@@ -18,5 +18,8 @@ struct NavigationRoutingView: View {
                 HomeView() // FIXME: - 임시
             }
         }
+        .hideBackButton()
+        .dismissKeyboardOnTap()
+        .environmentObject(router)
     }
 }
