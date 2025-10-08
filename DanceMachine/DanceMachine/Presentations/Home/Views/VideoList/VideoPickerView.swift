@@ -13,7 +13,7 @@ struct VideoPickerView: View {
   @Environment(\.dismiss) private var dismiss
   
   @State private var videos: [PHAsset] = [] // 이미지 및 비디오, 라이브포토를 나타내는 모델
-  @State var selectedAsset: PHAsset? = nil
+//  @State var selectedAsset: PHAsset? = nil
   @State private var showPreview: Bool = false
   
   @State private var isLoading: Bool = false
@@ -21,7 +21,8 @@ struct VideoPickerView: View {
   
   let onSelect: (URL, UIImage, Double) -> Void
   
-  // MARK: 뷰 나누자
+  @State private var vm: VideoPickerVM = .init()
+  
   var body: some View {
     NavigationStack {
       GeometryReader { g in
@@ -29,29 +30,17 @@ struct VideoPickerView: View {
         let totalSpacing = spacing * 2
         let itemWidth = (g.size.width - totalSpacing) / 4
         ScrollView {
-          GeometryReader { scroll in
-            let minY = scroll.frame(in: .global).minY
-            let header = g.size.height * 0.7
-            ZStack {
-              Color.black.opacity(0.2)
-                .ignoresSafeArea(.all)
-//                .frame(height: header + (minY > 0 ? minY : 0))
-//                .offset(y: minY > 0 ? -minY : 0)
-              
-              VideoPreview(
-                selectedAsset: $selectedAsset) { url, thumbnail, duration in
-                  onSelect(url, thumbnail, duration)
-                }
-                .padding(.top, 55)
-//                .frame(height: header + (minY > 0 ? minY : 0))
-//                .offset(y: minY > 0 ? -minY : 0)
-            }
-          }
-          .frame(height: g.size.height * 0.7)
+          
+          VideoPreview(
+            vm: vm,
+            size: g.size.height * 0.5
+          )
+          .frame(height: g.size.height * 0.5)
+          .padding(.top, (g.size.height * 0.5) / 3)
           
           CustomPicker(
             videos: $videos,
-            selectedAsset: $selectedAsset,
+            selectedAsset: $vm.selectedAsset,
             spacing: spacing,
             itemWidth: itemWidth
           )
@@ -62,7 +51,8 @@ struct VideoPickerView: View {
           ToolbarCenterTitle(text: "비디오 선택")
           ToolbarItemGroup(placement: .topBarTrailing) {
             Button {
-              //
+              // MARK: 서버 업로드 + 영상 리스트 UI 업데이트
+              vm.exportVideo()
             } label: {
               Text("저장")
             }
@@ -118,19 +108,10 @@ struct VideoPickerView: View {
       fetchedVideos.append(asset)
     }
     
-    DispatchQueue.main.async {
-      self.videos = fetchedVideos
-    }
+    self.videos = fetchedVideos
   }
 }
 
 #Preview {
   VideoPickerView(onSelect: {_, _, _ in })
-}
-
-// MARK: FullScreenCover(isPresented)로 했을 때 오류 해결을 위함
-extension PHAsset: Identifiable {
-  public var id: String {
-    return self.localIdentifier
-  }
 }
