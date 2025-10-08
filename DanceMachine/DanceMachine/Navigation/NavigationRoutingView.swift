@@ -18,6 +18,8 @@ struct NavigationRoutingView: View {
                 HomeView() // FIXME: - 임시
             case .createTeamspaceView: // 팀 스페이스 생성 화면
                 CreateTeamspaceView()
+            case .teamspaceListView:   // 팀 스페이스 목록 화면
+                TeamspaceListView()
             }
         }
         .hideBackButton()
