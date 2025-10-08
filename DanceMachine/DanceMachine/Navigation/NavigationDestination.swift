@@ -9,4 +9,5 @@ import Foundation
 
 enum NavigationDestination: Equatable, Hashable {
     case homeView // FIXME: - 임시
+    case createTeamspaceView // 팀 스페이스 생성 화면
 }

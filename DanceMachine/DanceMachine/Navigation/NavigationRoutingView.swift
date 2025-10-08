@@ -16,6 +16,8 @@ struct NavigationRoutingView: View {
             switch destination {
             case .homeView:
                 HomeView() // FIXME: - 임시
+            case .createTeamspaceView: // 팀 스페이스 생성 화면
+                CreateTeamspaceView()
             }
         }
         .hideBackButton()
