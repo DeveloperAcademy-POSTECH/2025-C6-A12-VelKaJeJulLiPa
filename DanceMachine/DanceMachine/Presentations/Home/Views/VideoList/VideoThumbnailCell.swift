@@ -30,6 +30,7 @@ struct VideoThumbnailCell: View {
       }
     }
     .frame(width: size, height: size)
+    .contentShape(Rectangle())
     .onAppear {
       loadThumbnail()
     }
