@@ -12,6 +12,9 @@ import AVKit
 @Observable
 final class VideoPickerVM {
   
+  private let store = FirestoreManager.shared
+  private let storage = FireStorageManager.shared
+  
   var selectedAsset: PHAsset? = nil
   
   var player: AVPlayer?
@@ -60,14 +63,25 @@ extension VideoPickerVM {
         guard let urlAsset = av as? AVURLAsset else { return }
         
         Task {
-          async let t = self.generateThumbnail(
-            from: urlAsset
-          )
-          async let d = self.getDuration(
-            from: urlAsset
-          )
-          
-          let (thumbnail, duration) = try await (t, d)
+          do {
+            let duration = try await self.getDuration(from: urlAsset)
+            
+            async let t = self.generateThumbnail(from: urlAsset)
+            async let _ = self.generateVideo(from: urlAsset, duration: duration)
+            
+            let thumbnail = try await t
+            
+            await MainActor.run {
+              self.videoThumbnail = thumbnail
+              self.videoDuration = duration
+              print("업로드 성공")
+            }
+            
+          } catch {
+            await MainActor.run {
+              print("업로드 실패")
+            }
+          }
         }
         
         //        Task {
@@ -109,9 +123,33 @@ extension VideoPickerVM {
       }
   }
   
+  private func generateVideo(
+    from asset: AVURLAsset,
+    duration: Double
+  ) async throws {
+    
+    let videoData = try Data(contentsOf: asset.url)
+    let videoId = UUID()
+    
+    let path = try await self.storage.uploadVideo(
+      data: videoData,
+      videoId: videoId
+    )
+    let downloadURL = try await self.storage.getDownloadURL(for: path)
+    
+    let video = Video(
+      videoId: videoId,
+      videoTitle: "제목", // TODO: 비디오 이름
+      videoDuration: duration,
+      videoURL: downloadURL
+    )
+    
+    try await store.create(video)
+  }
+  
   private func generateThumbnail(
     from asset: AVURLAsset
-  ) async throws-> UIImage? {
+  ) async throws -> UIImage? {
     
     let imageG = AVAssetImageGenerator(asset: asset)
     imageG.appliesPreferredTrackTransform = true
