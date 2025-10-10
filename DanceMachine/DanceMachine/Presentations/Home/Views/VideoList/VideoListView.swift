@@ -107,6 +107,7 @@ struct VideoListView: View {
           print("비디오 클릭")
         }
       }
+      .padding(.horizontal, 16)
     }
   }
   
