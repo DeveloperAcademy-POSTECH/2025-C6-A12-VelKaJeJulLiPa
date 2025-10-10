@@ -27,6 +27,7 @@ final class VideoPickerVM {
   
   // MARK: 동영상 미리보기 로드
   func loadVideo() {
+    self.cleanupPlayer()
     self.isLoading = true
     
     let o = PHVideoRequestOptions()
@@ -40,6 +41,12 @@ final class VideoPickerVM {
           self.isLoading = false
         }
       }
+  }
+  // MARK: player 정리
+  func cleanupPlayer() {
+    player?.pause()
+    player?.replaceCurrentItem(with: nil)
+    player = nil
   }
 }
 
