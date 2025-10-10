@@ -51,7 +51,6 @@ struct VideoPickerView: View {
           ToolbarCenterTitle(text: "비디오 선택")
           ToolbarItemGroup(placement: .topBarTrailing) {
             Button {
-              // MARK: 서버 업로드 + 영상 리스트 UI 업데이트
               vm.exportVideo()
             } label: {
               Text("저장")
