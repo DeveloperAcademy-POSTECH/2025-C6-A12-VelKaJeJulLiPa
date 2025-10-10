@@ -13,8 +13,7 @@ final class FireStorageManager {
   private init() {}
   
   // MARK: 버킷 링크
-  // TODO: 버킷 단일리전으로 생성 후 경로 지정
-  private let customBucketURL = ""
+  private let customBucketURL = "gs://dancemachine-5243b.firebasestorage.app"
   
   private func getStorageReference() -> StorageReference {
     return Storage.storage(url: customBucketURL).reference()
