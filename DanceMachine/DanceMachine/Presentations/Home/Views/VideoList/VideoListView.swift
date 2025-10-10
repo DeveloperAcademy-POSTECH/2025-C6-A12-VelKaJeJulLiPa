@@ -22,24 +22,14 @@ struct VideoListView: View {
   @State private var showCustomPicker: Bool = false
   
   var body: some View {
-    ZStack {
-      if videos.isEmpty {
-        emptyView
-      } else {
-        listView
+    listView
+      .sheet(isPresented: $showCustomPicker) {
+        VideoPickerView { url, thumbnail, duration in
+          self.localVideoURL = url
+          self.videoThumbnail = thumbnail
+          self.videoDuration = duration
+        }
       }
-      VStack {
-        Spacer()
-        uploadButton
-      }
-    }
-    .sheet(isPresented: $showCustomPicker) {
-      VideoPickerView { url, thumbnail, duration in
-        self.localVideoURL = url
-        self.videoThumbnail = thumbnail
-        self.videoDuration = duration
-      }
-    }
   }
   
   private var uploadButton: some View {
@@ -59,16 +49,24 @@ struct VideoListView: View {
   }
   
   private var listView: some View {
-    List(videos, id: \.videoId) { video in
-      Button {
-        //
-      } label: {
-        VStack {
-          Text(video.videoTitle)
-            .font(.headline)
-          Text("재생 시간: \(video.videoDuration)")
+    GeometryReader { g in
+      let spacing: CGFloat = 16
+      let columns = 2
+      let totalSpacing = spacing * CGFloat(columns - 1)
+      let itemSize = min((g.size.width - totalSpacing) / CGFloat(columns), 168)
+      ScrollView {
+        VideoGrid(
+          size: itemSize,
+          columns: columns,
+          spacing: spacing,
+          videos: $videos
+        )
+        .onTapGesture {
+          // TODO: 비디오 플레이 화면 네비게이션 연결
+          print("비디오 클릭")
         }
       }
+      .padding(.horizontal, 16)
     }
   }
   
