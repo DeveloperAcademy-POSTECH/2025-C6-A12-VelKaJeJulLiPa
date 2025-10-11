@@ -9,17 +9,30 @@ import SwiftUI
 
 struct NavigationRoutingView: View {
     @EnvironmentObject var router: NavigationRouter
-    @State var destination: NavigationDestination
+    @State var destination: AppRoute
     
     var body: some View {
         Group {
             switch destination {
-            case .homeView:
-                HomeView() // FIXME: - 임시
-            case .createTeamspaceView: // 팀 스페이스 생성 화면
-                CreateTeamspaceView()
-            case .teamspaceListView:   // 팀 스페이스 목록 화면
-                TeamspaceListView()
+            case .home:
+                HomeView()
+            case .inbox(let route):
+                switch route {
+                case .list:
+                    InboxView()
+                }
+            case .mypage(let route):
+                switch route {
+                case .profile:
+                    MyPageView()
+                }
+            case .teamspace(let route):
+                switch route {
+                case .list(let teamspace):
+                    TeamspaceListView(teamspaces: teamspace)
+                case .create:
+                    CreateTeamspaceView()
+                }
             }
         }
         .hideBackButton()
