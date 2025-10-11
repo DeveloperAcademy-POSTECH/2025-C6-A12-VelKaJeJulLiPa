@@ -15,7 +15,8 @@ final class VideoPickerVM {
   private let store = FirestoreManager.shared
   private let storage = FireStorageManager.shared
   
-  var selectedAsset: PHAsset? = nil
+  var videos: [PHAsset] = [] // 이미지 및 비디오, 라이브포토를 나타내는 모델
+  var selectedAsset: PHAsset? = nil // 선택된 에셋
   
   var player: AVPlayer?
   var videoTitle: String = ""
@@ -37,8 +38,10 @@ final class VideoPickerVM {
       forVideo: selectedAsset ?? PHAsset(),
       options: o) { item, _ in
         if let pItem = item {
-          self.player = AVPlayer(playerItem: pItem)
-          self.isLoading = false
+          Task { @MainActor in
+            self.player = AVPlayer(playerItem: pItem)
+            self.isLoading = false              
+          }
         }
       }
   }
