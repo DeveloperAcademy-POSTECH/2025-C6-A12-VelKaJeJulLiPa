@@ -175,3 +175,58 @@ extension VideoPickerVM {
     return CMTimeGetSeconds(d)
   }
 }
+// MARK: - 권한 설정 관련
+extension VideoPickerVM {
+  func requestPermissionAndFetch() {
+#if DEBUG
+    if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
+      Task { @MainActor in
+        self.videos = []
+      }
+      return
+    }
+#endif
+    PHPhotoLibrary.requestAuthorization(for: .readWrite) {
+      status in
+      switch status {
+      case .authorized:
+        self.fetchVideos()
+      case .denied, .restricted:
+        print("사진 라이브러리 접근 거부 또는 제한") // TODO: 처리 필요
+      case .notDetermined:
+        print("사용자가 아직 선택하지 않음") // TODO: 처리 필요
+      case .limited:
+        print("권한 제한") // TODO: 처리 필요
+      @unknown default:
+        fatalError("알 수 없는 권한 상태") // TODO: 처리 필요
+      }
+    }
+  }
+  
+  private func fetchVideos() {
+    // Asset 혹은 Collection 객체를 가져올 때 이들에 대한 필터링 및 정렬을 정의할 수 있는 객체
+    let fetchO = PHFetchOptions()
+    
+    // NSPredicate 타입인 predicate를 사용하여 필터링을 정의하고,
+    // NSSortDescriptor 타입인 sortDescriptors를 사용하여 정렬을 정의
+    fetchO.sortDescriptors = [NSSortDescriptor(
+      key: "creationDate",
+      ascending: false
+    )]
+    
+    let results = PHAsset.fetchAssets(
+      with: .video,
+      options: fetchO
+    )
+    
+    var fetchedVideos: [PHAsset] = []
+    results.enumerateObjects { (asset, _, _) in
+      fetchedVideos.append(asset)
+    }
+    
+    Task { @MainActor in
+      self.videos = fetchedVideos
+    }
+  }
+}
+
