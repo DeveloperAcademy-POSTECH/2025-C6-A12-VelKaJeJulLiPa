@@ -11,24 +11,13 @@ struct VideoListView: View {
   @EnvironmentObject private var router: NavigationRouter
   @State private var videos: [Video] = []
   
-  // MARK: 비디오 업로드 관련
-  @State private var localVideoURL: URL? = nil
-  
-  @State private var videoTitle: String = ""
-  @State private var videoDuration: Double = 0
-  @State private var videoThumbnail: UIImage? = nil
-  
-  @State private var isUploading: Bool = false
   @State private var showCustomPicker: Bool = false
   
   var body: some View {
     listView
+    uploadButton
       .sheet(isPresented: $showCustomPicker) {
-        VideoPickerView { url, thumbnail, duration in
-          self.localVideoURL = url
-          self.videoThumbnail = thumbnail
-          self.videoDuration = duration
-        }
+        VideoPickerView()
       }
   }
   
