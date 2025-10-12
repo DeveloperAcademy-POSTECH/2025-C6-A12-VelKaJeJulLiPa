@@ -38,7 +38,7 @@ struct DanceMachineApp: App {
                 case .authenticated:
                     RootView()
                         .environmentObject(router)
-                        .transition(.move(edge: .bottom))
+                        .transition(.move(edge: .trailing))
                 }
             }
             .animation(.easeInOut, value: authManager.authenticationState)
