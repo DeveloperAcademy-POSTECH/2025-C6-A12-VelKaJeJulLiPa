@@ -57,10 +57,13 @@ struct CreateTeamspaceView: View {
         Button {
             Task {
                 do {
-                    try await viewModel.createTeamsapce(
+                    let teamspaceId = try await viewModel.createTeamsapce(
                         userId: "4150C2CF-27DD-4B32-9313-0454258814BF1",
                         teamspaceName: teamspaceNameText
                     )
+                    
+                    try await viewModel.includeUserTeamspace(teamspaceId: teamspaceId)
+                    
                     router.pop()
                 } catch {
                     // FIXME: - 에러 분기 처리 추가하기
