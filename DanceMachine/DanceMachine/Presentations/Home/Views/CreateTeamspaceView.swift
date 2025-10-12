@@ -64,7 +64,7 @@ struct CreateTeamspaceView: View {
                     
                     try await viewModel.includeUserTeamspace(teamspaceId: teamspaceId)
                     
-                    router.pop()
+                    await MainActor.run { router.pop() }
                 } catch {
                     // FIXME: - 에러 분기 처리 추가하기
                     print("error: \(error.localizedDescription)")
