@@ -18,5 +18,12 @@ struct Members: Codable {
     enum CodingKeys: String, CodingKey {
         case userId = "user_id"
     }
-    
+}
+
+extension Members: EntityRepresentable {
+    var entityName: CollectionType { .members }
+    var documentID: String { userId }
+    var asDictionary: [String : Any]? {
+        [Members.CodingKeys.userId.rawValue: userId]
+    }
 }

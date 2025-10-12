@@ -62,6 +62,11 @@ struct CreateTeamspaceView: View {
                         teamspaceName: teamspaceNameText
                     )
                     
+                    try await viewModel.createTeamspaceMember(
+                        userId: "4150C2CF-27DD-4B32-9313-0454258814BF1",
+                        teamspaceId: teamspaceId
+                    )
+                    
                     try await viewModel.includeUserTeamspace(teamspaceId: teamspaceId)
                     
                     await MainActor.run { router.pop() }

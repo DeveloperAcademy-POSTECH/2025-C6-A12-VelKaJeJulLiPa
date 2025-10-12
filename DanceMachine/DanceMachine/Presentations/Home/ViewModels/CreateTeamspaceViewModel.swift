@@ -25,6 +25,22 @@ final class CreateTeamspaceViewModel {
         return teamspaceId.uuidString
     }
     
+    /// 팀 스페이스 멤버 서브 컬렉션 생성 메서드 입니다.
+    /// - Parameters:
+    ///     - userId: 생성 유저의 UUID
+    ///     - teamspaceId: 어떤 팀 스페이스인지 식별하기 위한 팀 스페이스 Id
+    ///
+    /// 팀 스페이스 생성 시, 팀 스페이스 소유자는 자동으로 멤버로 추가 되기 위해 구현
+    func createTeamspaceMember(userId: String, teamspaceId: String) async throws {
+        try await FirestoreManager.shared.createToSubcollection(
+            Members(userId: userId),
+            under: .teamspace,
+            parentId: teamspaceId,
+            subCollection: .members,
+            strategy: .join
+        )
+    }
+    
     /// 현재 로그인 된 유저의 서브 컬렉션 UserTeamspace 추가 메서드 입니다.
     /// teamspaceId: 팀 스페이스 documentId
     func includeUserTeamspace(teamspaceId: String) async throws {
