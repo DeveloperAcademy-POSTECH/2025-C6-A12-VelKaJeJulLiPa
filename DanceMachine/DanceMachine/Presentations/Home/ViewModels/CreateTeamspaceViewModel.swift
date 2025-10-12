@@ -28,7 +28,7 @@ final class CreateTeamspaceViewModel {
     /// 현재 로그인 된 유저의 서브 컬렉션 UserTeamspace 추가 메서드 입니다.
     /// teamspaceId: 팀 스페이스 documentId
     func includeUserTeamspace(teamspaceId: String) async throws {
-        try await FirestoreManager.shared.writeToSubcollection(
+        try await FirestoreManager.shared.createToSubcollection(
             UserTeamspace(teamspaceId: teamspaceId),
             under: .users,
             parentId: "4150C2CF-27DD-4B32-9313-0454258814BF", // FIXME: - 유저 아이디로 변경
