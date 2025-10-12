@@ -32,6 +32,8 @@ struct NavigationRoutingView: View {
                     TeamspaceListView()
                 case .create:
                     CreateTeamspaceView()
+                case .setting:
+                    TeamspaceSettingView()
                 }
             }
         }

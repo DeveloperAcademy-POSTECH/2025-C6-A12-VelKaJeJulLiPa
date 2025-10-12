@@ -18,6 +18,7 @@ enum AppRoute: Hashable {
 enum TeamspaceRoute: Hashable {
     case list
     case create
+    case setting
 }
 
 enum InboxRoute: Hashable {
