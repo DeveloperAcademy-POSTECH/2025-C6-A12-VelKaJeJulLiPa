@@ -12,6 +12,16 @@ import CryptoKit
 import Combine
 
 
+struct AuthDataResultModel {
+    let uid: String
+    let email: String?
+    
+    init(user: FirebaseAuth.User) {
+        self.uid = user.uid
+        self.email = user.email
+    }
+}
+
 enum AuthenticationState {
     case unauthenticated
     case authenticated
@@ -28,7 +38,7 @@ final class FirebaseAuthManager: ObservableObject {
     private var authStateHandler: AuthStateDidChangeListenerHandle?
     private var currentNonce: String?
     
-    init() {
+    private init() {
         // Sign out every time app is download or re-download and is launched for the first time.
         let hasLaunchedBefore = UserDefaults.standard.bool(forKey: "hasLaunchedBefore")
         if !hasLaunchedBefore {
@@ -36,7 +46,7 @@ final class FirebaseAuthManager: ObservableObject {
             UserDefaults.standard.set(true, forKey: "hasLaunchedBefore")
         }
         
-        // Check Authentication State
+        // Check authentication state
         if let user = Auth.auth().currentUser {
             self.user = user
             self.authenticationState = .authenticated
@@ -50,7 +60,7 @@ final class FirebaseAuthManager: ObservableObject {
         print("🔥 FirebaseAuthManager initialized")
     }
     
-    // Handler listens to and reflects authentication state
+    // AuthStateHandler listens to and changes authentication state
     func registerAuthStateHandler() {
         guard authStateHandler == nil else { return }
         
@@ -77,60 +87,17 @@ final class FirebaseAuthManager: ObservableObject {
     }
     
     
-    // MARK: - Sign In With Apple
-    func handleSignInWithAppleRequest(_ request: ASAuthorizationAppleIDRequest) {
-        request.requestedScopes = [.fullName, .email]
-        let nonce = randomNonceString()
-        currentNonce = nonce
-        request.nonce = sha256(nonce)
-    }
-    
-    
-    func handleSignInWithAppleCompletion(_ result: Result<ASAuthorization, Error>) {
-        if case .failure(let failure) = result {
-            print("❌ Apple Sign In failed: \(failure.localizedDescription)")
-            return
-        }
-        
-        guard case .success(let authorization) = result,
-              let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential
-        else { return }
-
-        
-        guard let nonce = currentNonce,
-              let appleIDToken = appleIDCredential.identityToken,
-              let idTokenString = String(data: appleIDToken, encoding: .utf8)
-        else {
-            print("❌ AppleID token invalid")
-            return
-        }
-        
-        let credential = OAuthProvider.credential(providerID: .apple, idToken: idTokenString, rawNonce: nonce)
-        
-        Task {
-            do {
-                let result = try await Auth.auth().signIn(with: credential)
-                await updateDisplayName(for: result.user, with: appleIDCredential)
-            } catch {
-                print("❌ Error authenticating: \(error.localizedDescription)")
-                authenticationState = .unauthenticated
-
-            }
-        }
-    }
-    
-    
-    func updateDisplayName(for user: FirebaseAuth.User, with appleIDCredential: ASAuthorizationAppleIDCredential, force: Bool = false) async {
+    func updateDisplayName(for user: FirebaseAuth.User, with displayName: String, force: Bool = false) async {
         if let currentDisplayName = Auth.auth().currentUser?.displayName, !currentDisplayName.isEmpty {
             // current user is non-empty, don't overwrite it
             return
         }
         else {
             let changeRequest = user.createProfileChangeRequest()
-            changeRequest.displayName = appleIDCredential.displayName()
+            changeRequest.displayName = displayName
             do {
                 try await changeRequest.commitChanges()
-                print("✅ Updated display name: \(appleIDCredential.displayName())")
+                print("✅ Updated display name: \(displayName)")
             }
             catch {
                 print("❌ Failed to update display name: \(error.localizedDescription)")
@@ -162,32 +129,18 @@ final class FirebaseAuthManager: ObservableObject {
     }
 }
 
-// MARK: - Helper Extensions
-extension ASAuthorizationAppleIDCredential {
-    func displayName() -> String {
-        [fullName?.givenName, fullName?.familyName]
-            .compactMap { $0 }
-            .joined(separator: " ")
-    }
-}
 
-
-private func randomNonceString(length: Int = 32) -> String {
-    precondition(length > 0)
-    var randomBytes = [UInt8](repeating: 0, count: length)
-    let errorCode = SecRandomCopyBytes(kSecRandomDefault, randomBytes.count, &randomBytes)
-    if errorCode != errSecSuccess {
-        fatalError("Unable to generate nonce.")
+// MARK: - Sign in with Apple
+extension FirebaseAuthManager {
+    
+    @discardableResult
+    func signInWithApple(tokens: SignInWithAppleResult) async throws -> AuthDataResult {
+        let credential = OAuthProvider.credential(providerID: .apple, idToken: tokens.token, rawNonce: tokens.nonce)
+        return try await signIn(credential: credential)
     }
     
-    let charset = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
-    return String(randomBytes.map { charset[Int($0) % charset.count] })
+    func signIn(credential: AuthCredential) async throws -> AuthDataResult {
+        let authDataResult = try await Auth.auth().signIn(with: credential)
+        return authDataResult
+    }
 }
-
-
-private func sha256(_ input: String) -> String {
-    let inputData = Data(input.utf8)
-    let hashedData = SHA256.hash(data: inputData)
-    return hashedData.map { String(format: "%02x", $0) }.joined()
-}
-
