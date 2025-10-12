@@ -28,8 +28,8 @@ struct NavigationRoutingView: View {
                 }
             case .teamspace(let route):
                 switch route {
-                case .list(let teamspace):
-                    TeamspaceListView(teamspaces: teamspace)
+                case .list:
+                    TeamspaceListView()
                 case .create:
                     CreateTeamspaceView()
                 }
