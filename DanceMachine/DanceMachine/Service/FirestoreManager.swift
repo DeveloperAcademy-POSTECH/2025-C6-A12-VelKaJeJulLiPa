@@ -108,6 +108,113 @@ final class FirestoreManager {
         }
         return data
     }
+  
+      /// 서브컬렉션의 데이터를 생성합니다.
+      /// - Parameters:
+      ///     - data: 데이터 형태
+      ///     - under: 부모 컬렉션 타입
+      ///     - parentId: document 이름
+      ///     - subCollection: 서브 컬렉션 타입
+      ///     - strategy: 전략 타입 (join, create, update, userStrategy)
+      @discardableResult
+      func createToSubcollection<T: EntityRepresentable>(
+          _ data: T,
+          under parentType: CollectionType,
+          parentId: String,
+          subCollection subType: CollectionType,
+          strategy: WriteStrategy
+      ) async throws -> T {
+          guard var dict = data.asDictionary else { throw FirestoreError.encodingFailed }
+
+          // 타임스탬프 처리 (save와 동일한 규칙)
+          switch strategy {
+          case .join:
+              dict[strategy.rawValue] = FieldValue.serverTimestamp()
+          case .create:
+              dict[strategy.rawValue] = FieldValue.serverTimestamp()
+              dict[WriteStrategy.update.rawValue] = FieldValue.serverTimestamp()
+          case .update:
+              dict[strategy.rawValue] = FieldValue.serverTimestamp()
+          case .userStrategy:
+              dict[WriteStrategy.create.rawValue] = FieldValue.serverTimestamp()
+              dict[WriteStrategy.update.rawValue] = FieldValue.serverTimestamp()
+              dict[WriteStrategy.userStrategy.rawValue] = FieldValue.serverTimestamp()
+          case .userUpdateStrategy:
+              dict[WriteStrategy.userStrategy.rawValue] = FieldValue.serverTimestamp()
+          }
+
+          let ref = db
+              .collection(parentType.rawValue)
+              .document(parentId)
+              .collection(subType.rawValue)
+              .document(data.documentID)
+
+          switch strategy {
+          case .create, .join, .userStrategy:
+              try await ref.setData(dict)
+          case .update, .userUpdateStrategy:
+              try await ref.updateData(dict)
+          }
+
+          return data
+      }
+  
+      /// 서브서브컬렉션의 데이터를 생성합니다.
+      /// - Parameters:
+      ///     - data: 데이터 형태
+      ///     - in: 상위 부모 컬렉션 타입 ex) Tracks
+      ///     - grandParentId: document 이름
+      ///     - withIn 부모 컬렉션 타입 ex) Section
+      ///     - parentId: document 이름
+      ///     - subCollection: 서브 컬렉션 타입
+      ///     - strategy: 전략 타입 (join, create, update, userStrategy)
+      @discardableResult
+      func createToSubSubcollection<T: EntityRepresentable>(
+          _ data: T,
+          in grandParentType: CollectionType,
+          grandParentId: String,
+          withIn parentType: CollectionType,
+          parentId: String,
+          subCollection subType: CollectionType,
+          strategy: WriteStrategy
+      ) async throws -> T {
+          guard var dict = data.asDictionary else { throw FirestoreError.encodingFailed }
+
+          // 타임스탬프 처리 (save와 동일한 규칙)
+          switch strategy {
+          case .join:
+              dict[strategy.rawValue] = FieldValue.serverTimestamp()
+          case .create:
+              dict[strategy.rawValue] = FieldValue.serverTimestamp()
+              dict[WriteStrategy.update.rawValue] = FieldValue.serverTimestamp()
+          case .update:
+              dict[strategy.rawValue] = FieldValue.serverTimestamp()
+          case .userStrategy:
+              dict[WriteStrategy.create.rawValue] = FieldValue.serverTimestamp()
+              dict[WriteStrategy.update.rawValue] = FieldValue.serverTimestamp()
+              dict[WriteStrategy.userStrategy.rawValue] = FieldValue.serverTimestamp()
+          case .userUpdateStrategy:
+              dict[WriteStrategy.userStrategy.rawValue] = FieldValue.serverTimestamp()
+          }
+
+          let ref = db
+              .collection(grandParentType.rawValue)
+              .document(grandParentId)
+              .collection(parentType.rawValue)
+              .document(parentId)
+              .collection(subType.rawValue)
+              .document(data.documentID)
+
+          switch strategy {
+          case .create, .join, .userStrategy:
+              try await ref.setData(dict)
+          case .update, .userUpdateStrategy:
+              try await ref.updateData(dict)
+          }
+
+          return data
+      }
+      
     
     /// 컬렉션의 모든 데이터를 가져옵니다.
     /// 파이어베이스 색인으로 정렬합니다.
