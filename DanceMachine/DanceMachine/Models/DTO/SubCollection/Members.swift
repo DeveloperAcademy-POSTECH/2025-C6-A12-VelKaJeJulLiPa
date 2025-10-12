@@ -9,14 +9,14 @@ import Foundation
 
 struct Members: Codable {
     
-    let userID: String
+    let userId: String
     
-    init(userID: String) {
-        self.userID = userID
+    init(userId: String) {
+        self.userId = userId
     }
     
     enum CodingKeys: String, CodingKey {
-        case userID = "user_id"
+        case userId = "user_id"
     }
     
 }
