@@ -8,7 +8,7 @@
 import Foundation
 
 struct Tracks: Codable {
-    let trackId: UUID
+    let tracksId: UUID
     let projectId: String
     let creatorId: String
     let trackName: String
@@ -19,14 +19,14 @@ struct Tracks: Codable {
         creatorId: String,
         trackName: String
     ) {
-        self.trackId = trackId
+        self.tracksId = trackId
         self.projectId = projectId
         self.creatorId = creatorId
         self.trackName = trackName
     }
 
     enum CodingKeys: String, CodingKey {
-        case trackId   = "track_id"
+        case tracksId   = "tracks_id"
         case projectId = "project_id"
         case creatorId = "creator_id"
         case trackName = "track_name"
@@ -35,5 +35,5 @@ struct Tracks: Codable {
 
 extension Tracks: EntityRepresentable {
     var entityName: CollectionType { .tracks }
-    var documentID: String { trackId.uuidString }
+    var documentID: String { tracksId.uuidString }
 }
