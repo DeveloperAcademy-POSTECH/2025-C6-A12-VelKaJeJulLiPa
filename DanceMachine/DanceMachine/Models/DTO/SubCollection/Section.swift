@@ -26,3 +26,8 @@ struct Section: Codable {
     }
     
 }
+
+extension Section: EntityRepresentable {
+    var entityName: CollectionType { .section }
+    var documentID: String { sectionId }
+}
