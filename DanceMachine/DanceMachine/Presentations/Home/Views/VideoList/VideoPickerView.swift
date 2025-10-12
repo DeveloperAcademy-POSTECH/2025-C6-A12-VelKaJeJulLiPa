@@ -14,6 +14,8 @@ struct VideoPickerView: View {
   
   @State private var vm: VideoPickerVM = .init()
   
+  let tracksId: String
+  
   var body: some View {
     NavigationStack {
       GeometryReader { g in
@@ -42,7 +44,7 @@ struct VideoPickerView: View {
           ToolbarCenterTitle(text: "비디오 선택")
           ToolbarItemGroup(placement: .topBarTrailing) {
             Button {
-              vm.exportVideo()
+              vm.exportVideo(tracksId: tracksId)
             } label: {
               Text("저장")
             }
@@ -51,11 +53,29 @@ struct VideoPickerView: View {
         .onAppear {
           vm.requestPermissionAndFetch()
         }
+        .alert(
+          "업로드 성공",
+          isPresented: $vm.showSuccessAlert
+        ) {
+          Button("확인") {
+            dismiss()
+          }
+        }
+        .alert(
+          "업로드 실패",
+          isPresented: .constant(vm.errorMessage != nil)
+        ) {
+          Button("확인") {
+            vm.errorMessage = nil
+          }
+        } message: {
+          Text(vm.errorMessage ?? "알 수 없는 오류가 발생했습니다.")
+        }
       }
     }
   }
 }
 
 #Preview {
-  VideoPickerView()
+  VideoPickerView(tracksId: "")
 }

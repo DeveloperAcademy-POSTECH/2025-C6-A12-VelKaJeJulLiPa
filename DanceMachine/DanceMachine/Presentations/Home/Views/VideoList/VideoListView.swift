@@ -13,11 +13,13 @@ struct VideoListView: View {
   
   @State private var showCustomPicker: Bool = false
   
+  let tracksId: String
+  
   var body: some View {
     listView
     uploadButton
       .sheet(isPresented: $showCustomPicker) {
-        VideoPickerView()
+        VideoPickerView(tracksId: tracksId)
       }
   }
   
@@ -66,7 +68,7 @@ struct VideoListView: View {
 
 #Preview {
   NavigationStack {
-    VideoListView()
+    VideoListView(tracksId: "")
   }
   .environmentObject(NavigationRouter())
 }
