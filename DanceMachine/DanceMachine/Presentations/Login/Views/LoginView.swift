@@ -8,8 +8,8 @@
 import SwiftUI
 import AuthenticationServices
 
+// FIXME: Implement Hi-fi Design
 struct LoginView: View {
-    
     @Environment(\.colorScheme) var colorScheme
     @State private var viewModel = LoginViewModel()
     
@@ -21,11 +21,21 @@ struct LoginView: View {
                 .font(.largeTitle.bold())
                 .multilineTextAlignment(.center)
             
-            SignInWithAppleButton(
-                onRequest: viewModel.handleSignInWithAppleRequest,
-                onCompletion: viewModel.handleSignInWithAppleCompletion
-            )
-            .signInWithAppleButtonStyle(colorScheme == .light ? .black : .white)
+            Button(action: {
+                Task {
+                    do {
+                        try await viewModel.signInApple()
+                    } catch {
+                        print(error)
+                    }
+                }
+            }, label: {
+                SignInWithAppleButtonViewRepresentable(
+                    type: .default,
+                    style: colorScheme == .light ? .black : .white
+                )
+                .allowsHitTesting(false)
+            })
             .frame(height: 50)
             .cornerRadius(8)
             .padding(.horizontal, 32)
