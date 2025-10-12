@@ -11,11 +11,13 @@ struct NavigationRoutingView: View {
     @EnvironmentObject var router: NavigationRouter
     @State var destination: AppRoute
     
+    @Binding var selectedTeamspace: Teamspace?
+    
     var body: some View {
         Group {
             switch destination {
             case .home:
-                HomeView()
+                HomeView(titleTeamspace: $selectedTeamspace)
             case .inbox(let route):
                 switch route {
                 case .list:
@@ -29,7 +31,7 @@ struct NavigationRoutingView: View {
             case .teamspace(let route):
                 switch route {
                 case .list:
-                    TeamspaceListView()
+                    TeamspaceListView(selected: $selectedTeamspace)
                 case .create:
                     CreateTeamspaceView()
                 case .setting:
