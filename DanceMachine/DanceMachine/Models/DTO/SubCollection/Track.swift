@@ -30,3 +30,8 @@ struct Track: Codable {
     }
     
 }
+
+extension Track: EntityRepresentable {
+    var entityName: CollectionType { .track }
+    var documentID: String { trackId }
+}
