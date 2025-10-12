@@ -120,10 +120,14 @@ final class SignInAppleHelper: NSObject {
 }
 
 extension ASAuthorizationAppleIDCredential {
-    func displayName() -> String {
-        [fullName?.givenName, fullName?.familyName]
-            .compactMap { $0 }
-            .joined(separator: " ")
+    func displayName(locale: Locale = .current) -> String {
+        guard let fullName = fullName else { return "Unknown" }
+
+        let formatter = PersonNameComponentsFormatter()
+        formatter.style = .default
+        formatter.locale = locale
+
+        return formatter.string(from: fullName)
     }
 }
 
@@ -139,7 +143,7 @@ extension SignInAppleHelper: ASAuthorizationControllerDelegate {
             return
         }
         
-        let name = appleIDCredential.displayName()
+        let name = appleIDCredential.displayName(locale: Locale.current)
         let email = appleIDCredential.email
 
         let tokens = SignInWithAppleResult(token: idTokenString, nonce: nonce, name: name, email: email)
