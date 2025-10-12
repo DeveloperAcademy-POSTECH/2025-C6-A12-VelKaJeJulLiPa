@@ -25,6 +25,8 @@ final class VideoPickerVM {
   var localVideoURL: URL? = nil
   
   var isLoading: Bool = false
+  var errorMessage: String? = nil
+  var showSuccessAlert: Bool = false
   
   // MARK: 동영상 미리보기 로드
   func loadVideo() {
@@ -55,9 +57,8 @@ final class VideoPickerVM {
 
 // MARK: 비디오 업로드 관련
 extension VideoPickerVM {
-  func exportVideo() {
+  func exportVideo(tracksId: String) {
     self.isLoading = true
-    defer { self.isLoading = false }
     
     // PHAsset 에서 비디오 파일 추출
     let o = PHVideoRequestOptions()
@@ -76,20 +77,36 @@ extension VideoPickerVM {
           do {
             let duration = try await self.getDuration(from: urlAsset)
             
-            async let t = self.generateThumbnail(from: urlAsset)
-            async let _ = self.generateVideo(from: urlAsset, duration: duration)
+            async let t = self.generateThumbnail(
+              from: urlAsset
+            )
+            async let v: Void = self.generateVideo(
+              from: urlAsset,
+              duration: duration,
+              tracksId: tracksId
+            )
             
-            let thumbnail = try await t
+            let (thumbnail, _) = try await (t, v)
             
             await MainActor.run {
               self.videoThumbnail = thumbnail
               self.videoDuration = duration
-              print("업로드 성공")
+              self.isLoading = false
+              self.showSuccessAlert = true
+              print("비디오 업로드 성공")
             }
             
+          } catch let error as FirestoreError {
+            await MainActor.run {
+              self.isLoading = false
+              self.errorMessage = error.errorDescription
+              print("Firestore 에러 : \(error.errorDescription ?? "")")
+            }
           } catch {
             await MainActor.run {
-              print("업로드 실패")
+              self.isLoading = false
+              self.errorMessage = "비디오 업로드 중 오류가 발생했습니다"
+              print("업로드 실패: \(error)")
             }
           }
         }
@@ -135,17 +152,102 @@ extension VideoPickerVM {
   
   private func generateVideo(
     from asset: AVURLAsset,
-    duration: Double
+    duration: Double,
+    tracksId: String
   ) async throws {
-    
+    // 1. 비디오 데이터로 변환
     let videoData = try Data(contentsOf: asset.url)
     let videoId = UUID()
-    
-    let path = try await self.storage.uploadVideo(
+    let sectionId = UUID()
+    // 2. Storage 업로드
+    let path = try await storage.uploadVideo(
       data: videoData,
       videoId: videoId
     )
-    let downloadURL = try await self.storage.getDownloadURL(for: path)
+    // 3. URL 추출
+    let downloadURL = try await storage.getDownloadURL(for: path)
+    
+    async let v: Void = self.createVideo(
+      videoId: videoId,
+      duration: duration,
+      downloadURL: downloadURL
+    )
+    async let s: Void = self.createSectionAndTrack(
+      tracksId: tracksId,
+      sectionId: sectionId,
+      videoId: videoId
+    )
+    
+    try await v
+    try await s
+  }
+  // MARK: Section -> Track 순차 생성 (의존성)
+  private func createSectionAndTrack(
+    tracksId: String,
+    sectionId: UUID,
+    videoId: UUID
+  ) async throws {
+    
+    try await self.createSection(
+      in: tracksId,
+      from: sectionId.uuidString
+    )
+    
+    try await self.createTrack(
+      in: tracksId,
+      withIn: sectionId.uuidString,
+      to: videoId.uuidString
+    )
+  }
+  // MARK: 서브컬렉션 Section 생성 메서드
+  private func createSection(
+    in tracksId: String,
+    from sectionId: String
+  ) async throws{
+    
+    let section = Section(
+      sectionId: sectionId,
+      sectionTitle: "경로 미지정"
+    )
+    
+    try await store.createToSubcollection(
+      section,
+      under: .tracks,
+      parentId: tracksId,
+      subCollection: .section,
+      strategy: .create
+    )
+  }
+  // MARK: 서브서브컬렉션 Track 생성 메서드
+  private func createTrack(
+    in tracksId: String,
+    withIn sectionId: String,
+    to videoId: String
+  ) async throws {
+    
+    let trackId = UUID()
+    let track = Track(
+      trackId: trackId.uuidString,
+      videoId: videoId,
+      sectionId: sectionId
+    )
+    
+    try await store.createToSubSubcollection(
+      track,
+      in: .tracks,
+      grandParentId: tracksId,
+      withIn: .section,
+      parentId: sectionId,
+      subCollection: .track,
+      strategy: .create
+    )
+  }
+  // MARK: 메인컬렉션 Video 생성 메서드
+  private func createVideo(
+    videoId: UUID,
+    duration: Double,
+    downloadURL: String
+  ) async throws {
     
     let video = Video(
       videoId: videoId,
