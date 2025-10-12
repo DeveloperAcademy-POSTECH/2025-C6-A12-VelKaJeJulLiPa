@@ -36,7 +36,7 @@ final class FireStorageManager {
     do {
       let ref = getStorageReference().child(path)
       let _ = try await ref.putDataAsync(data)
-      print("스토리지 업로드 성공")
+      print("비디오 스토리지 업로드 성공")
       return path
     } catch {
       throw FirestoreError.addFailed(underlying: error)
