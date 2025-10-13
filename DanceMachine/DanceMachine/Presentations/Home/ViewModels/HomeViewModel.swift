@@ -13,10 +13,10 @@ final class HomeViewModel {
     /// 현재 로그인 유저의 팀스페이스 목록을 전부 가져옵니다.
     /// - Parameters:
     ///     - userID: 현재 로그인 유저의 UUID
-    func fetchUserTeamspace(userID: String) async throws -> [UserTeamspace] {
+    func fetchUserTeamspace(userId: String) async throws -> [UserTeamspace] {
         return try await FirestoreManager.shared.fetchAllFromSubcollection(
             under: .users,
-            parentId: userID,
+            parentId: userId,
             subCollection: .userTeamspace
         )
     }
