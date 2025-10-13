@@ -26,14 +26,17 @@ final class FireStorageManager {
     return url.absoluteString
   }
   // MARK: - 스토리지에 업로드하는 메서드
-  func uploadVideo(data: Data, videoId: UUID) async throws -> String {
+  func uploadStorage(
+    data: Data,
+    type: StorageType
+  ) async throws -> String {
     
-    let path = "video/\(videoId)/video.mov"
+    let path = type.path
     
     do {
       let ref = getStorageReference().child(path)
       let _ = try await ref.putDataAsync(data)
-      print("비디오 스토리지 업로드 성공")
+      print("스토리지 업로드 성공")
       return path
     } catch {
       throw FirestoreError.addFailed(underlying: error)
