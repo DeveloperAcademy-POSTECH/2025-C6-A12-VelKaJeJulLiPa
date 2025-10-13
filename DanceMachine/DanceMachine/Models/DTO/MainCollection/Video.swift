@@ -12,17 +12,20 @@ struct Video: Codable {
     let videoTitle: String
     let videoDuration: Double
     let videoURL: String
+    let thumbnailURL: String
 
     init(
         videoId: UUID,
         videoTitle: String,
         videoDuration: Double,
-        videoURL: String
+        videoURL: String,
+        thumbnailURL: String
     ) {
         self.videoId = videoId
         self.videoTitle = videoTitle
         self.videoDuration = videoDuration
         self.videoURL = videoURL
+        self.thumbnailURL = thumbnailURL
     }
 
     enum CodingKeys: String, CodingKey {
@@ -30,6 +33,7 @@ struct Video: Codable {
         case videoTitle    = "video_title"
         case videoDuration = "video_duration"
         case videoURL      = "video_url"
+        case thumbnailURL = "thumbnail_url"
     }
 }
 
