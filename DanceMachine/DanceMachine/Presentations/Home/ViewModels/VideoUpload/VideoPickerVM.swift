@@ -20,7 +20,7 @@ final class VideoPickerVM {
   
   var player: AVPlayer?
   var videoTitle: String = ""
-  var videoThumbnail: UIImage? = nil
+//  var videoThumbnail: UIImage? = nil
   var videoDuration: Double = 0
   var localVideoURL: URL? = nil
   
@@ -77,36 +77,31 @@ extension VideoPickerVM {
           do {
             let duration = try await self.getDuration(from: urlAsset)
             
-            async let t = self.generateThumbnail(
-              from: urlAsset
-            )
-            async let v: Void = self.generateVideo(
+            try await self.generateVideo(
               from: urlAsset,
               duration: duration,
               tracksId: tracksId
             )
             
-            let (thumbnail, _) = try await (t, v)
-            
             await MainActor.run {
-              self.videoThumbnail = thumbnail
+//              self.videoThumbnail = thumbnail
               self.videoDuration = duration
               self.isLoading = false
               self.showSuccessAlert = true
               print("비디오 업로드 성공")
             }
             
-          } catch let error as FirestoreError {
+          } catch let error as VideoError {
             await MainActor.run {
               self.isLoading = false
-              self.errorMessage = error.errorDescription
-              print("Firestore 에러 : \(error.errorDescription ?? "")")
+              self.errorMessage = error.userMsg
+              print("Firestore 에러 : \(error.debugMsg)")
             }
           } catch {
             await MainActor.run {
               self.isLoading = false
               self.errorMessage = "비디오 업로드 중 오류가 발생했습니다"
-              print("업로드 실패: \(error)")
+              print("예상치 못한 에러: \(error)")
             }
           }
         }
@@ -157,29 +152,46 @@ extension VideoPickerVM {
   ) async throws {
     // 1. 비디오 데이터로 변환
     let videoData = try Data(contentsOf: asset.url)
+    
     let videoId = UUID()
     let sectionId = UUID()
-    // 2. Storage 업로드
-    let path = try await storage.uploadVideo(
-      data: videoData,
-      videoId: videoId
-    )
-    // 3. URL 추출
-    let downloadURL = try await storage.getDownloadURL(for: path)
+    // 2. 썸네일 데이터로 변환
+    let t = try await self.generateThumbnail(from: asset)
+    guard let thumbData = t?.jpegData(compressionQuality: 0.8) else {
+      throw VideoError.thumbnailFailed }
     
-    async let v: Void = self.createVideo(
-      videoId: videoId,
-      duration: duration,
-      downloadURL: downloadURL
-    )
-    async let s: Void = self.createSectionAndTrack(
-      tracksId: tracksId,
-      sectionId: sectionId,
-      videoId: videoId
-    )
+    try await withThrowingTaskGroup(of: Void.self) { group in
+      group.addTask {
+        do {
+          try await self.uploadStorage(
+            videoData: videoData,
+            thumbData: thumbData,
+            videoId: videoId,
+            sectionId: sectionId,
+            duration: duration
+          )
+          print("스토리지 업로드 성공")
+        } catch {
+          print("스토리지 업로드 실패: \(error)")
+          throw VideoError.uploadFailed
+        }
+      }
+      group.addTask {
+        do {
+          try await self.createSectionAndTrack(
+            tracksId: tracksId,
+            sectionId: sectionId,
+            videoId: videoId
+          )
+          print("section -> track 컬렉션 생성 완료")
+        } catch {
+          print("section/track 생성 실패: \(error)")
+          throw VideoError.createSectionFailed
+        }
+      }
+      try await group.waitForAll()
+    }
     
-    try await v
-    try await s
   }
   // MARK: Section -> Track 순차 생성 (의존성)
   private func createSectionAndTrack(
@@ -246,19 +258,60 @@ extension VideoPickerVM {
   private func createVideo(
     videoId: UUID,
     duration: Double,
-    downloadURL: String
+    downloadURL: String,
+    thumbnailURL: String
   ) async throws {
     
     let video = Video(
       videoId: videoId,
       videoTitle: "제목", // TODO: 비디오 이름
       videoDuration: duration,
-      videoURL: downloadURL
+      videoURL: downloadURL,
+      thumbnailURL: thumbnailURL
     )
     
     try await store.create(video)
   }
-  
+  // MARK: - 스토리지 업로드 + url 추출 + Video 컬렉션 생성
+  private func uploadStorage(
+    videoData: Data,
+    thumbData: Data,
+    videoId: UUID,
+    sectionId: UUID,
+    duration: Double
+  ) async throws{
+    
+    async let v = storage.uploadStorage(
+      data: videoData,
+      type: .video(videoId.uuidString)
+    )
+    async let t = storage.uploadStorage(
+      data: thumbData,
+      type: .thumbnail(videoId.uuidString)
+    )
+    
+    let (video, thumbnail) = try await (v, t)
+    
+    async let videoURL = self.getURL(url: video)
+    async let thumbURL = self.getURL(url: thumbnail)
+    
+    let (vU, thumbU) = try await (videoURL, thumbURL)
+    
+    _ = try await self.createVideo(
+      videoId: videoId,
+      duration: duration,
+      downloadURL: vU,
+      thumbnailURL: thumbU
+    )
+  }
+  // MARK: - URL 추출 메서드
+  private func getURL(
+    url: String
+  ) async throws -> String {
+    let url = try await storage.getDownloadURL(for: url)
+    return url
+  }
+  // MARK: - 영상에서 썸네일 추출 메서드
   private func generateThumbnail(
     from asset: AVURLAsset
   ) async throws -> UIImage? {
@@ -271,7 +324,7 @@ extension VideoPickerVM {
     let (cgImage, _) = try await imageG.image(at: t)
     return UIImage(cgImage: cgImage)
   }
-  
+  // MARK: - 영상 길이 추출 메서드
   private func getDuration(
     from asset: AVURLAsset
   ) async throws -> Double {
