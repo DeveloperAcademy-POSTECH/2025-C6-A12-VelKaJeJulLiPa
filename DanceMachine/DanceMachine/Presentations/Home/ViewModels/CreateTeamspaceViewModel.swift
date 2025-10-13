@@ -47,7 +47,7 @@ final class CreateTeamspaceViewModel {
         try await FirestoreManager.shared.createToSubcollection(
             UserTeamspace(teamspaceId: teamspaceId),
             under: .users,
-            parentId: "4150C2CF-27DD-4B32-9313-0454258814BF", // FIXME: - 유저 아이디로 변경
+            parentId: MockData.userId, // FIXME: - MockData 교체
             subCollection: .userTeamspace,
             strategy: .join
         )

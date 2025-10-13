@@ -58,12 +58,12 @@ struct CreateTeamspaceView: View {
             Task {
                 do {
                     let teamspaceId = try await viewModel.createTeamsapce(
-                        userId: "4150C2CF-27DD-4B32-9313-0454258814BF1",
+                        userId: MockData.userId, // FIXME: - Mock데이터 교체
                         teamspaceName: teamspaceNameText
                     )
                     
                     try await viewModel.createTeamspaceMember(
-                        userId: "4150C2CF-27DD-4B32-9313-0454258814BF1",
+                        userId: MockData.userId, // FIXME: - Mock데이터 교체
                         teamspaceId: teamspaceId
                     )
                     

@@ -58,7 +58,7 @@ struct TeamspaceListView: View {
             defer { isLoading = false }
     
             do {
-                self.userTeamspaces = try await self.viewModel.fetchUserTeamspace(userID: "4150C2CF-27DD-4B32-9313-0454258814BF") // FIXME: - Mock데이터 교체
+                self.userTeamspaces = try await self.viewModel.fetchUserTeamspace(userId: MockData.userId) // FIXME: - Mock데이터 교체
                 self.loadTeamspaces = try await viewModel.fetchTeamspaces(userTeamspaces: userTeamspaces)
                 print("loadTeamspaces: \(loadTeamspaces)")
             } catch {
