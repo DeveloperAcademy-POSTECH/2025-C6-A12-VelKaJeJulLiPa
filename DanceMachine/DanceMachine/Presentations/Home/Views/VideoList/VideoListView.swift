@@ -60,10 +60,6 @@ struct VideoListView: View {
       .padding(.horizontal, 16)
     }
   }
-  
-  private func loadVideoFormServer() {
-    // TODO: 서버에서 영상 조회
-  }
 }
 
 #Preview {
