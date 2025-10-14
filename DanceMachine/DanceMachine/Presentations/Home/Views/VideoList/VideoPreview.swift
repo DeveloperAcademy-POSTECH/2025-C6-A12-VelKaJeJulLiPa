@@ -13,7 +13,7 @@ struct VideoPreview: View {
 //  @State private var player: AVPlayer?
   @State private var isLoading: Bool = false
   
-  @Bindable var vm: VideoPickerVM
+  @Bindable var vm: VideoPickerViewModel
   
 //  @Binding var selectedAsset: PHAsset?
   

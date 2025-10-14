@@ -8,7 +8,7 @@
 import Foundation
 
 @Observable
-final class VideoListVM {
+final class VideoListViewModel {
   private let store = FirestoreManager.shared
   
   var videos: [Video] = []
@@ -38,7 +38,7 @@ extension VideoListVM {
 // MARK: - 서버 메서드
 extension VideoListVM {
   // 모든 데이터 불러오기
-  func loadFormServer(tracksId: String) async throws {
+  func loadFromServer(tracksId: String) async {
     await MainActor.run {
       self.isLoading = true
       self.errorMsg = nil
@@ -47,7 +47,7 @@ extension VideoListVM {
     do {
       // 1. Tracks -> Section 목록 가져오기
       let fetchSection = try await self.fetchSection(in: tracksId)
-      
+      print("불러온 section 개수\(fetchSection.count)")
       var allTrack: [Track] = []
       var videoIds: Set<String> = []
       // 2. 각 Section에서 Track 목록 가져오기
@@ -57,16 +57,20 @@ extension VideoListVM {
           withIn: section.sectionId
         )
         allTrack.append(contentsOf: track)
+        print("불러온 track 개수\(allTrack.count)")
         // 3. Track의 videoId 수집
         for t in track {
+          print("\(t.videoId)")
           videoIds.insert(t.videoId)
         }
       }
+      print("불러온 videoId 개수\(videoIds.count)")
       
       var fetchedVideos: [Video] = []
       // 4. 수집한 videoId로 Video 문서들 가져오기
       for videoId in videoIds {
         let video: Video = try await store.get(videoId, from: .video)
+        print("수집한 개별 videoID: \(videoId)")
         fetchedVideos.append(video)
       }
       // 5. UI 업데이트

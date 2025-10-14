@@ -10,7 +10,7 @@ import Photos
 import AVKit
 
 @Observable
-final class VideoPickerVM {
+final class VideoPickerViewModel {
   
   private let store = FirestoreManager.shared
   private let storage = FireStorageManager.shared
