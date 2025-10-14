@@ -12,7 +12,7 @@ import AVKit
 struct VideoPickerView: View {
   @Environment(\.dismiss) private var dismiss
   
-  @State private var vm: VideoPickerVM = .init()
+  @State private var vm: VideoPickerViewModel = .init()
   
   let tracksId: String
   
