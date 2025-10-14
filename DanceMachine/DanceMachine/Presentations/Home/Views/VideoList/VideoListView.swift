@@ -13,11 +13,18 @@ struct VideoListView: View {
   
   @State private var showCustomPicker: Bool = false
   
+  @State private var vm: VideoListViewModel = .init()
+  
   let tracksId: String
   
   var body: some View {
-    listView
-    uploadButton
+    VStack {
+      listView
+      uploadButton
+    }
+    .task {
+      await vm.loadFromServer(tracksId: tracksId)
+    }
       .sheet(isPresented: $showCustomPicker) {
         VideoPickerView(tracksId: tracksId)
       }
