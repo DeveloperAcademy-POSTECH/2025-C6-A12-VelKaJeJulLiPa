@@ -7,8 +7,6 @@
 
 import SwiftUI
 
-// TODO: 방장과 팀원과의 보여지는 뷰 분기처리 만들기
-
 struct TeamspaceSettingView: View {
     
     @EnvironmentObject private var rotuer: NavigationRouter
@@ -16,6 +14,7 @@ struct TeamspaceSettingView: View {
     @State private var viewModel: TeamspaceSettingViewModel = .init()
     @State private var editingState: EditingState = .viewing
     @State private var teamspaceRole: TeamspaceRole = .viewer
+    @State private var memberListMode: MemberListMode = .browsing
     
     @State private var users: [User] = [] // 유저 정보
     
@@ -203,12 +202,23 @@ struct TeamspaceSettingView: View {
                 case .viewer:
                     EmptyView()
                 case .owner:
-                    Button {
-                        print("팀원 삭제") // TODO: 기능 추가
-                    } label: {
-                        Text("팀원 삭제")
-                            .font(Font.caption) // FIXME: - 폰트 수정
-                            .foregroundStyle(Color.red) // FIXME: - 컬러 수정
+                    switch memberListMode {
+                    case .browsing:
+                        Button {
+                            self.memberListMode = .removing
+                        } label: {
+                            Text("팀원 삭제")
+                                .font(Font.caption) // FIXME: - 폰트 수정
+                                .foregroundStyle(Color.red) // FIXME: - 컬러 수정
+                        }
+                    case .removing:
+                        Button {
+                            self.memberListMode = .browsing
+                        } label: {
+                            Text("완료")
+                                .font(Font.caption) // FIXME: - 폰트 수정
+                                .foregroundStyle(Color.blue) // FIXME: - 컬러 수정
+                        }
                     }
                 }
             } label: {
@@ -220,10 +230,15 @@ struct TeamspaceSettingView: View {
             
             List(users, id: \.userId) { user in
                 LabeledContent {
-                    Button {
-                        
-                    } label: {
-                        Image(.minusCircle) // FIXME: - 이미지 수정 (임시)
+                    switch memberListMode {
+                    case .browsing:
+                        EmptyView()
+                    case .removing:
+                        Button {
+                            
+                        } label: {
+                            Image(.minusCircle) // FIXME: - 이미지 수정 (임시)
+                        }
                     }
                 } label: {
                     Text(user.name)
@@ -238,7 +253,6 @@ struct TeamspaceSettingView: View {
     // MARK: - 바텀 팀 스페이스 삭제하기 뷰
     private var bottomDeleteTeamspaceView: some View {
         VStack {
-            
             switch teamspaceRole {
             case .viewer:
                 Button {
