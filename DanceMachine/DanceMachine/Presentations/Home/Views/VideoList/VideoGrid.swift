@@ -29,35 +29,28 @@ struct VideoGrid: View {
         }
       } else {
         ForEach(videos, id: \.videoId) { video in
-          realBody
+          GridCell(
+            size: size,
+            title: video.videoTitle,
+            duration: video.videoDuration,
+            uploadDate: video.createdAt ?? Date()
+          )
         }
       }
 #else
       ForEach(videos, id: \.videoId) { video in
-        realBody
+        GridCell(
+          size: size,
+          title: video.videoTitle,
+          duration: video.videoDuration,
+          uploadDate: video.createdAt ?? Date()
+        )
       }
 #endif
     }
   }
-  
+  // 디자인 확인용
   private var cell: some View {
-    Rectangle()
-      .fill(Color.gray.opacity(0.5))
-      .frame(width: size, height: size)
-      .overlay {
-        VStack {
-          Text("동영상 썸네일")
-          Text("동영상 제목")
-          HStack {
-            Text("동영상 길이")
-            Text("올린 날짜")
-          }
-          .padding(.horizontal, 5)
-        }
-      }
-  }
-  // TODO: 실제 데이터 연결 뷰
-  private var realBody: some View {
     Rectangle()
       .fill(Color.gray.opacity(0.5))
       .frame(width: size, height: size)
