@@ -7,8 +7,12 @@
 
 import SwiftUI
 
+// TODO: 팀 스페이스 삭제하기, 나가기 구현
+// TODO: 팀 멤버 초대하기
+
 struct TeamspaceSettingView: View {
     
+    @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var rotuer: NavigationRouter
     
     @State private var viewModel: TeamspaceSettingViewModel = .init()
@@ -20,6 +24,8 @@ struct TeamspaceSettingView: View {
     
     @State private var isPresentingTeamspaceDeletionSheet: Bool = false // 팀 스페이스 삭제 시트 제어
     @State private var isPresentingMemberRemovalSheet: Bool = false // 팀원 방출 시트 제어
+    @State private var presentingMemberRemovalSheetUser: User?  // 팀원 방출 시트 변수
+    
     
     // 수정하기 변수
     @State private var editedName: String = ""
@@ -46,7 +52,9 @@ struct TeamspaceSettingView: View {
             BottomConfirmSheet(
                 titleText: "\(FirebaseAuthManager.shared.currentTeamspace?.teamspaceName ?? "")\n팀스페이스를 삭제하시겠어요?",
                 primaryText: "팀 스페이스 삭제"
-            )
+            ) {
+                
+            }
             .padding(.horizontal, 16)
             .padding(.vertical, 33)
             .presentationDetents([.fraction(0.4)])
@@ -55,12 +63,35 @@ struct TeamspaceSettingView: View {
         }
         .sheet(isPresented: $isPresentingMemberRemovalSheet) {
             BottomConfirmSheet(
-                titleText: "\n팀 멤버를 내보내시겠어요?",
+                titleText: "\(self.presentingMemberRemovalSheetUser?.name ?? "")\n팀 멤버를 내보내시겠어요?",
                 primaryText: "내보내기"
-            )
+            ) {
+                Task {
+                    do {
+                        try await viewModel.removingTeamspaceMember(
+                            teamspaceId: viewModel.currentTeamspace?.teamspaceId.uuidString ?? "",
+                            userId: self.presentingMemberRemovalSheetUser?.userId.uuidString ?? ""
+                        )
+                        
+                        let members: [Members] = try await viewModel.fetchTeamspaceMembers(
+                            teamspaceId: viewModel.currentTeamspace?.teamspaceId.uuidString ?? ""
+                        )
+                        
+                        var userIds: [String] = []
+                        
+                        for member in members {
+                            userIds.append(member.userId)
+                        }
+                       
+                        self.users = try await viewModel.fetchUserNamesInOrder(userIds: userIds)
+                        self.presentingMemberRemovalSheetUser = nil
+                    } catch {
+                        print("error: \(error.localizedDescription)")
+                    }
+                }
+            }
             .padding(.horizontal, 16)
-            .padding(.vertical, 33)
-            .presentationDetents([.fraction(0.3)])
+            .presentationDetents([.fraction(0.4)])
             .presentationCornerRadius(16)
         }
         .toolbar {
@@ -235,10 +266,22 @@ struct TeamspaceSettingView: View {
                         EmptyView()
                     case .removing:
                         Button {
-                            
+                            self.presentingMemberRemovalSheetUser = user
+                            self.isPresentingMemberRemovalSheet = true
                         } label: {
-                            Image(.minusCircle) // FIXME: - 이미지 수정 (임시)
+                            // 유저 멤버 중 팀스페이스 주인 아이디와 일치하면 이미지 x
+                            if viewModel.currentTeamspace?.ownerId == user.userId.uuidString {
+                                EmptyView()
+                            } else {
+                                Image(.minusCircle) // FIXME: - 이미지 수정 (임시)
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 24, height: 24)
+                            }
                         }
+                        .buttonStyle(.plain)
+                        .contentShape(Rectangle())
+                        .frame(minWidth: 24, minHeight: 24)
                     }
                 } label: {
                     Text(user.name)

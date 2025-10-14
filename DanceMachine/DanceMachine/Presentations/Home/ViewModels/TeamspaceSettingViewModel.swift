@@ -53,4 +53,19 @@ final class TeamspaceSettingViewModel {
         
         return users
     }
+    
+    
+    /// 특정 멥버를 팀 스페이스에서 제거하는 메서드 입니다.
+    /// - Parameters:
+    ///     - teamspaceId: 팀 스페이스 Id
+    ///     - userId: 제거하려는 유저 Id
+    func removingTeamspaceMember(teamspaceId: String, userId: String) async throws {
+        try await FirestoreManager.shared.deleteFromSubcollection(
+            under: .teamspace,
+            parentId: teamspaceId,
+            subCollection: .members,
+            target: userId
+        )
+    }
+    
 }
