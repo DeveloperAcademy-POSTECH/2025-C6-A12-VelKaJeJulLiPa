@@ -10,6 +10,15 @@ import Foundation
 @Observable
 final class TeamspaceListViewModel {
     
+    
+    var currentTeamspace: Teamspace? { FirebaseAuthManager.shared.currentTeamspace }
+    
+    
+    /// FirebaseAuthManager의 현재 팀 스페이스를 교체하는 메서드 입니다.
+    func fetchCurrentTeamspace(teamspace: Teamspace) {
+        FirebaseAuthManager.shared.currentTeamspace = teamspace
+    }
+    
     /// 현재 로그인 유저의 팀스페이스 목록을 전부 가져옵니다.
     /// - Parameters:
     ///     - userID: 현재 로그인 유저의 UUID

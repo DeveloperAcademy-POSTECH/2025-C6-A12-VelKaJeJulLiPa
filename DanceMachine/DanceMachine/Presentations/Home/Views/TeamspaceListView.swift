@@ -18,10 +18,6 @@ struct TeamspaceListView: View {
     
     @State private var isLoading: Bool = false
     
-    
-    
-    @Binding var selected: Teamspace?
-    
     var body: some View {
         ZStack {
             Color.white // FIXME: - 컬러 수정
@@ -39,7 +35,7 @@ struct TeamspaceListView: View {
                                 .foregroundStyle(Color.black)
                         }
                         .onTapGesture {
-                            selected = teamspace
+                            viewModel.fetchCurrentTeamspace(teamspace: teamspace)
                             router.pop()
                         }
                 }
@@ -56,7 +52,7 @@ struct TeamspaceListView: View {
         .task {
             self.isLoading = true
             defer { isLoading = false }
-    
+            
             do {
                 self.userTeamspaces = try await self.viewModel.fetchUserTeamspace(userId: MockData.userId) // FIXME: - Mock데이터 교체
                 self.loadTeamspaces = try await viewModel.fetchTeamspaces(userTeamspaces: userTeamspaces)
@@ -89,15 +85,7 @@ struct TeamspaceListView: View {
 
 #Preview {
     NavigationStack {
-        TeamspaceListView(
-            selected: .constant(
-                .init(
-                    teamspaceId: UUID(),
-                    ownerId: "aaaa",
-                    teamspaceName: "벨카제줄리파"
-                )
-            )
-        )
+        TeamspaceListView()
             .environmentObject(NavigationRouter())
     }
 }

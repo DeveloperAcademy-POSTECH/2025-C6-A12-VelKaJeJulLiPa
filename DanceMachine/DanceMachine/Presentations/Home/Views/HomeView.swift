@@ -12,12 +12,12 @@ struct HomeView: View {
     @EnvironmentObject private var router: NavigationRouter
     
     @State private var viewModel: HomeViewModel = .init()
-    @State private var userTeamspaces: [UserTeamspace] = []
-    @State private var loadTeamspaces: [Teamspace] = []
     
     @State private var teamspaceState: TeamspaceRoute?
     
-    @Binding var titleTeamspace: Teamspace? // FIXME: - 적절한지
+    @State private var userTeamspaces: [UserTeamspace] = []
+    @State private var loadTeamspaces: [Teamspace] = []
+    
     @State private var didInitializeTitle: Bool = false // 첫 설정 여부
     @State private var isLoading: Bool = false
     
@@ -35,29 +35,28 @@ struct HomeView: View {
         .task {
             self.isLoading = true
             defer { isLoading = false }
-            
+                        
             do {
                 self.userTeamspaces = try await self.viewModel.fetchUserTeamspace(userId: MockData.userId) // FIXME: - Mock데이터 교체
-                
-                print("userTeamspace: \(self.userTeamspaces)")
                 
                 self.teamspaceState = userTeamspaces.isEmpty ? .create : .list
                 self.loadTeamspaces = try await viewModel.fetchTeamspaces(userTeamspaces: userTeamspaces)
                 
                 if !didInitializeTitle {
                     defer { self.didInitializeTitle = true }
-                    await MainActor.run {
-                        self.titleTeamspace = loadTeamspaces.first
+                    if let firstTeamspace = loadTeamspaces.first {
+                        await MainActor.run {
+                            self.viewModel.fetchCurrentTeamspace(teamspace: firstTeamspace) // FIXME: - 배열의 첫 번째 요소를 currentTeamspace로 설정 => 추후 마지막 접속 스페이스를 설정할지 논의
+                        }
                     }
                 }
             } catch {
-                // FIXME: - 적절한 에러 분기 처리 진행하기
-                print("error: \(error.localizedDescription)")
+                print("error: \(error.localizedDescription)") // FIXME: - 적절한 에러 분기 처리 진행하기
             }
         }
     }
     
-    // MARK: - 탑 타이틑 뷰 (팀 스페이스 + 설정 아이콘)
+    // MARK: - 탑 타이틟 뷰 (팀 스페이스 + 설정 아이콘)
     private var topTitleView: some View {
         HStack {
             switch teamspaceState {
@@ -73,7 +72,7 @@ struct HomeView: View {
                 Button {
                     router.push(to: .teamspace(.list))
                 } label: {
-                    Text(self.titleTeamspace?.teamspaceName ?? "")
+                    Text(viewModel.currentTeamspace?.teamspaceName ?? "")
                         .font(Font.title3) // FIXME: - 폰트 수정
                         .foregroundStyle(Color.black) // FIXME: - 컬러 수정
                 }
@@ -98,15 +97,7 @@ struct HomeView: View {
 
 #Preview {
     NavigationStack {
-        HomeView(
-            titleTeamspace: .constant(
-                .init(
-                    teamspaceId: UUID(),
-                    ownerId: "aaaa",
-                    teamspaceName: "벨카제줄리파"
-                )
-            )
-        )
-        .environmentObject(NavigationRouter())
+        HomeView()
+            .environmentObject(NavigationRouter())
     }
 }

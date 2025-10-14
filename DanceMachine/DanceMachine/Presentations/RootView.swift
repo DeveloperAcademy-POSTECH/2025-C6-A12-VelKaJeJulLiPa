@@ -10,7 +10,6 @@ import SwiftUI
 struct RootView: View {
     
     @EnvironmentObject private var router: NavigationRouter
-    @State private var selectedTeamspace: Teamspace? // FIXME: - 적절한지 (선택된 홈 화면 팀스페이스)
     @State var tabcase: TabCase = .home
     
     var body: some View {
@@ -35,8 +34,7 @@ struct RootView: View {
                     for: AppRoute.self,
                     destination: { destination in
                         NavigationRoutingView(
-                            destination: destination,
-                            selectedTeamspace: $selectedTeamspace
+                            destination: destination
                         )
                     .environmentObject(router)
             })
@@ -59,18 +57,15 @@ struct RootView: View {
             switch tab {
             case .home:
                 NavigationRoutingView(
-                    destination: .home,
-                    selectedTeamspace: $selectedTeamspace
+                    destination: .home
                 )
             case .inbox:
                 NavigationRoutingView(
-                    destination: .inbox(.list),
-                    selectedTeamspace: $selectedTeamspace
+                    destination: .inbox(.list)
                 )
             case .myPage:
                 NavigationRoutingView(
-                    destination: .mypage(.profile),
-                    selectedTeamspace: $selectedTeamspace
+                    destination: .mypage(.profile)
                 )
             }
         }
