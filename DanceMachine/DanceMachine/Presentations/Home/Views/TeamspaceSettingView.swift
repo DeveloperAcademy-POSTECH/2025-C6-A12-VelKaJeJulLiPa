@@ -7,13 +7,14 @@
 
 import SwiftUI
 
-// TODO: 팀 스페이스 이름 수정할 때, 이전화면 여기화면까지 전부 즉시 반영되도록 수정해야함. => @Bindingd의 한계인지는 모르겠는데 현재 값을 수정하고 파이어베이스에 반영이 됐어도 값이 전체적으로 즉시 반영은 안됨. 이걸 수정
+// TODO: 방장과 팀원과의 보여지는 뷰 분기처리 만들기
 
 struct TeamspaceSettingView: View {
     
     @EnvironmentObject private var rotuer: NavigationRouter
     
     @State private var viewModel: TeamspaceSettingViewModel = .init()
+    @State private var editingState: EditingState = .viewing
     
     @State private var users: [User] = [] // 유저 정보
     
@@ -21,7 +22,6 @@ struct TeamspaceSettingView: View {
     @State private var isPresentingMemberRemovalSheet: Bool = false // 팀원 방출 시트 제어
     
     // 수정하기 변수
-    @State private var isEditingName = false
     @State private var editedName: String = ""
     @FocusState private var nameFieldFocused: Bool
     
@@ -91,7 +91,16 @@ struct TeamspaceSettingView: View {
     private var topTeamspaceSettingView: some View {
         VStack(alignment: .leading) {
             LabeledContent {
-                if isEditingName {
+                switch editingState {
+                case .viewing:
+                    Button("수정하기") {
+                        self.editedName = FirebaseAuthManager.shared.currentTeamspace?.teamspaceName ?? ""
+                        self.editingState = .editing
+                        self.nameFieldFocused = true
+                    }
+                    .font(.caption)  // FIXME: - 폰트 수정
+                    .foregroundStyle(.gray) // FIXME: - 컬러 수정
+                case .editing:
                     Button("완료") {
                         Task { @MainActor in
                             do {
@@ -106,24 +115,16 @@ struct TeamspaceSettingView: View {
                                     from: .teamspace
                                 )
                                 
-                                self.isEditingName = false
+                                self.editingState = .viewing
                                 self.nameFieldFocused = false
                             } catch {
                                 print("error:\(error.localizedDescription)")
                             }
                         }
                     }
-                    .font(.caption)
-                    .foregroundStyle(.blue)
+                    .font(.caption) // FIXME: - 폰트 수정
+                    .foregroundStyle(.blue) // FIXME: - 컬러 수정
                     .disabled(editedName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                } else {
-                    Button("수정하기") {
-                        self.editedName = FirebaseAuthManager.shared.currentTeamspace?.teamspaceName ?? ""
-                        self.isEditingName = true
-                        self.nameFieldFocused = true
-                    }
-                    .font(.caption)  // FIXME: - 폰트 수정
-                    .foregroundStyle(.gray) // FIXME: - 컬러 수정
                 }
             } label: {
                 Text("팀 이름")
@@ -133,39 +134,37 @@ struct TeamspaceSettingView: View {
             
             Spacer().frame(height: 16)
             
-            // 텍스트 ↔ 텍스트필드 전환부
-            Group {
-                if isEditingName {
-                    TextField("팀 이름을 입력하세요", text: $editedName)
-                        .font(.system(size: 22, weight: .medium)) // FIXME: - 폰트 수정
-                        .foregroundStyle(.black) // FIXME: - 컬러 수정
-                        .focused($nameFieldFocused)
-                        .submitLabel(.return)
-                        .onSubmit {
-                            Task { @MainActor in
-                                
-                                try await viewModel.updateTeamspaceName(
-                                    teamspaceId: FirebaseAuthManager.shared.currentTeamspace?.teamspaceId.uuidString ?? "",
-                                    newTeamspaceName: editedName
-                                )
-                               
-                                // 조회 후 값 다시 넣어주기
-                                let teamspace: Teamspace = try await FirestoreManager.shared.get(
-                                    FirebaseAuthManager.shared.currentTeamspace?.teamspaceId.uuidString ?? "",
-                                    from: .teamspace
-                                )
-                                
-                                viewModel.fetchCurrentTeamspace(teamspace: teamspace)
-                                
-                                isEditingName = false
-                                nameFieldFocused = false
-                            }
+            switch editingState {
+            case .viewing:
+                Text(viewModel.currentTeamspace?.teamspaceName ?? "")
+                    .font(.system(size: 22, weight: .medium)) // FIXME: - 폰트 수정
+                    .foregroundStyle(.black) // FIXME: - 컬러 수정
+            case .editing:
+                TextField("팀 이름을 입력하세요", text: $editedName)
+                    .font(.system(size: 22, weight: .medium)) // FIXME: - 폰트 수정
+                    .foregroundStyle(.black) // FIXME: - 컬러 수정
+                    .focused($nameFieldFocused)
+                    .submitLabel(.return)
+                    .onSubmit {
+                        Task { @MainActor in
+                            
+                            try await viewModel.updateTeamspaceName(
+                                teamspaceId: FirebaseAuthManager.shared.currentTeamspace?.teamspaceId.uuidString ?? "",
+                                newTeamspaceName: editedName
+                            )
+                            
+                            // 조회 후 값 다시 넣어주기
+                            let teamspace: Teamspace = try await FirestoreManager.shared.get(
+                                FirebaseAuthManager.shared.currentTeamspace?.teamspaceId.uuidString ?? "",
+                                from: .teamspace
+                            )
+                            
+                            viewModel.fetchCurrentTeamspace(teamspace: teamspace)
+                            
+                            self.editingState = .viewing
+                            nameFieldFocused = false
                         }
-                } else {
-                    Text(viewModel.currentTeamspace?.teamspaceName ?? "")
-                        .font(.system(size: 22, weight: .medium)) // FIXME: - 폰트 수정
-                        .foregroundStyle(.black) // FIXME: - 컬러 수정
-                }
+                    }
             }
             
             Spacer().frame(height: 32)
