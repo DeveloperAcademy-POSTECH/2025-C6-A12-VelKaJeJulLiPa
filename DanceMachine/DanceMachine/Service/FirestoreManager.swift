@@ -90,6 +90,26 @@ final class FirestoreManager {
         try await save(data, strategy: .userUpdateStrategy)
     }
     
+    /// 특정 필드만 부분 업데이트를 진행하는 메서드입니다.
+    /// - Parameters:
+    ///     - collection: 컬렉션 타입
+    ///     - documentId: 변경하고자 하는 documentId
+    ///     - asDictionary: 변경하려는 딕셔너리 데이터
+    func updateFields(
+        collection: CollectionType,
+        documentId: String,
+        asDictionary: [String: Any]
+    ) async throws {
+        var asDictionary = asDictionary
+        asDictionary[WriteStrategy.update.rawValue] = FieldValue.serverTimestamp() // 업데이트 시간을 포함
+        
+        try await db
+            .collection(collection.rawValue)
+            .document(documentId)
+            .updateData(asDictionary)
+    }
+    
+    
     /// 컬렉션의 데이터를 가져옵니다.
     /// - id: documentID
     /// - type: 컬렉션 타입
