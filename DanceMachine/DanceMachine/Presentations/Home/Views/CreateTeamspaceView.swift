@@ -43,8 +43,6 @@ struct CreateTeamspaceView: View {
                 .frame(maxWidth: .infinity)
                 .frame(height: 47)
                 .overlay {
-                    // TODO: 팀 스페이스 글자 제한 고려
-                    // TODO: 팀 스페이스 이름 미 입력 후 만들기 버튼 탭 시 보여질 뷰 고려
                     TextField("팀 이름을 입력해주세요", text: $teamspaceNameText)
                         .multilineTextAlignment(.center)
                 }
@@ -56,33 +54,31 @@ struct CreateTeamspaceView: View {
         ActionButton(
             title: "확인",
             color: self.teamspaceNameText.isEmpty ? Color.gray : Color.blue, // FIXME: - 컬러 수정
-            height: 47) {
-                switch self.teamspaceNameText.isEmpty {
-                case true:
-                    break
-                case false:
-                    Task {
-                        do {
-                            let teamspaceId = try await viewModel.createTeamsapce(
-                                userId: MockData.userId, // FIXME: - Mock데이터 교체
-                                teamspaceName: teamspaceNameText
-                            )
-                            
-                            try await viewModel.createTeamspaceMember(
-                                userId: MockData.userId, // FIXME: - Mock데이터 교체
-                                teamspaceId: teamspaceId
-                            )
-                            
-                            try await viewModel.includeUserTeamspace(teamspaceId: teamspaceId)
-                            
-                            await MainActor.run { router.pop() }
-                        } catch {
-                            // FIXME: - 에러 분기 처리 추가하기
-                            print("error: \(error.localizedDescription)")
-                        }
-                    }
+            height: 47,
+            isEnabled: self.teamspaceNameText.isEmpty ? false : true
+        ) {
+            Task {
+                do {
+                    let teamspaceId = try await viewModel.createTeamsapce(
+                        userId: MockData.userId, // FIXME: - Mock데이터 교체
+                        teamspaceName: teamspaceNameText
+                    )
+                    
+                    try await viewModel.createTeamspaceMember(
+                        userId: MockData.userId, // FIXME: - Mock데이터 교체
+                        teamspaceId: teamspaceId
+                    )
+                    
+                    try await viewModel.includeUserTeamspace(teamspaceId: teamspaceId)
+                    
+                    await MainActor.run { router.pop() }
+                } catch {
+                    // FIXME: - 에러 분기 처리 추가하기
+                    print("error: \(error.localizedDescription)")
                 }
             }
+            
+        }
     }
 }
 

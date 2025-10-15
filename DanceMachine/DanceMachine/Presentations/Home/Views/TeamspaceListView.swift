@@ -65,7 +65,6 @@ struct TeamspaceListView: View {
     
     // MARK: - 바텀 팀 스페이스 만들기 뷰
     private var bottomButtonView: some View {
-        // TODO: 컴포넌트 고려
         Button {
             router.push(to: .teamspace(.create))
         }

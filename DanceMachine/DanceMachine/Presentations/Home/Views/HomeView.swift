@@ -15,10 +15,9 @@ struct HomeView: View {
     
     @State private var teamspaceState: TeamspaceRoute?
     
-    @State private var userTeamspaces: [UserTeamspace] = []
     @State private var loadTeamspaces: [Teamspace] = []
     
-    @State private var didInitializeTitle: Bool = false // 첫 설정 여부
+    @State private var didInitialize: Bool = false // 첫 설정 여부
     @State private var isLoading: Bool = false
     
     var body: some View {
@@ -33,25 +32,26 @@ struct HomeView: View {
         .padding(.horizontal, 16)
         .overlay { if isLoading { LoadingView() } }
         .task {
-
+            var userTeamspaces: [UserTeamspace] = []
+            
             self.isLoading = true
             defer { isLoading = false }
             
             do {
-                self.userTeamspaces = try await self.viewModel.fetchUserTeamspace(userId: MockData.userId) // FIXME: - Mock데이터 교체
-                
+                userTeamspaces = try await self.viewModel.fetchUserTeamspace(userId: MockData.userId) // FIXME: - 유저 아이디 교체
                 self.teamspaceState = userTeamspaces.isEmpty ? .create : .list
-                
                 self.loadTeamspaces = try await viewModel.fetchTeamspaces(userTeamspaces: userTeamspaces)
                 
-                if !didInitializeTitle {
-                    defer { self.didInitializeTitle = true }
+                switch didInitialize {
+                case false: // FIXME: - 배열의 첫 번째 요소를 currentTeamspace로 설정 => 추후 마지막 접속 스페이스를 설정할지 논의
                     if let firstTeamspace = loadTeamspaces.first {
-                        await MainActor.run {
-                            self.viewModel.fetchCurrentTeamspace(teamspace: firstTeamspace) // FIXME: - 배열의 첫 번째 요소를 currentTeamspace로 설정 => 추후 마지막 접속 스페이스를 설정할지 논의
-                        }
+                        self.viewModel.fetchCurrentTeamspace(teamspace: firstTeamspace)
                     }
+                    self.didInitialize = true
+                case true:
+                    break
                 }
+                
             } catch {
                 print("error: \(error.localizedDescription)") // FIXME: - 적절한 에러 분기 처리 진행하기
             }
