@@ -49,71 +49,77 @@ struct TeamspaceSettingView: View {
         .sheet(isPresented: $isPresentingTeamspaceDeletionSheet) {
             switch teamspaceRole {
             case .viewer:
-                BottomConfirmSheet(
-                    titleText: "\(viewModel.currentTeamspace?.teamspaceName ?? "")\n팀스페이스를 나가시겠어요?",
-                    primaryText: "팀 스페이스 나가기"
-                ) {
-                    Task {
-                        do {
-                            try await viewModel.leaveTeamspace(
-                                userId: MockData.userId,
-                                teamspaceId: viewModel.currentTeamspace?.teamspaceId.uuidString ?? ""
-                            )
-                            
-                            let userTeamspaces = try await self.viewModel.fetchUserTeamspace(userId: MockData.userId)
-                            let loadTeamspaces = try await viewModel.fetchTeamspaces(userTeamspaces: userTeamspaces)
-                            
-                            if let firstTeamspace = loadTeamspaces.first {
-                                await MainActor.run {
-                                    self.viewModel.fetchCurrentTeamspace(teamspace: firstTeamspace)
+                ZStack {
+                    Color.white.ignoresSafeArea()
+                    BottomConfirmSheet(
+                        titleText: "\(viewModel.currentTeamspace?.teamspaceName ?? "")\n팀스페이스를 나가시겠어요?",
+                        primaryText: "팀 스페이스 나가기"
+                    ) {
+                        Task {
+                            do {
+                                try await viewModel.leaveTeamspace(
+                                    userId: MockData.userId,
+                                    teamspaceId: viewModel.currentTeamspace?.teamspaceId.uuidString ?? ""
+                                )
+                                
+                                let userTeamspaces = try await self.viewModel.fetchUserTeamspace(userId: MockData.userId)
+                                let loadTeamspaces = try await viewModel.fetchTeamspaces(userTeamspaces: userTeamspaces)
+                                
+                                if let firstTeamspace = loadTeamspaces.first {
+                                    await MainActor.run {
+                                        self.viewModel.fetchCurrentTeamspace(teamspace: firstTeamspace)
+                                    }
                                 }
+                                
+                                rotuer.pop()
+                                
+                                
+                            } catch {
+                                print("error: \(error.localizedDescription)")
                             }
-                            
-                            rotuer.pop()
-                        
-                            
-                        } catch {
-                            print("error: \(error.localizedDescription)")
                         }
                     }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 33)
+                    .presentationDetents([.fraction(0.4)])
+                    .presentationCornerRadius(16)
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 33)
-                .presentationDetents([.fraction(0.4)])
-                .presentationCornerRadius(16)
             case .owner:
-                BottomConfirmSheet(
-                    titleText: "\(viewModel.currentTeamspace?.teamspaceName ?? "")\n팀스페이스를 삭제하시겠어요?",
-                    primaryText: "팀 스페이스 삭제"
-                ) {
-                    Task {
-                        do {
-                            try await viewModel.removeTeamspace(
-                                userId: MockData.userId, // FIXME: - 유저 로그인 아이디로 교체
-                                teamspaceId: viewModel.currentTeamspace?.teamspaceId.uuidString ?? ""
-                            )
-                            
-                            
-                            let userTeamspaces = try await self.viewModel.fetchUserTeamspace(userId: MockData.userId)
-                            let loadTeamspaces = try await viewModel.fetchTeamspaces(userTeamspaces: userTeamspaces)
-                            
-                            if let firstTeamspace = loadTeamspaces.first {
-                                await MainActor.run {
-                                    self.viewModel.fetchCurrentTeamspace(teamspace: firstTeamspace)
+                ZStack {
+                    Color.white.ignoresSafeArea()
+                    BottomConfirmSheet(
+                        titleText: "\(viewModel.currentTeamspace?.teamspaceName ?? "")\n팀스페이스를 삭제하시겠어요?",
+                        primaryText: "팀 스페이스 삭제"
+                    ) {
+                        Task {
+                            do {
+                                try await viewModel.removeTeamspace(
+                                    userId: MockData.userId, // FIXME: - 유저 로그인 아이디로 교체
+                                    teamspaceId: viewModel.currentTeamspace?.teamspaceId.uuidString ?? ""
+                                )
+                                
+                                
+                                let userTeamspaces = try await self.viewModel.fetchUserTeamspace(userId: MockData.userId)
+                                let loadTeamspaces = try await viewModel.fetchTeamspaces(userTeamspaces: userTeamspaces)
+                                
+                                if let firstTeamspace = loadTeamspaces.first {
+                                    await MainActor.run {
+                                        self.viewModel.fetchCurrentTeamspace(teamspace: firstTeamspace)
+                                    }
                                 }
+                                
+                                rotuer.pop()
+                                
+                            } catch {
+                                print("error: \(error.localizedDescription)")
                             }
-                            
-                            rotuer.pop()
-                        
-                        } catch {
-                            print("error: \(error.localizedDescription)")
                         }
                     }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 33)
+                    .presentationDetents([.fraction(0.4)])
+                    .presentationCornerRadius(16)
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 33)
-                .presentationDetents([.fraction(0.4)])
-                .presentationCornerRadius(16)
             }
         }
         .sheet(isPresented: $isPresentingMemberRemovalSheet) {
