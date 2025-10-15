@@ -256,4 +256,40 @@ final class FirestoreManager {
             .delete()
     }
     
+    
+    /// 특정 부모 문서 하위의 서브컬렉션의 모든 데이터를 제거합니다.
+    /// - Parameters:
+    ///   - parentType: 부모 컬렉션(.user 등)
+    ///   - parentId: 부모 문서 ID(userId 등)
+    ///   - subType: 서브컬렉션(.blocks 등)
+    ///   - pageSize: 문서 삭제 갯수 (default == 300)
+    @discardableResult
+    func deleteAllDocumentsInSubcollection(
+        under parentType: CollectionType,
+        parentId: String,
+        subCollection subType: CollectionType,
+        pageSize: Int = 300 // 삭제 데이터 제한을 300개로 설정
+    ) async throws -> Int {
+
+        let subRef = db
+            .collection(parentType.rawValue)
+            .document(parentId)
+            .collection(subType.rawValue)
+
+        var totalDeleted = 0
+
+        while true {
+            let snap = try await subRef.limit(to: pageSize).getDocuments()
+            guard snap.isEmpty == false else { break }
+
+            let batch = db.batch()
+            snap.documents.forEach { batch.deleteDocument($0.reference) }
+            try await batch.commit()
+            totalDeleted += snap.count
+        }
+
+        return totalDeleted
+    }
+
 }
+
