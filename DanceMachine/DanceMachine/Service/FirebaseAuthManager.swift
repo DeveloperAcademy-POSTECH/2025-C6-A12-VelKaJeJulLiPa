@@ -12,42 +12,31 @@ import CryptoKit
 import Combine
 
 
-struct AuthDataResultModel {
-    let uid: String
-    let email: String?
-    
-    init(user: FirebaseAuth.User) {
-        self.uid = user.uid
-        self.email = user.email
-    }
-}
-
-enum AuthenticationState {
-    case unauthenticated
-    case authenticated
-}
-
-
 final class FirebaseAuthManager: ObservableObject {
 
     static let shared = FirebaseAuthManager()
+    private let firebaseAuth = Auth.auth()
 
     @Published var user: FirebaseAuth.User?
     @Published var authenticationState: AuthenticationState = .unauthenticated
+    @Published var hasNameSet: Bool = UserDefaults.standard.bool(forKey:  UserDefaultsKey.hasNameSet.rawValue)
 
     private var authStateHandler: AuthStateDidChangeListenerHandle?
     private var currentNonce: String?
     
     private init() {
-        // Sign out every time app is download or re-download and is launched for the first time.
-        let hasLaunchedBefore = UserDefaults.standard.bool(forKey: "hasLaunchedBefore")
+        // 앱을 다시 다운로드했는데, 자동으로 로그인되지 않게 하기 위한 로그아웃
+        let hasLaunchedBefore = UserDefaults.standard.bool(forKey:  UserDefaultsKey.hasLaunchedBefore.rawValue)
         if !hasLaunchedBefore {
-            self.signOut()
-            UserDefaults.standard.set(true, forKey: "hasLaunchedBefore")
+            do {
+                try self.signOut()
+                UserDefaults.standard.set(true, forKey: UserDefaultsKey.hasLaunchedBefore.rawValue)
+            } catch {
+                print("❌ SignOut failed: \(error.localizedDescription)")            }
         }
         
-        // Check authentication state
-        if let user = Auth.auth().currentUser {
+        // 현재 사용자 인증 상태 확인
+        if let user = firebaseAuth.currentUser {
             self.user = user
             self.authenticationState = .authenticated
             print("✅ Found cached Firebase user: \(user.uid)")
@@ -60,52 +49,29 @@ final class FirebaseAuthManager: ObservableObject {
         print("🔥 FirebaseAuthManager initialized")
     }
     
-    // AuthStateHandler listens to and changes authentication state
+    /// 사용자 인증 상태를 확인하는 리스너를 등록하는 메서드
+    /// - 로그인 및 로그아웃 시점에 리스너가 알려주는 인증상태를 앱에 반영합니다.
     func registerAuthStateHandler() {
         guard authStateHandler == nil else { return }
         
-        authStateHandler = Auth.auth().addStateDidChangeListener { auth, user in
-            print("🎧 Listener triggered!")
+        authStateHandler = firebaseAuth.addStateDidChangeListener { auth, user in
+            print("🎧 Authentication Listener triggered!")
             self.user = user
             self.authenticationState = user == nil ? .unauthenticated : .authenticated
+            //FIXME: 주석 삭제
             if let user = user {
                 print("✅ Firebase user restored: \(user.uid)")
+                print("✅ Firebase user email: \(user.email ?? "")")
+                print("✅ Firebase user displayName: \(user.displayName ?? "")")
             } else {
                 print("👋 No active user — unauthenticated.")
             }
         }
     }
     
-    
-    func signOut() {
-        do {
-            try Auth.auth().signOut()
-            print("👋 Signed out")
-        } catch {
-            print("❌ SignOut failed: \(error.localizedDescription)")
-        }
-    }
-    
-    
-    func updateDisplayName(for user: FirebaseAuth.User, with displayName: String, force: Bool = false) async {
-        if let currentDisplayName = Auth.auth().currentUser?.displayName, !currentDisplayName.isEmpty {
-            // current user is non-empty, don't overwrite it
-            return
-        }
-        else {
-            let changeRequest = user.createProfileChangeRequest()
-            changeRequest.displayName = displayName
-            do {
-                try await changeRequest.commitChanges()
-                print("✅ Updated display name: \(displayName)")
-            }
-            catch {
-                print("❌ Failed to update display name: \(error.localizedDescription)")
-            }
-        }
-    }
-    
-    
+    /// 애플 로그인 연동 상태를 확인하는 메서드
+    /// - Sign in with Apple 과 현재 서비스 연동 상태가 유효한지 확인하고 유효하지 않다면 로그아웃합니다.
+    /// - 예를 들어, Sign in with apple 을 더이상 사용하지 않겠다고 설정한 경우 로그아웃됩니다.
     func verifySignInWithAppleAuthenticationState() {
         let appleIDProvider = ASAuthorizationAppleIDProvider()
         guard let providerData = Auth.auth().currentUser?.providerData.first(where: { $0.providerID == "apple.com" }) else { return }
@@ -116,9 +82,10 @@ final class FirebaseAuthManager: ObservableObject {
                 switch credentialState {
                 case .authorized:
                     print("🍎 Apple credential still valid")
+                    break
                 case .revoked, .notFound:
+                    try self.signOut()
                     print("🍎 Apple credential revoked — signing out")
-                    self.signOut()
                 default:
                     break
                 }
@@ -127,6 +94,78 @@ final class FirebaseAuthManager: ObservableObject {
             }
         }
     }
+    
+    /// 로그아웃 메서드
+    /// - 로그아웃 시, 인증상태 리스너가 작동합니다.
+    func signOut() throws {
+        try firebaseAuth.signOut()
+    }
+    
+    
+    /// Firebase Authentication 의 사용자 계정 삭제 메서드
+    //    func deleteAuthUser() async -> Bool {
+    //        try await firebaseAuth.currentUser?.delete()
+    //
+    //
+    //
+    //        return false
+    //    }
+    //
+    
+//    func deleteAccount() async throws -> Bool {
+//        guard let user = user else { return false }
+//        guard let lastSignInDate = user.metadata.lastSignInDate else { return false }
+//        let needsReauth = !lastSignInDate.isWithinPast(minutes: 5)
+//        
+//        let needsTokenRevocation = user.providerData.contains { $0.providerID == "apple.com" }
+//        
+//        do {
+//            if needsReauth || needsTokenRevocation {
+//                let helper = SignInAppleHelper()
+//                let tokens = try await helper.startSignInWithAppleFlow()
+//                let appleIDCredential = tokens.appleIDCredential
+//
+//                guard
+//                    let appleIDToken = appleIDCredential.identityToken,
+//                    let idTokenString = String(data: appleIDToken, encoding: .utf8),
+//                    let nonce = currentNonce
+//                else { return false }
+//                
+////
+//                let credential = OAuthProvider.appleCredential(withIDToken: tokens.token, rawNonce: tokens.nonce, fullName: tokens.fullName)
+//                
+//                if needsReauth {
+//                    try await user.reauthenticate(with: credential)
+//                }
+//                if needsTokenRevocation {
+//                    guard let authorizationCode = appleIDCredential.authorizationCode else { return false }
+//                    guard let authCodeString = String(data: authorizationCode, encoding: .utf8) else { return false }
+//                    
+//                    try await Auth.auth().revokeToken(withAuthorizationCode: authCodeString)
+//                }
+//            }
+//            
+//            try await user.delete()
+//            return true
+//        }
+//        catch {
+//            print(error.localizedDescription)
+//            return false
+//        }
+//    }
+    
+//    func deleteAccountWithRevocationHelper() async -> Bool {
+//        do {
+//            // add code to find out if the user is connected to SiwA
+//            try await TokenRevocationHelper().revokeToken()
+//            try await user?.delete()
+//            return true
+//        }
+//        catch {
+//            errorMessage = error.localizedDescription
+//            return false
+//        }
+//    }
 }
 
 
@@ -135,12 +174,12 @@ extension FirebaseAuthManager {
     
     @discardableResult
     func signInWithApple(tokens: SignInWithAppleResult) async throws -> AuthDataResult {
-        let credential = OAuthProvider.credential(providerID: .apple, idToken: tokens.token, rawNonce: tokens.nonce)
+        let credential = OAuthProvider.appleCredential(withIDToken: tokens.token, rawNonce: tokens.nonce, fullName: tokens.fullName)
         return try await signIn(credential: credential)
     }
     
     func signIn(credential: AuthCredential) async throws -> AuthDataResult {
-        let authDataResult = try await Auth.auth().signIn(with: credential)
+        let authDataResult = try await firebaseAuth.signIn(with: credential)
         return authDataResult
     }
 }
