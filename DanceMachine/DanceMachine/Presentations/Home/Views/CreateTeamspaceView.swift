@@ -53,41 +53,37 @@ struct CreateTeamspaceView: View {
     
     // MARK: - 바텀 팀 스페이스 만들기 뷰
     private var bottomButtonView: some View {
-        // TODO: 컴포넌트 고려
-        Button {
-            Task {
-                do {
-                    let teamspaceId = try await viewModel.createTeamsapce(
-                        userId: MockData.userId, // FIXME: - Mock데이터 교체
-                        teamspaceName: teamspaceNameText
-                    )
-                    
-                    try await viewModel.createTeamspaceMember(
-                        userId: MockData.userId, // FIXME: - Mock데이터 교체
-                        teamspaceId: teamspaceId
-                    )
-                    
-                    try await viewModel.includeUserTeamspace(teamspaceId: teamspaceId)
-                    
-                    await MainActor.run { router.pop() }
-                } catch {
-                    // FIXME: - 에러 분기 처리 추가하기
-                    print("error: \(error.localizedDescription)")
+        ActionButton(
+            title: "확인",
+            color: self.teamspaceNameText.isEmpty ? Color.gray : Color.blue, // FIXME: - 컬러 수정
+            height: 47) {
+                switch self.teamspaceNameText.isEmpty {
+                case true:
+                    break
+                case false:
+                    Task {
+                        do {
+                            let teamspaceId = try await viewModel.createTeamsapce(
+                                userId: MockData.userId, // FIXME: - Mock데이터 교체
+                                teamspaceName: teamspaceNameText
+                            )
+                            
+                            try await viewModel.createTeamspaceMember(
+                                userId: MockData.userId, // FIXME: - Mock데이터 교체
+                                teamspaceId: teamspaceId
+                            )
+                            
+                            try await viewModel.includeUserTeamspace(teamspaceId: teamspaceId)
+                            
+                            await MainActor.run { router.pop() }
+                        } catch {
+                            // FIXME: - 에러 분기 처리 추가하기
+                            print("error: \(error.localizedDescription)")
+                        }
+                    }
                 }
             }
-        } label: {
-            RoundedRectangle(cornerRadius: 5)
-                .fill(Color.gray) // FIXME: - 컬러 수정
-                .frame(maxWidth: .infinity)
-                .frame(height: 47)
-                .overlay {
-                    Text("팀 스페이스 만들기")
-                        .font(Font.system(size: 15, weight: .medium)) // FIXME: - 폰트 수정
-                        .foregroundStyle(Color.black) // FIXME: - 컬러 수정
-                }
-        }
     }
-    
 }
 
 #Preview {

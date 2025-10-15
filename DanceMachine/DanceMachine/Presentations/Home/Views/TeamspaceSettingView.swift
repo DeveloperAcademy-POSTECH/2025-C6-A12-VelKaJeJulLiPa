@@ -12,7 +12,6 @@ import SwiftUI
 
 struct TeamspaceSettingView: View {
     
-    @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var rotuer: NavigationRouter
     
     @State private var viewModel: TeamspaceSettingViewModel = .init()
@@ -265,19 +264,22 @@ struct TeamspaceSettingView: View {
             
             Spacer().frame(height: 32)
             
-            Button {
-                print("팀에 멤버 초대하기") // TODO: 기능 추가
-            } label: {
-                RoundedRectangle(cornerRadius: 5)
-                    .fill(Color.blue) // FIXME: - 컬러 수정
-                    .overlay {
-                        Text("팀에 멤버 초대하기")
-                            .font(Font.body)
-                            .foregroundStyle(Color.white)
+            ActionButton(
+                title: "팀에 멤버 초대하기",
+                color: self.editingState == .viewing ? Color.blue : Color.mint, // FIXME: - 컬러 수정
+                height: 47,
+                isEnabled: self.editingState == .viewing ? true : false,
+                action: {
+                    switch self.editingState {
+                    case .viewing:
+                        // 팀원 초대하기
+                        print("팀원 초대하기")
+                    case .editing:
+                        // 버튼 비활성화
+                        break
                     }
-            }
-            .frame(maxWidth: .infinity)
-            .frame(height: 47)
+                }
+            )
         }
     }
     
@@ -386,10 +388,11 @@ struct TeamspaceSettingView: View {
     }
 }
 
-#Preview {
-    NavigationStack {
-        TeamspaceSettingView()
-            .environmentObject(NavigationRouter())
-    }
-}
+//#Preview {
+//    NavigationStack {
+//        TeamspaceSettingView()
+//            .environmentObject(NavigationRouter())
+//    }
+//}
  
+
