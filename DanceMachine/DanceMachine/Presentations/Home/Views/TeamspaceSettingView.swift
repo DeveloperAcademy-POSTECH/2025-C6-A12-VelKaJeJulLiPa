@@ -53,7 +53,36 @@ struct TeamspaceSettingView: View {
                 titleText: "\(FirebaseAuthManager.shared.currentTeamspace?.teamspaceName ?? "")\n팀스페이스를 삭제하시겠어요?",
                 primaryText: "팀 스페이스 삭제"
             ) {
-                
+                switch teamspaceRole {
+                case .viewer:
+                    // FIXME: - 팀 스페이스를 나가면 그 다음 선택 팀스페이스를 교체해야함
+                    break
+                case .owner:
+                    Task {
+                        do {
+                            try await viewModel.removeTeamspace(
+                                userId: MockData.userId, // FIXME: - 유저 로그인 아이디로 교체
+                                teamspaceId: viewModel.currentTeamspace?.teamspaceId.uuidString ?? ""
+                            )
+                            
+                            
+                            let userTeamspaces = try await self.viewModel.fetchUserTeamspace(userId: MockData.userId)
+                            let loadTeamspaces = try await viewModel.fetchTeamspaces(userTeamspaces: userTeamspaces)
+                            
+                            if let firstTeamspace = loadTeamspaces.first {
+                                await MainActor.run {
+                                    self.viewModel.fetchCurrentTeamspace(teamspace: firstTeamspace)
+                                }
+                            }
+                            
+                            
+                            rotuer.pop()
+                        
+                        } catch {
+                            print("error: \(error.localizedDescription)")
+                        }
+                    }
+                }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 33)
@@ -299,7 +328,7 @@ struct TeamspaceSettingView: View {
             switch teamspaceRole {
             case .viewer:
                 Button {
-                    withAnimation(.easeInOut) { isPresentingTeamspaceDeletionSheet = true }
+                    withAnimation(.easeInOut) { self.isPresentingTeamspaceDeletionSheet = true }
                 } label: {
                     RoundedRectangle(cornerRadius: 5)
                         .fill(Color.blue) // FIXME: - 컬러 수정
@@ -313,7 +342,7 @@ struct TeamspaceSettingView: View {
                 .frame(height: 47) // FIXME: - 임의 설정 (추후 설정)
             case .owner:
                 Button {
-                    withAnimation(.easeInOut) { isPresentingTeamspaceDeletionSheet = true }
+                    withAnimation(.easeInOut) { self.isPresentingTeamspaceDeletionSheet = true }
                 } label: {
                     RoundedRectangle(cornerRadius: 5)
                         .fill(Color.blue) // FIXME: - 컬러 수정

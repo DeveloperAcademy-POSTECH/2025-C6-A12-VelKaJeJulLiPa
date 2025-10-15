@@ -33,13 +33,15 @@ struct HomeView: View {
         .padding(.horizontal, 16)
         .overlay { if isLoading { LoadingView() } }
         .task {
+
             self.isLoading = true
             defer { isLoading = false }
-                        
+            
             do {
                 self.userTeamspaces = try await self.viewModel.fetchUserTeamspace(userId: MockData.userId) // FIXME: - Mock데이터 교체
                 
                 self.teamspaceState = userTeamspaces.isEmpty ? .create : .list
+                
                 self.loadTeamspaces = try await viewModel.fetchTeamspaces(userTeamspaces: userTeamspaces)
                 
                 if !didInitializeTitle {
