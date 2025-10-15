@@ -236,7 +236,7 @@ final class FirestoreManager {
             .delete()
     }
     
-    /// 특정 부모 문서 하위의 서브컬렉션을 가져옵니다.
+    /// 특정 부모 문서 하위의 서브컬렉션의 특정 문서를 제거합니다.
     /// - Parameters:
     ///   - parentType: 부모 컬렉션(.user 등)
     ///   - parentId: 부모 문서 ID(userId 등)
