@@ -21,7 +21,6 @@ struct SignInWithAppleButtonViewRepresentable: UIViewRepresentable {
     }
     
     func updateUIView(_ uiView: ASAuthorizationAppleIDButton, context: Context) {
-        
     }
     
 }
@@ -29,11 +28,11 @@ struct SignInWithAppleButtonViewRepresentable: UIViewRepresentable {
 struct SignInWithAppleResult {
     let token: String
     let nonce: String
-    let name: String
+    let appleIDCredential: ASAuthorizationAppleIDCredential
+    let fullName: PersonNameComponents?
     let email: String?
 }
 
-@MainActor
 final class SignInAppleHelper: NSObject {
     
     private var currentNonce: String?
@@ -75,7 +74,7 @@ final class SignInAppleHelper: NSObject {
         authorizationController.performRequests()
     }
     
-    private func randomNonceString(length: Int = 32) -> String {
+    func randomNonceString(length: Int = 32) -> String {
         precondition(length > 0)
         var randomBytes = [UInt8](repeating: 0, count: length)
         let errorCode = SecRandomCopyBytes(kSecRandomDefault, randomBytes.count, &randomBytes)
@@ -88,7 +87,7 @@ final class SignInAppleHelper: NSObject {
     }
 
 
-    private func sha256(_ input: String) -> String {
+    func sha256(_ input: String) -> String {
         let inputData = Data(input.utf8)
         let hashedData = SHA256.hash(data: inputData)
         return hashedData.map { String(format: "%02x", $0) }.joined()
@@ -119,17 +118,6 @@ final class SignInAppleHelper: NSObject {
     
 }
 
-extension ASAuthorizationAppleIDCredential {
-    func displayName(locale: Locale = .current) -> String {
-        guard let fullName = fullName else { return "Unknown" }
-
-        let formatter = PersonNameComponentsFormatter()
-        formatter.style = .default
-        formatter.locale = locale
-
-        return formatter.string(from: fullName)
-    }
-}
 
 extension SignInAppleHelper: ASAuthorizationControllerDelegate {
     
@@ -142,67 +130,17 @@ extension SignInAppleHelper: ASAuthorizationControllerDelegate {
             completionHandler?(.failure(SignInWithAppleError.badResponse))
             return
         }
-        
-        let name = appleIDCredential.displayName(locale: Locale.current)
-        let email = appleIDCredential.email
 
-        let tokens = SignInWithAppleResult(token: idTokenString, nonce: nonce, name: name, email: email)
+        let fullName = appleIDCredential.fullName
+        let email = appleIDCredential.email
+        let tokens = SignInWithAppleResult(token: idTokenString, nonce: nonce,
+                                           appleIDCredential: appleIDCredential, fullName: fullName, email: email)
         completionHandler?(.success(tokens))
     }
     
     func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
         print("Sign in with Apple errored: \(error)")
         completionHandler?(.failure(URLError(.cannotFindHost)))
-    }
-
-}
-
-extension UIViewController: @retroactive ASAuthorizationControllerPresentationContextProviding {
-    
-    public func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
-        return self.view.window!
-    }
-}
-
-extension UIApplication {
-
-    static private func rootViewController() -> UIViewController? {
-        var rootVC: UIViewController?
-        if #available(iOS 15.0, *) {
-            rootVC = UIApplication
-                .shared
-                .connectedScenes
-                .compactMap { ($0 as? UIWindowScene)?.keyWindow }
-                .last?
-                .rootViewController
-        } else {
-            rootVC = UIApplication
-                .shared
-                .connectedScenes
-                .flatMap { ($0 as? UIWindowScene)?.windows ?? [] }
-                .last { $0.isKeyWindow }?
-                .rootViewController
-        }
-
-        return rootVC
-    }
-
-    @MainActor
-    static func topViewController(controller: UIViewController? = nil) -> UIViewController? {
-        let controller = controller ?? rootViewController()
-
-        if let navigationController = controller as? UINavigationController {
-            return topViewController(controller: navigationController.visibleViewController)
-        }
-        if let tabController = controller as? UITabBarController {
-            if let selected = tabController.selectedViewController {
-                return topViewController(controller: selected)
-            }
-        }
-        if let presented = controller?.presentedViewController {
-            return topViewController(controller: presented)
-        }
-        return controller
     }
 
 }
