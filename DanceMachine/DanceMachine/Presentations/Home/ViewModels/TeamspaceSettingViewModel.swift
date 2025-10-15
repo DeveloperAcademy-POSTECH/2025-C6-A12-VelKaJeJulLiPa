@@ -68,6 +68,28 @@ final class TeamspaceSettingViewModel {
         )
     }
     
+    /// 팀 스페이스를 나가는 메서드입니다.
+    /// - Parameters:
+    ///     - userId: 유저 아이디
+    ///     - teamspaceId: 팀 스페이스 Id
+    func leaveTeamspace(userId: String, teamspaceId: String) async throws {
+        // teamspace 서브컬렉션에서 유저를 제거
+        try await FirestoreManager.shared.deleteFromSubcollection(
+            under: .teamspace,
+            parentId: teamspaceId,
+            subCollection: .members,
+            target: userId
+        )
+        
+        // users 서브컬렉션에서 teamspace를 제거
+        try await FirestoreManager.shared.deleteFromSubcollection(
+            under: .users,
+            parentId: userId,
+            subCollection: .userTeamspace,
+            target: teamspaceId
+        )
+    }
+    
     
     /// 팀 스페이스를 제거하는 메서드입니다.
     /// - Parameters:
