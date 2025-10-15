@@ -11,25 +11,13 @@ import FirebaseAuth
 struct User: Codable {
     
     let userId: String
-    let email: String?
-    let name: String?
+    let email: String
+    let name: String
     let loginType: LoginType.RawValue
     let status: UserStatus.RawValue
     let fcmToken: String
     let termsAgreed: Bool
     let privacyAgreed: Bool
-    
-    //FIXME: FCM TOKEN MUST BE SAVED
-    init(user: FirebaseAuth.User) {
-        self.userId = user.uid
-        self.email = user.email
-        self.name = user.displayName
-        self.loginType = LoginType.apple.rawValue
-        self.status = UserStatus.active.rawValue
-        self.fcmToken = "FAKE_FCM_TOKEN"
-        self.termsAgreed = true
-        self.privacyAgreed = true
-    }
 
     init(
         userId: String,
