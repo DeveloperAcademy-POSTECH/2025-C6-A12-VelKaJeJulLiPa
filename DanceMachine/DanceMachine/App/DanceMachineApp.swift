@@ -36,9 +36,16 @@ struct DanceMachineApp: App {
                         .transition(.opacity)
                     
                 case .authenticated:
-                    RootView()
-                        .environmentObject(router)
-                        .transition(.move(edge: .trailing))
+                    ZStack {
+                        if !authManager.hasNameSet {
+                            NameSettingView()
+                        } else {
+                            RootView()
+                                .environmentObject(router)
+                                .transition(.move(edge: .trailing))
+                        }
+                    }
+                    .animation(.easeInOut, value: authManager.hasNameSet)
                 }
             }
             .animation(.easeInOut, value: authManager.authenticationState)
