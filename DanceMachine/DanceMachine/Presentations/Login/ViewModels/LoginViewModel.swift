@@ -9,16 +9,26 @@ import Foundation
 import AuthenticationServices
 import FirebaseAuth
 
-
-@MainActor
 final class LoginViewModel {
     
+    
+    /// 애플 로그인을 담담하는 메서드
+    /// - SigninwithAppleHelper 파일에서 소셜 로그인 플로우를 담당
+    /// - 애플에서 제공해주는 사용자 정보로 Firebase Authentication 연동
+    /// - 사용자 정보 DB에 저장 (재로그인시, 최근 로그인 시점을 함께 저장)
     func signInApple() async throws {
         let helper = SignInAppleHelper()
         let tokens = try await helper.startSignInWithAppleFlow()
         let authDataResult = try await FirebaseAuthManager.shared.signInWithApple(tokens: tokens)
-        await FirebaseAuthManager.shared.updateDisplayName(for: authDataResult.user, with: tokens.name)
-        let user = User(user: authDataResult.user)
+        
+        let user = User(userId: authDataResult.user.uid,
+                        email: authDataResult.user.email ?? "Unknown",
+                        name: displayName(from: authDataResult.user.displayName),
+                        loginType: LoginType.apple,
+                        status: UserStatus.active,
+                        fcmToken: "FAKE_FCM_TOKEN",
+                        termsAgreed: true,
+                        privacyAgreed: true)
         
         // Check whether user document exists or not
         if let user: User = try? await FirestoreManager.shared.get(user.userId, from: .users) {

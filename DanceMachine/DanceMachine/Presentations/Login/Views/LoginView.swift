@@ -8,7 +8,7 @@
 import SwiftUI
 import AuthenticationServices
 
-// FIXME: Implement Hi-fi Design
+//TODO: Hi-fi 디자인 반영 (현재는 임시)
 struct LoginView: View {
     @Environment(\.colorScheme) var colorScheme
     @State private var viewModel = LoginViewModel()
@@ -21,27 +21,31 @@ struct LoginView: View {
                 .font(.largeTitle.bold())
                 .multilineTextAlignment(.center)
             
-            Button(action: {
+            Button {
                 Task {
                     do {
                         try await viewModel.signInApple()
                     } catch {
-                        print(error)
+                        print(error.localizedDescription)
                     }
                 }
-            }, label: {
+            } label: {
                 SignInWithAppleButtonViewRepresentable(
                     type: .default,
                     style: colorScheme == .light ? .black : .white
                 )
                 .allowsHitTesting(false)
-            })
-            .frame(height: 50)
-            .cornerRadius(8)
-            .padding(.horizontal, 32)
+            }
+            .frame(height: 50) //FIXME: 버튼 크기
+            .padding(.horizontal, 32) //FIXME: 버튼 여백
             
             Spacer()
         }
         .background(Color(.systemBackground))
     }
+}
+
+
+#Preview {
+    LoginView()
 }
