@@ -16,16 +16,16 @@ struct VideoListView: View {
   
   init(
     vm: VideoListViewModel = .init(),
-    tracksId: UUID,
-    sectionId: UUID
+    tracksId: String,
+    sectionId: String
   ) {
     self.vm = vm
     self.tracksId = tracksId
     self.sectionId = sectionId
   }
   
-  let tracksId: UUID
-  let sectionId: UUID
+  let tracksId: String
+  let sectionId: String
   
   var body: some View {
     VStack {
@@ -95,7 +95,7 @@ struct VideoListView: View {
     ScrollView(.horizontal, showsIndicators: false) {
       HStack {
         SectionChipIcon(vm: $vm)
-        SectionChip(vm: $vm)
+//        SectionChip(vm: $vm)
         ForEach(vm.section, id: \.sectionId) { section in
           CustomSectionChip(
             vm: $vm,
@@ -115,7 +115,7 @@ struct VideoListView: View {
 #Preview {
   @Previewable @State var vm: VideoListViewModel = .preview
   NavigationStack {
-    VideoListView(vm: vm, tracksId: UUID(), sectionId: UUID())
+    VideoListView(vm: vm, tracksId: "", sectionId: "")
   }
   .environmentObject(NavigationRouter())
 }
