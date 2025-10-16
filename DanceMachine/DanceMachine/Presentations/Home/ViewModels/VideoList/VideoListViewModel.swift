@@ -21,7 +21,7 @@ final class VideoListViewModel {
   var selectedSection: Section? = nil
 }
 // MARK: - UI 관련
-extension VideoListVM {
+extension VideoListViewModel {
   // 섹션 필터링
   var filteredVideos: [Video] {
     guard let selectedSection = selectedSection else {
@@ -36,9 +36,13 @@ extension VideoListVM {
   }
 }
 // MARK: - 서버 메서드
-extension VideoListVM {
+extension VideoListViewModel {
   // 모든 데이터 불러오기
   func loadFromServer(tracksId: String) async {
+    #if DEBUG
+    if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
+      return }
+    #endif
     await MainActor.run {
       self.isLoading = true
       self.errorMsg = nil
