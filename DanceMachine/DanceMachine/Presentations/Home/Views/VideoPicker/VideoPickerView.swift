@@ -14,8 +14,8 @@ struct VideoPickerView: View {
   
   @State private var vm: VideoPickerViewModel = .init()
   
-  let tracksId: UUID
-  let sectionId: UUID
+  let tracksId: String
+  let sectionId: String
   
   var body: some View {
     NavigationStack {
@@ -78,5 +78,5 @@ struct VideoPickerView: View {
 }
 
 #Preview {
-  VideoPickerView(tracksId: UUID(), sectionId: UUID())
+  VideoPickerView(tracksId: "", sectionId: "")
 }
