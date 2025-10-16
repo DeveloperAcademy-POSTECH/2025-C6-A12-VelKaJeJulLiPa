@@ -76,6 +76,9 @@ extension VideoListViewModel {
         let video: Video = try await store.get(videoId, from: .video)
         print("수집한 개별 videoID: \(videoId)")
         fetchedVideos.append(video)
+        fetchedVideos.sort {
+          ($0.createdAt ?? .distantPast > ($1.createdAt ?? .distantPast))
+        }
       }
       // 5. UI 업데이트
       await MainActor.run {
@@ -95,7 +98,7 @@ extension VideoListViewModel {
   }
 }
 // MARK: - 파이어베이스 메서드 조건 쿼리 분리
-private extension VideoListVM {
+private extension VideoListViewModel {
   func fetchSection(
     in tracksId: String
   ) async throws-> [Section] {
