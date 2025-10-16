@@ -56,7 +56,7 @@ final class VideoPickerViewModel {
 }
 
 // MARK: 비디오 업로드 관련
-extension VideoPickerVM {
+extension VideoPickerViewModel {
   func exportVideo(tracksId: String) {
     self.isLoading = true
     
@@ -219,7 +219,7 @@ extension VideoPickerVM {
     
     let section = Section(
       sectionId: sectionId,
-      sectionTitle: "경로 미지정"
+      sectionTitle: "전체"
     )
     
     try await store.createToSubcollection(
@@ -334,7 +334,7 @@ extension VideoPickerVM {
   }
 }
 // MARK: - 권한 설정 관련
-extension VideoPickerVM {
+extension VideoPickerViewModel {
   func requestPermissionAndFetch() {
 #if DEBUG
     if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
