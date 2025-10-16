@@ -51,8 +51,8 @@ struct VideoPickerView: View {
             }
           }
         }
-        .onAppear {
-          vm.requestPermissionAndFetch()
+        .task {
+          await vm.requestPermissionAndFetch()
         }
         .alert(
           "업로드 성공",
