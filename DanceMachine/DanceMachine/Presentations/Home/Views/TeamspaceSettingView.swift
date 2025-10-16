@@ -7,9 +7,6 @@
 
 import SwiftUI
 
-// TODO: 팀 스페이스 삭제하기, 나가기 구현
-// TODO: 팀 멤버 초대하기
-
 struct TeamspaceSettingView: View {
     
     @EnvironmentObject private var rotuer: NavigationRouter
@@ -22,9 +19,7 @@ struct TeamspaceSettingView: View {
     @State private var users: [User] = [] // 유저 정보
     
     @State private var isPresentingTeamspaceDeletionSheet: Bool = false // 팀 스페이스 삭제 시트 제어
-    @State private var isPresentingMemberRemovalSheet: Bool = false // 팀원 방출 시트 제어
     @State private var presentingMemberRemovalSheetUser: User?  // 팀원 방출 시트 변수
-    
     
     // 수정하기 변수
     @State private var editedName: String = ""
@@ -35,151 +30,64 @@ struct TeamspaceSettingView: View {
             Color.white // FIXME: - 컬러 수정
             
             VStack {
-                topTeamspaceSettingView
-                    .padding(.horizontal, 16)
+                topTeamspaceSettingView.padding(.horizontal, 16)
                 Spacer().frame(height: 32)
                 Divider()
                 Spacer().frame(height: 32)
                 middleTeamMemberManagementView
                 Spacer()
-                bottomDeleteTeamspaceView
-                    .padding(.horizontal, 16)
+                bottomDeleteTeamspaceView.padding(.horizontal, 16)
             }
         }
         .sheet(isPresented: $isPresentingTeamspaceDeletionSheet) {
             switch teamspaceRole {
             case .viewer:
-                ZStack {
-                    Color.white.ignoresSafeArea()
-                    BottomConfirmSheet(
-                        titleText: "\(viewModel.currentTeamspace?.teamspaceName ?? "")\n팀스페이스를 나가시겠어요?",
-                        primaryText: "팀 스페이스 나가기"
-                    ) {
+                BottomConfirmSheetView(
+                    titleText: "\(viewModel.currentTeamspace?.teamspaceName ?? "")\n팀스페이스를 나가시겠어요?",
+                    primaryText: "팀 스페이스 나가기") {
                         Task {
-                            do {
-                                try await viewModel.leaveTeamspace(
-                                    userId: MockData.userId,
-                                    teamspaceId: viewModel.currentTeamspace?.teamspaceId.uuidString ?? ""
-                                )
-                                
-                                let userTeamspaces = try await self.viewModel.fetchUserTeamspace(userId: MockData.userId)
-                                let loadTeamspaces = try await viewModel.fetchTeamspaces(userTeamspaces: userTeamspaces)
-                                
-                                if let firstTeamspace = loadTeamspaces.first {
-                                    await MainActor.run {
-                                        self.viewModel.fetchCurrentTeamspace(teamspace: firstTeamspace)
-                                    }
-                                }
-                                
-                                rotuer.pop()
-                                
-                                
-                            } catch {
-                                print("error: \(error.localizedDescription)")
-                            }
+                            try await viewModel.leaveTeamspace()
+                            
                         }
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 33)
-                    .presentationDetents([.fraction(0.4)])
-                    .presentationCornerRadius(16)
-                }
             case .owner:
-                ZStack {
-                    Color.white.ignoresSafeArea()
-                    BottomConfirmSheet(
-                        titleText: "\(viewModel.currentTeamspace?.teamspaceName ?? "")\n팀스페이스를 삭제하시겠어요?",
-                        primaryText: "팀 스페이스 삭제"
-                    ) {
+                BottomConfirmSheetView(
+                    titleText: "\(viewModel.currentTeamspace?.teamspaceName ?? "")\n팀스페이스를 삭제하시겠어요?",
+                    primaryText: "팀 스페이스 삭제") {
                         Task {
-                            do {
-                                try await viewModel.removeTeamspace(
-                                    userId: MockData.userId, // FIXME: - 유저 로그인 아이디로 교체
-                                    teamspaceId: viewModel.currentTeamspace?.teamspaceId.uuidString ?? ""
-                                )
-                                
-                                
-                                let userTeamspaces = try await self.viewModel.fetchUserTeamspace(userId: MockData.userId)
-                                let loadTeamspaces = try await viewModel.fetchTeamspaces(userTeamspaces: userTeamspaces)
-                                
-                                if let firstTeamspace = loadTeamspaces.first {
-                                    await MainActor.run {
-                                        self.viewModel.fetchCurrentTeamspace(teamspace: firstTeamspace)
-                                    }
-                                }
-                                
-                                rotuer.pop()
-                                
-                            } catch {
-                                print("error: \(error.localizedDescription)")
-                            }
+                            try await viewModel.removeTeamspace(userId: MockData.userId) // FIXME: - 로직 수정
+                            await MainActor.run { rotuer.pop() }
                         }
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 33)
-                    .presentationDetents([.fraction(0.4)])
-                    .presentationCornerRadius(16)
-                }
             }
         }
-        .sheet(isPresented: $isPresentingMemberRemovalSheet) {
-            BottomConfirmSheet(
-                titleText: "\(self.presentingMemberRemovalSheetUser?.name ?? "")\n팀 멤버를 내보내시겠어요?",
-                primaryText: "내보내기"
-            ) {
-                Task {
-                    do {
-                        try await viewModel.removingTeamspaceMember(
-                            teamspaceId: viewModel.currentTeamspace?.teamspaceId.uuidString ?? "",
-                            userId: self.presentingMemberRemovalSheetUser?.userId.uuidString ?? ""
-                        )
-                        
-                        let members: [Members] = try await viewModel.fetchTeamspaceMembers(
-                            teamspaceId: viewModel.currentTeamspace?.teamspaceId.uuidString ?? ""
-                        )
-                        
-                        var userIds: [String] = []
-                        
-                        for member in members {
-                            userIds.append(member.userId)
+        .sheet(item: $presentingMemberRemovalSheetUser) { selectedUser in
+            BottomConfirmSheetView(
+                titleText: "\(selectedUser.name)\n팀 멤버를 내보내시겠어요?",
+                primaryText: "내보내기") {
+                    Task {
+                        let users: [User] = try await viewModel.removeTeamMemberAndReload(userId: selectedUser.userId.uuidString)
+                        await MainActor.run {
+                            self.users = users
+                            self.presentingMemberRemovalSheetUser = nil
                         }
-                       
-                        self.users = try await viewModel.fetchUserNamesInOrder(userIds: userIds)
-                        self.presentingMemberRemovalSheetUser = nil
-                    } catch {
-                        print("error: \(error.localizedDescription)")
                     }
                 }
-            }
-            .padding(.horizontal, 16)
-            .presentationDetents([.fraction(0.4)])
-            .presentationCornerRadius(16)
         }
         .toolbar {
             ToolbarLeadingBackButton()
             ToolbarCenterTitle(text: "팀 스페이스 설정")
         }
-        .task {
+        .task(id: viewModel.currentTeamspace?.teamspaceId) {
+            // 로그인 유저와 팀 스페이스 ownerId가 일치하면 발생하는 로직 => 팀 스페이스 주인 => 권한 up
+            await MainActor.run { self.teamspaceRole = viewModel.isTeamspaceOwner() ? .owner : .viewer }
             do {
-                let members: [Members] = try await viewModel.fetchTeamspaceMembers(
-                    teamspaceId: viewModel.currentTeamspace?.teamspaceId.uuidString ?? ""
-                )
-                
-                // 로그인 유저와 팀 스페이스 ownerId가 일치하면 발생하는 로직
-                if viewModel.currentTeamspace?.ownerId == MockData.userId {
-                    self.teamspaceRole = .owner
-                }
-                
-                var userIds: [String] = []
-                
-                for member in members {
-                    userIds.append(member.userId)
-                }
-               
-                self.users = try await viewModel.fetchUserNamesInOrder(userIds: userIds)
+                let users: [User] = try await viewModel.fetchCurrentTeamspaceAllMember()
+                self.users = users
             } catch {
                 print("error: \(error.localizedDescription)")
             }
+            
         }
     }
     
@@ -193,48 +101,34 @@ struct TeamspaceSettingView: View {
                 case .owner:
                     switch editingState {
                     case .viewing:
-                        Button("수정하기") {
-                            self.editedName = FirebaseAuthManager.shared.currentTeamspace?.teamspaceName ?? ""
-                            self.editingState = .editing
-                            self.nameFieldFocused = true
-                        }
-                        .font(.caption)  // FIXME: - 폰트 수정
-                        .foregroundStyle(.gray) // FIXME: - 컬러 수정
+                        UpdateButton(
+                            title: "수정하기",
+                            titleColor: Color.gray) { // FIXME: - 컬러 수정
+                                self.editedName = viewModel.currentTeamspace?.teamspaceName ?? ""
+                                self.editingState = .editing
+                                self.nameFieldFocused = true
+                            }
                     case .editing:
-                        Button("완료") {
-                            Task { @MainActor in
-                                do {
-                                    try await viewModel.updateTeamspaceName(
-                                        teamspaceId: FirebaseAuthManager.shared.currentTeamspace?.teamspaceId.uuidString ?? "",
-                                        newTeamspaceName: editedName
-                                    )
-                                    
-                                    // 조회 후 값 다시 넣어주기
-                                    FirebaseAuthManager.shared.currentTeamspace = try await FirestoreManager.shared.get(
-                                        FirebaseAuthManager.shared.currentTeamspace?.teamspaceId.uuidString ?? "",
-                                        from: .teamspace
-                                    )
-                                    
-                                    self.editingState = .viewing
-                                    self.nameFieldFocused = false
-                                } catch {
-                                    print("error:\(error.localizedDescription)")
+                        UpdateButton(
+                            title: "완료",
+                            titleColor: Color.blue) { // FIXME: - 컬러 수정
+                                Task {
+                                    try await viewModel.renameCurrentTeamspaceAndReload(editedName: self.editedName)
+                                    await MainActor.run {
+                                        self.editingState = .viewing
+                                        self.nameFieldFocused = false
+                                    }
                                 }
                             }
-                        }
-                        .font(.caption) // FIXME: - 폰트 수정
-                        .foregroundStyle(.blue) // FIXME: - 컬러 수정
-                        .disabled(editedName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                            .disabled(editedName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     }
                 }
             } label: {
                 Text("팀 이름")
-                    .font(Font.caption) // FIXME: - 폰트 수정
+                    .font(Font.system(size: 16, weight: .semibold)) // FIXME: - 폰트 수정
                     .foregroundStyle(Color.gray) // FIXME: - 컬러 수정
             }
-            
             Spacer().frame(height: 16)
-            
             switch editingState {
             case .viewing:
                 Text(viewModel.currentTeamspace?.teamspaceName ?? "")
@@ -247,29 +141,16 @@ struct TeamspaceSettingView: View {
                     .focused($nameFieldFocused)
                     .submitLabel(.return)
                     .onSubmit {
-                        Task { @MainActor in
-                            
-                            try await viewModel.updateTeamspaceName(
-                                teamspaceId: FirebaseAuthManager.shared.currentTeamspace?.teamspaceId.uuidString ?? "",
-                                newTeamspaceName: editedName
-                            )
-                            
-                            // 조회 후 값 다시 넣어주기
-                            let teamspace: Teamspace = try await FirestoreManager.shared.get(
-                                FirebaseAuthManager.shared.currentTeamspace?.teamspaceId.uuidString ?? "",
-                                from: .teamspace
-                            )
-                            
-                            viewModel.fetchCurrentTeamspace(teamspace: teamspace)
-                            
-                            self.editingState = .viewing
-                            nameFieldFocused = false
+                        Task {
+                            try await viewModel.renameCurrentTeamspaceAndReload(editedName: self.editedName)
+                            await MainActor.run {
+                                self.editingState = .viewing
+                                self.nameFieldFocused = false
+                            }
                         }
                     }
             }
-            
             Spacer().frame(height: 32)
-            
             ActionButton(
                 title: "팀에 멤버 초대하기",
                 color: self.editingState == .viewing ? Color.blue : Color.mint, // FIXME: - 컬러 수정
@@ -277,11 +158,9 @@ struct TeamspaceSettingView: View {
                 isEnabled: self.editingState == .viewing ? true : false,
                 action: {
                     switch self.editingState {
-                    case .viewing:
-                        // 팀원 초대하기
+                    case .viewing: // 팀원 초대하기
                         print("팀원 초대하기")
-                    case .editing:
-                        // 버튼 비활성화
+                    case .editing: // 버튼 비활성화
                         break
                     }
                 }
@@ -299,21 +178,17 @@ struct TeamspaceSettingView: View {
                 case .owner:
                     switch memberListMode {
                     case .browsing:
-                        Button {
-                            self.memberListMode = .removing
-                        } label: {
-                            Text("팀원 삭제")
-                                .font(Font.caption) // FIXME: - 폰트 수정
-                                .foregroundStyle(Color.red) // FIXME: - 컬러 수정
-                        }
+                        UpdateButton(
+                            title: "팀원 삭제",
+                            titleColor: Color.red) { // FIXME: - 컬러 수정
+                                self.memberListMode = .removing
+                            }
                     case .removing:
-                        Button {
-                            self.memberListMode = .browsing
-                        } label: {
-                            Text("완료")
-                                .font(Font.caption) // FIXME: - 폰트 수정
-                                .foregroundStyle(Color.blue) // FIXME: - 컬러 수정
-                        }
+                        UpdateButton(
+                            title: "완료",
+                            titleColor: Color.blue) { // FIXME: - 컬러 수정
+                                self.memberListMode = .browsing
+                            }
                     }
                 }
             } label: {
@@ -322,30 +197,15 @@ struct TeamspaceSettingView: View {
                     .foregroundStyle(Color.gray) // FIXME: - 컬러 수정
             }
             .padding(.horizontal, 16)
-            
             List(users, id: \.userId) { user in
                 LabeledContent {
                     switch memberListMode {
                     case .browsing:
                         EmptyView()
                     case .removing:
-                        Button {
-                            self.presentingMemberRemovalSheetUser = user
-                            self.isPresentingMemberRemovalSheet = true
-                        } label: {
-                            // 유저 멤버 중 팀스페이스 주인 아이디와 일치하면 이미지 x
-                            if viewModel.currentTeamspace?.ownerId == user.userId.uuidString {
-                                EmptyView()
-                            } else {
-                                Image(.minusCircle) // FIXME: - 이미지 수정 (임시)
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 24, height: 24)
-                            }
-                        }
-                        .buttonStyle(.plain)
-                        .contentShape(Rectangle())
-                        .frame(minWidth: 24, minHeight: 24)
+                        // 유저 멤버 중 팀스페이스 주인 아이디와 일치하면 이미지 x
+                        if viewModel.currentTeamspace?.ownerId == user.userId.uuidString { EmptyView() }
+                        else { MinusCircleButton { self.presentingMemberRemovalSheetUser = user } }
                     }
                 } label: {
                     Text(user.name)
@@ -362,37 +222,24 @@ struct TeamspaceSettingView: View {
         VStack {
             switch teamspaceRole {
             case .viewer:
-                Button {
-                    withAnimation(.easeInOut) { self.isPresentingTeamspaceDeletionSheet = true }
-                } label: {
-                    RoundedRectangle(cornerRadius: 5)
-                        .fill(Color.blue) // FIXME: - 컬러 수정
-                        .overlay {
-                            Text("팀 스페이스 나가기")
-                                .font(Font.system(size: 16, weight: .medium))
-                                .foregroundStyle(Color.red)
-                        }
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: 47) // FIXME: - 임의 설정 (추후 설정)
+                ActionButton(
+                    title: "팀 스페이스 나가기",
+                    color: Color.blue, // FIXME: - 컬러 수정
+                    height: 47) {
+                        withAnimation(.easeInOut) { self.isPresentingTeamspaceDeletionSheet = true }
+                    }
             case .owner:
-                Button {
-                    withAnimation(.easeInOut) { self.isPresentingTeamspaceDeletionSheet = true }
-                } label: {
-                    RoundedRectangle(cornerRadius: 5)
-                        .fill(Color.blue) // FIXME: - 컬러 수정
-                        .overlay {
-                            Text("팀 스페이스 삭제하기")
-                                .font(Font.system(size: 16, weight: .medium))
-                                .foregroundStyle(Color.red)
-                        }
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: 47) // FIXME: - 임의 설정 (추후 설정)
+                ActionButton(
+                    title: "팀 스페이스 삭제하기",
+                    color: Color.blue, // FIXME: - 컬러 수정
+                    height: 47) {
+                        withAnimation(.easeInOut) { self.isPresentingTeamspaceDeletionSheet = true }
+                    }
             }
         }
     }
 }
+
 
 //#Preview {
 //    NavigationStack {

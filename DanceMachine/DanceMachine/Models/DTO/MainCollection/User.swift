@@ -50,6 +50,10 @@ struct User: Codable {
     }
 }
 
+extension User: Identifiable {
+    var id: UUID { userId }
+}
+
 extension User: EntityRepresentable {
     var entityName: CollectionType { .users }
     var documentID: String { userId.uuidString } // FIXME: - document를 FirebaseAuth UUID로 교체
