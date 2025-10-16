@@ -124,3 +124,53 @@ private extension VideoListViewModel {
     )
   }
 }
+// MARK: - 프리뷰
+extension VideoListViewModel {
+    static var preview: VideoListViewModel {
+      let vm = VideoListViewModel()
+
+      // 목 데이터 주입
+      vm.section = [
+        Section(sectionId: "1", sectionTitle: "기초"),
+        Section(sectionId: "2", sectionTitle: "중급"),
+        Section(sectionId: "3", sectionTitle: "고급 안무 연습")
+      ]
+
+      vm.track = [
+        Track(trackId: "t1", videoId: "v1", sectionId: "1"),
+        Track(trackId: "t2", videoId: "v2", sectionId: "1"),
+        Track(trackId: "t3", videoId: "v3", sectionId: "2")
+      ]
+
+      vm.videos = [
+        Video(
+          videoId: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
+          videoTitle: "비디오 1",
+          videoDuration: 120.5,
+          videoURL: "https://example.com/video1.mp4",
+          thumbnailURL: "https://example.com/thumb1.jpg",
+          createdAt: Date()
+        ),
+        Video(
+          videoId: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!,
+          videoTitle: "비디오 2",
+          videoDuration: 95.3,
+          videoURL: "https://example.com/video2.mp4",
+          thumbnailURL: "https://example.com/thumb2.jpg",
+          createdAt: Date()
+        ),
+        Video(
+          videoId: UUID(uuidString: "00000000-0000-0000-0000-000000000003")!,
+          videoTitle: "비디오 3",
+          videoDuration: 180.0,
+          videoURL: "https://example.com/video3.mp4",
+          thumbnailURL: "https://example.com/thumb3.jpg",
+          createdAt: Date()
+        )
+      ]
+
+      vm.isLoading = false
+
+      return vm
+    }
+  }
