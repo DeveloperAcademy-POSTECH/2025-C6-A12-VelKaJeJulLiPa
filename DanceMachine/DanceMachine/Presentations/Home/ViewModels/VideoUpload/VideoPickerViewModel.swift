@@ -80,7 +80,8 @@ extension VideoPickerViewModel {
             try await self.generateVideo(
               from: urlAsset,
               duration: duration,
-              tracksId: tracksId
+              tracksId: tracksId,
+              sectionId: sectionId
             )
             
             await MainActor.run {
@@ -148,13 +149,14 @@ extension VideoPickerViewModel {
   private func generateVideo(
     from asset: AVURLAsset,
     duration: Double,
-    tracksId: String
+    tracksId: UUID,
+    sectionId: UUID
   ) async throws {
     // 1. 비디오 데이터로 변환
     let videoData = try Data(contentsOf: asset.url)
     
     let videoId = UUID()
-    let sectionId = UUID()
+//    let sectionId = UUID() // TODO: 테스트 후 삭제
     // 2. 썸네일 데이터로 변환
     let t = try await self.generateThumbnail(from: asset)
     guard let thumbData = t?.jpegData(compressionQuality: 0.8) else {
@@ -194,42 +196,44 @@ extension VideoPickerViewModel {
     
   }
   // MARK: Section -> Track 순차 생성 (의존성)
+  // TODO: Section은 전 플로우인 Tracks에서 생성해서 id를 넘겨받고 그걸 통해 tracks를 생성
+  // TODO: 테스트 후 section관련 메서드 삭제하기
   private func createSectionAndTrack(
-    tracksId: String,
+    tracksId: UUID,
     sectionId: UUID,
     videoId: UUID
   ) async throws {
     
-    try await self.createSection(
-      in: tracksId,
-      from: sectionId.uuidString
-    )
+//    try await self.createSection(
+//      in: tracksId,
+//      from: sectionId.uuidString
+//    )
     
     try await self.createTrack(
-      in: tracksId,
+      in: tracksId.uuidString,
       withIn: sectionId.uuidString,
       to: videoId.uuidString
     )
   }
-  // MARK: 서브컬렉션 Section 생성 메서드
-  private func createSection(
-    in tracksId: String,
-    from sectionId: String
-  ) async throws{
-    
-    let section = Section(
-      sectionId: sectionId,
-      sectionTitle: "전체"
-    )
-    
-    try await store.createToSubcollection(
-      section,
-      under: .tracks,
-      parentId: tracksId,
-      subCollection: .section,
-      strategy: .create
-    )
-  }
+//  // MARK: 서브컬렉션 Section 생성 메서드
+//  private func createSection(
+//    in tracksId: String,
+//    from sectionId: String
+//  ) async throws{
+//    
+//    let section = Section(
+//      sectionId: sectionId,
+//      sectionTitle: "전체"
+//    )
+//    
+//    try await store.createToSubcollection(
+//      section,
+//      under: .tracks,
+//      parentId: tracksId,
+//      subCollection: .section,
+//      strategy: .create
+//    )
+//  }
   // MARK: 서브서브컬렉션 Track 생성 메서드
   private func createTrack(
     in tracksId: String,
