@@ -17,7 +17,7 @@ struct VideoGrid: View {
   var body: some View {
     LazyVGrid(
       columns: Array(
-        repeating: GridItem(.flexible()),
+        repeating: GridItem(.fixed(size), spacing: spacing),
         count: columns
       ),
       spacing: spacing
@@ -31,6 +31,7 @@ struct VideoGrid: View {
         ForEach(videos, id: \.videoId) { video in
           GridCell(
             size: size,
+            thumbnailURL: video.thumbnailURL,
             title: video.videoTitle,
             duration: video.videoDuration,
             uploadDate: video.createdAt ?? Date()
@@ -41,6 +42,7 @@ struct VideoGrid: View {
       ForEach(videos, id: \.videoId) { video in
         GridCell(
           size: size,
+          thumbnailURL: video.thumbnailURL,
           title: video.videoTitle,
           duration: video.videoDuration,
           uploadDate: video.createdAt ?? Date()
@@ -53,7 +55,7 @@ struct VideoGrid: View {
   private var cell: some View {
     Rectangle()
       .fill(Color.gray.opacity(0.5))
-      .frame(width: size, height: size)
+      .frame(width: size, height: size * 1.2)
       .overlay {
         VStack {
           Text("동영상 썸네일")
