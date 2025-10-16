@@ -9,25 +9,36 @@ import SwiftUI
 
 struct VideoListView: View {
   @EnvironmentObject private var router: NavigationRouter
-  @State private var videos: [Video] = []
   
   @State private var showCustomPicker: Bool = false
   
-  @State private var vm: VideoListViewModel = .init()
+  @State var vm: VideoListViewModel
+  
+  init(vm: VideoListViewModel = .init(), tracksId: String) {
+    self.vm = vm
+    self.tracksId = tracksId
+  }
   
   let tracksId: String
   
   var body: some View {
     VStack {
-      listView
+      sectionView
+      if vm.isLoading {
+        ProgressView()
+      } else if vm.videos.isEmpty {
+        emptyView
+      } else {
+        listView
+      }
       uploadButton
     }
     .task {
       await vm.loadFromServer(tracksId: tracksId)
     }
-      .sheet(isPresented: $showCustomPicker) {
-        VideoPickerView(tracksId: tracksId)
-      }
+    .sheet(isPresented: $showCustomPicker) {
+      VideoPickerView(tracksId: tracksId)
+    }
   }
   
   private var uploadButton: some View {
@@ -42,36 +53,63 @@ struct VideoListView: View {
   
   private var emptyView: some View {
     VStack {
+      Spacer()
       Text("업로드 된 영상이 없습니다.")
+      Spacer()
     }
   }
   
   private var listView: some View {
     GeometryReader { g in
+      let horizontalPadding: CGFloat = 16
       let spacing: CGFloat = 16
       let columns = 2
+      
       let totalSpacing = spacing * CGFloat(columns - 1)
-      let itemSize = min((g.size.width - totalSpacing) / CGFloat(columns), 168)
+      let availableWidth = g.size.width - (horizontalPadding * 2) - totalSpacing
+      let itemSize = availableWidth / CGFloat(columns)
+      
       ScrollView {
         VideoGrid(
           size: itemSize,
           columns: columns,
           spacing: spacing,
-          videos: $videos
+          videos: .constant(vm.filteredVideos)
         )
         .onTapGesture {
           // TODO: 비디오 플레이 화면 네비게이션 연결
           print("비디오 클릭")
         }
       }
-      .padding(.horizontal, 16)
+      
     }
+  }
+  
+  private var sectionView: some View {
+    ScrollView(.horizontal, showsIndicators: false) {
+      HStack {
+        SectionChipIcon(vm: $vm)
+        SectionChip(vm: $vm)
+        ForEach(vm.section, id: \.sectionId) { section in
+          CustomSectionChip(
+            vm: $vm,
+            action: { vm.selectedSection = section },
+            title: section.sectionTitle,
+            id: section.sectionId
+          )
+        }
+      }
+      .padding(.horizontal, 1) // FIXME: 여백 없으면 캡슐이 짤리는 현상 있음
+      .padding(.vertical, 1) // FIXME: 여백 없으면 캡슐이 짤리는 현상 있음
+    }
+    .padding(.horizontal, 16)
   }
 }
 
 #Preview {
+  @Previewable @State var vm: VideoListViewModel = .preview
   NavigationStack {
-    VideoListView(tracksId: "")
+    VideoListView(vm: vm, tracksId: "ㅇㅇㅇ")
   }
   .environmentObject(NavigationRouter())
 }
