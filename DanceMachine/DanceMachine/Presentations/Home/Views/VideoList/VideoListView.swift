@@ -17,21 +17,26 @@ struct VideoListView: View {
   init(
     vm: VideoListViewModel = .init(),
     tracksId: String,
-    sectionId: String
+    sectionId: String,
+    trackName: String
   ) {
     self.vm = vm
     self.tracksId = tracksId
     self.sectionId = sectionId
+    self.trackName = trackName
   }
   
   let tracksId: String
   let sectionId: String
+  let trackName: String
   
   var body: some View {
     VStack {
       sectionView
       if vm.isLoading {
+        Spacer().frame(maxWidth: .infinity)
         ProgressView()
+        Spacer().frame(maxWidth: .infinity)
       } else if vm.videos.isEmpty {
         emptyView
       } else {
@@ -44,6 +49,10 @@ struct VideoListView: View {
     }
     .sheet(isPresented: $showCustomPicker) {
       VideoPickerView(tracksId: tracksId, sectionId: sectionId)
+    }
+    .toolbar {
+      ToolbarLeadingBackButton(icon: .chevron)
+      ToolbarCenterTitle(text: trackName)
     }
   }
   
@@ -87,7 +96,6 @@ struct VideoListView: View {
           print("비디오 클릭")
         }
       }
-      
     }
   }
   
@@ -95,7 +103,6 @@ struct VideoListView: View {
     ScrollView(.horizontal, showsIndicators: false) {
       HStack {
         SectionChipIcon(vm: $vm)
-//        SectionChip(vm: $vm)
         ForEach(vm.section, id: \.sectionId) { section in
           CustomSectionChip(
             vm: $vm,
@@ -115,7 +122,7 @@ struct VideoListView: View {
 #Preview {
   @Previewable @State var vm: VideoListViewModel = .preview
   NavigationStack {
-    VideoListView(vm: vm, tracksId: "", sectionId: "")
+    VideoListView(vm: vm, tracksId: "", sectionId: "", trackName: "벨코의 리치맨")
   }
   .environmentObject(NavigationRouter())
 }
