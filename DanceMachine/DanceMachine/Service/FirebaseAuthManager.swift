@@ -70,7 +70,7 @@ final class FirebaseAuthManager: ObservableObject {
     /// - 예를 들어, Sign in with apple 을 더이상 사용하지 않겠다고 설정한 경우 로그아웃됩니다.
     func verifySignInWithAppleAuthenticationState() {
         let appleIDProvider = ASAuthorizationAppleIDProvider()
-        guard let providerData = Auth.auth().currentUser?.providerData.first(where: { $0.providerID == "apple.com" }) else { return }
+        guard let providerData = firebaseAuth.currentUser?.providerData.first(where: { $0.providerID == "apple.com" }) else { return }
         
         Task {
             do {
