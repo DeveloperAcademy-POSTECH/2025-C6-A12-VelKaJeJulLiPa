@@ -23,11 +23,7 @@ struct LoginView: View {
             
             Button {
                 Task {
-                    do {
-                        try await viewModel.signInApple()
-                    } catch {
-                        print(error.localizedDescription)
-                    }
+                    await viewModel.signInApple()
                 }
             } label: {
                 SignInWithAppleButtonViewRepresentable(

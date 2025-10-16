@@ -9,26 +9,30 @@ import Foundation
 import Combine
 import FirebaseAuth
 
-final class NameSettingViewModel: ObservableObject {
+@Observable
+final class NameSettingViewModel {
     private let authManager = FirebaseAuthManager.shared
     private let storeManager = FirestoreManager.shared
     
-    @Published var displayName: String?
+    var displayName: String?
     
     init() {
-        displayName = authManager.user?.displayName
+        displayName = authManager.displayName(from: authManager.user?.displayName)
     }
-    
+
     /// 사용자 이름을 업데이트하는 메서드
     /// - Parameters:
     ///     - name: 수정할 사용자 이름
-    func updateUserName(name: String) async throws {
-        try await storeManager.updateFields(
-            collection: .users,
-            documentId: authManager.user?.uid ?? "",
-            asDictionary: [ User.CodingKeys.name.stringValue : name ])
+    func updateUserName(name: String) async  {
+        do {
+            try await storeManager.updateFields(
+                collection: .users,
+                documentId: authManager.user?.uid ?? "",
+                asDictionary: [ User.CodingKeys.name.stringValue: name ])
+        } catch {
+            print(error.localizedDescription)
+        }
     }
-    
     
     /// FIrebaseAuthManager 의 setHasName 값을 true 로 변경하는 메서드
     /// setHasName 가 true 로 변경되면, RootView 로 진입합니다.
