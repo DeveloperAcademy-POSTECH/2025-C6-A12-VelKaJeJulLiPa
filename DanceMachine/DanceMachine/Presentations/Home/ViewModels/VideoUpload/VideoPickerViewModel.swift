@@ -337,7 +337,7 @@ extension VideoPickerViewModel {
 }
 // MARK: - 권한 설정 관련
 extension VideoPickerViewModel {
-  func requestPermissionAndFetch() {
+  func requestPermissionAndFetch() async {
 #if DEBUG
     if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
       Task { @MainActor in

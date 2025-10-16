@@ -56,9 +56,6 @@ struct VideoPreview: View {
         VideoPlayer(player: p)
           .aspectRatio(16/9, contentMode: .fit)
           .frame(height: size)
-        //          .onAppear {
-        //            p.play()
-        //          }
       } else {
         VStack {
           Text("비디오를 선택해 주세요.")
