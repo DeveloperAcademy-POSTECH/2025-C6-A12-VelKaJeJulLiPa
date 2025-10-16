@@ -39,7 +39,7 @@ extension VideoListViewModel {
 // MARK: - 서버 메서드
 extension VideoListViewModel {
   // 모든 데이터 불러오기
-  func loadFromServer(tracksId: UUID) async {
+  func loadFromServer(tracksId: String) async {
     #if DEBUG
     if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
       return }
@@ -119,7 +119,7 @@ private extension VideoListViewModel {
   ) async throws -> [Section] {
     return try await store.fetchAllFromSubcollection(
       under: .tracks,
-      parentId: tracksId.uuidString,
+      parentId: tracksId,
       subCollection: .section,
       orderBy: "created_at",
       descending: false
@@ -127,12 +127,12 @@ private extension VideoListViewModel {
   }
   
   func fetchTrack(
-    in tracksId: UUID,
+    in tracksId: String,
     withIn sectionId: String
   ) async throws -> [Track] {
     return try await store.fetchAllFromSubSubcollection(
       in: .tracks,
-      grandParentId: tracksId.uuidString,
+      grandParentId: tracksId,
       withIn: .section,
       parentId: sectionId,
       subCollection: .track
