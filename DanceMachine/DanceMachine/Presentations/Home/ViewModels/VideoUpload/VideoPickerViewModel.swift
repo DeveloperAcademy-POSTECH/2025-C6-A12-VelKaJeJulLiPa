@@ -57,7 +57,7 @@ final class VideoPickerViewModel {
 
 // MARK: 비디오 업로드 관련
 extension VideoPickerViewModel {
-  func exportVideo(tracksId: UUID, sectionId: UUID) {
+  func exportVideo(tracksId: String, sectionId: String) {
     self.isLoading = true
     
     // PHAsset 에서 비디오 파일 추출
@@ -149,13 +149,13 @@ extension VideoPickerViewModel {
   private func generateVideo(
     from asset: AVURLAsset,
     duration: Double,
-    tracksId: UUID,
-    sectionId: UUID
+    tracksId: String,
+    sectionId: String
   ) async throws {
     // 1. 비디오 데이터로 변환
     let videoData = try Data(contentsOf: asset.url)
     
-    let videoId = UUID()
+    let videoId = UUID().uuidString
 //    let sectionId = UUID() // TODO: 테스트 후 삭제
     // 2. 썸네일 데이터로 변환
     let t = try await self.generateThumbnail(from: asset)
@@ -169,7 +169,6 @@ extension VideoPickerViewModel {
             videoData: videoData,
             thumbData: thumbData,
             videoId: videoId,
-            sectionId: sectionId,
             duration: duration
           )
           print("스토리지 업로드 성공")
@@ -199,9 +198,9 @@ extension VideoPickerViewModel {
   // TODO: Section은 전 플로우인 Tracks에서 생성해서 id를 넘겨받고 그걸 통해 tracks를 생성
   // TODO: 테스트 후 section관련 메서드 삭제하기
   private func createSectionAndTrack(
-    tracksId: UUID,
-    sectionId: UUID,
-    videoId: UUID
+    tracksId: String,
+    sectionId: String,
+    videoId: String
   ) async throws {
     
 //    try await self.createSection(
@@ -210,9 +209,9 @@ extension VideoPickerViewModel {
 //    )
     
     try await self.createTrack(
-      in: tracksId.uuidString,
-      withIn: sectionId.uuidString,
-      to: videoId.uuidString
+      in: tracksId,
+      withIn: sectionId,
+      to: videoId
     )
   }
 //  // MARK: 서브컬렉션 Section 생성 메서드
@@ -260,14 +259,14 @@ extension VideoPickerViewModel {
   }
   // MARK: 메인컬렉션 Video 생성 메서드
   private func createVideo(
-    videoId: UUID,
+    videoId: String,
     duration: Double,
     downloadURL: String,
     thumbnailURL: String
   ) async throws {
     
     let video = Video(
-      videoId: videoId,
+      videoId: UUID(uuidString: videoId) ?? UUID(),
       videoTitle: "제목", // TODO: 비디오 이름
       videoDuration: duration,
       videoURL: downloadURL,
@@ -280,18 +279,17 @@ extension VideoPickerViewModel {
   private func uploadStorage(
     videoData: Data,
     thumbData: Data,
-    videoId: UUID,
-    sectionId: UUID,
+    videoId: String,
     duration: Double
   ) async throws{
     
     async let v = storage.uploadStorage(
       data: videoData,
-      type: .video(videoId.uuidString)
+      type: .video(videoId)
     )
     async let t = storage.uploadStorage(
       data: thumbData,
-      type: .thumbnail(videoId.uuidString)
+      type: .thumbnail(videoId)
     )
     
     let (video, thumbnail) = try await (v, t)
