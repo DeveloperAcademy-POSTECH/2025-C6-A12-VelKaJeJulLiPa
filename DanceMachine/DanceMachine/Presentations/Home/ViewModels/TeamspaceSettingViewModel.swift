@@ -63,7 +63,7 @@ final class TeamspaceSettingViewModel {
     func leaveTeamspace() async throws {
         do {
             try await self.removeUserFromCurrentTeamspace(userId: MockData.userId)
-            let userTeamspaces = try await self.fetchUserTeamspace(userId: MockData.userId)
+            let userTeamspaces = try await self.fetchUserTeamspace(userId: MockData.userId) // FIXME: - 목 데이터 수정
             let loadTeamspaces = try await self.fetchTeamspaces(userTeamspaces: userTeamspaces)
             
             if let firstTeamspace = loadTeamspaces.first {
@@ -154,14 +154,63 @@ extension TeamspaceSettingViewModel {
     }
     
     
-    // FIXME: - 로직 수정 => 팀 스페이스에 있는 모든 유저의 서브컬렉션에서 팀 스페이스를 제거 해야함.
-    /// 팀 스페이스를 제거하는 메서드입니다.
-    /// - Parameters:
-    ///     - userId: 유저 아이디
-    func removeTeamspace(userId: String) async throws {
-        try await FirestoreManager.shared.deleteAllDocumentsInSubcollection(under: .teamspace, parentId: self.currentTeamspace?.teamspaceId.uuidString ?? "", subCollection: .members)
-        try await FirestoreManager.shared.delete(collectionType: .teamspace, documentID: self.currentTeamspace?.teamspaceId.uuidString ?? "") // 팀 스페이스 문서 제거
-        try await FirestoreManager.shared.deleteFromSubcollection(under: .users, parentId: userId, subCollection: .userTeamspace, target: self.currentTeamspace?.teamspaceId.uuidString ?? "")// 유저 팀 서브 컬렉션 스페이스에서 팀 스페이스를 제거
+    /// 팀스페이스를 삭제하기 전에, 이 팀스페이스에 속한 모든 유저의
+    /// users/{userId}/userTeamspace 에서 해당 팀스페이스 참조를 제거하고,
+    /// teamspace/{id}/members 를 비운 뒤, teamspace 문서를 삭제합니다.
+    func removeTeamspaceAndDetachFromAllUsers() async throws {
+        do {
+            let teamspaceId = self.currentTeamspace?.teamspaceId.uuidString ?? ""
+            
+            // 1) members 서브컬렉션에서 모든 멤버 조회
+            let members: [Members] = try await FirestoreManager.shared.fetchAllFromSubcollection(
+                under: .teamspace,
+                parentId: teamspaceId,
+                subCollection: .members
+            )
+            
+            // 2) 유저 ID 중복 제거
+            let userIds = Array(Set(members.map { $0.userId }))
+            
+            // 3) 모든 유저의 userTeamspace에서 teamspaceId 제거 (병렬 처리)
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                for uid in userIds {
+                    group.addTask {
+                        try await FirestoreManager.shared.deleteFromSubcollection(
+                            under: .users,
+                            parentId: uid,
+                            subCollection: .userTeamspace,
+                            target: teamspaceId
+                        )
+                    }
+                }
+                try await group.waitForAll()
+            }
+            
+            // 4) teamspace/{id}/members 모두 삭제
+            try await FirestoreManager.shared.deleteAllDocumentsInSubcollection(
+                under: .teamspace,
+                parentId: teamspaceId,
+                subCollection: .members
+            )
+            
+            // 5) teamspace 문서 삭제
+            try await FirestoreManager.shared.delete(
+                collectionType: .teamspace,
+                documentID: teamspaceId
+            )
+            
+            let userTeamspaces = try await self.fetchUserTeamspace(userId: MockData.userId) // FIXME: - 목 데이터 수정
+            let loadTeamspaces = try await self.fetchTeamspaces(userTeamspaces: userTeamspaces)
+            
+            if let firstTeamspace = loadTeamspaces.first {
+                await MainActor.run {
+                    self.fetchCurrentTeamspace(teamspace: firstTeamspace)
+                }
+            }
+            
+        } catch {
+            print("error: \(error.localizedDescription)")
+        }
     }
     
     

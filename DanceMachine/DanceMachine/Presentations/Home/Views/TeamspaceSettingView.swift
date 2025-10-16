@@ -55,7 +55,7 @@ struct TeamspaceSettingView: View {
                     titleText: "\(viewModel.currentTeamspace?.teamspaceName ?? "")\n팀스페이스를 삭제하시겠어요?",
                     primaryText: "팀 스페이스 삭제") {
                         Task {
-                            try await viewModel.removeTeamspace(userId: MockData.userId) // FIXME: - 로직 수정
+                            try await viewModel.removeTeamspaceAndDetachFromAllUsers() // FIXME: - 로직 수정
                             await MainActor.run { rotuer.pop() }
                         }
                     }
