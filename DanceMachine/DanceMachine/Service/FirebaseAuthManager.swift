@@ -13,14 +13,13 @@ import Combine
 
 
 final class FirebaseAuthManager: ObservableObject {
-
     static let shared = FirebaseAuthManager()
     private let firebaseAuth = Auth.auth()
-
+    
     @Published var user: FirebaseAuth.User?
     @Published var authenticationState: AuthenticationState = .unauthenticated
     @Published var hasNameSet: Bool = UserDefaults.standard.bool(forKey:  UserDefaultsKey.hasNameSet.rawValue)
-
+    
     private var authStateHandler: AuthStateDidChangeListenerHandle?
     private var currentNonce: String?
     
@@ -28,11 +27,8 @@ final class FirebaseAuthManager: ObservableObject {
         // 앱을 다시 다운로드했는데, 자동으로 로그인되지 않게 하기 위한 로그아웃
         let hasLaunchedBefore = UserDefaults.standard.bool(forKey:  UserDefaultsKey.hasLaunchedBefore.rawValue)
         if !hasLaunchedBefore {
-            do {
-                try self.signOut()
-                UserDefaults.standard.set(true, forKey: UserDefaultsKey.hasLaunchedBefore.rawValue)
-            } catch {
-                print("❌ SignOut failed: \(error.localizedDescription)")            }
+            self.signOut()
+            UserDefaults.standard.set(true, forKey: UserDefaultsKey.hasLaunchedBefore.rawValue)
         }
         
         // 현재 사용자 인증 상태 확인
@@ -43,7 +39,7 @@ final class FirebaseAuthManager: ObservableObject {
         } else {
             self.authenticationState = .unauthenticated
         }
-
+        
         registerAuthStateHandler()
         verifySignInWithAppleAuthenticationState()
         print("🔥 FirebaseAuthManager initialized")
@@ -84,7 +80,7 @@ final class FirebaseAuthManager: ObservableObject {
                     print("🍎 Apple credential still valid")
                     break
                 case .revoked, .notFound:
-                    try self.signOut()
+                    self.signOut()
                     print("🍎 Apple credential revoked — signing out")
                 default:
                     break
@@ -95,10 +91,34 @@ final class FirebaseAuthManager: ObservableObject {
         }
     }
     
+    /// 사용자 이름을 locale에 알맞게 보여주는 함수입니다.
+    /// - Parameters:
+    ///     - fullName:  사용자 이름
+    ///     - locale: 사용자 로케일
+    /// - Returns:
+    ///     - 공백 없는 한중일 이름(CJK) 등 사용자 설정 이름겂에 구조화된 이름으로 판단할 수 없다면,  "Unknown"을 반환합니다.
+    func displayName(from fullName: String?, locale: Locale = .current) -> String {
+        guard let fullName = fullName,
+              let nameComponents = PersonNameComponentsFormatter().personNameComponents(from: fullName) else {
+            return "Unknown"
+        }
+        
+        let formatter = PersonNameComponentsFormatter()
+        formatter.style = .medium
+        formatter.locale = locale
+        
+        return formatter.string(from: nameComponents)
+    }
+    
     /// 로그아웃 메서드
     /// - 로그아웃 시, 인증상태 리스너가 작동합니다.
-    func signOut() throws {
-        try firebaseAuth.signOut()
+    func signOut() {
+        do {
+            try firebaseAuth.signOut()
+        }
+        catch {
+            print(error.localizedDescription)
+        }
     }
 }
 
