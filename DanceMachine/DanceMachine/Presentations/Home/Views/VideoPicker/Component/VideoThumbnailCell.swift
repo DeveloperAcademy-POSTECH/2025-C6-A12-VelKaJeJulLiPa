@@ -31,8 +31,8 @@ struct VideoThumbnailCell: View {
     }
     .frame(width: size, height: size)
     .contentShape(Rectangle())
-    .onAppear {
-      loadThumbnail()
+    .task {
+      await loadThumbnail()
     }
   }
   
@@ -48,7 +48,7 @@ struct VideoThumbnailCell: View {
     }
   }
   
-  private func loadThumbnail() {
+  private func loadThumbnail() async {
     let manager = PHImageManager.default()
     let options = PHImageRequestOptions()
     options.isSynchronous = false
