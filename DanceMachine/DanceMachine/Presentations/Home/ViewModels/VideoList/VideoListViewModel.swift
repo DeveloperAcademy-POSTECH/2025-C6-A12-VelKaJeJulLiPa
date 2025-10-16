@@ -18,7 +18,8 @@ final class VideoListViewModel {
   var isLoading: Bool = false
   var errorMsg: String? = nil
   
-  var selectedSection: Section? = nil
+  var selectedSection: Section?
+  
 }
 // MARK: - UI 관련
 extension VideoListViewModel {
@@ -38,7 +39,7 @@ extension VideoListViewModel {
 // MARK: - 서버 메서드
 extension VideoListViewModel {
   // 모든 데이터 불러오기
-  func loadFromServer(tracksId: UUID) async {
+  func loadFromServer(tracksId: String) async {
     #if DEBUG
     if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
       return }
@@ -49,6 +50,7 @@ extension VideoListViewModel {
     }
     
     do {
+      print("tracksId: \(tracksId)")
       // 1. Tracks -> Section 목록 가져오기
       let fetchSection = try await self.fetchSection(in: tracksId)
       print("불러온 section 개수\(fetchSection.count)")
@@ -85,6 +87,12 @@ extension VideoListViewModel {
         self.section = fetchSection
         self.track = allTrack
         self.videos = fetchedVideos
+        
+        if self.selectedSection == nil,
+           let first = fetchSection.first {
+          self.selectedSection = first
+        }
+        
         self.isLoading = false
       }
     } catch {
@@ -100,11 +108,11 @@ extension VideoListViewModel {
 // MARK: - 파이어베이스 메서드 조건 쿼리 분리
 private extension VideoListViewModel {
   func fetchSection(
-    in tracksId: UUID
+    in tracksId: String
   ) async throws-> [Section] {
     return try await store.fetchAllFromSubcollection(
       under: .tracks,
-      parentId: tracksId.uuidString,
+      parentId: tracksId,
       subCollection: .section,
       orderBy: "created_at",
       descending: true
@@ -112,12 +120,12 @@ private extension VideoListViewModel {
   }
   
   func fetchTrack(
-    in tracksId: UUID,
+    in tracksId: String,
     withIn sectionId: String
   ) async throws -> [Track] {
     return try await store.fetchAllFromSubSubcollection(
       in: .tracks,
-      grandParentId: tracksId.uuidString,
+      grandParentId: tracksId,
       withIn: .section,
       parentId: sectionId,
       subCollection: .track
