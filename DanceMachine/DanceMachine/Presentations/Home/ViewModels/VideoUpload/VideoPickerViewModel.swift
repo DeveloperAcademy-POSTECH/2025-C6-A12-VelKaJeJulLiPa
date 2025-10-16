@@ -57,7 +57,7 @@ final class VideoPickerViewModel {
 
 // MARK: 비디오 업로드 관련
 extension VideoPickerViewModel {
-  func exportVideo(tracksId: String) {
+  func exportVideo(tracksId: UUID, sectionId: UUID) {
     self.isLoading = true
     
     // PHAsset 에서 비디오 파일 추출

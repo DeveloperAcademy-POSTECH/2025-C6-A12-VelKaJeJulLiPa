@@ -14,12 +14,18 @@ struct VideoListView: View {
   
   @State var vm: VideoListViewModel
   
-  init(vm: VideoListViewModel = .init(), tracksId: String) {
+  init(
+    vm: VideoListViewModel = .init(),
+    tracksId: UUID,
+    sectionId: UUID
+  ) {
     self.vm = vm
     self.tracksId = tracksId
+    self.sectionId = sectionId
   }
   
-  let tracksId: String
+  let tracksId: UUID
+  let sectionId: UUID
   
   var body: some View {
     VStack {
@@ -37,7 +43,7 @@ struct VideoListView: View {
       await vm.loadFromServer(tracksId: tracksId)
     }
     .sheet(isPresented: $showCustomPicker) {
-      VideoPickerView(tracksId: tracksId)
+      VideoPickerView(tracksId: tracksId, sectionId: sectionId)
     }
   }
   
@@ -109,7 +115,7 @@ struct VideoListView: View {
 #Preview {
   @Previewable @State var vm: VideoListViewModel = .preview
   NavigationStack {
-    VideoListView(vm: vm, tracksId: "ㅇㅇㅇ")
+    VideoListView(vm: vm, tracksId: UUID(), sectionId: UUID())
   }
   .environmentObject(NavigationRouter())
 }

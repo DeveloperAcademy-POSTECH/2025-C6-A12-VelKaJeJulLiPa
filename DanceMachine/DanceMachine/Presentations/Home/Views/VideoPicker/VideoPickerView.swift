@@ -14,7 +14,8 @@ struct VideoPickerView: View {
   
   @State private var vm: VideoPickerViewModel = .init()
   
-  let tracksId: String
+  let tracksId: UUID
+  let sectionId: UUID
   
   var body: some View {
     NavigationStack {
@@ -44,7 +45,7 @@ struct VideoPickerView: View {
           ToolbarCenterTitle(text: "비디오 선택")
           ToolbarItemGroup(placement: .topBarTrailing) {
             Button {
-              vm.exportVideo(tracksId: tracksId)
+              vm.exportVideo(tracksId: tracksId, sectionId: sectionId)
             } label: {
               Text("저장")
             }
@@ -77,5 +78,5 @@ struct VideoPickerView: View {
 }
 
 #Preview {
-  VideoPickerView(tracksId: "")
+  VideoPickerView(tracksId: UUID(), sectionId: UUID())
 }
