@@ -8,7 +8,7 @@
 import Foundation
 import AuthenticationServices
 
-
+/// Sign in with Apple 인증 UI가 표시될 window 반환
 extension UIViewController: @retroactive ASAuthorizationControllerPresentationContextProviding {
     
     public func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {

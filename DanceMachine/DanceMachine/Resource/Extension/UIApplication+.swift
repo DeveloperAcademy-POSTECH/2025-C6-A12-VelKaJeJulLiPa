@@ -31,6 +31,7 @@ extension UIApplication {
         return rootVC
     }
 
+    /// 최상위 ViewController 반환
     @MainActor
     static func topViewController(controller: UIViewController? = nil) -> UIViewController? {
         let controller = controller ?? rootViewController()
@@ -50,4 +51,3 @@ extension UIApplication {
     }
 
 }
-//
