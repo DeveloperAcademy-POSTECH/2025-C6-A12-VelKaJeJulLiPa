@@ -57,5 +57,19 @@ final class HomeViewModel {
         }
         return fetched.sorted { $0.index < $1.index }.map(\.item)
     }
+    
+    
+    
+    /// 현재 로그인 유저의 선택된 팀스페이스의 프로젝트 목록을 전부 가져옵니다.
+    /// - Parameters:
+    ///     -
+    func fetchCurrentTeamspaceProject() async throws -> [Project] {
+        // TODO: 이 메서드를 teamspaceId를 파라미터로 받아서, project컬렉션에 있는 모든 데이터중에 필드의 teamspaceId가 같은 것을 찾는 메서드를 만들어야함.
+        return try await FirestoreManager.shared.fetchAll(
+            currentTeamspace?.teamspaceId.uuidString ?? "",
+            from: .project,                                   // 프로젝트 컬렉션 enum
+            where: Project.CodingKeys.teamspaceId.stringValue // 필드명: "teamspaceId"
+        )
+    }
 }
 

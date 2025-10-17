@@ -14,8 +14,10 @@ struct HomeView: View {
     @State private var viewModel: HomeViewModel = .init()
     
     @State private var teamspaceState: TeamspaceRoute?
+    @State private var projectState: ProjectState = .none
     
     @State private var loadTeamspaces: [Teamspace] = []
+    @State private var loadProjects: [Project] = []
     
     @State private var didInitialize: Bool = false // 첫 설정 여부
     @State private var isLoading: Bool = false
@@ -26,6 +28,7 @@ struct HomeView: View {
             
             VStack {
                 topTitleView
+                middleProjectListView
                 Spacer()
             }
         }
@@ -71,10 +74,19 @@ struct HomeView: View {
                 case false: // FIXME: - 배열의 첫 번째 요소를 currentTeamspace로 설정 => 추후 마지막 접속 스페이스를 설정할지 논의
                     if let firstTeamspace = loadTeamspaces.first {
                         self.viewModel.fetchCurrentTeamspace(teamspace: firstTeamspace)
+                       
                     }
                     self.didInitialize = true
                 case true:
                     break
+                }
+                
+                self.loadProjects = try await self.viewModel.fetchCurrentTeamspaceProject()
+                switch self.loadProjects.isEmpty {
+                case true:
+                    self.projectState = .none
+                case false:
+                    self.projectState = .list
                 }
                 
             } catch {
@@ -118,11 +130,46 @@ struct HomeView: View {
             }
         }
     }
-}
-
-#Preview {
-    NavigationStack {
-        HomeView()
-            .environmentObject(NavigationRouter())
+        
+    // MARK: - 미들 프로젝트 리스트 뷰
+    private var middleProjectListView: some View {
+        VStack {
+            switch teamspaceState {
+            case .none, .create:
+                Text("팀 스페이스가 없습니다.")
+                    .font(Font.system(size: 15, weight: .medium))
+                    .foregroundStyle(Color.gray)
+            case .list, .setting:
+                LabeledContent {
+                    Text("편집")
+                        .font(Font.system(size: 16, weight: .semibold))
+                        .foregroundStyle(Color.gray)
+                } label: {
+                    Text("프로젝트 목록")
+                        .font(Font.system(size: 16, weight: .semibold))
+                        .foregroundStyle(Color.gray)
+                }
+                switch projectState {
+                case .none:
+                    Text("프로젝트가 없습니다.")
+                        .font(Font.system(size: 15, weight: .medium))
+                        .foregroundStyle(Color.gray)
+                case .list:
+                    List(self.loadProjects, id: \.projectId) { project in
+                        ListCell(title: project.projectName)
+                    }
+                    .listStyle(.plain)
+                }
+            }
+        }
     }
 }
+
+
+//#Preview {
+//    NavigationStack {
+//        HomeView()
+//            .environmentObject(NavigationRouter())
+//    }
+//}
+
