@@ -15,6 +15,8 @@ struct HomeView: View {
     
     @State private var teamspaceState: TeamspaceRoute?
     @State private var projectState: ProjectState = .none
+    @State private var editingState: EditingState = .viewing
+    
     
     @State private var loadTeamspaces: [Teamspace] = []
     @State private var loadProjects: [Project] = []
@@ -131,6 +133,9 @@ struct HomeView: View {
         }
     }
         
+    
+    @State private var presentingRemovalSheetProject: Project?
+    
     // MARK: - 미들 프로젝트 리스트 뷰
     private var middleProjectListView: some View {
         VStack {
@@ -141,9 +146,18 @@ struct HomeView: View {
                     .foregroundStyle(Color.gray)
             case .list, .setting:
                 LabeledContent {
-                    Text("편집")
-                        .font(Font.system(size: 16, weight: .semibold))
-                        .foregroundStyle(Color.gray)
+                    Button {
+                        switch self.editingState {
+                        case .viewing:
+                            self.editingState = .editing
+                        case .editing:
+                            self.editingState = .viewing
+                        }
+                    } label: {
+                        Text(self.editingState == .viewing ? "편집" : "취소")
+                            .font(Font.system(size: 16, weight: .semibold)) // FIXME: - 폰트 수정
+                            .foregroundStyle(self.editingState == .viewing ? .gray : .blue) // FIXME: - 컬러 수정
+                    }
                 } label: {
                     Text("프로젝트 목록")
                         .font(Font.system(size: 16, weight: .semibold))
@@ -156,11 +170,30 @@ struct HomeView: View {
                         .foregroundStyle(Color.gray)
                 case .list:
                     List(self.loadProjects, id: \.projectId) { project in
-                        ListCell(title: project.projectName)
+                        ListCell(
+                            title: project.projectName,
+                            isEditing: self.editingState,
+                            deleteAction: { self.presentingRemovalSheetProject = project },
+                            editAction: { /* 편집 액션 */ },
+                            rowTapAction: {
+                                print("tapped:", project.projectName)
+                                // 필요하면 router.push(...) 등
+                            }
+                        )
+                        .listRowSeparator(.hidden)
                     }
                     .listStyle(.plain)
                 }
             }
+        }
+        .sheet(item: $presentingRemovalSheetProject) { project in
+            BottomConfirmSheetView(
+                titleText: "\(project.projectName)\n프로젝트의 내용이 모두 삭제됩니다.\n 계속하시겠어요?",
+                primaryText: "모두 삭제") {
+                    Task {
+                       
+                    }
+                }
         }
     }
 }
