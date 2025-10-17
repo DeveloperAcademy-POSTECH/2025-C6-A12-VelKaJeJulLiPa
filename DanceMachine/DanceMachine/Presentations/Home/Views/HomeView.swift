@@ -31,6 +31,31 @@ struct HomeView: View {
         }
         .padding(.horizontal, 16)
         .overlay { if isLoading { LoadingView() } }
+        // 2) 플로팅 버튼 오버레이 추가
+        .overlay(alignment: .bottomTrailing) {
+            // TODO: 플로팅 버튼 분기 처리하기
+            Button {
+                router.push(to: .project(.create))
+            } label: {
+                HStack(spacing: 4) {
+                    Text("프로젝트 추가")
+                        .font(Font.system(size: 15, weight: .medium)) // FIXME: - 폰트 수정
+                        .foregroundStyle(Color.white) // FIXME: - 컬러 수정
+                    Image(systemName: "plus") // FIXME: - 이미지 수정
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 16, height: 16) // FIXME: - 크기 수정 ( geometry 고려 )
+                        .foregroundStyle(Color.white)// FIXME: - 컬러 수정
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 11)
+                .background(
+                    RoundedRectangle(cornerRadius: 30)
+                            .fill(Color.blue)
+                )
+            }
+            .padding([.trailing, .bottom], 16)
+        }
         .task {
             var userTeamspaces: [UserTeamspace] = []
             
@@ -93,8 +118,6 @@ struct HomeView: View {
             }
         }
     }
-    
-    
 }
 
 #Preview {

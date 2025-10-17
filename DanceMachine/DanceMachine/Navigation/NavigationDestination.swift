@@ -13,6 +13,11 @@ enum AppRoute: Hashable {
     case mypage(MyPageRoute)
     
     case teamspace(TeamspaceRoute)
+    case project(ProjectRoute)
+}
+
+enum ProjectRoute: Hashable {
+    case create
 }
 
 enum TeamspaceRoute: Hashable {

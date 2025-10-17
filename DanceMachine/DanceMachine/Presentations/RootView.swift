@@ -74,5 +74,8 @@ struct RootView: View {
 }
 
 #Preview {
-    RootView()
+    NavigationStack {
+        RootView()
+            .environmentObject(NavigationRouter())
+    }
 }

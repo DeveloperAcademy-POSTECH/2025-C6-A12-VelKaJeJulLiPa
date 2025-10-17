@@ -35,6 +35,11 @@ struct NavigationRoutingView: View {
                 case .setting:
                     TeamspaceSettingView()
                 }
+            case .project(let route):
+                switch route {
+                case .create:
+                    CreateProjectView()
+                }
             }
         }
         .hideBackButton()
