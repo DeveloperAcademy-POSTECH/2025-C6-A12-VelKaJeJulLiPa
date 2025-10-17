@@ -75,27 +75,10 @@ struct CreateProjectView: View {
             height: 47,
             isEnabled: self.projectNameText.isEmpty ? false : true
         ) {
-//            Task {
-//                do {
-//                    let teamspaceId = try await viewModel.createTeamsapce(
-//                        userId: MockData.userId, // FIXME: - Mock데이터 교체
-//                        teamspaceName: teamspaceNameText
-//                    )
-//                    
-//                    try await viewModel.createTeamspaceMember(
-//                        userId: MockData.userId, // FIXME: - Mock데이터 교체
-//                        teamspaceId: teamspaceId
-//                    )
-//                    
-//                    try await viewModel.includeUserTeamspace(teamspaceId: teamspaceId)
-//                    
-//                    await MainActor.run { router.pop() }
-//                } catch {
-//                    // FIXME: - 에러 분기 처리 추가하기
-//                    print("error: \(error.localizedDescription)")
-//                }
-//            }
-            
+            Task {
+                try await viewModel.createProject(creatorId: MockData.userId, projectName: self.projectNameText)
+                await MainActor.run { router.pop() }
+            }
         }
     }
 }
