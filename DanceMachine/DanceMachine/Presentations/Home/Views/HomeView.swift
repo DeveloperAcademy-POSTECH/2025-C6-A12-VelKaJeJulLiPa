@@ -177,7 +177,6 @@ struct HomeView: View {
                             editAction: { /* 편집 액션 */ },
                             rowTapAction: {
                                 print("tapped:", project.projectName)
-                                // 필요하면 router.push(...) 등
                             }
                         )
                         .listRowSeparator(.hidden)
@@ -191,7 +190,8 @@ struct HomeView: View {
                 titleText: "\(project.projectName)\n프로젝트의 내용이 모두 삭제됩니다.\n 계속하시겠어요?",
                 primaryText: "모두 삭제") {
                     Task {
-                       
+                        try await viewModel.removeProject(projectId: project.projectId.uuidString)
+                        self.loadProjects = try await self.viewModel.fetchCurrentTeamspaceProject() // 프로젝트 리로드
                     }
                 }
         }

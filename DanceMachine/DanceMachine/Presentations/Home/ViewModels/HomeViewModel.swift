@@ -60,9 +60,16 @@ final class HomeViewModel {
     
     
     
+
+    
+}
+
+
+// MARK: - 프로젝트 관련 로직
+extension HomeViewModel {
+    
+    
     /// 현재 로그인 유저의 선택된 팀스페이스의 프로젝트 목록을 전부 가져옵니다.
-    /// - Parameters:
-    ///     -
     func fetchCurrentTeamspaceProject() async throws -> [Project] {
         // TODO: 이 메서드를 teamspaceId를 파라미터로 받아서, project컬렉션에 있는 모든 데이터중에 필드의 teamspaceId가 같은 것을 찾는 메서드를 만들어야함.
         return try await FirestoreManager.shared.fetchAll(
@@ -71,5 +78,17 @@ final class HomeViewModel {
             where: Project.CodingKeys.teamspaceId.stringValue // 필드명: "teamspaceId"
         )
     }
+    
+    /// 프로젝트를 제거하는 메서드입니다.
+    /// - Parameters:
+    ///     - projectId: 프로젝트 Id
+    func removeProject(projectId: String) async throws {
+        do {
+            try await FirestoreManager.shared.delete(collectionType: .project, documentID: projectId)
+        } catch {
+            print("error: \(error.localizedDescription)") // FIXME: - 적절한 에러 처리
+        }
+    }
+    
 }
 
