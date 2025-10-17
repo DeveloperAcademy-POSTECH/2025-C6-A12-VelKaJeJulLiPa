@@ -13,8 +13,9 @@ struct CreateProjectView: View {
     @EnvironmentObject private var router: NavigationRouter
     
     @State private var viewModel: CreateProjectViewModel = .init()
-    @State private var teamspaceNameText = ""
+    @State private var projectNameText = ""
     
+    @FocusState private var isFocusTextField: Bool
     
     var body: some View {
         ZStack {
@@ -35,19 +36,34 @@ struct CreateProjectView: View {
     
     // MARK: - 팀 스페이스 텍스트 필드 뷰 ("팀 스페이스 이름" + 텍스트 필드)
     private var inputTeamspaceNameView: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 32) {
             Text("프로젝트명을 입력하세요.")
-                .font(Font.system(size: 20, weight: .semibold)) // FIXME: - 폰트 수정
+                .font(Font.system(size: 24, weight: .semibold)) // FIXME: - 폰트 수정
                 .foregroundStyle(Color.black) // FIXME: - 컬러 수정
             
             RoundedRectangle(cornerRadius: 5)
                 .fill(Color.gray) // FIXME: - 컬러 수정
+                .overlay(
+                    RoundedRectangle(cornerRadius: 5)
+                        .stroke(isFocusTextField ? Color.blue : Color.clear, lineWidth: isFocusTextField ? 1 : 0) // FIXME: - 컬러 수정
+                )
                 .frame(maxWidth: .infinity)
                 .frame(height: 47)
                 .overlay {
-                    TextField("프로젝트명", text: $teamspaceNameText)
-                        .multilineTextAlignment(.center)
+                    HStack {
+                        // TODO: 컴포넌트 추가하기
+                        TextField("프로젝트명", text: $projectNameText)
+                            .font(Font.system(size: 16, weight: .medium)) // FIXME: - 폰트 수정
+                            .foregroundStyle(Color.black) // FIXME: - 컬러 수정
+                            .multilineTextAlignment(.center)
+                            .padding(.vertical, 16)
+                            .overlay(alignment: .trailing) {
+                                XmarkButton { self.projectNameText = "" }
+                                .padding(.trailing, 8)
+                            }
+                    }
                 }
+                .focused($isFocusTextField)
         }
     }
     
@@ -55,9 +71,9 @@ struct CreateProjectView: View {
     private var bottomButtonView: some View {
         ActionButton(
             title: "확인",
-            color: self.teamspaceNameText.isEmpty ? Color.gray : Color.blue, // FIXME: - 컬러 수정
+            color: self.projectNameText.isEmpty ? Color.gray : Color.blue, // FIXME: - 컬러 수정
             height: 47,
-            isEnabled: self.teamspaceNameText.isEmpty ? false : true
+            isEnabled: self.projectNameText.isEmpty ? false : true
         ) {
 //            Task {
 //                do {
@@ -85,5 +101,8 @@ struct CreateProjectView: View {
 }
 
 #Preview {
-    CreateProjectView()
+    NavigationStack {
+        CreateProjectView()
+    }
 }
+
