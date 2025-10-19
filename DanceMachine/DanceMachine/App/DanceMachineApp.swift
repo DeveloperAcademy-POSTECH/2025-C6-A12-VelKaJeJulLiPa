@@ -22,9 +22,8 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
 @main
 struct DanceMachineApp: App {
-    @StateObject private var router: NavigationRouter = .init()
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
-    
+    @StateObject private var router: NavigationRouter = .init()
     @StateObject private var authManager = FirebaseAuthManager.shared
     
     var body: some Scene {
@@ -37,7 +36,7 @@ struct DanceMachineApp: App {
                     
                 case .authenticated:
                     ZStack {
-                        if !authManager.hasNameSet {
+                        if authManager.needsNameSetting {
                             NameSettingView()
                         } else {
                             RootView()
@@ -45,7 +44,7 @@ struct DanceMachineApp: App {
                                 .transition(.move(edge: .trailing))
                         }
                     }
-                    .animation(.easeInOut, value: authManager.hasNameSet)
+                    .animation(.easeInOut, value: authManager.needsNameSetting)
                 }
             }
             .animation(.easeInOut, value: authManager.authenticationState)
