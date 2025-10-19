@@ -47,6 +47,10 @@ struct VideoListView: View {
     .task {
       await vm.loadFromServer(tracksId: tracksId)
     }
+    .onReceive(NotificationCenter.default.publisher(
+      for: .sectionDidUpdate)) { _ in
+        Task { await vm.loadFromServer(tracksId: tracksId) }
+    }
     .sheet(isPresented: $showCustomPicker) {
       VideoPickerView(tracksId: tracksId, sectionId: sectionId)
     }
@@ -102,7 +106,18 @@ struct VideoListView: View {
   private var sectionView: some View {
     ScrollView(.horizontal, showsIndicators: false) {
       HStack {
-        SectionChipIcon(vm: $vm)
+        SectionChipIcon(
+          vm: $vm,
+          action: {
+            router.push(
+              to: .sectionEditView(
+                section: vm.section,
+                tracksId: tracksId,
+                trackName: trackName
+              )
+            )
+          }
+        )
         ForEach(vm.section, id: \.sectionId) { section in
           CustomSectionChip(
             vm: $vm,
