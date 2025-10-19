@@ -11,28 +11,7 @@ import AuthenticationServices
 import CryptoKit
 
 
-struct SignInWithAppleButtonViewRepresentable: UIViewRepresentable {
-    
-    let type: ASAuthorizationAppleIDButton.ButtonType
-    let style: ASAuthorizationAppleIDButton.Style
-    
-    func makeUIView(context: Context) -> ASAuthorizationAppleIDButton {
-        ASAuthorizationAppleIDButton(authorizationButtonType: type, authorizationButtonStyle: style)
-    }
-    
-    func updateUIView(_ uiView: ASAuthorizationAppleIDButton, context: Context) {
-    }
-    
-}
-
-struct SignInWithAppleResult {
-    let token: String
-    let nonce: String
-    let appleIDCredential: ASAuthorizationAppleIDCredential
-    let fullName: PersonNameComponents?
-    let email: String?
-}
-
+/// 애플 로그인 로직을 담당
 final class SignInAppleHelper: NSObject {
     
     private var currentNonce: String?
@@ -119,6 +98,7 @@ final class SignInAppleHelper: NSObject {
 }
 
 
+/// 애플 로그인 성공 및 실패 분기처리
 extension SignInAppleHelper: ASAuthorizationControllerDelegate {
     
     func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
@@ -142,5 +122,30 @@ extension SignInAppleHelper: ASAuthorizationControllerDelegate {
         print("Sign in with Apple errored: \(error)")
         completionHandler?(.failure(URLError(.cannotFindHost)))
     }
+}
 
+
+/// 애플 로그인 후 애플이 제공해주는 정보
+struct SignInWithAppleResult {
+    let token: String
+    let nonce: String
+    let appleIDCredential: ASAuthorizationAppleIDCredential
+    let fullName: PersonNameComponents?
+    let email: String?
+}
+
+
+///  애플 로그인 버튼
+struct SignInWithAppleButtonViewRepresentable: UIViewRepresentable {
+    
+    let type: ASAuthorizationAppleIDButton.ButtonType
+    let style: ASAuthorizationAppleIDButton.Style
+    
+    func makeUIView(context: Context) -> ASAuthorizationAppleIDButton {
+        ASAuthorizationAppleIDButton(authorizationButtonType: type, authorizationButtonStyle: style)
+    }
+    
+    func updateUIView(_ uiView: ASAuthorizationAppleIDButton, context: Context) {
+    }
+    
 }
