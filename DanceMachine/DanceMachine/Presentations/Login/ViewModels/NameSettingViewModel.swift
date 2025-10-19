@@ -14,7 +14,7 @@ final class NameSettingViewModel {
     private let authManager = FirebaseAuthManager.shared
     private let storeManager = FirestoreManager.shared
     
-    var displayName: String?
+    var displayName: String = ""
     
     init() {
         displayName = authManager.displayName(from: authManager.user?.displayName)
@@ -34,15 +34,9 @@ final class NameSettingViewModel {
         }
     }
     
-    /// FIrebaseAuthManager 의 setHasName 값을 true 로 변경하는 메서드
-    /// setHasName 가 true 로 변경되면, RootView 로 진입합니다.
-    func setHasNameSet() {
-        authManager.hasNameSet = true
-    }
-    
-    /// UserDefaults의 hasNameSet 값을 true 로 변경하는 메서드
-    /// 앱 종료 후 다시 진입할 때, 해당 값이 true 이면, 이름 설정 화면을 거치지 않고 RootView 로 진입합니다.
-    func saveHasNameSetToUserDefaults() {
-        UserDefaults.standard.set(true, forKey: UserDefaultsKey.hasNameSet.rawValue)
+    ///  FirebaseAuthManager 의 needsNameSetting 값을 false 로 만드는 메서드
+    ///  - needsNameSetting이 false가 되면 RootView 로 화면이 전환됩니다.
+    func setNeedsNameSettingToFalse() {
+        authManager.needsNameSetting = false
     }
 }

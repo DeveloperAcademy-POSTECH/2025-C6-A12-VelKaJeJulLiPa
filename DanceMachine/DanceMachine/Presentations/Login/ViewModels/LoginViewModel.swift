@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Combine
 import AuthenticationServices
 import FirebaseAuth
 
@@ -17,6 +18,12 @@ final class LoginViewModel {
     /// - 애플에서 제공해주는 사용자 정보로 Firebase Authentication 연동
     /// - 사용자 정보 DB에 저장 (재로그인시, 최근 로그인 시점을 함께 저장)
     func signInApple() async {
+        FirebaseAuthManager.shared.isSigningIn = true
+        
+        defer {
+            FirebaseAuthManager.shared.isSigningIn = false
+        }
+        
         do {
             let helper = SignInAppleHelper()
             let tokens = try await helper.startSignInWithAppleFlow()
@@ -31,13 +38,20 @@ final class LoginViewModel {
                             termsAgreed: true,
                             privacyAgreed: true)
             
-            if let user: User = try? await FirestoreManager.shared.get(user.userId, from: .users) {
-                try await FirestoreManager.shared.updateUserLastLogin(user)
+            if let existingUser: User = try? await FirestoreManager.shared.get(user.userId, from: .users) {
+                try await FirestoreManager.shared.updateUserLastLogin(existingUser)
+                FirebaseAuthManager.shared.userInfo = existingUser
+                FirebaseAuthManager.shared.needsNameSetting = false
             } else {
                 try await FirestoreManager.shared.createUser(user)
+                FirebaseAuthManager.shared.userInfo = user
+                FirebaseAuthManager.shared.needsNameSetting = true
             }
+            
+            FirebaseAuthManager.shared.authenticationState = .authenticated
+            print("✅ signInApple done with authenticationState updated")
         } catch {
-            print(error.localizedDescription)
+            print("⚠️ signInApple error: \(error.localizedDescription)")
         }
     }
 }

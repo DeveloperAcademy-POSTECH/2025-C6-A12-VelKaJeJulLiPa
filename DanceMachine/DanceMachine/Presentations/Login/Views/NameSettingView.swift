@@ -68,14 +68,13 @@ struct NameSettingView: View {
                 Task {
                     await viewModel.updateUserName(name: name)
                     dismissKeyboard()
-                    viewModel.setHasNameSet()
+                    viewModel.setNeedsNameSettingToFalse()
                 }
             }
             .padding()
         }
         .onAppear {
-            name = FirebaseAuthManager.shared.displayName(from: viewModel.displayName)
-            viewModel.saveHasNameSetToUserDefaults()
+            name = viewModel.displayName
         }
         .dismissKeyboardOnTap()
     }

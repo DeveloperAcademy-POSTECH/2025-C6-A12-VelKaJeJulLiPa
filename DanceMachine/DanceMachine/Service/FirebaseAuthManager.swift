@@ -10,31 +10,42 @@ import FirebaseAuth
 import AuthenticationServices
 import CryptoKit
 import Combine
+import SwiftUI
 
 
 final class FirebaseAuthManager: ObservableObject {
     static let shared = FirebaseAuthManager()
     private let firebaseAuth = Auth.auth()
     
+    @AppStorage(UserDefaultsKey.hasLaunchedBefore.rawValue) var hasLaunchedBefore: Bool = false
+    
     @Published var user: FirebaseAuth.User?
+    @Published var userInfo: User?
     @Published var authenticationState: AuthenticationState = .unauthenticated
+    @Published var needsNameSetting: Bool = false
+    @Published var errormessage: String = ""
     
     private var authStateHandler: AuthStateDidChangeListenerHandle?
     private var currentNonce: String?
     
+    var isSigningIn: Bool = false
+    
     private init() {
         // 앱을 다시 다운로드했는데, 자동으로 로그인되지 않게 하기 위한 로그아웃
-        let hasLaunchedBefore = UserDefaults.standard.bool(forKey:  UserDefaultsKey.hasLaunchedBefore.rawValue)
         if !hasLaunchedBefore {
-            self.signOut()
-            UserDefaults.standard.set(true, forKey: UserDefaultsKey.hasLaunchedBefore.rawValue)
+            do { try self.signOut() }
+            catch {
+                errormessage = error.localizedDescription
+                print("❌ Failed to sign out: \(error.localizedDescription)")
+            }
+            hasLaunchedBefore = true
         }
         
-        // 현재 사용자 인증 상태 확인
+        // 현재 사용자 인증 상태 확인 + 사용자 데이터 가져오기
         if let user = firebaseAuth.currentUser {
             self.user = user
             self.authenticationState = .authenticated
-            print("✅ Found cached Firebase user: \(user.uid)")
+            Task { await self.fetchUserInfo(for: user.uid) }
         } else {
             self.authenticationState = .unauthenticated
         }
@@ -48,21 +59,42 @@ final class FirebaseAuthManager: ObservableObject {
     /// - 로그인 및 로그아웃 시점에 리스너가 알려주는 인증상태를 앱에 반영합니다.
     func registerAuthStateHandler() {
         guard authStateHandler == nil else { return }
-        
         authStateHandler = firebaseAuth.addStateDidChangeListener { auth, user in
-            print("🎧 Authentication Listener triggered!")
             self.user = user
-            self.authenticationState = user == nil ? .unauthenticated : .authenticated
-            //FIXME: 주석 삭제
+            guard !self.isSigningIn else { return }
+            
             if let user = user {
-                print("✅ Firebase user restored: \(user.uid)")
-                print("✅ Firebase user email: \(user.email ?? "")")
-                print("✅ Firebase user displayName: \(user.displayName ?? "")")
+                Task { await self.fetchUserInfo(for: user.uid) }
             } else {
-                print("👋 No active user — unauthenticated.")
+                self.userInfo = nil
+                self.needsNameSetting = false
+                self.authenticationState = .unauthenticated
             }
         }
     }
+    
+    
+    ///  사용자 정보 불러오기 (자동 로그인용)
+    ///  - Parameters:
+    ///     - uid: 사용자 id (Firebase Authentication 에서 반환 - users 콜렉션에서 id로 사용중)
+    @MainActor
+    func fetchUserInfo(for uid: String) async {
+        print("🔄 Fetch user information for \(uid)")
+        do {
+            if let user: User = try await FirestoreManager.shared.get(uid, from: .users) {
+                self.userInfo = user
+                self.needsNameSetting = false
+            } else {
+                self.userInfo = nil
+                self.needsNameSetting = true
+            }
+        } catch {
+            self.authenticationState = .unauthenticated
+            errormessage = error.localizedDescription
+            print("❌ Failed to fetch user information: \(error.localizedDescription)")
+        }
+    }
+    
     
     /// 애플 로그인 연동 상태를 확인하는 메서드
     /// - Sign in with Apple 과 현재 서비스 연동 상태가 유효한지 확인하고 유효하지 않다면 로그아웃합니다.
@@ -79,8 +111,12 @@ final class FirebaseAuthManager: ObservableObject {
                     print("🍎 Apple credential still valid")
                     break
                 case .revoked, .notFound:
-                    self.signOut()
-                    print("🍎 Apple credential revoked — signing out")
+                    do {
+                        try self.signOut()
+                    } catch {
+                        errormessage = error.localizedDescription
+                        print("🍎 Apple credential revoked — signing out")
+                    }
                 default:
                     break
                 }
@@ -89,6 +125,7 @@ final class FirebaseAuthManager: ObservableObject {
             }
         }
     }
+    
     
     /// 사용자 이름을 locale에 알맞게 보여주는 함수입니다.
     /// - Parameters:
@@ -111,13 +148,8 @@ final class FirebaseAuthManager: ObservableObject {
     
     /// 로그아웃 메서드
     /// - 로그아웃 시, 인증상태 리스너가 작동합니다.
-    func signOut() {
-        do {
-            try firebaseAuth.signOut()
-        }
-        catch {
-            print(error.localizedDescription)
-        }
+    func signOut() throws {
+        try firebaseAuth.signOut()
     }
 }
 
