@@ -9,10 +9,11 @@ import SwiftUI
 
 struct SectionChipIcon: View {
   @Binding var vm: VideoListViewModel
+  let action: () -> Void
   
   var body: some View {
     Button {
-      // TODO: 섹션 수정 페이지 이동
+      action()
     } label: {
       Image(systemName: "folder.badge.gearshape") // FIXME: 아이콘 수정?
         .foregroundStyle(.black)
