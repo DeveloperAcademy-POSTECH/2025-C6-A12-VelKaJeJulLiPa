@@ -49,10 +49,6 @@ struct DanceMachineApp: App {
                 }
             }
             .animation(.easeInOut, value: authManager.authenticationState)
-            .onAppear {
-                print("🚀 DanceMachineApp appeared")
-                print("🚀 Authentication State is now \(authManager.authenticationState)")
-            }
         }
     }
 }
