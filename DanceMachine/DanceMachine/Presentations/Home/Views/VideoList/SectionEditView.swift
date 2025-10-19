@@ -9,9 +9,21 @@ import SwiftUI
 
 struct SectionEditView: View {
   @EnvironmentObject private var router: NavigationRouter
-  @Binding var vm: VideoListViewModel
+  @State private var vm: SectionEditViewModel
   
+  let tracksId: String
   let trackName: String
+  
+  init(
+    sections: [Section],
+    tracksId: String,
+    trackName: String
+  ) {
+    self._vm = State(initialValue: SectionEditViewModel(sections: sections))
+    self.tracksId = tracksId
+    self.trackName = trackName
+  }
+  
   
   var body: some View {
     VStack {
@@ -19,14 +31,24 @@ struct SectionEditView: View {
       text
       Spacer().frame(height: 15)
       listView
-      Spacer()
     }
     .padding(.horizontal, 16)
+    .safeAreaInset(edge: .bottom) {
+      Group {
+        if vm.editingSectionid == nil {
+          addButton
+        } else {
+          confirButtons
+        }
+      }
+      .padding(.horizontal, 16)
+    }
   }
   
   private var customHeader: some View {
     HStack(alignment: .top, spacing: 16) {
       Button {
+        vm.notify(.sectionDidUpdate)
         router.pop()
       } label: {
         Image(systemName: "chevron.left")
@@ -60,48 +82,74 @@ struct SectionEditView: View {
   
   private var listView: some View {
     ScrollView {
-      ForEach(vm.section, id: \.sectionId) { section in
-        RoundedRectangle(cornerRadius: 5)
-          .fill(Color.gray.opacity(0.2)) // FIXME: 컬러 수정
-          .frame(maxWidth: .infinity)
-          .frame(height: 43)
-          .overlay {
-            HStack {
-              Text(section.sectionTitle)
-                .font(Font.system(size: 14, weight: .medium)) // FIXME: 폰트 수정
-              Spacer()
-              editLabel
+      ForEach(vm.sections, id: \.sectionId) { section in
+        SectionEditRow(
+          section: section,
+          isEditing: vm.editingSectionid == section.sectionId,
+          onEditStart: { vm.startEdit(section: section) },
+          onDelete: {
+            Task {
+              await vm.deleteSection(tracksId: tracksId, section: section)
             }
-            .padding(.horizontal, 16)
-          }
+          },
+          editText: $vm.editText
+        )
       }
     }
   }
+  // 평상시 버튼
+  private var addButton: some View {
+    ActionButton(
+      title: "섹션 추가하기",
+      color: Color.blue,
+      height: 47,
+      action: {} // TODO: 섹션 추가 기능
+    )
+  }
+  // 편집모드 버튼
+  private var confimButton: some View {
+    ActionButton(
+      title: "확인",
+      color: Color.blue,
+      height: 47,
+      isEnabled: !vm.editText.isEmpty,
+      action: {
+        if let sectionId = vm.editingSectionid,
+           let section = vm.sections.first(where: { $0.sectionId == sectionId }) {
+          Task { await vm.updateSection(tracksId: tracksId, section: section) }
+        }
+      }
+    )
+  }
   
-  private var editLabel: some View {
-    HStack(spacing: 16) {
-      Button {
-        // TODO: 삭제 기능
-      } label: {
-        Text("삭제")
-          .font(Font.system(size: 14, weight: .medium)) // FIXME: 폰트 수정
-          .foregroundStyle(Color.red) // FIXME: 컬러 수정
+  private var confirButtons: some View {
+    RoundedRectangle(cornerRadius: 5)
+      .fill(!vm.editText.isEmpty ? Color.blue : Color.gray.opacity(0.5))
+      .frame(maxWidth: .infinity)
+      .frame(height: 47)
+      .overlay {
+        Text("확인")
+          .font(Font.system(size: 16, weight: .medium)) // FIXME: - 폰트 수정
+          .foregroundStyle(Color.white) // FIXME: - 컬러 수정
       }
-      Button {
-        // TODO: 수정 기능
-      } label: {
-        Text("수정")
-          .font(Font.system(size: 14, weight: .medium)) // FIXME: 폰트 수정
-          .foregroundStyle(Color.blue) // FIXME: 컬러 수정
+      .onTapGesture {
+        if !vm.editText.isEmpty {
+          if let sectionId = vm.editingSectionid,
+             let section = vm.sections.first(where: { $0.sectionId == sectionId }) {
+            Task { await vm.updateSection(tracksId: tracksId, section: section) }
+          }
+        }
       }
-    }
   }
 }
 
 #Preview {
-  @Previewable @State var vm: VideoListViewModel = .preview
+  @Previewable @State var vm: SectionEditViewModel = .preview
   NavigationStack {
-    SectionEditView(vm: $vm, trackName: "벨코의 리치맨")
+    SectionEditView(
+      sections: vm.sections,
+      tracksId: "",
+      trackName: "벨코의 리치맨")
   }
   .environmentObject(NavigationRouter())
 }
