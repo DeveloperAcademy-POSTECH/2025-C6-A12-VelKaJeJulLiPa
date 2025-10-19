@@ -7,10 +7,10 @@
 
 import Foundation
 
-struct Section: Codable {
+struct Section: Codable, Equatable, Hashable {
     
     let sectionId: String
-    let sectionTitle: String
+    var sectionTitle: String
     
     init(
         sectionId: String,
