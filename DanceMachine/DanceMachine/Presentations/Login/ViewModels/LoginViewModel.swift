@@ -10,17 +10,20 @@ import Combine
 import AuthenticationServices
 import FirebaseAuth
 
-@Observable
-final class LoginViewModel {
+
+final class LoginViewModel: ObservableObject {
+    @Published var isLoading = false
     
     /// 애플 로그인을 담담하는 메서드
     /// - SigninwithAppleHelper 파일에서 소셜 로그인 플로우를 담당
     /// - 애플에서 제공해주는 사용자 정보로 Firebase Authentication 연동
     /// - 사용자 정보 DB에 저장 (재로그인시, 최근 로그인 시점을 함께 저장)
     func signInApple() async {
+        isLoading = true
         FirebaseAuthManager.shared.isSigningIn = true
         
         defer {
+            isLoading = false
             FirebaseAuthManager.shared.isSigningIn = false
         }
         

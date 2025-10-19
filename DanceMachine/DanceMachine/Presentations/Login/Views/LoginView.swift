@@ -13,6 +13,7 @@ struct LoginView: View {
     @Environment(\.colorScheme) var colorScheme
     @State private var viewModel = LoginViewModel()
     
+    
     var body: some View {
         VStack(spacing: 24) {
             Spacer()
@@ -36,6 +37,9 @@ struct LoginView: View {
             .padding(.horizontal, 32) //FIXME: 버튼 여백
             
             Spacer()
+                .overlay {
+                    if viewModel.isLoading { ProgressView() }
+                }
         }
         .background(Color(.systemBackground))
     }
