@@ -9,5 +9,4 @@ import Foundation
 
 enum UserDefaultsKey: String, CaseIterable {
     case hasLaunchedBefore = "hasLaunchedBefore"
-    case hasNameSet = "hasNameSet"
 }

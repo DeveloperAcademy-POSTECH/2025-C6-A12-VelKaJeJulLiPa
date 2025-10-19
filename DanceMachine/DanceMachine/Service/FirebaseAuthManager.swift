@@ -18,7 +18,6 @@ final class FirebaseAuthManager: ObservableObject {
     
     @Published var user: FirebaseAuth.User?
     @Published var authenticationState: AuthenticationState = .unauthenticated
-    @Published var hasNameSet: Bool = UserDefaults.standard.bool(forKey:  UserDefaultsKey.hasNameSet.rawValue)
     
     private var authStateHandler: AuthStateDidChangeListenerHandle?
     private var currentNonce: String?
