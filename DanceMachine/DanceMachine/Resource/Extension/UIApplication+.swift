@@ -6,10 +6,12 @@
 //
 
 import Foundation
-import UIKit
+import SwiftUI
 
+/// 최상단에 표시되고 있는 ViewController 를 가져오기 위한 extension
 extension UIApplication {
 
+    /// 앱의 RootViewController 반환
     static private func rootViewController() -> UIViewController? {
         var rootVC: UIViewController?
         if #available(iOS 15.0, *) {
@@ -31,7 +33,7 @@ extension UIApplication {
         return rootVC
     }
 
-    /// 최상위 ViewController 반환
+    /// 사용자가 보고있는 ViewController 반환
     @MainActor
     static func topViewController(controller: UIViewController? = nil) -> UIViewController? {
         let controller = controller ?? rootViewController()
