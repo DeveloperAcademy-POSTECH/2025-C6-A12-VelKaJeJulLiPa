@@ -16,6 +16,12 @@ struct NavigationRoutingView: View {
             switch destination {
             case .homeView:
                 HomeView() // FIXME: - 임시
+            case .sectionEditView(let section, let tracksId, let trackName):
+              SectionEditView(
+                sections: section,
+                tracksId: tracksId,
+                trackName: trackName
+              )
             }
         }
         .hideBackButton()

@@ -9,4 +9,9 @@ import Foundation
 
 enum NavigationDestination: Equatable, Hashable {
     case homeView // FIXME: - 임시
+    case sectionEditView(
+      section: [Section],
+      tracksId: String,
+      trackName: String
+    )
 }
