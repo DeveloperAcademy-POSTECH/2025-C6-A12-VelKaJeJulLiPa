@@ -97,30 +97,6 @@ struct SectionEditView: View {
       }
     }
   }
-  // 평상시 버튼
-  private var addButton: some View {
-    ActionButton(
-      title: "섹션 추가하기",
-      color: Color.blue,
-      height: 47,
-      action: {} // TODO: 섹션 추가 기능
-    )
-  }
-  // 편집모드 버튼
-  private var confimButton: some View {
-    ActionButton(
-      title: "확인",
-      color: Color.blue,
-      height: 47,
-      isEnabled: !vm.editText.isEmpty,
-      action: {
-        if let sectionId = vm.editingSectionid,
-           let section = vm.sections.first(where: { $0.sectionId == sectionId }) {
-          Task { await vm.updateSection(tracksId: tracksId, section: section) }
-        }
-      }
-    )
-  }
   
   private var confirButtons: some View {
     RoundedRectangle(cornerRadius: 5)
