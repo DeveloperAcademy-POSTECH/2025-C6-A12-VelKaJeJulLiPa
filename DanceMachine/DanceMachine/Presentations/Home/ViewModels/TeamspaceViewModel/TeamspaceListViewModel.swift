@@ -42,7 +42,7 @@ final class TeamspaceListViewModel {
 
 }
 
-
+// MARK: - 파이어베이스 관리 메서드
 extension TeamspaceListViewModel {
     
     /// 현재 로그인 유저의 팀스페이스 목록을 전부 가져옵니다.
