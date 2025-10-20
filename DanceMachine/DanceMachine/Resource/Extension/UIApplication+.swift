@@ -13,23 +13,13 @@ extension UIApplication {
 
     /// 앱의 RootViewController 반환
     static private func rootViewController() -> UIViewController? {
-        var rootVC: UIViewController?
-        if #available(iOS 15.0, *) {
-            rootVC = UIApplication
-                .shared
-                .connectedScenes
-                .compactMap { ($0 as? UIWindowScene)?.keyWindow }
-                .last?
-                .rootViewController
-        } else {
-            rootVC = UIApplication
-                .shared
-                .connectedScenes
-                .flatMap { ($0 as? UIWindowScene)?.windows ?? [] }
-                .last { $0.isKeyWindow }?
-                .rootViewController
-        }
-
+        let rootVC: UIViewController? = UIApplication
+            .shared
+            .connectedScenes
+            .flatMap { ($0 as? UIWindowScene)?.windows ?? [] }
+            .last { $0.isKeyWindow }?
+            .rootViewController
+        
         return rootVC
     }
 
