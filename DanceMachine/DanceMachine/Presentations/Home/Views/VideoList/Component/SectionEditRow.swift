@@ -10,7 +10,6 @@ import SwiftUI
 struct SectionEditRow: View {
   let section: Section
   let isEditing: Bool
-//  let onEditComplete: () -> Void
   let onEditStart: () -> Void
   let onDelete: () -> Void
   
