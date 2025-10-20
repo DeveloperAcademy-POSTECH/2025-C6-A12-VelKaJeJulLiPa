@@ -11,6 +11,9 @@ import Foundation
 final class CreateTeamspaceViewModel {
     
     /// 팀스페이스 생성 + 소유자 멤버 추가 + 사용자 userTeamspace 등록까지 한 번에
+    /// - Parameters:
+    ///     - ownerId: 팀 스페이스 생성자 아이디
+    ///     - teamspaceNameText: 팀 스페이스 이름
     func createTeamspaceWithInitialMembership(ownerId: String, teamspaceNameText: String) async throws {
         do {
             let teamspaceId = try await self.createTeamsapce(
