@@ -89,13 +89,19 @@ struct SectionEditView: View {
           section: section,
           isEditing: vm.editingSectionid == section.sectionId,
           onEditStart: { vm.startEdit(section: section) },
-          sheetAction: {
-            Task {
-              await vm.deleteSection(tracksId: tracksId, section: section)
-            }
-          },
+          onDelete: { self.showDeleteModal = true },
           editText: $vm.editText
         )
+        .sheet(
+          isPresented: $showDeleteModal) {
+            BottomConfirmSheetView(
+              titleText: "\(section.sectionTitle)\n섹션을 삭제하시겠어요?\n모든 영상이 삭제됩니다.",
+              primaryText: "삭제") {
+                Task {
+                  await vm.deleteSection(tracksId: tracksId, section: section)
+                }
+              }
+          }
       }
     }
   }
