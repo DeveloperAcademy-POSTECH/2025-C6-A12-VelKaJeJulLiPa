@@ -46,7 +46,7 @@ struct NameSettingView: View {
                         .offset(y: 26)
                         .frame(height: 2)
                         .frame(width: underlineWidth)
-                        .foregroundColor(underlineColor)
+                        .foregroundStyle(underlineColor)
                         .animation(.easeInOut(duration: 0.1), value: underlineWidth)
                 }
                 .onChange(of: name, { oldValue, newValue in
@@ -59,6 +59,7 @@ struct NameSettingView: View {
             
             Text("이름이 정확하신가요?")
             
+            // FIXME: 버튼 스타일 수정
             ActionButton(
                 title: "확인",
                 color: Color.blue,
