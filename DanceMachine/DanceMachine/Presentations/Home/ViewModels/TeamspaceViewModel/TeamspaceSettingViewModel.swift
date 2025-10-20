@@ -243,7 +243,7 @@ extension TeamspaceSettingViewModel {
 
         let fetched: [Indexed] = try await withThrowingTaskGroup(of: Indexed.self) { group in
             for (idx, id) in ids.enumerated() {
-                group.addTask {
+                group.addTask { @MainActor in
                     let t: Teamspace = try await FirestoreManager.shared.get(id, from: .teamspace)
                     return Indexed(index: idx, item: t)
                 }

@@ -81,13 +81,9 @@ struct TeamspaceSettingView: View {
         .task(id: viewModel.currentTeamspace?.teamspaceId) {
             // 로그인 유저와 팀 스페이스 ownerId가 일치하면 발생하는 로직 => 팀 스페이스 주인 => 권한 up
             await MainActor.run { self.teamspaceRole = viewModel.isTeamspaceOwner() ? .owner : .viewer }
-            do {
-                let users: [User] = try await viewModel.fetchCurrentTeamspaceAllMember()
-                self.users = users
-            } catch {
-                print("error: \(error.localizedDescription)")
-            }
-            
+          
+            let users: [User] = try await viewModel.fetchCurrentTeamspaceAllMember()
+            self.users = users
         }
     }
     
