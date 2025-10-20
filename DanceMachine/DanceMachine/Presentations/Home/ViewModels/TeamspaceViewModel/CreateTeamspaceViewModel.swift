@@ -10,6 +10,30 @@ import Foundation
 @Observable
 final class CreateTeamspaceViewModel {
     
+    /// 팀스페이스 생성 + 소유자 멤버 추가 + 사용자 userTeamspace 등록까지 한 번에
+    func createTeamspaceWithInitialMembership(ownerId: String, teamspaceNameText: String) async throws {
+        do {
+            let teamspaceId = try await self.createTeamsapce(
+                userId: ownerId, // FIXME: - Mock데이터 교체
+                teamspaceName: teamspaceNameText
+            )
+            
+            try await self.createTeamspaceMember(
+                userId: ownerId, // FIXME: - Mock데이터 교체
+                teamspaceId: teamspaceId
+            )
+            
+            try await self.includeUserTeamspace(teamspaceId: teamspaceId)
+        } catch {
+            print("error: \(error.localizedDescription)") // FIXME: - 에러 분기 처리 추가하기
+        }
+    }
+}
+
+
+// MARK: - 파이어베이스 관리 메서드
+extension CreateTeamspaceViewModel {
+    
     /// 팀 스페이스 생성 메서드입니다.
     /// - userId: userId -> ownerId, 팀 스페이스 owner는 현재 로그인 유저
     /// - teamspaceName: 팀 스페이스 이름
