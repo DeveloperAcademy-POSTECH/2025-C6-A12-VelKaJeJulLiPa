@@ -38,7 +38,7 @@ struct SectionEditView: View {
         if vm.editingSectionid == nil {
           addButton
         } else {
-          confirButtons
+          confirmButton
         }
       }
       .padding(.horizontal, 16)
@@ -97,8 +97,17 @@ struct SectionEditView: View {
       }
     }
   }
+  // 평상시 버튼
+  private var addButton: some View {
+    ActionButton(
+      title: "섹션 추가하기",
+      color: Color.blue,
+      height: 47,
+      action: {} // TODO: 섹션 추가 기능
+    )
+  }
   
-  private var confirButtons: some View {
+  private var confirmButton: some View {
     RoundedRectangle(cornerRadius: 5)
       .fill(!vm.editText.isEmpty ? Color.blue : Color.gray.opacity(0.5))
       .frame(maxWidth: .infinity)
