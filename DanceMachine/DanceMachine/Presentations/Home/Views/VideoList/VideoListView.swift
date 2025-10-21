@@ -62,10 +62,6 @@ struct VideoListView: View {
     .sheet(isPresented: $showCustomPicker) {
       VideoPickerView(tracksId: tracksId, sectionId: sectionId)
     }
-    .toolbar {
-      ToolbarLeadingBackButton(icon: .chevron)
-      ToolbarCenterTitle(text: trackName)
-    }
   }
   
   private var uploadButton: some View {
