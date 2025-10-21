@@ -31,30 +31,6 @@ struct SectionChipIcon: View {
   }
 }
 
-struct SectionChip: View {
-  @Binding var vm: VideoListViewModel
-  
-  var body: some View {
-    Button {
-      vm.selectedSection = nil
-    } label: {
-      Text("전체")
-        .font(.system(size: 15)) // FIXME: 폰트 수정
-        .fontWeight(vm.selectedSection == nil ? .semibold : .regular) // FIXME: 폰트 수정
-        .padding(.horizontal, 12)
-        .padding(.vertical, 4)
-        .background(
-          Capsule() // FIXME: 컬러 수정
-            .fill(vm.selectedSection == nil ? Color.blue.opacity(0.15) : Color.white.opacity(0.1))
-        )
-        .overlay(
-          Capsule() // FIXME: 컬러 수정
-          .stroke(vm.selectedSection == nil ? Color.blue : Color.clear, lineWidth: 1.5)
-        )
-    }
-  }
-}
-
 struct CustomSectionChip: View {
   @Binding var vm: VideoListViewModel
   let action: () -> Void
@@ -66,8 +42,9 @@ struct CustomSectionChip: View {
       action()
     } label: {
       Text(title)
-        .font(.system(size: 15)) // FIXME: 폰트 수정
+        .font(.system(size: 18)) // FIXME: 폰트 수정
         .fontWeight(vm.selectedSection?.sectionId == id ? .semibold : .regular) // FIXME: 폰트 수정
+        .foregroundStyle(vm.selectedSection?.sectionId == id ? Color.blue : Color.black) // FIXME: 폰트 수정
         .padding(.horizontal, 12)
         .padding(.vertical, 4)
         .background(
@@ -76,12 +53,12 @@ struct CustomSectionChip: View {
         )
         .overlay(
           Capsule()
-            .stroke(vm.selectedSection?.sectionId == id ? Color.blue : Color.clear, lineWidth: 1.5)
+            .stroke(vm.selectedSection?.sectionId == id ? Color.blue : Color.black, lineWidth: 1.5)
         )
     }
   }
 }
 
-#Preview {
-  SectionChip(vm: .constant(VideoListViewModel()))
-}
+//#Preview {
+//  SectionChip(vm: .constant(VideoListViewModel()))
+//}
