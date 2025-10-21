@@ -84,13 +84,20 @@ extension VideoListViewModel {
       }
       // 5. UI 업데이트
       await MainActor.run {
+        let previousSelectedId = self.selectedSection?.sectionId
         self.section = fetchSection
         self.track = allTrack
         self.videos = fetchedVideos
         
-        if self.selectedSection == nil,
-           let first = fetchSection.first {
-          self.selectedSection = first
+//        if self.selectedSection == nil,
+//           let first = fetchSection.first {
+//          self.selectedSection = first
+//        }
+        if let prevId = previousSelectedId,
+           let stillExists = fetchSection.first(where: { $0.sectionId == prevId }) {
+          self.selectedSection = stillExists
+        } else {
+          self.selectedSection = fetchSection.first
         }
         
         self.isLoading = false
@@ -109,13 +116,13 @@ extension VideoListViewModel {
 private extension VideoListViewModel {
   func fetchSection(
     in tracksId: String
-  ) async throws-> [Section] {
+  ) async throws -> [Section] {
     return try await store.fetchAllFromSubcollection(
       under: .tracks,
       parentId: tracksId,
       subCollection: .section,
       orderBy: "created_at",
-      descending: true
+      descending: false
     )
   }
   
