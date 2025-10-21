@@ -16,6 +16,8 @@ struct NavigationRoutingView: View {
             switch destination {
             case .homeView:
                 HomeView() // FIXME: - 임시
+            case .videoListView(let tracksId, let sectionId, let trackName):
+              VideoListView(tracksId: tracksId, sectionId: sectionId, trackName: trackName)
             case .sectionEditView(let section, let tracksId, let trackName):
               SectionEditView(
                 sections: section,
