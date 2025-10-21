@@ -11,8 +11,13 @@ struct VideoGrid: View {
   let size: CGFloat
   let columns: Int
   let spacing: CGFloat
+  let tracksId: String
   
   @Binding var videos: [Video]
+  @Binding var track: [Track]
+  @Binding var section: [Section]
+  
+  @State var selectedTrack: Track?
   
   var body: some View {
     LazyVGrid(
@@ -29,26 +34,48 @@ struct VideoGrid: View {
         }
       } else {
         ForEach(videos, id: \.videoId) { video in
+          if let track = track.first(where: { $0.videoId == video.videoId.uuidString }) {
+            GridCell(
+              size: size,
+              thumbnailURL: video.thumbnailURL,
+              title: video.videoTitle,
+              duration: video.videoDuration,
+              uploadDate: video.createdAt ?? Date(),
+              action: {
+                self.selectedTrack = track
+              }
+            )
+          }
+        }
+      }
+#else
+      ForEach(videos, id: \.videoId) { video in
+        if let track = track.first(where: { $0.videoId == video.videoId.uuidString }) {
           GridCell(
             size: size,
             thumbnailURL: video.thumbnailURL,
             title: video.videoTitle,
             duration: video.videoDuration,
-            uploadDate: video.createdAt ?? Date()
+            uploadDate: video.createdAt ?? Date(),
+            action: {
+              self.selectedTrack = track
+            }
           )
         }
       }
-#else
-      ForEach(videos, id: \.videoId) { video in
-        GridCell(
-          size: size,
-          thumbnailURL: video.thumbnailURL,
-          title: video.videoTitle,
-          duration: video.videoDuration,
-          uploadDate: video.createdAt ?? Date()
-        )
-      }
 #endif
+    }
+    .fullScreenCover(item: $selectedTrack) { _ in
+      if let track = selectedTrack {
+        NavigationStack {
+          SectionSelectView(
+            section: section,
+            sectionId: track.sectionId,
+            track: track,
+            tracksId: tracksId
+          )
+        }
+      }
     }
   }
   // 디자인 확인용
@@ -70,11 +97,18 @@ struct VideoGrid: View {
   }
 }
 
+extension Track: Identifiable {
+  var id: String { trackId }
+}
+
 #Preview {
   VideoGrid(
     size: 168,
     columns: 2,
     spacing: 16,
-    videos: .constant([])
+    tracksId: "",
+    videos: .constant([]),
+    track: .constant([]),
+    section: .constant([])
   )
 }
