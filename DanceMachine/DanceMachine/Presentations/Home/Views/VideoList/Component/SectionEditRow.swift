@@ -8,12 +8,14 @@
 import SwiftUI
 
 struct SectionEditRow: View {
+  
+  let tracksId: String
   let section: Section
   let isEditing: Bool
   let onEditStart: () -> Void
-  let onDelete: () -> Void
+  let sheetAction: () -> Void
   
-  
+  @State private var showDeleteModal: Bool = false
   @Binding var editText: String
   @FocusState private var isFocused: Bool
   
@@ -55,7 +57,7 @@ struct SectionEditRow: View {
             .foregroundStyle(Color.blue) // FIXME: 컬러 수정
         }
         Button {
-          onDelete()
+          self.showDeleteModal = true
         } label: {
           Text("삭제")
             .font(Font.system(size: 14, weight: .medium)) // FIXME: 폰트 수정
@@ -64,15 +66,22 @@ struct SectionEditRow: View {
       }
     }
     .padding(.horizontal, 16)
+    .sheet(
+      isPresented: $showDeleteModal) {
+        BottomConfirmSheetView(
+          titleText: "\(section.sectionTitle)\n섹션을 삭제하시겠어요?\n모든 영상이 삭제됩니다.",
+          primaryText: "삭제") { self.sheetAction() }
+      }
   }
 }
 
 #Preview {
   SectionEditRow(
+    tracksId: "",
     section: Section(sectionId: "", sectionTitle: "dd"),
     isEditing: true,
     onEditStart: {},
-    onDelete: {} ,
+    sheetAction: {},
     editText: .constant("dd")
   )
 }
