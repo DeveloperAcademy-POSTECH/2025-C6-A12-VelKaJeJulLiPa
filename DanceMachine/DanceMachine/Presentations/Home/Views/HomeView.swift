@@ -15,7 +15,7 @@ struct HomeView: View {
     
     @State private var teamspaceState: TeamspaceRoute?
     @State private var projectState: ProjectState = .none
-    @State private var editingState: EditingState = .viewing
+    
     
     
     @State private var loadTeamspaces: [Teamspace] = []
@@ -23,6 +23,17 @@ struct HomeView: View {
     
     @State private var didInitialize: Bool = false // 첫 설정 여부
     @State private var isLoading: Bool = false
+    
+    
+    // MARK: - 프로젝트 관련 변수
+    @State private var projectRowState: ProjectRowState = .viewing
+    
+    @State private var presentingRemovalSheetProject: Project?
+    @State private var selectedProject: Project?
+    
+    @State private var editingProjectID: UUID? = nil
+    @State private var editText: String = ""
+    
     
     var body: some View {
         ZStack {
@@ -56,7 +67,7 @@ struct HomeView: View {
                 .padding(.vertical, 11)
                 .background(
                     RoundedRectangle(cornerRadius: 30)
-                            .fill(Color.blue)
+                        .fill(Color.blue)
                 )
             }
             .padding([.trailing, .bottom], 16)
@@ -76,7 +87,7 @@ struct HomeView: View {
                 case false: // FIXME: - 배열의 첫 번째 요소를 currentTeamspace로 설정 => 추후 마지막 접속 스페이스를 설정할지 논의
                     if let firstTeamspace = loadTeamspaces.first {
                         self.viewModel.fetchCurrentTeamspace(teamspace: firstTeamspace)
-                       
+                        
                     }
                     self.didInitialize = true
                 case true:
@@ -132,58 +143,100 @@ struct HomeView: View {
             }
         }
     }
-        
     
-    @State private var presentingRemovalSheetProject: Project?
+    
+    private func rowState(for projectID: UUID) -> ProjectRowState {
+        switch projectRowState {
+        case .viewing:             return .viewing
+        case .editing(.none):      return .editing(.none)   // 편집모드 진입 직후 (삭제/수정 버튼 노출)
+        case .editing(.delete):    return .editing(.delete)
+        case .editing(.update):    return (editingProjectID == projectID) ? .editing(.update) : .editing(.none)
+        }
+    }
     
     // MARK: - 미들 프로젝트 리스트 뷰
     private var middleProjectListView: some View {
         VStack {
-            switch teamspaceState {
-            case .none, .create:
-                Text("팀 스페이스가 없습니다.")
+            switch projectState {
+            case .none:
+                Text("프로젝트가 없습니다.")
                     .font(Font.system(size: 15, weight: .medium))
                     .foregroundStyle(Color.gray)
-            case .list, .setting:
+            case .list:
                 LabeledContent {
-                    Button {
-                        switch self.editingState {
-                        case .viewing:
-                            self.editingState = .editing
-                        case .editing:
-                            self.editingState = .viewing
+                    HStack(spacing: 16) {
+                        if let sec = projectRowState.secondaryTitle {
+                            Button(sec) {
+                                projectRowState = .viewing
+                                editingProjectID = nil
+                                selectedProject = nil
+                                //  editText = ""
+                            }
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(projectRowState.secondaryColor)
                         }
-                    } label: {
-                        Text(self.editingState == .viewing ? "편집" : "취소")
-                            .font(Font.system(size: 16, weight: .semibold)) // FIXME: - 폰트 수정
-                            .foregroundStyle(self.editingState == .viewing ? .gray : .blue) // FIXME: - 컬러 수정
+                        Button(projectRowState.primaryTitle) {
+                            switch projectRowState {
+                            case .viewing:
+                                projectRowState = .editing(.none)
+                                selectedProject = nil
+                                // editText = ""
+                            case .editing(.none), .editing(.delete):
+                                projectRowState = .viewing
+                                selectedProject = nil
+                                // editText = ""
+                            case .editing(.update):
+                                Task {
+                                    guard let id = editingProjectID?.uuidString else {
+                                        projectRowState = .viewing
+                                        return
+                                    }
+                                    try await viewModel.updateProjectName(projectId: id, newProjectName: editText)
+                                    self.loadProjects = try await self.viewModel.fetchCurrentTeamspaceProject()
+                                    projectRowState = .viewing
+                                    editingProjectID = nil
+                                    selectedProject = nil
+                                    // editText = ""
+                                }
+                            }
+                        }
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(projectRowState.primaryColor)
                     }
                 } label: {
                     Text("프로젝트 목록")
-                        .font(Font.system(size: 16, weight: .semibold))
-                        .foregroundStyle(Color.gray)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(.gray)
                 }
-                switch projectState {
-                case .none:
-                    Text("프로젝트가 없습니다.")
-                        .font(Font.system(size: 15, weight: .medium))
-                        .foregroundStyle(Color.gray)
-                case .list:
-                    List(self.loadProjects, id: \.projectId) { project in
-                        ListCell(
-                            title: project.projectName,
-                            isEditing: self.editingState,
-                            deleteAction: { self.presentingRemovalSheetProject = project },
-                            editAction: { /* 편집 액션 */ },
-                            rowTapAction: {
-                                print("tapped:", project.projectName)
+                
+                List(self.loadProjects, id: \.projectId) { project in
+                    ListCell(
+                        title: project.projectName,
+                        projectRowState: rowState(for: project.projectId),
+                        deleteAction: { presentingRemovalSheetProject = project },
+                        editAction: {
+                            editText         = project.projectName    // 1) 먼저 현재 제목을 넣고
+                            selectedProject  = project                // 2) 선택 저장
+                            editingProjectID = project.projectId      // 3) 수정중인 행 지정
+                            projectRowState  = .editing(.update)      // 4) 그 셀만 텍스트필드로
+                        },
+                        rowTapAction: { print("rowTapAction") },
+                        editText: Binding(
+                            get: {
+                                (editingProjectID == project.projectId) ? editText : project.projectName
+                            },
+                            set: { newValue in
+                                if editingProjectID == project.projectId {
+                                    editText = newValue
+                                }
                             }
                         )
-                        .listRowSeparator(.hidden)
-                    }
-                    .listStyle(.plain)
+                    )
+                    .listRowSeparator(.hidden)
                 }
+                .listStyle(.plain)
             }
+            
         }
         .sheet(item: $presentingRemovalSheetProject) { project in
             BottomConfirmSheetView(
@@ -195,6 +248,8 @@ struct HomeView: View {
                     }
                 }
         }
+        
+        
     }
 }
 
@@ -205,4 +260,4 @@ struct HomeView: View {
 //            .environmentObject(NavigationRouter())
 //    }
 //}
-
+//

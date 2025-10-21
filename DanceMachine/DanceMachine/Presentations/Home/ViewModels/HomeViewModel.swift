@@ -90,5 +90,21 @@ extension HomeViewModel {
         }
     }
     
+    /// 프로젝트 이름을 수정하는 메서드입니다.
+    /// - Parameters:
+    ///     - projectId: 프로젝트 Id
+    ///     - newProjectName: 새로운 프로젝트 이름
+    func updateProjectName(projectId: String, newProjectName: String) async throws {
+        do {
+            try await FirestoreManager.shared.updateFields(
+                collection: .project,
+                documentId: projectId,
+                asDictionary: [ Project.CodingKeys.projectName.stringValue: newProjectName ]
+            )} catch {
+                print("error: \(error.localizedDescription)")
+            }
+    }
+    
+    
 }
 

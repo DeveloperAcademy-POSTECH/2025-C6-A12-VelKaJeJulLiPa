@@ -10,78 +10,115 @@ import SwiftUI
 /// 리스트 셀 컴포넌트 입니다.
 struct ListCell: View {
     let title: String
-    var isEditing: EditingState = .viewing
-
+    var projectRowState: ProjectRowState = .viewing
+    
     let deleteAction: () -> Void
     let editAction: () -> Void
     let rowTapAction: () -> Void
+    
+    var onTextChanged: (String) -> Void = { _ in }
+    
+    @Binding var editText: String
 
+    @FocusState private var nameFieldFocused: Bool
+    
     var body: some View {
         HStack {
-            Text(title)
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(.black)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-
-            Spacer()
-
-            switch isEditing {
-            case .editing:
-                HStack(spacing: 16) {
-                    Button(action: deleteAction) {
-                        Text("삭제")
-                            .font(.system(size: 15, weight: .medium))
-                            .foregroundStyle(.red)
-                    }
-                    .buttonStyle(.plain)
-                    Button(action: editAction) {
-                        Text("수정")
-                            .font(.system(size: 15, weight: .medium))
-                            .foregroundStyle(.blue)
-                    }
-                    .buttonStyle(.plain)
-                }
-                .padding(.horizontal, 16)
+            switch projectRowState {
             case .viewing:
+                Text(title)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(.black)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                Spacer()
                 Image(systemName: "chevron.right")
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
+            case .editing(let action):
+                switch action {
+                case .none, .delete:
+                    Text(title)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(.black)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                    Spacer()
+                    HStack(spacing: 16) {
+                        Button("삭제", action: deleteAction)
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundStyle(.red)
+                            .buttonStyle(.plain)
+                        
+                        Button("수정", action: editAction) // ← 이걸 누르면 상위에서 .editing(.update)로 전환
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundStyle(.blue)
+                            .buttonStyle(.plain)
+                    }
+                    .padding(.horizontal, 16)
+                case .update:
+                    VStack(spacing: .zero) {
+                        TextField("프로젝트 명", text: $editText)
+                            .font(.system(size: 16, weight: .semibold))
+                            .textFieldStyle(.plain)
+                            .padding(.leading, 16)
+                            .padding(.top, 12)
+                            .focused($nameFieldFocused)
+                            .onChange(of: projectRowState) { _, new in
+                                if case .editing(.update) = new {
+                                    // 셀이 update 모드로 바뀐 그 순간만 초기화
+                                    editText = title
+                                    nameFieldFocused = true
+                                    onTextChanged(editText)
+                                }
+                            }
+                            .onChange(of: editText) { _, newValue in
+                                onTextChanged(newValue)
+                            }
+
+                        Rectangle()
+                            .fill(Color.blue)
+                            .frame(height: 1)
+                            .padding(.leading, 16)
+                            .padding(.bottom, 12)
+                    }
+                    
+                    Spacer()
+                    
+                    XmarkButton { self.editText = "" }
+                        .padding(.trailing, 16)
+                    
+                }
             }
         }
         .background(
             RoundedRectangle(cornerRadius: 5)
-                .fill(Color.gray)
+                .fill(Color.gray.opacity(0.1))
         )
         .contentShape(Rectangle())
         .onTapGesture {
-            if isEditing == .viewing { rowTapAction() }
+            if case .viewing = projectRowState { rowTapAction() }
         }
+    }
+    
+    private var isUpdateMode: Bool {
+        if case .editing(.update) = projectRowState { return true }
+        return false
     }
 }
 
 #Preview("수정 x") {
     ListCell(
-        title: "2025 가을 축제",
-        isEditing: .viewing) {
-            print("삭제 액션")
-        } editAction: {
-            print("수정 액션")
-        } rowTapAction: {
-            print("셀 영역 터치 액션")
-        }
-        .padding(.horizontal, 16)
-}
-
-#Preview("수정 o") {
-    ListCell(
-        title: "2025 가을 축제",
-        isEditing: .editing) {
-            print("삭제 액션")
-        } editAction: {
-            print("수정 액션")
-        } rowTapAction: {
-            print("셀 영역 터치 액션")
-        }
-        .padding(.horizontal, 16)
+        title: "수정",
+        deleteAction: {
+            
+        },
+        editAction: {
+            
+        },
+        rowTapAction: {
+            
+        }, editText: .constant("")
+    )
+    .padding(.horizontal, 16)
 }
