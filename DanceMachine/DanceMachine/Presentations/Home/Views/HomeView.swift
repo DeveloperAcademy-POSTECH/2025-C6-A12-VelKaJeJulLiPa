@@ -35,6 +35,12 @@ struct HomeView: View {
     @State private var editText: String = ""
     
     
+    @State private var expandedProjectIDs: Set<UUID> = []  // 펼쳐져 있는 프로젝트
+    @State private var tracksByProject: [UUID: [Tracks]] = [:]  // 프로젝트별 트랙 캐시
+    @State private var tracksLoading: Set<UUID> = []  // 로딩 중인 프로젝트
+    @State private var tracksError: [UUID: String] = [:] // 에러 메시지
+    
+    
     // 버튼 위쪽 어딘가(동일 스코프)에 추가
     private var shouldDisablePrimaryButton: Bool {
         if case .editing(.update) = projectRowState {
@@ -153,12 +159,40 @@ struct HomeView: View {
     }
     
     
+    // MARK: - ProjectRowState 조금 더 편안한게 변경하는 로직
     private func rowState(for projectID: UUID) -> ProjectRowState {
         switch projectRowState {
-        case .viewing:             return .viewing
-        case .editing(.none):      return .editing(.none)   // 편집모드 진입 직후 (삭제/수정 버튼 노출)
-        case .editing(.delete):    return .editing(.delete)
-        case .editing(.update):    return (editingProjectID == projectID) ? .editing(.update) : .editing(.none)
+        case .viewing:
+            return .viewing
+        case .editing(.none):
+            return .editing(.none)   // 편집모드 진입 직후 (삭제/수정 버튼 노출)
+        case .editing(.delete):
+            return .editing(.delete)
+        case .editing(.update):
+            return (editingProjectID == projectID) ? .editing(.update) : .editing(.none)
+        }
+    }
+    
+    
+    // MARK: - 해당 프로젝트의 곡을 뷰에 나타내는 로직
+    private func toggleExpand(for project: Project) {
+        let id = project.projectId
+        if expandedProjectIDs.contains(id) {
+            expandedProjectIDs.remove(id)
+            return
+        }
+        expandedProjectIDs.insert(id)
+
+        if tracksByProject[id] != nil { return }
+        
+        tracksLoading.insert(id)
+        tracksError[id] = nil
+        Task {
+            let tracks = try await viewModel.fetchTracks(projectId: id.uuidString)
+            await MainActor.run {
+                tracksByProject[id] = tracks
+                tracksLoading.remove(id)
+            }
         }
     }
     
@@ -220,28 +254,53 @@ struct HomeView: View {
                 }
                 
                 List(self.loadProjects, id: \.projectId) { project in
-                    ListCell(
-                        title: project.projectName,
-                        projectRowState: rowState(for: project.projectId),
-                        deleteAction: { presentingRemovalSheetProject = project },
-                        editAction: {
-                            editText         = project.projectName    // 1) 먼저 현재 제목을 넣고
-                            selectedProject  = project                // 2) 선택 저장
-                            editingProjectID = project.projectId      // 3) 수정중인 행 지정
-                            projectRowState  = .editing(.update)      // 4) 그 셀만 텍스트필드로
-                        },
-                        rowTapAction: { print("rowTapAction") },
-                        editText: Binding(
-                            get: {
-                                (editingProjectID == project.projectId) ? editText : project.projectName
+                    VStack(spacing: 8) {
+                        ListCell(
+                            title: project.projectName,
+                            projectRowState: rowState(for: project.projectId),
+                            deleteAction: { presentingRemovalSheetProject = project },
+                            editAction: {
+                                editText         = project.projectName
+                                selectedProject  = project
+                                editingProjectID = project.projectId
+                                projectRowState  = .editing(.update)
                             },
-                            set: { newValue in
-                                if editingProjectID == project.projectId {
-                                    editText = newValue
-                                }
-                            }
+                            rowTapAction: { toggleExpand(for: project) },
+                            editText: Binding(
+                                get: { (editingProjectID == project.projectId) ? editText : project.projectName },
+                                set: { if editingProjectID == project.projectId { editText = $0 } }
+                            ),
+                            isExpanded: expandedProjectIDs.contains(project.projectId) // 화살표 이미지 회전
                         )
-                    )
+                        .listRowSeparator(.hidden)
+
+                       
+                        if expandedProjectIDs.contains(project.projectId) {
+                            if tracksLoading.contains(project.projectId) {
+                                HStack {
+                                    ProgressView()
+                                    Text("트랙 불러오는 중…").font(.system(size: 14)).foregroundStyle(.gray)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.leading, 20)
+                            } else if let error = tracksError[project.projectId] {
+                                Text("불러오기 실패: \(error)")
+                                    .font(.system(size: 14))
+                                    .foregroundStyle(.red)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(.leading, 20)
+                            } else {
+                                let tracks = tracksByProject[project.projectId] ?? []
+                                VStack(spacing: 10) {
+                                    ForEach(tracks, id: \.trackId) { track in
+                                        TrackRow(track: track)
+                                    }
+                                }
+                                .padding(.leading, 20)
+                            }
+                        }
+                    }
+                    .animation(.easeInOut, value: expandedProjectIDs)
                     .listRowSeparator(.hidden)
                 }
                 .listStyle(.plain)

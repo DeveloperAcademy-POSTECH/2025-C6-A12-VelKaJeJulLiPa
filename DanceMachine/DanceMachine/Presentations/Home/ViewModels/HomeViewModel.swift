@@ -10,7 +10,7 @@ import Foundation
 @Observable
 final class HomeViewModel {
     
-     var currentTeamspace: Teamspace? { FirebaseAuthManager.shared.currentTeamspace }
+    var currentTeamspace: Teamspace? { FirebaseAuthManager.shared.currentTeamspace }
     
     
     /// FirebaseAuthManager의 현재 팀 스페이스를 교체하는 메서드 입니다.
@@ -41,9 +41,9 @@ final class HomeViewModel {
             return nil
         }
         guard !ids.isEmpty else { return [] }
-
+        
         struct Indexed { let index: Int; let item: Teamspace }
-
+        
         let fetched: [Indexed] = try await withThrowingTaskGroup(of: Indexed.self) { group in
             for (idx, id) in ids.enumerated() {
                 group.addTask {
@@ -60,7 +60,7 @@ final class HomeViewModel {
     
     
     
-
+    
     
 }
 
@@ -105,6 +105,26 @@ extension HomeViewModel {
             }
     }
     
+    /// 특정 project_id 에 해당하는 tracks를 반환합니다.
+    /// - Parameters:
+    ///   - projectId: 필터링할 project_id
+    ///   - orderBy: 정렬 기준 (기본값: "created_at")
+    ///   - descending: 정렬 방향 (기본값: true)
+    /// - Returns: [Track]
+    func fetchTracks(
+        projectId: String
+    ) async throws -> [Tracks] {
+        do {
+            return try await FirestoreManager.shared.fetchAll(
+                projectId,
+                from: .tracks,
+                where: Project.CodingKeys.projectId.rawValue
+            )
+        } catch {
+            print("error: \(error.localizedDescription)")
+            return []
+        }
+    }
     
 }
 
