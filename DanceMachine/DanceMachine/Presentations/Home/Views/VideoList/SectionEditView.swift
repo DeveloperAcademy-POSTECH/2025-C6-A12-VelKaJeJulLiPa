@@ -11,7 +11,6 @@ struct SectionEditView: View {
   @EnvironmentObject private var router: NavigationRouter
   @State private var vm: SectionEditViewModel
   
-  @State private var showDeleteModal: Bool = false
   
   let tracksId: String
   let trackName: String
@@ -86,22 +85,17 @@ struct SectionEditView: View {
     ScrollView {
       ForEach(vm.sections, id: \.sectionId) { section in
         SectionEditRow(
+          tracksId: tracksId,
           section: section,
           isEditing: vm.editingSectionid == section.sectionId,
           onEditStart: { vm.startEdit(section: section) },
-          onDelete: { self.showDeleteModal = true },
+          sheetAction: {
+            Task {
+              await vm.deleteSection(tracksId: tracksId, section: section)
+            }
+          },
           editText: $vm.editText
         )
-        .sheet(
-          isPresented: $showDeleteModal) {
-            BottomConfirmSheetView(
-              titleText: "\(section.sectionTitle)\n섹션을 삭제하시겠어요?\n모든 영상이 삭제됩니다.",
-              primaryText: "삭제") {
-                Task {
-                  await vm.deleteSection(tracksId: tracksId, section: section)
-                }
-              }
-          }
       }
     }
   }
@@ -111,7 +105,7 @@ struct SectionEditView: View {
       title: "섹션 추가하기",
       color: Color.blue,
       height: 47,
-      action: {} // TODO: 섹션 추가 기능
+      action: { vm.addNewSection() }
     )
   }
   
