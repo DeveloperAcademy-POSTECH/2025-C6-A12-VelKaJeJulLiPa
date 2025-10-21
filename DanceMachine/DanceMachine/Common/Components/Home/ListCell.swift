@@ -19,6 +19,8 @@ struct ListCell: View {
     var onTextChanged: (String) -> Void = { _ in }
     
     @Binding var editText: String
+    
+    var isExpanded: Bool = false // 화살표 회전 변수
 
     @FocusState private var nameFieldFocused: Bool
     
@@ -33,6 +35,8 @@ struct ListCell: View {
                     .padding(.vertical, 12)
                 Spacer()
                 Image(systemName: "chevron.right")
+                    .rotationEffect(.degrees(isExpanded ? 90 : 0))
+                    .animation(.easeInOut(duration: 0.2), value: isExpanded)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
             case .editing(let action):
