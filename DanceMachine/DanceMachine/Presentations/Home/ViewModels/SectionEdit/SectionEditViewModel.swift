@@ -15,6 +15,8 @@ final class SectionEditViewModel {
   var editingSectionid: String? = nil
   var editText: String = ""
   
+  var isNewSection: Bool = false // 수정모드와 추가모드 플래그
+  
   init(sections: [Section]) {
     self.sections = sections
   }
@@ -22,6 +24,20 @@ final class SectionEditViewModel {
   func startEdit(section: Section) {
     editingSectionid = section.sectionId
     editText = section.sectionTitle
+    isNewSection = false
+  }
+  
+  func addNewSection() {
+    let new = Section(
+      sectionId: UUID().uuidString,
+      sectionTitle: ""
+    )
+    sections.append(new)
+    
+    // 편집모드 진입
+    self.editText = ""
+    self.editingSectionid = new.sectionId
+    self.isNewSection = true
   }
   // MARK: 노티 메서드
   func notify(_ name: Foundation.Notification.Name) {
@@ -41,12 +57,14 @@ extension SectionEditViewModel {
     updatedSection.sectionTitle = self.editText
     
     do {
+      //
+      let strategy: WriteStrategy = self.isNewSection ? .create : .update
       try await store.createToSubcollection(
         updatedSection,
         under: .tracks,
         parentId: tracksId,
         subCollection: .section,
-        strategy: .update
+        strategy: strategy
       )
       
       await MainActor.run {
@@ -55,6 +73,7 @@ extension SectionEditViewModel {
         }
         self.editText = ""
         self.editingSectionid = nil
+        self.isNewSection = false
       }
     } catch { // TODO: 에러처리
       print("섹션 수정 실패")
