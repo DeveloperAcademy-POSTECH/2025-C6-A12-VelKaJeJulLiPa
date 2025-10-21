@@ -15,14 +15,10 @@ struct XmarkButton: View {
         Button {
             action()
         } label: {
-            Image(systemName: "xmark") // FIXME: - 이미지 교체
-                .foregroundStyle(Color.white)
-                .background(
-                    Circle()
-                        .fill(Color.blue)
-                        .frame(width: 19, height: 19)
-                )
+            Image(systemName: "xmark.circle.fill")
+                .foregroundStyle(.gray)
         }
+        .buttonStyle(.plain)
     }
 }
 
