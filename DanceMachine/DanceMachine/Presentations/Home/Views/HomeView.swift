@@ -35,6 +35,14 @@ struct HomeView: View {
     @State private var editText: String = ""
     
     
+    // 버튼 위쪽 어딘가(동일 스코프)에 추가
+    private var shouldDisablePrimaryButton: Bool {
+        if case .editing(.update) = projectRowState {
+            return editText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+        return false
+    }
+    
     var body: some View {
         ZStack {
             Color.white // FIXME: - 컬러 수정
@@ -170,7 +178,7 @@ struct HomeView: View {
                                 projectRowState = .viewing
                                 editingProjectID = nil
                                 selectedProject = nil
-                                //  editText = ""
+                                editText = ""
                             }
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundStyle(projectRowState.secondaryColor)
@@ -180,11 +188,11 @@ struct HomeView: View {
                             case .viewing:
                                 projectRowState = .editing(.none)
                                 selectedProject = nil
-                                // editText = ""
+                                editText = ""
                             case .editing(.none), .editing(.delete):
                                 projectRowState = .viewing
                                 selectedProject = nil
-                                // editText = ""
+                                editText = ""
                             case .editing(.update):
                                 Task {
                                     guard let id = editingProjectID?.uuidString else {
@@ -196,12 +204,14 @@ struct HomeView: View {
                                     projectRowState = .viewing
                                     editingProjectID = nil
                                     selectedProject = nil
-                                    // editText = ""
+                                    editText = ""
                                 }
                             }
                         }
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(projectRowState.primaryColor)
+                        .disabled(shouldDisablePrimaryButton)
+                        .opacity(shouldDisablePrimaryButton ? 0.5 : 1.0)
                     }
                 } label: {
                     Text("프로젝트 목록")
@@ -236,7 +246,6 @@ struct HomeView: View {
                 }
                 .listStyle(.plain)
             }
-            
         }
         .sheet(item: $presentingRemovalSheetProject) { project in
             BottomConfirmSheetView(
