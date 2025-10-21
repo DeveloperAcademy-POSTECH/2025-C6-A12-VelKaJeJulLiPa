@@ -16,14 +16,24 @@ struct GridCell: View {
   let duration: Double
   let uploadDate: Date
   
+  let action: () -> Void
+  
+  @State private var showMenu: Bool = false
+  
   var body: some View {
-    Rectangle()
-      .fill(Color.white)
-      .frame(width: size, height: size * 1.2)
-      .clipShape(RoundedRectangle(cornerRadius: 10))
-      .overlay {
-        content
-      }
+    ZStack(alignment: .topTrailing) {
+      Rectangle()
+        .fill(Color.white)
+        .frame(width: size, height: size * 1.2)
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .overlay {
+          content
+        }
+        .sensoryFeedback(.success, trigger: showMenu)
+    }
+    .contextMenu {
+      contextMenu
+    }
   }
   
   private var content: some View {
@@ -53,7 +63,40 @@ struct GridCell: View {
     }
 //    .padding(.leading, -4)
   }
+  
+  
+  private var contextMenu: some View {
+    RoundedRectangle(cornerRadius: 40)
+      .fill(.ultraThinMaterial)
+      .frame(width: 201)
+      .frame(height: 120)
+      .overlay {
+        contextRow
+      }
+  }
+  
+  private var contextRow: some View {
+    VStack(alignment: .leading, spacing: 16) {
+      Button {
+        action()
+      } label: {
+        HStack {
+          Image(systemName: "pencil")
+          Text("섹션 이름 수정")
+        }
+      }
+      Button {
+        // TODO: 섹션 삭제
+      } label: {
+        HStack {
+          Image(systemName: "trash")
+          Text("섹션 삭제")
+        }
+      }
+    }
+  }
 }
+
 
 #Preview {
   GridCell(
@@ -61,6 +104,7 @@ struct GridCell: View {
     thumbnailURL: "https://picsum.photos/300",
     title: "제목",
     duration: 14.1414141414,
-    uploadDate: Date()
+    uploadDate: Date(),
+    action: {}
   )
 }
