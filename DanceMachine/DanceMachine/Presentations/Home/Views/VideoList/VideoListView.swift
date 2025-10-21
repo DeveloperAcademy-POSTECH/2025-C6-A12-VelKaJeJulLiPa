@@ -32,7 +32,9 @@ struct VideoListView: View {
   
   var body: some View {
     VStack {
+      Spacer().frame(height: 16)
       sectionView
+      Spacer().frame(height: 32)
       if vm.isLoading {
         Spacer().frame(maxWidth: .infinity)
         ProgressView()
@@ -44,6 +46,12 @@ struct VideoListView: View {
       }
       uploadButton
     }
+    .navigationBarTitleDisplayMode(.inline)
+//    .toolbar(.hidden, for: .tabBar)
+    .toolbar {
+      ToolbarLeadingBackButton(icon: .chevron)
+      ToolbarCenterTitle(text: trackName)
+    }
     .task {
       await vm.loadFromServer(tracksId: tracksId)
     }
@@ -53,10 +61,6 @@ struct VideoListView: View {
     }
     .sheet(isPresented: $showCustomPicker) {
       VideoPickerView(tracksId: tracksId, sectionId: sectionId)
-    }
-    .toolbar {
-      ToolbarLeadingBackButton(icon: .chevron)
-      ToolbarCenterTitle(text: trackName)
     }
   }
   
@@ -93,7 +97,10 @@ struct VideoListView: View {
           size: itemSize,
           columns: columns,
           spacing: spacing,
-          videos: .constant(vm.filteredVideos)
+          tracksId: tracksId,
+          videos: .constant(vm.filteredVideos),
+          track: .constant(vm.track),
+          section: .constant(vm.section)
         )
         .onTapGesture {
           // TODO: 비디오 플레이 화면 네비게이션 연결
