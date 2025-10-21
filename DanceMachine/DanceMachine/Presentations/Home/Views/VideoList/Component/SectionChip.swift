@@ -44,11 +44,11 @@ struct SectionChip: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 4)
         .background(
-          Capsule()
+          Capsule() // FIXME: 컬러 수정
             .fill(vm.selectedSection == nil ? Color.blue.opacity(0.15) : Color.white.opacity(0.1))
         )
         .overlay(
-          Capsule()
+          Capsule() // FIXME: 컬러 수정
           .stroke(vm.selectedSection == nil ? Color.blue : Color.clear, lineWidth: 1.5)
         )
     }
