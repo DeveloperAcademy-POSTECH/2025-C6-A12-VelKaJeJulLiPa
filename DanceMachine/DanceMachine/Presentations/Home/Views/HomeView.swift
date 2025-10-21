@@ -28,8 +28,10 @@ struct HomeView: View {
     // MARK: - 프로젝트 관련 변수
     @State private var projectRowState: ProjectRowState = .viewing
     
+    // FIXME: - 변수 통합하기
     @State private var presentingRemovalSheetProject: Project?
-    @State private var selectedProject: Project?
+    @State private var editSelectedProject: Project?
+    @State private var choiceSelectedProject: Project?
     
     @State private var editingProjectID: UUID? = nil
     @State private var editText: String = ""
@@ -176,8 +178,11 @@ struct HomeView: View {
     
     // MARK: - 해당 프로젝트의 곡을 뷰에 나타내는 로직
     private func toggleExpand(for project: Project) {
+        self.choiceSelectedProject = project
+        
         let id = project.projectId
         if expandedProjectIDs.contains(id) {
+            self.choiceSelectedProject = nil
             expandedProjectIDs.remove(id)
             return
         }
@@ -211,7 +216,7 @@ struct HomeView: View {
                             Button(sec) {
                                 projectRowState = .viewing
                                 editingProjectID = nil
-                                selectedProject = nil
+                                editSelectedProject = nil
                                 editText = ""
                             }
                             .font(.system(size: 16, weight: .semibold))
@@ -221,11 +226,11 @@ struct HomeView: View {
                             switch projectRowState {
                             case .viewing:
                                 projectRowState = .editing(.none)
-                                selectedProject = nil
+                                editSelectedProject = nil
                                 editText = ""
                             case .editing(.none), .editing(.delete):
                                 projectRowState = .viewing
-                                selectedProject = nil
+                                editSelectedProject = nil
                                 editText = ""
                             case .editing(.update):
                                 Task {
@@ -237,7 +242,7 @@ struct HomeView: View {
                                     self.loadProjects = try await self.viewModel.fetchCurrentTeamspaceProject()
                                     projectRowState = .viewing
                                     editingProjectID = nil
-                                    selectedProject = nil
+                                    editSelectedProject = nil
                                     editText = ""
                                 }
                             }
@@ -248,7 +253,7 @@ struct HomeView: View {
                         .opacity(shouldDisablePrimaryButton ? 0.5 : 1.0)
                     }
                 } label: {
-                    Text("프로젝트 목록")
+                    Text(self.choiceSelectedProject == nil ? "프로젝트 목록" : choiceSelectedProject?.projectName ?? "프로젝트 목록")
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(.gray)
                 }
@@ -261,7 +266,7 @@ struct HomeView: View {
                             deleteAction: { presentingRemovalSheetProject = project },
                             editAction: {
                                 editText         = project.projectName
-                                selectedProject  = project
+                                editSelectedProject  = project
                                 editingProjectID = project.projectId
                                 projectRowState  = .editing(.update)
                             },
