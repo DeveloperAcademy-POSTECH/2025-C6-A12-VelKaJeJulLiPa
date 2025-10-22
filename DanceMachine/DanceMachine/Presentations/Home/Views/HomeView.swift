@@ -327,8 +327,21 @@ struct HomeView: View {
                             } else {
                                 let tracks = tracksByProject[project.projectId] ?? []
                                 VStack(spacing: 10) {
-                                    ForEach(tracks, id: \.trackId) { track in
-                                        TrackRow(track: track)
+                                    if tracks.isEmpty {
+                                        Text("곡이 없습니다. 추가해보세요")
+                                            .font(.system(size: 16, weight: .semibold))
+                                            .foregroundStyle(.black)
+                                            .padding(.horizontal, 16)
+                                            .padding(.vertical, 12)
+                                            .frame(maxWidth: .infinity, alignment: .center)
+                                            .background(
+                                                RoundedRectangle(cornerRadius: 10)
+                                                    .fill(Color.gray.opacity(0.1)) // FIXME: - 컬러 수정
+                                            )
+                                    } else {
+                                        ForEach(tracks, id: \.trackId) { track in
+                                            TrackRow(track: track)
+                                        }
                                     }
                                 }
                                 .padding(.leading, 20)
