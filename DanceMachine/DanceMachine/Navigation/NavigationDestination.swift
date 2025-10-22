@@ -7,6 +7,25 @@
 
 import Foundation
 
-enum NavigationDestination: Equatable, Hashable {
-    case homeView // FIXME: - 임시
+enum AppRoute: Hashable {
+    case home
+    case inbox(InboxRoute)
+    case mypage(MyPageRoute)
+    
+    case teamspace(TeamspaceRoute)
 }
+
+enum TeamspaceRoute: Hashable {
+    case list
+    case create
+    case setting
+}
+
+enum InboxRoute: Hashable {
+    case list
+}
+
+enum MyPageRoute: Hashable {
+    case profile
+}
+

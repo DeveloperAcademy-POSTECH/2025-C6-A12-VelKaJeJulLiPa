@@ -9,9 +9,9 @@ import Foundation
 
 protocol NavigationRoutable {
 
-    var destination: [NavigationDestination] { get set }
+    var destination: [AppRoute] { get set }
     
-    func push(to view: NavigationDestination)
+    func push(to view: AppRoute)
     func pop()
     func popToRootView()
 }

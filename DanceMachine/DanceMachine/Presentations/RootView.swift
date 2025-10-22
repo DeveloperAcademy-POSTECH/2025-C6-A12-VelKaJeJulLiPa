@@ -13,23 +13,29 @@ struct RootView: View {
     @State var tabcase: TabCase = .home
     
     var body: some View {
-        NavigationStack(path: $router.destination, root: {
-            TabView(selection: $tabcase, content: {
-                ForEach(TabCase.allCases, id: \.rawValue) { tab in
-                    Tab(
-                        value: tab,
-                        content: {
-                            tabView(tab: tab)
-                                .tag(tab)
-                        },
-                        label: {
-                            tabLabel(tab)
-                        })
-                }
-            })
-            .tint(Color.blue)
-            .navigationDestination(for: NavigationDestination.self, destination: { destination in
-                NavigationRoutingView(destination: destination)
+        NavigationStack(
+            path: $router.destination,
+            root: {
+                TabView(selection: $tabcase, content: {
+                    ForEach(TabCase.allCases, id: \.rawValue) { tab in
+                        Tab(
+                            value: tab,
+                            content: {
+                                tabView(tab: tab)
+                                    .tag(tab)
+                            },
+                            label: {
+                                tabLabel(tab)
+                            })
+                    }
+                })
+                .tint(Color.blue)
+                .navigationDestination(
+                    for: AppRoute.self,
+                    destination: { destination in
+                        NavigationRoutingView(
+                            destination: destination
+                        )
                     .environmentObject(router)
             })
         })
@@ -50,11 +56,17 @@ struct RootView: View {
         Group {
             switch tab {
             case .home:
-                HomeView()
+                NavigationRoutingView(
+                    destination: .home
+                )
             case .inbox:
-                InboxView()
+                NavigationRoutingView(
+                    destination: .inbox(.list)
+                )
             case .myPage:
-                MyPageView()
+                NavigationRoutingView(
+                    destination: .mypage(.profile)
+                )
             }
         }
         .environmentObject(router)

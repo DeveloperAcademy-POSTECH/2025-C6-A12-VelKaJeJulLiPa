@@ -51,6 +51,10 @@ struct User: Codable {
     }
 }
 
+extension User: Identifiable {
+    var id: String { UUID().uuidString }
+}
+
 extension User: EntityRepresentable {
     var entityName: CollectionType { .users }
     var documentID: String { userId }
