@@ -36,13 +36,19 @@ struct SectionEditRow: View {
           .textFieldStyle(.plain)
           .font(.system(size: 16)) // FIXME: 폰트 수정
           .focused($isFocused)
+          .overlay {
+            Rectangle()
+              .frame(height: 2)
+              .foregroundStyle(Color.blue) // FIXME: 컬러 수정
+              .padding(.top, 30)
+          }
           .onAppear {
             isFocused = true
           }
         Button {
           self.editText = ""
         } label: {
-          Image(systemName: "xmark.circle.fill")
+          Image(systemName: "xmark.circle.fill") // FIXME: 아이콘 수정
             .foregroundStyle(.gray)
         }
       } else { // 일반 모드
