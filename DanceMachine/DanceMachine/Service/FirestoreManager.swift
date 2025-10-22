@@ -235,6 +235,7 @@ final class FirestoreManager {
           return data
       }
       
+<<<<<<< HEAD
     
     /// 서브컬렉션의 데이터를 생성합니다.
     /// - Parameters:
@@ -285,6 +286,8 @@ final class FirestoreManager {
 
         return data
     }
+=======
+>>>>>>> origin/feat/#10
     
     /// 컬렉션의 모든 데이터를 가져옵니다.
     /// 파이어베이스 색인으로 정렬합니다.
