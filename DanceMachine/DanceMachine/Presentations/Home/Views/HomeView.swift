@@ -89,37 +89,16 @@ struct HomeView: View {
             .padding([.trailing, .bottom], 16)
         }
         .task {
-            var userTeamspaces: [UserTeamspace] = []
-            
-            self.isLoading = true
+            isLoading = true
             defer { isLoading = false }
             
-            do {
-                userTeamspaces = try await self.viewModel.fetchUserTeamspace(userId: MockData.userId) // FIXME: - 유저 아이디 교체
-                self.teamspaceState = userTeamspaces.isEmpty ? .create : .list
-                self.loadTeamspaces = try await viewModel.fetchTeamspaces(userTeamspaces: userTeamspaces)
-                
-                switch didInitialize {
-                case false: // FIXME: - 배열의 첫 번째 요소를 currentTeamspace로 설정 => 추후 마지막 접속 스페이스를 설정할지 논의
-                    if let firstTeamspace = loadTeamspaces.first {
-                        self.viewModel.fetchCurrentTeamspace(teamspace: firstTeamspace)
-                        
-                    }
-                    self.didInitialize = true
-                case true:
-                    break
-                }
-                
-                self.loadProjects = try await self.viewModel.fetchCurrentTeamspaceProject()
-                switch self.loadProjects.isEmpty {
-                case true:
-                    self.projectState = .none
-                case false:
-                    self.projectState = .list
-                }
-                
-            } catch {
-                print("error: \(error.localizedDescription)") // FIXME: - 적절한 에러 분기 처리 진행하기
+            let result = await viewModel.loadUserTeamspacesAndTeamspaces(userId: MockData.userId)
+            self.teamspaceState = result.userTeamspaces.isEmpty ? .create : .list
+            self.loadTeamspaces = result.teamspaces
+            
+            if !didInitialize, let first = loadTeamspaces.first {
+                viewModel.fetchCurrentTeamspace(teamspace: first)
+                didInitialize = true
             }
         }
     }

@@ -21,7 +21,7 @@ final class TeamspaceSettingViewModel {
     }
     
     /// 현재 팀스페이스의 전체 멤버의 Id를 조회한 후, Id를 이용하여 Users 컬렉션에서 멤버 정보를 가져오는 메서드입니다.
-    func fetchCurrentTeamspaceAllMember() async throws -> [User] {
+    func fetchCurrentTeamspaceAllMember() async -> [User] {
         do {
             let members: [Members] = try await FirestoreManager.shared.fetchAllFromSubcollection(
                 under: .teamspace,
@@ -243,7 +243,7 @@ extension TeamspaceSettingViewModel {
 
         let fetched: [Indexed] = try await withThrowingTaskGroup(of: Indexed.self) { group in
             for (idx, id) in ids.enumerated() {
-                group.addTask {
+                group.addTask { @MainActor in
                     let t: Teamspace = try await FirestoreManager.shared.get(id, from: .teamspace)
                     return Indexed(index: idx, item: t)
                 }

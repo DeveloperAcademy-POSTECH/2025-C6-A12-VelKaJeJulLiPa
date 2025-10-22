@@ -53,13 +53,8 @@ struct TeamspaceListView: View {
             self.isLoading = true
             defer { isLoading = false }
             
-            do {
-                self.userTeamspaces = try await self.viewModel.fetchUserTeamspace(userId: MockData.userId) // FIXME: - Mock데이터 교체
-                self.loadTeamspaces = try await viewModel.fetchTeamspaces(userTeamspaces: userTeamspaces)
-                print("loadTeamspaces: \(loadTeamspaces)")
-            } catch {
-                print("error: \(error.localizedDescription)") // FIXME: - 적절한 에러 분기 처리
-            }
+            let loaded: [Teamspace] = (try? await viewModel.loadTeamspacesForUser(userId: MockData.userId)) ?? []
+            self.loadTeamspaces = loaded
         }
     }
     
