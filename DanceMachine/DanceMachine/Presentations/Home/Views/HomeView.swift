@@ -158,6 +158,10 @@ struct HomeView: View {
             // TODO: 애니메이션 플로팅버튼 enum 분기처리 구현 때 추가하기
             
         }
+		// 알림 허용 권한 팝업
+		.task {
+            await viewModel.setupNotificationAuthorizationIfNeeded()
+		}
         // 최초 1회 + teamspaceId 바뀔 때마다 재실행
         .task(id: FirebaseAuthManager.shared.currentTeamspace?.teamspaceId) {
             await reloadAll()
