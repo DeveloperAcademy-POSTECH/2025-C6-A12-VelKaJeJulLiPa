@@ -15,7 +15,7 @@ final class CreateTracksViewModel {
     
     /// 프로젝트의 곡(Treacks)을 생성하는 메서드입니다.
     /// - Parameters:
-    ///     - creatorId: 프로젝트 생성 유저의 Id
+    ///     - projectId: 생성 프로젝트 Id
     ///     - tracksName: 프로젝트 이름 설정
     func createTracks(projectId: String, tracksName: String) async throws {
         do {
@@ -31,14 +31,4 @@ final class CreateTracksViewModel {
             print("error: \(error.localizedDescription)") // FIXME: - 적절한 에러 분기 처리
         }
     }
-    
-    
-//    // 조회 임시
-//    func a(trackId: String) async throws -> Tracks {
-//        let tracks: Tracks = try await FirestoreManager.shared.get(
-//            trackId,
-//            from: .tracks
-//        )
-//    }
-    
 }
