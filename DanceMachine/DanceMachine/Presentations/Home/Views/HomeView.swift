@@ -63,44 +63,36 @@ struct HomeView: View {
         }
         .padding(.horizontal, 16)
         .overlay { if isLoading { LoadingView() } }
-        // 2) 플로팅 버튼 오버레이 추가
         .overlay(alignment: .bottomTrailing) {
-            // TODO: 플로팅 버튼 분기 처리하기
-            Button {
-                router.push(to: .project(.create))
-            } label: {
-                HStack(spacing: 4) {
-                    Text("프로젝트 추가")
-                        .font(Font.system(size: 15, weight: .medium)) // FIXME: - 폰트 수정
-                        .foregroundStyle(Color.white) // FIXME: - 컬러 수정
-                    Image(systemName: "plus") // FIXME: - 이미지 수정
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 16, height: 16) // FIXME: - 크기 수정 ( geometry 고려 )
-                        .foregroundStyle(Color.white)// FIXME: - 컬러 수정
+            
+            if self.choiceSelectedProject == nil {
+                // TODO: 플로팅 버튼 분기 처리하기
+                Button {
+                    router.push(to: .project(.create))
+                } label: {
+                    HStack(spacing: 4) {
+                        Text("프로젝트 추가")
+                            .font(Font.system(size: 15, weight: .medium)) // FIXME: - 폰트 수정
+                            .foregroundStyle(Color.white) // FIXME: - 컬러 수정
+                        Image(systemName: "plus") // FIXME: - 이미지 수정
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 16, height: 16) // FIXME: - 크기 수정 ( geometry 고려 )
+                            .foregroundStyle(Color.white)// FIXME: - 컬러 수정
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 11)
+                    .background(
+                        RoundedRectangle(cornerRadius: 30)
+                            .fill(Color.blue)
+                    )
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 11)
-                .background(
-                    RoundedRectangle(cornerRadius: 30)
-                        .fill(Color.blue)
-                )
+                .padding([.trailing, .bottom], 16)
             }
-            .padding([.trailing, .bottom], 16)
+            
+            
+            
         }
-//        .task {
-//            isLoading = true
-//            defer { isLoading = false }
-//            
-//            let result = await viewModel.loadUserTeamspacesAndTeamspaces(userId: MockData.userId)
-//            self.teamspaceState = result.userTeamspaces.isEmpty ? .create : .list
-//            self.loadTeamspaces = result.teamspaces
-//            
-//            if !didInitialize, let first = loadTeamspaces.first {
-//                viewModel.fetchCurrentTeamspace(teamspace: first)
-//                didInitialize = true
-//            }
-//        }
         .task {
             var userTeamspaces: [UserTeamspace] = []
             
@@ -186,16 +178,19 @@ struct HomeView: View {
     
     // MARK: - 해당 프로젝트의 곡을 뷰에 나타내는 로직
     private func toggleExpand(for project: Project) {
-        self.choiceSelectedProject = project
-        
         let id = project.projectId
+        
         if expandedProjectIDs.contains(id) {
-            self.choiceSelectedProject = nil
-            expandedProjectIDs.remove(id)
+            expandedProjectIDs.removeAll()
+            choiceSelectedProject = nil
             return
         }
-        expandedProjectIDs.insert(id)
-
+        
+        // 다른 프로젝트 탭하면 → 기존 모두 접고 이거 하나만 펼치기
+        expandedProjectIDs = [id]
+        choiceSelectedProject = project
+        
+        // 캐시가 있으면 재조회 생략
         if tracksByProject[id] != nil { return }
         
         tracksLoading.insert(id)
@@ -208,6 +203,8 @@ struct HomeView: View {
             }
         }
     }
+    
+    
     
     // MARK: - 미들 프로젝트 리스트 뷰
     private var middleProjectListView: some View {
@@ -286,8 +283,8 @@ struct HomeView: View {
                             isExpanded: expandedProjectIDs.contains(project.projectId) // 화살표 이미지 회전
                         )
                         .listRowSeparator(.hidden)
-
-                       
+                        
+                        
                         if expandedProjectIDs.contains(project.projectId) {
                             if tracksLoading.contains(project.projectId) {
                                 HStack {
