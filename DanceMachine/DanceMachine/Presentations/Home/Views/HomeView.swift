@@ -51,6 +51,8 @@ struct HomeView: View {
         return false
     }
     
+    @State private var showCreateTracksView: Bool = false
+    
     var body: some View {
         ZStack {
             Color.white // FIXME: - 컬러 수정
@@ -65,6 +67,7 @@ struct HomeView: View {
         .overlay { if isLoading { LoadingView() } }
         .overlay(alignment: .bottomTrailing) {
             
+            // FIXME: - 버튼 적절한 분기처리
             if self.choiceSelectedProject == nil {
                 // TODO: 플로팅 버튼 분기 처리하기
                 Button {
@@ -75,6 +78,28 @@ struct HomeView: View {
                             .font(Font.system(size: 15, weight: .medium)) // FIXME: - 폰트 수정
                             .foregroundStyle(Color.white) // FIXME: - 컬러 수정
                         Image(systemName: "plus") // FIXME: - 이미지 수정
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 16, height: 16) // FIXME: - 크기 수정 ( geometry 고려 )
+                            .foregroundStyle(Color.white)// FIXME: - 컬러 수정
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 11)
+                    .background(
+                        RoundedRectangle(cornerRadius: 30)
+                            .fill(Color.blue)
+                    )
+                }
+                .padding([.trailing, .bottom], 16)
+            } else {
+                Button {
+                    self.showCreateTracksView = true
+                } label: {
+                    HStack(spacing: 4) {
+                        Text("곡 추가")
+                            .font(Font.system(size: 15, weight: .medium)) // FIXME: - 폰트 수정
+                            .foregroundStyle(Color.white) // FIXME: - 컬러 수정
+                        Image(systemName: "music.note") // FIXME: - 이미지 수정
                             .resizable()
                             .scaledToFit()
                             .frame(width: 16, height: 16) // FIXME: - 크기 수정 ( geometry 고려 )
@@ -326,8 +351,29 @@ struct HomeView: View {
                     }
                 }
         }
-        
-        
+        .sheet(isPresented: $showCreateTracksView) {
+            // TODO: 컴포넌트화 만들기
+            CreateTracksView(choiceSelectedProject: $choiceSelectedProject,
+                             onCreated: {
+                guard let project = choiceSelectedProject else { return }
+                let id = project.projectId
+                
+                tracksByProject[id] = nil
+                tracksLoading.insert(id)
+                tracksError[id] = nil
+                
+                Task {
+                    let tracks = try await viewModel.fetchTracks(projectId: id.uuidString)
+                    await MainActor.run {
+                        tracksByProject[id] = tracks
+                        tracksLoading.remove(id)
+                    }
+                }
+            }
+            )
+            .presentationDetents([.fraction(0.9)])
+            .presentationCornerRadius(16)
+        }
     }
 }
 
