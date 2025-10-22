@@ -18,7 +18,6 @@ import { onDocumentCreated } from "firebase-functions/v2/firestore"
 import { setGlobalOptions } from "firebase-functions"
 import * as logger from "firebase-functions/logger"
 import { josa } from "es-hangul"
-import { v4 as uuidv4 } from "uuid"
 
 
 admin.initializeApp()
@@ -28,7 +27,6 @@ setGlobalOptions({ region: "asia-northeast3", maxInstances: 10 })
 const db = admin.firestore()
 const fcm = admin.messaging()
 
-const URLScheme = "dancemachine"
 
 /**
  * 특정 수신자(receiverId)가 발신자(senderId)를 차단했는지 확인
@@ -53,7 +51,7 @@ async function isUserBlockedBy(receiverId: string, senderId: string): Promise<bo
  * @param {string} title - 알림 제목
  * @param {string} body - 알림 내용
  */
-async function sendPushNotification(receiverIds: string[], title: string, body: string, extra?: { video_id: string; video_title: string; video_url: string }) {
+async function sendPushNotification(receiverIds: string[], title: string, body: string) {
   if (!receiverIds.length) {
     logger.error("No receiverIds for push", { receiverIds })
     return
@@ -74,25 +72,15 @@ async function sendPushNotification(receiverIds: string[], title: string, body: 
     return
   }
 
-  var deeplink: string = ""
-  if (extra?.video_id && extra?.video_title && extra?.video_url) {
-    const encodedTitle = encodeURIComponent(extra.video_title)
-    const encodedURL = encodeURIComponent(extra.video_url)
-    deeplink = `${URLScheme}://video/view?videoId=${extra.video_id}&videoTitle=${encodedTitle}&videoURL=${encodedURL}`
+
+  const message: admin.messaging.MulticastMessage = {
+    notification: { title, body },
+    tokens,
   }
-
-
- const message: admin.messaging.MulticastMessage = {
-  tokens,
-  notification: { title, body },
-  data: {
-    deeplink
-  },
-}
 
   try {
     await fcm.sendEachForMulticast(message)
-    logger.info("Push notification sent", { tokens, title, body, deeplink })
+    logger.info("Push notification sent", { tokens, title, body })
   } catch (error) {
     logger.error("Push notification send error", error)
   }
@@ -100,17 +88,17 @@ async function sendPushNotification(receiverIds: string[], title: string, body: 
 
 /**
  * feedback 문서 생성 시 알림
- * feedback 문서 생성됨 - 태그된 사람 있는지 확인 - 태그된 사람 중 작성자를 차단한 사람 필터링 - notification 문서 생성 - 문서 기반으로 푸시 알림 보냄
+ * feedback 문서 생성됨 - 태그된 사람 있는지 확인 - 태그된 사람 중 작성자를 차단한 사람 필터링 - 필터링한 사람한테만 보낼 notification 문서 생성 - 문서 기반으로 푸시 알림 보냄
  */
 export const onFeedbackCreated = onDocumentCreated("feedback/{feedbackId}", async (event) => {
   const snap = event.data
   if (!snap) {
-    logger.error("No feedback document found", { eventId: event.id })
+    logger.error("No feedback doc found", { eventId: event.id })
     return
   }
   const feedback = snap.data()
 
-  const { feedback_id, author_id, tagged_user_ids, content, video_id, teamspace_id } = feedback
+  const { feedback_id, author_id, tagged_user_ids, content, video_id } = feedback
 
   if (!tagged_user_ids || tagged_user_ids.length === 0) {
     logger.info("No tagged users, skipping notification", { feedback_id })
@@ -132,63 +120,54 @@ export const onFeedbackCreated = onDocumentCreated("feedback/{feedbackId}", asyn
     return
   }
 
- const notification_id = String(uuidv4()).toUpperCase();
-
- await db.collection("notification").doc(notification_id).set({
-    notification_id,
+  await db.collection("notification").add({
     sender_id: author_id,
     receiver_ids: validTaggedUsers,
     feedback_id,
+    reply_id: null,
     created_at: admin.firestore.FieldValue.serverTimestamp(),
     video_id,
-    teamspace_id,
     content,
   })
-  logger.info("Notification document created by feedback", { feedback_id, validTaggedUsers })
+  logger.info("Notification doc created by feedback", { feedback_id, validTaggedUsers })
 
   const authorDoc = await db.collection("users").doc(author_id).get()
   const name = authorDoc.exists ? authorDoc.get("name") : null
   if (!name) {
-    logger.error("Author name not found", { author_id })
-    return
-  }
-
-  const videoDoc = await db.collection("video").doc(video_id).get()
-  const video_title = videoDoc.exists ? videoDoc.get("video_title") : null
-  const video_url = videoDoc.exists ? videoDoc.get("video_url") : null
-  if (!video_title || !video_url) {
-    logger.error("Video info not found", { video_id })
+    logger.warn("Author name not found", { author_id })
     return
   }
 
   const title = `${josa(name, "이/가")} 피드백을 남겼어요`
-  const body = content // FIXME: 글자수 제한
-  const data = { video_id, video_title, video_url }
+  const body = content.slice(0, 50)
 
-  await sendPushNotification(validTaggedUsers, title, body, data)
-  logger.info("Push notification sent for feedback", { validTaggedUsers, title, body, data })
+  await sendPushNotification(validTaggedUsers, title, body)
+  logger.info("Push notification sent for feedback", { validTaggedUsers, title, body })
 })
 
 /**
  * reply 문서 생성 시 알림
- * reply 문서 생성됨 - 태그된 사람 있는지 확인 - 태그된 사람 중 작성자를 차단한 사람 필터링 - notification 문서 생성 - 문서 기반으로 푸시 알림 보냄
+ *
  */
-export const onReplyCreated = onDocumentCreated("feedback/{feedbackId}/reply/{replyId}", async (event) => {
+export const onReplyCreated = onDocumentCreated("reply/{replyId}", async (event) => {
   const snap = event.data
   if (!snap) {
-    logger.error("No reply doc found", { eventId: event.id })
+    logger.warn("No reply doc found", { eventId: event.id })
     return
   }
 
   const reply = snap.data()
   const { reply_id, feedback_id, author_id, tagged_user_ids, content } = reply
- 
+  if (!tagged_user_ids || tagged_user_ids.length === 0) {
+    logger.info("No tagged users in reply, skipping notification", { reply_id })
+    return
+  }
+
   const feedbackDoc = await db.collection("feedback").doc(feedback_id).get()
   const feedbackDoc_author_id = feedbackDoc.exists ? feedbackDoc.get("author_id") : null
-  const teamspace_id = feedbackDoc.exists ? feedbackDoc.get("teamspace_id") : null
   const video_id = feedbackDoc.exists ? feedbackDoc.get("video_id") : null
-  if (!feedbackDoc_author_id || !video_id || !teamspace_id) {
-    logger.error("Feedback document not found", { feedback_id, feedbackDoc_author_id, video_id, teamspace_id })
+  if (!feedbackDoc_author_id || !video_id) {
+    logger.error("Feedback author_id or video_id not found", { feedback_id, feedbackDoc_author_id, video_id })
     return
   }
 
@@ -223,19 +202,16 @@ export const onReplyCreated = onDocumentCreated("feedback/{feedbackId}/reply/{re
     return
   }
 
- const notification_id = String(uuidv4()).toUpperCase();
-
- await db.collection("notification").doc(notification_id).set({
-    notification_id,
+  await db.collection("notification").add({
     sender_id: author_id,
     receiver_ids: validReceivers,
     feedback_id,
+    reply_id,
     created_at: admin.firestore.FieldValue.serverTimestamp(),
     video_id,
-    teamspace_id,
     content,
   })
-  logger.info("Notification document created by reply", { reply_id, validReceivers })
+  logger.info("Notification doc created by reply", { reply_id, validReceivers })
 
   const authorDoc = await db.collection("users").doc(author_id).get()
   const name = authorDoc.exists ? authorDoc.get("name") : null
@@ -244,20 +220,9 @@ export const onReplyCreated = onDocumentCreated("feedback/{feedbackId}/reply/{re
     return
   }
 
-  const videoDoc = await db.collection("video").doc(video_id).get()
-  const video_title = videoDoc.exists ? videoDoc.get("video_title") : null
-  const video_url = videoDoc.exists ? videoDoc.get("video_url") : null
-  if (!video_title || !video_url) {
-    logger.error("Video info not found", { video_id })
-    return
-  }
-
   const title = `${josa(name, "이/가")} 댓글을 남겼어요`
-  const body = content // FIXME: 글자수 제한
-  const data = { video_id, video_title, video_url }
+  const body = content.slice(0, 50)
 
-
-  await sendPushNotification(validReceivers, title, body, data)
-  logger.info("Push notification sent for reply", { validReceivers, title, body, data })
+  await sendPushNotification(validReceivers, title, body)
+  logger.info("Push notification sent for reply", { validReceivers, title, body })
 })
-
