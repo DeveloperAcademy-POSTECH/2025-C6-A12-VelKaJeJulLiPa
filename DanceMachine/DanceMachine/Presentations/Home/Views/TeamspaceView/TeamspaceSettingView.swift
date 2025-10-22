@@ -66,7 +66,7 @@ struct TeamspaceSettingView: View {
                 titleText: "\(selectedUser.name)\n팀 멤버를 내보내시겠어요?",
                 primaryText: "내보내기") {
                     Task {
-                        let users: [User] = try await viewModel.removeTeamMemberAndReload(userId: selectedUser.userId.uuidString)
+                        let users: [User] = try await viewModel.removeTeamMemberAndReload(userId: selectedUser.userId)
                         await MainActor.run {
                             self.users = users
                             self.presentingMemberRemovalSheetUser = nil
@@ -200,7 +200,7 @@ struct TeamspaceSettingView: View {
                         EmptyView()
                     case .removing:
                         // 유저 멤버 중 팀스페이스 주인 아이디와 일치하면 이미지 x
-                        if viewModel.currentTeamspace?.ownerId == user.userId.uuidString { EmptyView() }
+                        if viewModel.currentTeamspace?.ownerId == user.userId { EmptyView() }
                         else { MinusCircleButton { self.presentingMemberRemovalSheetUser = user } }
                     }
                 } label: {
