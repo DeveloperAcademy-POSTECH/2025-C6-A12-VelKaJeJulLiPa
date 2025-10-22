@@ -60,7 +60,7 @@ struct SectionSelectView: View {
     ActionButton(
       title: "영상 이동하기",
       color:
-        selectedSectionId == sectionId ? Color.blue.opacity(0.3) : Color.blue,
+        selectedSectionId == sectionId ? Color.blue.opacity(0.3) : Color.blue, // FIXME: 컬러 수정
       height: 47,
       isEnabled: selectedSectionId != sectionId,
       action: {

@@ -19,15 +19,16 @@ struct SectionChipIcon: View {
         .foregroundStyle(.black)
         .padding(.horizontal, 12)
         .padding(.vertical, 4)
-        .background(
-          Capsule()
-            .fill(Color.clear)
-        )
-        .overlay(
-          Capsule()
-            .stroke(Color.black, lineWidth: 1.5)
-        )
+//        .background(
+//          Capsule()
+//            .fill(Color.clear)
+//        )
+//        .overlay(
+//          Capsule()
+//            .stroke(Color.black, lineWidth: 1.5)
+//        )
     }
+    .glassEffect(.clear.tint(Color.purple.opacity(0.5)).interactive(), in: Capsule())
   }
 }
 
@@ -47,15 +48,16 @@ struct CustomSectionChip: View {
         .foregroundStyle(vm.selectedSection?.sectionId == id ? Color.blue : Color.black) // FIXME: 폰트 수정
         .padding(.horizontal, 12)
         .padding(.vertical, 4)
-        .background(
-          Capsule()
-            .fill(vm.selectedSection?.sectionId == id ? Color.blue.opacity(0.15) : Color.white.opacity(0.1))
-        )
-        .overlay(
-          Capsule()
-            .stroke(vm.selectedSection?.sectionId == id ? Color.blue : Color.black, lineWidth: 1.5)
-        )
+//        .background(
+//          Capsule()
+//            .fill(vm.selectedSection?.sectionId == id ? Color.blue.opacity(0.15) : Color.white.opacity(0.1))
+//        )
+//        .overlay(
+//          Capsule()
+//            .stroke(vm.selectedSection?.sectionId == id ? Color.blue : Color.black, lineWidth: 1.5)
+//        )
     }
+    .glassEffect(.clear.tint(Color.purple.opacity(0.5)).interactive(), in: Capsule())
   }
 }
 

@@ -33,19 +33,22 @@ struct VideoGrid: View {
           cell
         }
       } else {
-        ForEach(videos, id: \.videoId) { video in
-          if let track = track.first(where: { $0.videoId == video.videoId.uuidString }) {
-            GridCell(
-              size: size,
-              thumbnailURL: video.thumbnailURL,
-              title: video.videoTitle,
-              duration: video.videoDuration,
-              uploadDate: video.createdAt ?? Date(),
-              action: {
-                self.selectedTrack = track
-              }
-            )
-          }
+//        ForEach(videos, id: \.videoId) { video in
+//          if let track = track.first(where: { $0.videoId == video.videoId.uuidString }) {
+//            GridCell(
+//              size: size,
+//              thumbnailURL: video.thumbnailURL,
+//              title: video.videoTitle,
+//              duration: video.videoDuration,
+//              uploadDate: video.createdAt ?? Date(),
+//              action: {
+//                self.selectedTrack = track
+//              }
+//            )
+//          }
+//        }
+        ForEach(0..<15, id:\.self) { _ in
+          cell
         }
       }
 #else
