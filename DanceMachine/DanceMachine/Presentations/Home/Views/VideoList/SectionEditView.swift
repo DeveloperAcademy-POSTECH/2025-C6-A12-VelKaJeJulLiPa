@@ -46,7 +46,7 @@ struct SectionEditView: View {
     }
   }
   
-  private var customHeader: some View {
+  private var customHeader: some View { // FIXME: 컬러 폰트 수정
     HStack(alignment: .top, spacing: 16) {
       Button {
         vm.notify(.sectionDidUpdate)
@@ -76,7 +76,7 @@ struct SectionEditView: View {
     HStack {
       Text("섹션 리스트")
         .font(Font.system(size: 14, weight: .semibold)) // FIXME: 폰트 수정
-        .foregroundStyle(Color.gray.opacity(0.8))
+        .foregroundStyle(Color.gray.opacity(0.8)) // FIXME: 컬러 수정
       Spacer()
     }
   }
@@ -111,7 +111,7 @@ struct SectionEditView: View {
   
   private var confirmButton: some View {
     RoundedRectangle(cornerRadius: 5)
-      .fill(!vm.editText.isEmpty ? Color.blue : Color.gray.opacity(0.5))
+      .fill(!vm.editText.isEmpty ? Color.blue : Color.gray.opacity(0.5)) // FIXME: 컬러 수정
       .frame(maxWidth: .infinity)
       .frame(height: 47)
       .overlay {

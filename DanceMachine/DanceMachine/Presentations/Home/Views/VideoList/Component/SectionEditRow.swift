@@ -21,7 +21,7 @@ struct SectionEditRow: View {
   
   var body: some View {
     RoundedRectangle(cornerRadius: 5)
-      .fill(Color.gray.opacity(0.6))
+      .fill(Color.gray.opacity(0.6)) // FIXME: 컬러 수정
       .frame(maxWidth: .infinity)
       .frame(height: 43)
       .overlay {

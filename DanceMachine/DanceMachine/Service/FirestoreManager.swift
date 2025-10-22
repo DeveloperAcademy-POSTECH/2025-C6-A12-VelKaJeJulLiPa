@@ -429,5 +429,23 @@ final class FirestoreManager {
         return totalDeleted
     }
 
+  
+    func deleteFromSubSubcollection(
+        in grandParentType: CollectionType,
+        grandParentId: String,
+        withIn parentType: CollectionType,
+        parentId: String,
+        subCollection subType: CollectionType,
+        target documentID: String
+    ) async throws {
+        try await db
+            .collection(grandParentType.rawValue)
+            .document(grandParentId)
+            .collection(parentType.rawValue)
+            .document(parentId)
+            .collection(subType.rawValue)
+            .document(documentID)
+            .delete()
+    }
 }
 

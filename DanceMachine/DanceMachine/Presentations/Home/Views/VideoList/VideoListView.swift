@@ -31,47 +31,83 @@ struct VideoListView: View {
   let trackName: String
   
   var body: some View {
-    VStack {
-      Spacer().frame(height: 16)
-      sectionView
-      Spacer().frame(height: 32)
+    ZStack(alignment: .top) {
       if vm.isLoading {
         Spacer().frame(maxWidth: .infinity)
         ProgressView()
         Spacer().frame(maxWidth: .infinity)
       } else if vm.videos.isEmpty {
         emptyView
+        glassButton
       } else {
         listView
+//        sectionView
       }
-      uploadButton
     }
+    .safeAreaInset(edge: .top, content: {
+      sectionView
+    })
+//    .safeAreaInset(edge: .bottom, content: {
+//      glassButton
+//    })
     .navigationBarTitleDisplayMode(.inline)
-//    .toolbar(.hidden, for: .tabBar)
+    //    .toolbar(.hidden, for: .tabBar)
     .toolbar {
       ToolbarLeadingBackButton(icon: .chevron)
       ToolbarCenterTitle(text: trackName)
     }
+//    .tabBarMinimizeBehavior(.onScrollDown)
+//    .tabViewBottomAccessory {
+//      glassButton
+//    }
+//    .tabBarMinimizeBehavior(.onScrollDown)
     .task {
       await vm.loadFromServer(tracksId: tracksId)
     }
     .onReceive(NotificationCenter.default.publisher(
       for: .sectionDidUpdate)) { _ in
         Task { await vm.loadFromServer(tracksId: tracksId) }
+      }
+      .sheet(isPresented: $showCustomPicker) {
+        VideoPickerView(tracksId: tracksId, sectionId: sectionId)
+      }
+  }
+  
+  private var glassButton: some View {
+    GlassEffectContainer {
+      HStack(spacing: 20) {
+        homeButton
+        uploadButton
+      }
     }
-    .sheet(isPresented: $showCustomPicker) {
-      VideoPickerView(tracksId: tracksId, sectionId: sectionId)
+    .padding(.horizontal, 16)
+  }
+  
+  private var homeButton: some View {
+    Button {
+      // TODO: 여긴 뭐지?
+    } label: {
+      Image(systemName: "house.fill")
+        .foregroundStyle(Color.purple.opacity(0.8))
     }
+    .frame(width: 47, height: 47)
+    .glassEffect(.clear.interactive(), in: .circle)
   }
   
   private var uploadButton: some View {
     Button {
       self.showCustomPicker = true
     } label: {
-      Image(systemName: "plus.circle.fill")
-        .resizable()
-        .frame(width: 44, height: 44)
+      Text("동영상 업로드")
+        .font(.system(size: 17)) // FIXME: 폰트 수정
+        .foregroundStyle(Color.white)
     }
+    .frame(maxWidth: .infinity)
+    .frame(height: 47)
+    .glassEffect(
+      .clear.tint(Color.purple.opacity(0.7)).interactive(),
+      in: RoundedRectangle(cornerRadius: 1000)
+    )
   }
   
   private var emptyView: some View {
@@ -112,30 +148,32 @@ struct VideoListView: View {
   
   private var sectionView: some View {
     ScrollView(.horizontal, showsIndicators: false) {
-      HStack {
-        SectionChipIcon(
-          vm: $vm,
-          action: {
-            router.push(
-              to: .sectionEditView(
-                section: vm.section,
-                tracksId: tracksId,
-                trackName: trackName
+      GlassEffectContainer {
+        HStack {
+          SectionChipIcon(
+            vm: $vm,
+            action: {
+              router.push(
+                to: .sectionEditView(
+                  section: vm.section,
+                  tracksId: tracksId,
+                  trackName: trackName
+                )
               )
+            }
+          )
+          ForEach(vm.section, id: \.sectionId) { section in
+            CustomSectionChip(
+              vm: $vm,
+              action: { vm.selectedSection = section },
+              title: section.sectionTitle,
+              id: section.sectionId
             )
           }
-        )
-        ForEach(vm.section, id: \.sectionId) { section in
-          CustomSectionChip(
-            vm: $vm,
-            action: { vm.selectedSection = section },
-            title: section.sectionTitle,
-            id: section.sectionId
-          )
         }
+        .padding(.horizontal, 1) // FIXME: 여백 없으면 캡슐이 짤리는 현상 있음
+        .padding(.vertical, 1) // FIXME: 여백 없으면 캡슐이 짤리는 현상 있음
       }
-      .padding(.horizontal, 1) // FIXME: 여백 없으면 캡슐이 짤리는 현상 있음
-      .padding(.vertical, 1) // FIXME: 여백 없으면 캡슐이 짤리는 현상 있음
     }
     .padding(.horizontal, 16)
   }
