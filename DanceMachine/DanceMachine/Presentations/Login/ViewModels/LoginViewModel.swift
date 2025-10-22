@@ -37,7 +37,7 @@ final class LoginViewModel: ObservableObject {
                             name: FirebaseAuthManager.shared.displayName(from: authDataResult.user.displayName),
                             loginType: LoginType.apple,
                             status: UserStatus.active,
-                            fcmToken: "FAKE_FCM_TOKEN",
+                            fcmToken: "Unknown",
                             termsAgreed: true,
                             privacyAgreed: true)
             
