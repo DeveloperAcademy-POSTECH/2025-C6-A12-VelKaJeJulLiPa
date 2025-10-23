@@ -24,8 +24,10 @@ struct CreateTracksView: View {
             Color.white.ignoresSafeArea() // FIXME: - 컬러 수정
             
             VStack {
+                topTitleCloseView
+                    
                 Spacer()
-                inputTrackNameView
+                middleInputTrackNameView
                     .padding(.horizontal, 16)
                 Spacer()
                 bottomButtonView
@@ -34,8 +36,37 @@ struct CreateTracksView: View {
         }
     }
     
-    // MARK: - 팀 스페이스 텍스트 필드 뷰 ("팀 스페이스 이름" + 텍스트 필드)
-    private var inputTrackNameView: some View {
+    // MARK: - 탑 타이틀, 닫기 버튼 뷰
+    private var topTitleCloseView: some View {
+        VStack {
+            Spacer().frame(height: 32)
+            HStack {
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(Font.system(size: 15, weight: .semibold)) // FIXME: - 폰트 수정
+                        .foregroundStyle(Color.black) // FIXME: - 컬러 수정
+                }
+                Spacer()
+                Text("곡 추가하기")
+                    .font(Font.system(size: 18, weight: .medium)) // FIXME: - 폰트 수정
+                    .foregroundStyle(Color.black) // FIXME: - 컬러 수정
+                Spacer()
+            }
+            .padding([.horizontal, .bottom], 16)
+            
+            Rectangle()
+                .fill(Color.black) // FIXME: - 컬러 수정
+                .frame(maxWidth: .infinity)
+                .frame(height: 0.5)
+        }
+        
+    }
+    
+    
+    // MARK: - 미들 팀 스페이스 텍스트 필드 뷰 ("팀 스페이스 이름" + 텍스트 필드)
+    private var middleInputTrackNameView: some View {
         VStack(spacing: 32) {
             Text("추가할 곡의 이름을 입력하세요")
                 .font(Font.system(size: 24, weight: .medium)) // FIXME: - 폰트 수정
