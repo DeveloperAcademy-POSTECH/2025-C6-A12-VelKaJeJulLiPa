@@ -50,8 +50,6 @@ struct CustomPicker: View {
       }
 #endif
     }
-    .padding(.top, 8)
-    
   }
 }
 
