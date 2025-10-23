@@ -38,7 +38,7 @@ struct VideoListView: View {
         Spacer().frame(maxWidth: .infinity)
       } else if vm.videos.isEmpty {
         emptyView
-        glassButton
+        uploadButton
       } else {
         listView
         uploadButton
@@ -70,26 +70,26 @@ struct VideoListView: View {
               }
   }
   
-  private var glassButton: some View {
-    GlassEffectContainer {
-      HStack(spacing: 20) {
-        homeButton
-        uploadButton
-      }
-    }
-    .padding(.horizontal, 16)
-  }
+//  private var glassButton: some View {
+//    GlassEffectContainer {
+//      HStack(spacing: 20) {
+//        homeButton
+//        uploadButton
+//      }
+//    }
+//    .padding(.horizontal, 16)
+//  }
   
-  private var homeButton: some View {
-    Button {
-      // TODO: 여긴 뭐지?
-    } label: {
-      Image(systemName: "house.fill")
-        .foregroundStyle(Color.purple.opacity(0.8))
-    }
-    .frame(width: 47, height: 47)
-    .glassEffect(.clear.interactive(), in: .circle)
-  }
+//  private var homeButton: some View {
+//    Button {
+//      // TODO: 여긴 뭐지?
+//    } label: {
+//      Image(systemName: "house.fill")
+//        .foregroundStyle(Color.purple.opacity(0.8))
+//    }
+//    .frame(width: 47, height: 47)
+//    .glassEffect(.clear.interactive(), in: .circle)
+//  }
   
   private var uploadButton: some View {
     Button {
