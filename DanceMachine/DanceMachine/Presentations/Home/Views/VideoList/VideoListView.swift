@@ -32,11 +32,7 @@ struct VideoListView: View {
   
   var body: some View {
     ZStack(alignment: .bottom) {
-      if vm.isLoading {
-        Spacer().frame(maxWidth: .infinity)
-        ProgressView()
-        Spacer().frame(maxWidth: .infinity)
-      } else if vm.videos.isEmpty {
+      if vm.videos.isEmpty && vm.isLoading != true {
         emptyView
         uploadButton
       } else {
@@ -44,6 +40,7 @@ struct VideoListView: View {
         uploadButton
       }
     }
+    .overlay { if vm.isLoading { LoadingView() }}
     .safeAreaInset(edge: .top, content: {
       sectionView
     })
