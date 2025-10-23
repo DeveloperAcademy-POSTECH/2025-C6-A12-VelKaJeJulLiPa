@@ -60,14 +60,15 @@ struct VideoListView: View {
       for: .sectionDidUpdate)) { _ in
         Task { await vm.loadFromServer(tracksId: tracksId) }
       }
-          .sheet(isPresented: $showCustomPicker) {
+    // MARK: 영상 추가 시트
+    .sheet(isPresented: $showCustomPicker) {
             VideoPickerView(tracksId: tracksId, sectionId: sectionId)
           }
-          .onReceive(
-            NotificationCenter.default.publisher(
-              for: .showVideoPicker)) { _ in
-                self.showCustomPicker = true
-              }
+    .onReceive(
+      NotificationCenter.default.publisher(
+        for: .showVideoPicker)) { _ in
+          self.showCustomPicker = true
+        }
   }
   
 //  private var glassButton: some View {
@@ -114,7 +115,7 @@ struct VideoListView: View {
       Spacer()
     }
   }
-  
+  // MARK: 영상 그리드 뷰
   private var listView: some View {
     GeometryReader { g in
       let horizontalPadding: CGFloat = 16
@@ -142,7 +143,7 @@ struct VideoListView: View {
       }
     }
   }
-  
+  // MARK: 섹션 칩 뷰
   private var sectionView: some View {
     ScrollView(.horizontal, showsIndicators: false) {
       GlassEffectContainer {
