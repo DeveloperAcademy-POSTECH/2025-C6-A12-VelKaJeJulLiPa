@@ -66,56 +66,69 @@ struct HomeView: View {
         .padding(.horizontal, 16)
         .overlay { if isLoading { LoadingView() } }
         .overlay(alignment: .bottomTrailing) {
-            
-            // FIXME: - 버튼 적절한 분기처리
-            if self.choiceSelectedProject == nil {
-                // TODO: 플로팅 버튼 분기 처리하기
-                Button {
-                    router.push(to: .project(.create))
-                } label: {
-                    HStack(spacing: 4) {
-                        Text("프로젝트 추가")
-                            .font(Font.system(size: 15, weight: .medium)) // FIXME: - 폰트 수정
-                            .foregroundStyle(Color.white) // FIXME: - 컬러 수정
-                        Image(systemName: "plus") // FIXME: - 이미지 수정
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 16, height: 16) // FIXME: - 크기 수정 ( geometry 고려 )
-                            .foregroundStyle(Color.white)// FIXME: - 컬러 수정
+            if !self.loadTeamspaces.isEmpty {
+                
+                // FIXME: - 버튼 적절한 분기처리
+                if self.choiceSelectedProject == nil {
+                    Button {
+                        router.push(to: .project(.create))
+                    } label: {
+                        if self.loadProjects.isEmpty {
+                            // TODO: 플로팅 버튼 분기 처리하기
+                            HStack(spacing: 4) {
+                                Text("프로젝트 추가")
+                                    .font(Font.system(size: 15, weight: .medium)) // FIXME: - 폰트 수정
+                                    .foregroundStyle(Color.white) // FIXME: - 컬러 수정
+                                Image(systemName: "plus") // FIXME: - 이미지 수정
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 16, height: 16) // FIXME: - 크기 수정 ( geometry 고려 )
+                                    .foregroundStyle(Color.white)// FIXME: - 컬러 수정
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 11)
+                            .background(
+                                RoundedRectangle(cornerRadius: 30)
+                                    .fill(Color.blue)
+                            )
+                        } else {
+                            Circle()
+                                .fill(Color.blue) // FIXME: - 컬러 수정
+                                .frame(width: 50, height: 50) // FIXME: - 고정 크기 수정?
+                                .overlay {
+                                    Image(systemName: "plus")
+                                        .foregroundStyle(Color.white) // FIXME: - 컬러 수정
+                                        .frame(width: 20, height: 21)
+                                }
+                        }
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 11)
-                    .background(
-                        RoundedRectangle(cornerRadius: 30)
-                            .fill(Color.blue)
-                    )
-                }
-                .padding([.trailing, .bottom], 16)
-            } else {
-                Button {
-                    self.showCreateTracksView = true
-                } label: {
-                    HStack(spacing: 4) {
-                        Text("곡 추가")
-                            .font(Font.system(size: 15, weight: .medium)) // FIXME: - 폰트 수정
-                            .foregroundStyle(Color.white) // FIXME: - 컬러 수정
-                        Image(systemName: "music.note") // FIXME: - 이미지 수정
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 16, height: 16) // FIXME: - 크기 수정 ( geometry 고려 )
-                            .foregroundStyle(Color.white)// FIXME: - 컬러 수정
+                    .padding([.trailing, .bottom], 16)
+                } else {
+                    Button {
+                        self.showCreateTracksView = true
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text("곡 추가")
+                                .font(Font.system(size: 15, weight: .medium)) // FIXME: - 폰트 수정
+                                .foregroundStyle(Color.white) // FIXME: - 컬러 수정
+                            Image(systemName: "music.note") // FIXME: - 이미지 수정
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 16, height: 16) // FIXME: - 크기 수정 ( geometry 고려 )
+                                .foregroundStyle(Color.white)// FIXME: - 컬러 수정
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 11)
+                        .background(
+                            RoundedRectangle(cornerRadius: 30)
+                                .fill(Color.blue)
+                        )
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 11)
-                    .background(
-                        RoundedRectangle(cornerRadius: 30)
-                            .fill(Color.blue)
-                    )
+                    .padding([.trailing, .bottom], 16)
                 }
-                .padding([.trailing, .bottom], 16)
             }
             
-            
+            // TODO: 애니메이션 플로팅버튼 enum 분기처리 구현 때 추가하기
             
         }
         .task {
