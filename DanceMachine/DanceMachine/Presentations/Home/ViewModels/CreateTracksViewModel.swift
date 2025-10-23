@@ -25,8 +25,21 @@ final class CreateTracksViewModel {
                 creatorId: MockData.userId, // FIXME: - 데이터 교체
                 trackName: tracksName
             )
-            tracks.trackId.uuidString
             try await FirestoreManager.shared.create(tracks)
+            
+            // 서브컬렉션 section도 같이 생성
+            let section: Section = .init(
+                sectionId: UUID().uuidString,
+                sectionTitle: "일반" // TODO: 디자이너와 이야기 해볼 것
+            )
+            
+            try await FirestoreManager.shared.createToSubcollection(
+                section,
+                under: .tracks,
+                parentId: tracks.trackId.uuidString,
+                subCollection: .section,
+                strategy: .create
+            )
         } catch {
             print("error: \(error.localizedDescription)") // FIXME: - 적절한 에러 분기 처리
         }
