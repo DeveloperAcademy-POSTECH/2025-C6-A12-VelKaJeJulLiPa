@@ -7,6 +7,42 @@
 
 import SwiftUI
 
+enum TracksEditAction: Equatable {
+    case none, delete, update
+}
+
+
+enum TracksRowState: Equatable {
+    case viewing
+    case editing(TracksEditAction)
+    
+    var primaryTitle: String {
+        switch self {
+        case .viewing:                 return "편집"
+        case .editing(.none):          return "취소"
+        case .editing(.delete):        return "취소"
+        case .editing(.update):        return "완료"
+        }
+    }
+    var primaryColor: Color {
+        switch self {
+        case .viewing:                 return .gray
+        case .editing(.none):          return .blue
+        case .editing(.delete):        return .blue
+        case .editing(.update):        return .blue
+        }
+    }
+    // 보조(왼쪽) 버튼이 필요한 경우만 제공
+    var secondaryTitle: String? {
+        switch self {
+        case .editing(.update):        return "취소"
+        default:                       return nil
+        }
+    }
+    
+    var secondaryColor: Color { .gray }
+}
+
 struct HomeView: View {
     
     @EnvironmentObject private var router: NavigationRouter
@@ -52,6 +88,27 @@ struct HomeView: View {
     }
     
     @State private var showCreateTracksView: Bool = false
+    
+    
+    // MARK: - 곡 관련 변수
+    @State private var tracksRowState: TracksRowState = .viewing
+    @State private var editingTracksID: UUID? = nil
+    @State private var presentingRemovalSheetTracks: Tracks?
+    @State private var editSelectedTracks: Tracks?
+    @State private var choiceSelectedTracks: Tracks?
+    
+    // 트랙 전용 입력 버퍼 (프로젝트의 editText와 분리!)
+    @State private var trackEditText: String = ""
+    
+    // 트랙 완료 버튼 비활성화 조건
+    private var shouldDisablePrimaryTracksButton: Bool {
+        if case .editing(.update) = tracksRowState {
+            return trackEditText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+        return false
+    }
+    
+    
     
     var body: some View {
         ZStack {
@@ -254,49 +311,117 @@ struct HomeView: View {
                     .foregroundStyle(Color.gray)
             case .list:
                 LabeledContent {
-                    HStack(spacing: 16) {
-                        if let sec = projectRowState.secondaryTitle {
-                            Button(sec) {
-                                projectRowState = .viewing
-                                editingProjectID = nil
-                                editSelectedProject = nil
-                                editText = ""
-                            }
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundStyle(projectRowState.secondaryColor)
-                        }
-                        Button(projectRowState.primaryTitle) {
-                            switch projectRowState {
-                            case .viewing:
-                                projectRowState = .editing(.none)
-                                editSelectedProject = nil
-                                editText = ""
-                            case .editing(.none), .editing(.delete):
-                                projectRowState = .viewing
-                                editSelectedProject = nil
-                                editText = ""
-                            case .editing(.update):
-                                Task {
-                                    guard let id = editingProjectID?.uuidString else {
-                                        projectRowState = .viewing
-                                        return
-                                    }
-                                    try await viewModel.updateProjectName(projectId: id, newProjectName: editText)
-                                    self.loadProjects = await self.viewModel.fetchCurrentTeamspaceProject()
+                    // 곡 리스트가 보이지 않는 상태
+                    if self.choiceSelectedProject == nil {
+                        // =========================
+                        // 프로젝트 편집 헤더 버튼
+                        // =========================
+                        HStack(spacing: 16) {
+                            if let sec = projectRowState.secondaryTitle {
+                                Button(sec) {
                                     projectRowState = .viewing
                                     editingProjectID = nil
                                     editSelectedProject = nil
                                     editText = ""
                                 }
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundStyle(projectRowState.secondaryColor)
                             }
+                            
+                            Button(projectRowState.primaryTitle) {
+                                switch projectRowState {
+                                case .viewing:
+                                    projectRowState = .editing(.none)
+                                    editSelectedProject = nil
+                                    editText = ""
+                                case .editing(.none), .editing(.delete):
+                                    projectRowState = .viewing
+                                    editSelectedProject = nil
+                                    editText = ""
+                                case .editing(.update):
+                                    Task {
+                                        guard let id = editingProjectID?.uuidString else {
+                                            projectRowState = .viewing
+                                            return
+                                        }
+                                        try await viewModel.updateProjectName(projectId: id, newProjectName: editText)
+                                        self.loadProjects = await self.viewModel.fetchCurrentTeamspaceProject()
+                                        projectRowState = .viewing
+                                        editingProjectID = nil
+                                        editSelectedProject = nil
+                                        editText = ""
+                                    }
+                                }
+                            }
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(projectRowState.primaryColor)
+                            .disabled(shouldDisablePrimaryButton)
+                            .opacity(shouldDisablePrimaryButton ? 0.5 : 1.0)
                         }
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(projectRowState.primaryColor)
-                        .disabled(shouldDisablePrimaryButton)
-                        .opacity(shouldDisablePrimaryButton ? 0.5 : 1.0)
+                        
+                    } else {
+                        // 곡 리스트가 보이는 상태
+                        // =========================
+                        // 트랙 편집 헤더 버튼
+                        // =========================
+                        HStack(spacing: 16) {
+                            if let sec = tracksRowState.secondaryTitle {
+                                Button(sec) {
+                                    tracksRowState = .viewing
+                                    editingTracksID = nil
+                                    editSelectedTracks = nil
+                                    trackEditText = ""
+                                }
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundStyle(tracksRowState.secondaryColor)
+                            }
+                            
+                            Button(tracksRowState.primaryTitle) {
+                                switch tracksRowState {
+                                case .viewing:
+                                    tracksRowState = .editing(.none)
+                                    editSelectedTracks = nil
+                                    trackEditText = ""
+                                case .editing(.none), .editing(.delete):
+                                    tracksRowState = .viewing
+                                    editSelectedTracks = nil
+                                    trackEditText = ""
+                                case .editing(.update):
+                                    Task {
+                                        guard let trackId = editingTracksID?.uuidString else {
+                                            tracksRowState = .viewing
+                                            return
+                                        }
+                                        try await viewModel.updateTracksName(
+                                            tracksId: trackId,
+                                            newTracksName: trackEditText
+                                        )
+                                        
+                                        // 프로젝트 목록 전체가 아니라, 현재 펼친 프로젝트 트랙만 갱신
+                                        let (id, tracks) = try await viewModel.refreshTracksForSelectedProject(
+                                            choiceSelectedProject: self.choiceSelectedProject
+                                        )
+                                        // UI 변경 메인 쓰레드에서 진행
+                                        await MainActor.run {
+                                            tracksByProject[id] = tracks
+                                            tracksError[id] = nil
+                                        }
+                                        
+                                        tracksRowState = .viewing
+                                        editingTracksID = nil
+                                        editSelectedTracks = nil
+                                        trackEditText = ""
+                                    }
+                                }
+                            }
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(tracksRowState.primaryColor)
+                            .disabled(shouldDisablePrimaryTracksButton)
+                            .opacity(shouldDisablePrimaryTracksButton ? 0.5 : 1.0)
+                        }
                     }
                 } label: {
-                    Text(self.choiceSelectedProject == nil ? "프로젝트 목록" : choiceSelectedProject?.projectName ?? "프로젝트 목록")
+                    Text(self.choiceSelectedProject == nil ? "프로젝트 목록" : (choiceSelectedProject?.projectName ?? "프로젝트 목록"))
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(.gray)
                 }
@@ -353,7 +478,32 @@ struct HomeView: View {
                                             )
                                     } else {
                                         ForEach(tracks, id: \.trackId) { track in
-                                            TrackRow(track: track)
+                                            TrackRow(
+                                                track: track,
+                                                rowState: (tracksRowState == .editing(.update) && editingTracksID == track.trackId)
+                                                ? .editing(.update)
+                                                : (tracksRowState == .viewing ? .viewing : .editing(.none)),
+                                                deleteAction: {
+                                                    // 삭제 후 현재 프로젝트 트랙만 새로고침
+                                                    //                                                    Task {
+                                                    //                                                        try await viewModel.deleteTrack(trackId: track.trackId.uuidString)
+                                                    //                                                        await refreshTracksForSelectedProject()
+                                                    //                                                    }
+                                                },
+                                                editAction: {
+                                                    trackEditText      = track.trackName
+                                                    editSelectedTracks = track
+                                                    editingTracksID    = track.trackId
+                                                    tracksRowState     = .editing(.update)
+                                                },
+                                                rowTapAction: {
+                                                    // TODO: 카단 뷰(트랙들)와 연결 지점
+                                                },
+                                                editText: Binding(
+                                                    get: { (editingTracksID == track.trackId) ? trackEditText : track.trackName },
+                                                    set: { if editingTracksID == track.trackId { trackEditText = $0 } }
+                                                )
+                                            )
                                         }
                                     }
                                 }
