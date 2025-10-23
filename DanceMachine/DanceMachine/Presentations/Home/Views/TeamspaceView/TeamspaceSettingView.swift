@@ -63,7 +63,7 @@ struct TeamspaceSettingView: View {
         }
         .sheet(item: $presentingMemberRemovalSheetUser) { selectedUser in
             BottomConfirmSheetView(
-                titleText: "\(selectedUser.name)\n팀 멤버를 내보내시겠어요?",
+                titleText: "\(selectedUser.name)\n팀원을 내보내시겠어요?",
                 primaryText: "내보내기") {
                     Task {
                         let users: [User] = try await viewModel.removeTeamMemberAndReload(userId: selectedUser.userId)
@@ -148,7 +148,7 @@ struct TeamspaceSettingView: View {
             }
             Spacer().frame(height: 32)
             ActionButton(
-                title: "팀에 멤버 초대하기",
+                title: "팀원 초대하기",
                 color: self.editingState == .viewing ? Color.blue : Color.mint, // FIXME: - 컬러 수정
                 height: 47,
                 isEnabled: self.editingState == .viewing ? true : false,
@@ -188,7 +188,7 @@ struct TeamspaceSettingView: View {
                     }
                 }
             } label: {
-                Text("팀 멤버")
+                Text("팀원")
                     .font(Font.caption) // FIXME: - 폰트 수정
                     .foregroundStyle(Color.gray) // FIXME: - 컬러 수정
             }
