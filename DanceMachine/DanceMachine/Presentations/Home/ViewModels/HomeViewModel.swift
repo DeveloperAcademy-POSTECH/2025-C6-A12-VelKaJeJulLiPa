@@ -186,17 +186,6 @@ extension HomeViewModel {
     
     
     
-    /// 곡(Tracks)를 제거하는 메서드입니다.
-    /// - Parameters:
-    ///     - tracksId: 제거하려는 tracksId
-    func removeTracks(tracksId: String) async throws {
-        try await FirestoreManager.shared.delete(
-            collectionType: .tracks,
-            documentID: tracksId
-        )
-    }
-    
-    
     /// 곡(Tracks)의 섹션(서브컬렉션)을 조회하는 메서드입니다.
     func fetchSection(tracks: Tracks) async throws -> [Section] {
         do {
@@ -211,5 +200,27 @@ extension HomeViewModel {
             return []
         }
     }
-    
+  
+    /// 곡(Tracks)과 섹션(하위 컬렉션)을 제거하는 메서드입니다.
+    /// - Parameters:
+    ///     - tracksId: 제거하려는 tracksId
+    func removeTracksAndSection(tracksId: String) async throws {
+        
+        do {
+            try await FirestoreManager.shared.deleteAllDocumentsInSubcollection(
+                under: .tracks,
+                parentId: tracksId,
+                subCollection: .section
+            )
+            
+            
+            try await FirestoreManager.shared.delete(
+                collectionType: .tracks,
+                documentID: tracksId
+            )
+            
+        } catch {
+            print("error: \(error.localizedDescription)")
+        }
+    }
 }

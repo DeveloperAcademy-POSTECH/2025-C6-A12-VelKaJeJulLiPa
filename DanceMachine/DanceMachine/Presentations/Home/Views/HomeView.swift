@@ -521,7 +521,7 @@ struct HomeView: View {
                 titleText: "\(tracks.trackName)\n곡과 영상을 모두 삭제하시겠어요?",
                 primaryText: "모두 삭제") {
                     Task {
-                        try await viewModel.removeTracks(tracksId: tracks.tracksId.uuidString)
+                        try await viewModel.removeTracksAndSection(tracksId: tracks.tracksId.uuidString)
                         
                         // 프로젝트 목록 전체가 아니라, 현재 펼친 프로젝트 트랙만 갱신
                         let (id, tracks) = try await viewModel.refreshTracksForSelectedProject(
