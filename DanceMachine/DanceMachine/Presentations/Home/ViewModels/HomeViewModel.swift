@@ -197,5 +197,19 @@ extension HomeViewModel {
     }
     
     
+    /// 곡(Tracks)의 섹션(서브컬렉션)을 조회하는 메서드입니다.
+    func fetchSection(tracks: Tracks) async throws -> [Section] {
+        do {
+            let section: [Section] = try await FirestoreManager.shared.fetchAllFromSubcollection(
+                under: .tracks,
+                parentId: tracks.tracksId.uuidString,
+                subCollection: .section
+            )
+            return section
+        } catch {
+            print("error: \(error.localizedDescription)") // FIXME: - 적절한 분기 처리
+            return []
+        }
+    }
     
 }

@@ -457,7 +457,12 @@ struct HomeView: View {
                                                 },
                                                 rowTapAction: {
                                                     // TODO: 카단 뷰(트랙들)와 연결 지점 (tracksId,sectionId,trackName)
-                                                    print(track.tracksId)
+                                                    print("track.tracksId: \(track.tracksId)")
+                                                    print("track.trackName: \(track.trackName)")
+                                                    Task {
+                                                        let section = try await viewModel.fetchSection(tracks: track)
+                                                        print("section: \(section[0].sectionId)")
+                                                    }
                                                 },
                                                 editText: Binding(
                                                     get: { (editingTracksID == track.tracksId) ? trackEditText : track.trackName },
