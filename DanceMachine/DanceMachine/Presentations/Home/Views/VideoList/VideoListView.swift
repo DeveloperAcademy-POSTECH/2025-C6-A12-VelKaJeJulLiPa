@@ -31,7 +31,7 @@ struct VideoListView: View {
   let trackName: String
   
   var body: some View {
-    ZStack(alignment: .top) {
+    ZStack(alignment: .bottom) {
       if vm.isLoading {
         Spacer().frame(maxWidth: .infinity)
         ProgressView()
@@ -41,26 +41,18 @@ struct VideoListView: View {
         glassButton
       } else {
         listView
-//        sectionView
+        uploadButton
       }
     }
     .safeAreaInset(edge: .top, content: {
       sectionView
     })
-//    .safeAreaInset(edge: .bottom, content: {
-//      glassButton
-//    })
     .navigationBarTitleDisplayMode(.inline)
     //    .toolbar(.hidden, for: .tabBar)
     .toolbar {
       ToolbarLeadingBackButton(icon: .chevron)
       ToolbarCenterTitle(text: trackName)
     }
-//    .tabBarMinimizeBehavior(.onScrollDown)
-//    .tabViewBottomAccessory {
-//      glassButton
-//    }
-//    .tabBarMinimizeBehavior(.onScrollDown)
     .task {
       await vm.loadFromServer(tracksId: tracksId)
     }
@@ -68,9 +60,14 @@ struct VideoListView: View {
       for: .sectionDidUpdate)) { _ in
         Task { await vm.loadFromServer(tracksId: tracksId) }
       }
-      .sheet(isPresented: $showCustomPicker) {
-        VideoPickerView(tracksId: tracksId, sectionId: sectionId)
-      }
+          .sheet(isPresented: $showCustomPicker) {
+            VideoPickerView(tracksId: tracksId, sectionId: sectionId)
+          }
+          .onReceive(
+            NotificationCenter.default.publisher(
+              for: .showVideoPicker)) { _ in
+                self.showCustomPicker = true
+              }
   }
   
   private var glassButton: some View {
@@ -154,10 +151,12 @@ struct VideoListView: View {
             vm: $vm,
             action: {
               router.push(
-                to: .sectionEditView(
-                  section: vm.section,
-                  tracksId: tracksId,
-                  trackName: trackName
+                to: .video(
+                  .section(
+                    section: vm.section,
+                    tracksId: tracksId,
+                    trackName: trackName
+                  )
                 )
               )
             }
