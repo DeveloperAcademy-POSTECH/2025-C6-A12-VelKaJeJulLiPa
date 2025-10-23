@@ -88,19 +88,6 @@ struct HomeView: View {
             }
             .padding([.trailing, .bottom], 16)
         }
-//        .task {
-//            isLoading = true
-//            defer { isLoading = false }
-//            
-//            let result = await viewModel.loadUserTeamspacesAndTeamspaces(userId: MockData.userId)
-//            self.teamspaceState = result.userTeamspaces.isEmpty ? .create : .list
-//            self.loadTeamspaces = result.teamspaces
-//            
-//            if !didInitialize, let first = loadTeamspaces.first {
-//                viewModel.fetchCurrentTeamspace(teamspace: first)
-//                didInitialize = true
-//            }
-//        }
         .task {
             var userTeamspaces: [UserTeamspace] = []
             
