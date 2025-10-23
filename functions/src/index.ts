@@ -18,6 +18,7 @@ import { onDocumentCreated } from "firebase-functions/v2/firestore"
 import { setGlobalOptions } from "firebase-functions"
 import * as logger from "firebase-functions/logger"
 import { josa } from "es-hangul"
+import { v4 as uuidv4 } from 'uuid';
 
 
 admin.initializeApp()
@@ -121,10 +122,10 @@ export const onFeedbackCreated = onDocumentCreated("feedback/{feedbackId}", asyn
   }
 
   await db.collection("notification").add({
+    notificaion_id: uuidv4().toUpperCase,
     sender_id: author_id,
     receiver_ids: validTaggedUsers,
     feedback_id,
-    reply_id: null,
     created_at: admin.firestore.FieldValue.serverTimestamp(),
     video_id,
     content,
@@ -203,6 +204,7 @@ export const onReplyCreated = onDocumentCreated("reply/{replyId}", async (event)
   }
 
   await db.collection("notification").add({
+    notificaion_id: uuidv4().toUpperCase,
     sender_id: author_id,
     receiver_ids: validReceivers,
     feedback_id,
@@ -226,3 +228,4 @@ export const onReplyCreated = onDocumentCreated("reply/{replyId}", async (event)
   await sendPushNotification(validReceivers, title, body)
   logger.info("Push notification sent for reply", { validReceivers, title, body })
 })
+
