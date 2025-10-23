@@ -13,7 +13,23 @@ enum AppRoute: Hashable {
     case mypage(MyPageRoute)
     
     case teamspace(TeamspaceRoute)
-    case project(ProjectRoute)
+  
+    case video(VideoRoute)
+  
+    var floatingButtonType: FloatingButtonType {
+      switch self {
+      case .home:
+        return .none
+      case .inbox:
+        return .none
+      case .mypage:
+        return .none
+      case .teamspace:
+        return .none
+      case .video:
+        return .videoList
+      }
+    }
 }
 
 enum ProjectRoute: Hashable {
@@ -34,3 +50,12 @@ enum MyPageRoute: Hashable {
     case profile
 }
 
+enum VideoRoute: Hashable {
+    case list(tracksId: String, sectionId: String, trackName: String)
+    case section(section: [Section], tracksId: String, trackName: String)
+}
+
+enum FloatingButtonType {
+  case videoList
+  case none
+}
