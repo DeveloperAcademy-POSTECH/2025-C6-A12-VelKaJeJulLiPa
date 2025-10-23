@@ -29,9 +29,9 @@ module.exports = {
     "quotes": ["error", "double"],
     "import/no-unresolved": 0,
     "indent": ["error", 2],
+    "max-len": ["off"],
     "semi": ["error", "never"],
     "object-curly-spacing": ["error", "always"],
     "camelcase": ["off"],
-    "max-len": ["error", { "code": 120 }],
   },
 }
