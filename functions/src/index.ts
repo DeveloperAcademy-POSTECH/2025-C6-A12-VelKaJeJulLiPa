@@ -18,7 +18,7 @@ import { onDocumentCreated } from "firebase-functions/v2/firestore"
 import { setGlobalOptions } from "firebase-functions"
 import * as logger from "firebase-functions/logger"
 import { josa } from "es-hangul"
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid"
 
 
 admin.initializeApp()
@@ -121,8 +121,10 @@ export const onFeedbackCreated = onDocumentCreated("feedback/{feedbackId}", asyn
     return
   }
 
-  await db.collection("notification").add({
-    notificaion_id: uuidv4().toUpperCase,
+ const notification_id = String(uuidv4()).toUpperCase();
+
+ await db.collection("notification").doc(notification_id).set({
+    notification_id,
     sender_id: author_id,
     receiver_ids: validTaggedUsers,
     feedback_id,
@@ -140,7 +142,7 @@ export const onFeedbackCreated = onDocumentCreated("feedback/{feedbackId}", asyn
   }
 
   const title = `${josa(name, "이/가")} 피드백을 남겼어요`
-  const body = content.slice(0, 50)
+  const body = content.slice(0, 50) // FIXME: 글자수 제한
 
   await sendPushNotification(validTaggedUsers, title, body)
   logger.info("Push notification sent for feedback", { validTaggedUsers, title, body })
@@ -203,12 +205,13 @@ export const onReplyCreated = onDocumentCreated("reply/{replyId}", async (event)
     return
   }
 
-  await db.collection("notification").add({
-    notificaion_id: uuidv4().toUpperCase,
+ const notification_id = String(uuidv4()).toUpperCase();
+
+ await db.collection("notification").doc(notification_id).set({
+    notification_id,
     sender_id: author_id,
     receiver_ids: validReceivers,
     feedback_id,
-    reply_id,
     created_at: admin.firestore.FieldValue.serverTimestamp(),
     video_id,
     content,
@@ -223,9 +226,8 @@ export const onReplyCreated = onDocumentCreated("reply/{replyId}", async (event)
   }
 
   const title = `${josa(name, "이/가")} 댓글을 남겼어요`
-  const body = content.slice(0, 50)
+  const body = content.slice(0, 50) // FIXME: 글자수 제한
 
   await sendPushNotification(validReceivers, title, body)
   logger.info("Push notification sent for reply", { validReceivers, title, body })
 })
-
