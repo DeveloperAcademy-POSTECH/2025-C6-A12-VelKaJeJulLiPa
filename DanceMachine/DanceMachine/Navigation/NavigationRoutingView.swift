@@ -35,6 +35,21 @@ struct NavigationRoutingView: View {
                 case .setting:
                     TeamspaceSettingView()
                 }
+            case .video(let route):
+                switch route {
+                case .list(let tracksId, let sectionId, let trackName):
+                  VideoListView(
+                    tracksId: tracksId,
+                    sectionId: sectionId,
+                    trackName: trackName
+                  )
+                case .section(let section, let tracksId, let trackName):
+                  SectionEditView(
+                    sections: section,
+                    tracksId: tracksId,
+                    trackName: trackName
+                  )
+                }
             }
         }
         .hideBackButton()
