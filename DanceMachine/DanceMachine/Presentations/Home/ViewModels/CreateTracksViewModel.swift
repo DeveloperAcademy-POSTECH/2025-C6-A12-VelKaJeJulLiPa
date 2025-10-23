@@ -20,7 +20,7 @@ final class CreateTracksViewModel {
     func createTracks(projectId: String, tracksName: String) async throws {
         do {
             let tracks: Tracks = .init(
-                trackId: UUID(),
+                tracksId: UUID(),
                 projectId: projectId,
                 creatorId: MockData.userId, // FIXME: - 데이터 교체
                 trackName: tracksName
@@ -36,7 +36,7 @@ final class CreateTracksViewModel {
             try await FirestoreManager.shared.createToSubcollection(
                 section,
                 under: .tracks,
-                parentId: tracks.trackId.uuidString,
+                parentId: tracks.tracksId.uuidString,
                 subCollection: .section,
                 strategy: .create
             )

@@ -440,10 +440,10 @@ struct HomeView: View {
                                                     .fill(Color.gray.opacity(0.1)) // FIXME: - 컬러 수정
                                             )
                                     } else {
-                                        ForEach(tracks, id: \.trackId) { track in
+                                        ForEach(tracks, id: \.tracksId) { track in
                                             TrackRow(
                                                 track: track,
-                                                rowState: (tracksRowState == .editing(.update) && editingTracksID == track.trackId)
+                                                rowState: (tracksRowState == .editing(.update) && editingTracksID == track.tracksId)
                                                 ? .editing(.update)
                                                 : (tracksRowState == .viewing ? .viewing : .editing(.none)),
                                                 deleteAction: {
@@ -452,15 +452,16 @@ struct HomeView: View {
                                                 editAction: {
                                                     trackEditText      = track.trackName
                                                     editSelectedTracks = track
-                                                    editingTracksID    = track.trackId
+                                                    editingTracksID    = track.tracksId
                                                     tracksRowState     = .editing(.update)
                                                 },
                                                 rowTapAction: {
-                                                    // TODO: 카단 뷰(트랙들)와 연결 지점
+                                                    // TODO: 카단 뷰(트랙들)와 연결 지점 (tracksId,sectionId,trackName)
+                                                    print(track.tracksId)
                                                 },
                                                 editText: Binding(
-                                                    get: { (editingTracksID == track.trackId) ? trackEditText : track.trackName },
-                                                    set: { if editingTracksID == track.trackId { trackEditText = $0 } }
+                                                    get: { (editingTracksID == track.tracksId) ? trackEditText : track.trackName },
+                                                    set: { if editingTracksID == track.tracksId { trackEditText = $0 } }
                                                 )
                                             )
                                         }
@@ -515,7 +516,7 @@ struct HomeView: View {
                 titleText: "\(tracks.trackName)\n곡과 영상을 모두 삭제하시겠어요?",
                 primaryText: "모두 삭제") {
                     Task {
-                        try await viewModel.removeTracks(tracksId: tracks.trackId.uuidString)
+                        try await viewModel.removeTracks(tracksId: tracks.tracksId.uuidString)
                         
                         // 프로젝트 목록 전체가 아니라, 현재 펼친 프로젝트 트랙만 갱신
                         let (id, tracks) = try await viewModel.refreshTracksForSelectedProject(

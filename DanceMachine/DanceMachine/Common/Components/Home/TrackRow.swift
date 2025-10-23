@@ -98,7 +98,7 @@ struct TrackRow: View {
 #Preview {
     TrackRow(
         track: .init(
-            trackId: UUID(),
+            tracksId: UUID(),
             projectId: "project",
             creatorId: "creator",
             trackName: "Aespa - Rich Man"
