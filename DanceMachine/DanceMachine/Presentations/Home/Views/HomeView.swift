@@ -73,8 +73,6 @@ struct HomeView: View {
         return false
     }
     
-    
-    
     var body: some View {
         ZStack {
             Color.white // FIXME: - 컬러 수정
@@ -449,11 +447,7 @@ struct HomeView: View {
                                                 ? .editing(.update)
                                                 : (tracksRowState == .viewing ? .viewing : .editing(.none)),
                                                 deleteAction: {
-                                                    // 삭제 후 현재 프로젝트 트랙만 새로고침
-                                                    //                                                    Task {
-                                                    //                                                        try await viewModel.deleteTrack(trackId: track.trackId.uuidString)
-                                                    //                                                        await refreshTracksForSelectedProject()
-                                                    //                                                    }
+                                                    self.presentingRemovalSheetTracks = track
                                                 },
                                                 editAction: {
                                                     trackEditText      = track.trackName
@@ -514,6 +508,27 @@ struct HomeView: View {
             )
             .presentationDetents([.fraction(0.9)])
             .presentationCornerRadius(16)
+        }
+        // MARK: - 트랙 시트
+        .sheet(item: $presentingRemovalSheetTracks) { tracks in
+            BottomConfirmSheetView(
+                titleText: "\(tracks.trackName)\n곡과 영상을 모두 삭제하시겠어요?",
+                primaryText: "모두 삭제") {
+                    Task {
+                        try await viewModel.removeTracks(tracksId: tracks.trackId.uuidString)
+                        
+                        // 프로젝트 목록 전체가 아니라, 현재 펼친 프로젝트 트랙만 갱신
+                        let (id, tracks) = try await viewModel.refreshTracksForSelectedProject(
+                            choiceSelectedProject: self.choiceSelectedProject
+                        )
+                        // UI 변경 메인 쓰레드에서 진행
+                        await MainActor.run {
+                            tracksByProject[id] = tracks
+                            tracksError[id] = nil
+                        }
+
+                    }
+                }
         }
     }
 }

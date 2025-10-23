@@ -33,6 +33,10 @@ struct Tracks: Codable {
     }
 }
 
+extension Tracks: Identifiable {
+    var id: String { UUID().uuidString }
+}
+
 extension Tracks: EntityRepresentable {
     var entityName: CollectionType { .tracks }
     var documentID: String { trackId.uuidString }

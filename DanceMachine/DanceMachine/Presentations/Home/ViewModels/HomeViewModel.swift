@@ -183,4 +183,19 @@ extension HomeViewModel {
         let tracks = try await self.fetchTracks(projectId: id.uuidString)
         return (id, tracks)
     }
+    
+    
+    
+    /// 곡(Tracks)를 제거하는 메서드입니다.
+    /// - Parameters:
+    ///     - tracksId: 제거하려는 tracksId
+    func removeTracks(tracksId: String) async throws {
+        try await FirestoreManager.shared.delete(
+            collectionType: .tracks,
+            documentID: tracksId
+        )
+    }
+    
+    
+    
 }
