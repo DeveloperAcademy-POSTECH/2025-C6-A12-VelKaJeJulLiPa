@@ -134,3 +134,7 @@ iOSInjectionProject/
 # End of https://www.toptal.com/developers/gitignore/api/macos,swift,xcode
 **/GoogleService-Info.plist
 **/Config.xcconfig
+
+# Firebase
+# Firebase Cloud Functions
+**/node_modules
