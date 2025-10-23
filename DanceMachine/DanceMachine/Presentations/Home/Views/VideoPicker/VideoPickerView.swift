@@ -14,6 +14,8 @@ struct VideoPickerView: View {
   
   @State private var vm: VideoPickerViewModel = .init()
   
+  @FocusState private var isFocused: Bool
+  
   let tracksId: String
   let sectionId: String
   
@@ -24,22 +26,25 @@ struct VideoPickerView: View {
         let totalSpacing = spacing * 2
         let itemWidth = (g.size.width - totalSpacing) / 4
         ScrollView {
-          
-          VideoPreview(
-            vm: vm,
-            size: g.size.height * 0.5
-          )
-          .frame(height: g.size.height * 0.5)
-          .padding(.top, (g.size.height * 0.5) / 3)
-          
-          CustomPicker(
-            videos: $vm.videos,
-            selectedAsset: $vm.selectedAsset,
-            spacing: spacing,
-            itemWidth: itemWidth
-          )
+          VStack(spacing: 16) {
+            VideoPreview(
+              vm: vm,
+              size: 224
+            )
+            .padding(.top, (g.size.height * 0.4) / 3)
+            
+            textField
+            
+            CustomPicker(
+              videos: $vm.videos,
+              selectedAsset: $vm.selectedAsset,
+              spacing: spacing,
+              itemWidth: itemWidth
+            )
+          }
         }
         .ignoresSafeArea(.all)
+        
         .toolbar {
           ToolbarLeadingBackButton(icon: .chevron)
           ToolbarCenterTitle(text: "비디오 선택")
@@ -74,6 +79,22 @@ struct VideoPickerView: View {
         }
       }
     }
+  }
+  
+  private var textField: some View {
+    RoundedRectangle(cornerRadius: 10)
+      .fill(Color.gray.opacity(0.6)) // FIXME: 컬러 수정
+      .frame(maxWidth: .infinity)
+      .frame(height: 51)
+      .overlay {
+        TextField("업로드할 영상을 선택하세요.", text: $vm.videoTitle)
+          .padding()
+          .textFieldStyle(.plain)
+          .font(.system(size: 16)) // FIXME: 폰트 수정
+          .foregroundStyle(Color.gray)
+          .focused($isFocused)
+      }
+      .padding(.horizontal, 16)
   }
 }
 

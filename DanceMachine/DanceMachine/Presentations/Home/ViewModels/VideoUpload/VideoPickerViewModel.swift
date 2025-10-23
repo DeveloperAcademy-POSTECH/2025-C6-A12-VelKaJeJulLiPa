@@ -267,7 +267,7 @@ extension VideoPickerViewModel {
     
     let video = Video(
       videoId: UUID(uuidString: videoId) ?? UUID(),
-      videoTitle: "제목", // TODO: 비디오 이름
+      videoTitle: videoTitle,
       videoDuration: duration,
       videoURL: downloadURL,
       thumbnailURL: thumbnailURL
