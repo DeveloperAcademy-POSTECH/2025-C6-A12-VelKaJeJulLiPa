@@ -9,14 +9,14 @@ import SwiftUI
 
 struct GridCell: View {
   var size: CGFloat
-//  var height: CGFloat?
   
   let thumbnailURL: String?
   let title: String
   let duration: Double
   let uploadDate: Date
   
-  let action: () -> Void
+  let editAction: () -> Void
+  let deleteAction: () -> Void
   
   @State private var showMenu: Bool = false
   
@@ -48,7 +48,6 @@ struct GridCell: View {
       
       Spacer()
     }
-//    .padding(.leading, 4)
   }
   
   private var thumbnail: some View {
@@ -61,7 +60,6 @@ struct GridCell: View {
         )
       }
     }
-//    .padding(.leading, -4)
   }
   
   
@@ -78,19 +76,19 @@ struct GridCell: View {
   private var contextRow: some View {
     VStack(alignment: .leading, spacing: 16) {
       Button {
-        action()
+        editAction()
       } label: {
         HStack {
           Image(systemName: "pencil")
-          Text("섹션 이름 수정")
+          Text("영상 이동")
         }
       }
       Button {
-        // TODO: 섹션 삭제
+        deleteAction()
       } label: {
         HStack {
           Image(systemName: "trash")
-          Text("섹션 삭제")
+          Text("영상 삭제")
         }
       }
     }
@@ -105,6 +103,7 @@ struct GridCell: View {
     title: "제목",
     duration: 14.1414141414,
     uploadDate: Date(),
-    action: {}
+    editAction: {},
+    deleteAction: {}
   )
 }
