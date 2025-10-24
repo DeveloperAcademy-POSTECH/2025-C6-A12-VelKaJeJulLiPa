@@ -161,11 +161,7 @@ export const onReplyCreated = onDocumentCreated("reply/{replyId}", async (event)
 
   const reply = snap.data()
   const { reply_id, feedback_id, author_id, tagged_user_ids, content } = reply
-  if (!tagged_user_ids || tagged_user_ids.length === 0) {
-    logger.info("No tagged users in reply, skipping notification", { reply_id })
-    return
-  }
-
+ 
   const feedbackDoc = await db.collection("feedback").doc(feedback_id).get()
   const feedbackDoc_author_id = feedbackDoc.exists ? feedbackDoc.get("author_id") : null
   const video_id = feedbackDoc.exists ? feedbackDoc.get("video_id") : null
