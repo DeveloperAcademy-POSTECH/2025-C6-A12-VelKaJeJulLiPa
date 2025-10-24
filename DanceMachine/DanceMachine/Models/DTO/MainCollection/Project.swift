@@ -33,6 +33,10 @@ struct Project: Codable {
     }
 }
 
+extension Project: Identifiable {
+    var id: UUID { projectId }
+}
+
 extension Project: EntityRepresentable {
     var entityName: CollectionType { .project }
     var documentID: String { projectId.uuidString }

@@ -81,7 +81,7 @@ final class TeamspaceSettingViewModel {
     func removeTeamMemberAndReload(userId: String) async throws -> [User] {
         do {
             try await self.removingTeamspaceMember(userId: userId)
-            return try await self.fetchCurrentTeamspaceAllMember()
+            return await self.fetchCurrentTeamspaceAllMember()
         } catch {
             print("error: \(error.localizedDescription)") // FIXME: - 에러에 맞게 로직 수정
             return []
