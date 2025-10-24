@@ -85,7 +85,6 @@ extension VideoPickerViewModel {
             )
             
             await MainActor.run {
-//              self.videoThumbnail = thumbnail
               self.videoDuration = duration
               self.isLoading = false
               self.showSuccessAlert = true
