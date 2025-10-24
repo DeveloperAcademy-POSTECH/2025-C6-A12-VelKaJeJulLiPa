@@ -13,6 +13,7 @@ final class SectionSelectViewModel {
   
   var isLoading: Bool = false
   var errorMsg: String? = nil
+  var showAlert: Bool = false
   
   // MARK: 노티 메서드
   func notify(_ name: Foundation.Notification.Name) {
@@ -60,6 +61,8 @@ extension SectionSelectViewModel {
       
       await MainActor.run {
         self.isLoading = false
+        self.showAlert = true
+        self.errorMsg = "영상 이동에 성공했습니다!"
         print("track 이동 성공")
       }
       
@@ -68,7 +71,8 @@ extension SectionSelectViewModel {
     } catch { // TODO: 에러처리
       await MainActor.run {
         self.isLoading = false
-        self.errorMsg = "섹션 변경에 실패했습니다"
+        self.showAlert = true
+        self.errorMsg = "영상 이동에 실패했습니다"
       }
     }
   }
