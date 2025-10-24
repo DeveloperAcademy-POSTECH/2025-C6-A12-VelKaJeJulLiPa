@@ -43,6 +43,7 @@ struct VideoPickerView: View {
             )
           }
         }
+        .overlay { if vm.isLoading { LoadingView() }}
         .ignoresSafeArea(.all)
         
         .toolbar {
