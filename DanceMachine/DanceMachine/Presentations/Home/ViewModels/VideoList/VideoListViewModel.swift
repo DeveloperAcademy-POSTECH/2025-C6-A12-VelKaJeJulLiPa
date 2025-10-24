@@ -10,6 +10,7 @@ import Foundation
 @Observable
 final class VideoListViewModel {
   private let store = FirestoreManager.shared
+  private let storage = FireStorageManager.shared
   
   var videos: [Video] = []
   var section: [Section] = []
@@ -89,10 +90,6 @@ extension VideoListViewModel {
         self.track = allTrack
         self.videos = fetchedVideos
         
-//        if self.selectedSection == nil,
-//           let first = fetchSection.first {
-//          self.selectedSection = first
-//        }
         if let prevId = previousSelectedId,
            let stillExists = fetchSection.first(where: { $0.sectionId == prevId }) {
           self.selectedSection = stillExists
@@ -109,6 +106,50 @@ extension VideoListViewModel {
         print("비디오 에러: \(VideoError.fetchFailed.debugMsg)")
         print("상세 에러: \(error)")
       }
+    }
+  }
+  
+  // 영상 삭제 메서드 Storage + Firestore(Video + Track)
+  func deleteVideo(video: Video, tracksId: String) async {
+    await MainActor.run {
+      self.isLoading = true
+      self.errorMsg = nil
+    }
+    
+    do {
+      let videoId = video.videoId.uuidString
+      
+      let videoPath = StorageType.video(videoId).path
+      let thumbnailPath = StorageType.thumbnail(videoId).path
+      
+      try await withThrowingTaskGroup(of: Void.self) { group in
+        group.addTask {
+          _ = try await self.storage.deleteVideo(at: videoPath)
+        }
+        group.addTask {
+          _ = try await self.storage.deleteVideo(at: thumbnailPath)
+        }
+        group.addTask {
+          _ = try await self.deleteTrack(videoId: videoId, tracksId: tracksId)
+        }
+        group.addTask {
+          _ = try await self.store.delete(collectionType: .video, documentID: videoId)
+          print(videoId)
+        }
+        try await group.waitForAll()
+      }
+      
+      await MainActor.run {
+        self.videos.removeAll { $0.videoId == video.videoId }
+        self.track.removeAll { $0.videoId == videoId }
+        self.isLoading = false
+      }
+    } catch {
+      await MainActor.run { // TODO: 에러 처리
+        self.isLoading = false
+        self.errorMsg = "영상 삭제에 실패했습니다. 다시 시도해 주세요."
+      }
+      print("영상 삭제 실패")
     }
   }
 }
@@ -137,6 +178,25 @@ private extension VideoListViewModel {
       parentId: sectionId,
       subCollection: .track
     )
+  }
+  
+  func deleteTrack(
+    videoId: String,
+    tracksId: String
+  ) async throws {
+    let trackingTrack = track.filter { $0.videoId == videoId }
+    
+    for track in trackingTrack {
+      try await self.store.deleteFromSubSubcollection(
+        in: .tracks,
+        grandParentId: tracksId,
+        withIn: .section,
+        parentId: track.sectionId,
+        subCollection: .track,
+        target: track.trackId
+      )
+      print(track.trackId)
+    }
   }
 }
 // MARK: - 프리뷰
