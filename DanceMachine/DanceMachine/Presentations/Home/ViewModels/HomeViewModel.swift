@@ -153,3 +153,74 @@ extension HomeViewModel {
     }
     
 }
+
+// MARK: - 곡(Tracks) 관련 로직
+extension HomeViewModel {
+    
+    /// 곡(Tracks) 이름을 수정하는 메서드입니다.
+    /// - Parameters:
+    ///     - tracksId: 곡(Tracks) Id
+    ///     - newTracksName: 새로운 곡(Tracks) 이름
+    func updateTracksName(tracksId: String, newTracksName: String) async throws {
+        do {
+            try await FirestoreManager.shared.updateFields(
+                collection: .tracks,
+                documentId: tracksId,
+                asDictionary: [ Tracks.CodingKeys.trackName.stringValue: newTracksName ]
+            )} catch {
+                print("error: \(error.localizedDescription)")
+            }
+    }
+    
+    
+    /// 선택된(펼친) 프로젝트의 트랙만 다시 불러오는 메서드입니다.
+    /// - Parameters:
+    ///     - choiceSelectedProject: 선택된 Project
+    func refreshTracksForSelectedProject(choiceSelectedProject: Project?) async throws -> (UUID, [Tracks]) {
+        guard let project = choiceSelectedProject else { throw RefreshError.noSelectedProject }
+        
+        let id = project.projectId
+        let tracks = try await self.fetchTracks(projectId: id.uuidString)
+        return (id, tracks)
+    }
+    
+    
+    
+    /// 곡(Tracks)의 섹션(서브컬렉션)을 조회하는 메서드입니다.
+    func fetchSection(tracks: Tracks) async throws -> [Section] {
+        do {
+            let section: [Section] = try await FirestoreManager.shared.fetchAllFromSubcollection(
+                under: .tracks,
+                parentId: tracks.tracksId.uuidString,
+                subCollection: .section
+            )
+            return section
+        } catch {
+            print("error: \(error.localizedDescription)") // FIXME: - 적절한 분기 처리
+            return []
+        }
+    }
+  
+    /// 곡(Tracks)과 섹션(하위 컬렉션)을 제거하는 메서드입니다.
+    /// - Parameters:
+    ///     - tracksId: 제거하려는 tracksId
+    func removeTracksAndSection(tracksId: String) async throws {
+        
+        do {
+            try await FirestoreManager.shared.deleteAllDocumentsInSubcollection(
+                under: .tracks,
+                parentId: tracksId,
+                subCollection: .section
+            )
+            
+            
+            try await FirestoreManager.shared.delete(
+                collectionType: .tracks,
+                documentID: tracksId
+            )
+            
+        } catch {
+            print("error: \(error.localizedDescription)")
+        }
+    }
+}

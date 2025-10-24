@@ -26,3 +26,15 @@ struct Section: Codable {
     }
     
 }
+
+extension Section: EntityRepresentable {
+    var entityName: CollectionType { .section }
+    var documentID: String { sectionId }
+    var asDictionary: [String: Any]? {
+        let encoder = JSONEncoder()
+        encoder.keyEncodingStrategy = .convertToSnakeCase
+        guard let data = try? encoder.encode(self),
+              let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
+        return dict
+    }
+}
