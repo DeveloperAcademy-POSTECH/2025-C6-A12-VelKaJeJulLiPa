@@ -89,12 +89,12 @@ async function sendPushNotification(receiverIds: string[], title: string, body: 
 
 /**
  * feedback 문서 생성 시 알림
- * feedback 문서 생성됨 - 태그된 사람 있는지 확인 - 태그된 사람 중 작성자를 차단한 사람 필터링 - 필터링한 사람한테만 보낼 notification 문서 생성 - 문서 기반으로 푸시 알림 보냄
+ * feedback 문서 생성됨 - 태그된 사람 있는지 확인 - 태그된 사람 중 작성자를 차단한 사람 필터링 - notification 문서 생성 - 문서 기반으로 푸시 알림 보냄
  */
 export const onFeedbackCreated = onDocumentCreated("feedback/{feedbackId}", async (event) => {
   const snap = event.data
   if (!snap) {
-    logger.error("No feedback doc found", { eventId: event.id })
+    logger.error("No feedback document found", { eventId: event.id })
     return
   }
   const feedback = snap.data()
@@ -132,7 +132,7 @@ export const onFeedbackCreated = onDocumentCreated("feedback/{feedbackId}", asyn
     video_id,
     content,
   })
-  logger.info("Notification doc created by feedback", { feedback_id, validTaggedUsers })
+  logger.info("Notification document created by feedback", { feedback_id, validTaggedUsers })
 
   const authorDoc = await db.collection("users").doc(author_id).get()
   const name = authorDoc.exists ? authorDoc.get("name") : null
@@ -142,7 +142,7 @@ export const onFeedbackCreated = onDocumentCreated("feedback/{feedbackId}", asyn
   }
 
   const title = `${josa(name, "이/가")} 피드백을 남겼어요`
-  const body = content.slice(0, 50) // FIXME: 글자수 제한
+  const body = content // FIXME: 글자수 제한
 
   await sendPushNotification(validTaggedUsers, title, body)
   logger.info("Push notification sent for feedback", { validTaggedUsers, title, body })
@@ -150,7 +150,7 @@ export const onFeedbackCreated = onDocumentCreated("feedback/{feedbackId}", asyn
 
 /**
  * reply 문서 생성 시 알림
- *
+ * reply 문서 생성됨 - 태그된 사람 있는지 확인 - 태그된 사람 중 작성자를 차단한 사람 필터링 - notification 문서 생성 - 문서 기반으로 푸시 알림 보냄
  */
 export const onReplyCreated = onDocumentCreated("reply/{replyId}", async (event) => {
   const snap = event.data
@@ -216,7 +216,7 @@ export const onReplyCreated = onDocumentCreated("reply/{replyId}", async (event)
     video_id,
     content,
   })
-  logger.info("Notification doc created by reply", { reply_id, validReceivers })
+  logger.info("Notification document created by reply", { reply_id, validReceivers })
 
   const authorDoc = await db.collection("users").doc(author_id).get()
   const name = authorDoc.exists ? authorDoc.get("name") : null
@@ -226,7 +226,7 @@ export const onReplyCreated = onDocumentCreated("reply/{replyId}", async (event)
   }
 
   const title = `${josa(name, "이/가")} 댓글을 남겼어요`
-  const body = content.slice(0, 50) // FIXME: 글자수 제한
+  const body = content // FIXME: 글자수 제한
 
   await sendPushNotification(validReceivers, title, body)
   logger.info("Push notification sent for reply", { validReceivers, title, body })
