@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct SectionSelectView: View {
+  @Environment(\.dismiss) private var dismiss
   let section: [Section]
   let sectionId: String
   let track: Track
@@ -39,9 +40,7 @@ struct SectionSelectView: View {
         .onTapGesture {
           if selectedSectionId == section.sectionId {
             selectedSectionId = ""
-          } else {
-            selectedSectionId = section.sectionId
-          }
+          } else { selectedSectionId = section.sectionId }
         }
       }
     }
@@ -54,6 +53,9 @@ struct SectionSelectView: View {
       confirmButton
         .padding(.horizontal, 16)
     }
+    .alert(vm.errorMsg ?? "알 수 없는 오류가 발생했습니다.",
+           isPresented: $vm.showAlert) {
+      Button("확인") { dismiss() } }
   }
   
   private var confirmButton: some View {
