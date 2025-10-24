@@ -17,7 +17,9 @@ struct VideoGrid: View {
   @Binding var track: [Track]
   @Binding var section: [Section]
   
-  @State var selectedTrack: Track?
+  @State private var selectedVideo: Video?
+  @State private var selectedTrack: Track?
+  @Binding var vm: VideoListViewModel
   
   var body: some View {
     LazyVGrid(
@@ -41,8 +43,12 @@ struct VideoGrid: View {
               title: video.videoTitle,
               duration: video.videoDuration,
               uploadDate: video.createdAt ?? Date(),
-              action: {
+              editAction: {
                 self.selectedTrack = track
+              },
+              deleteAction: {
+                self.selectedVideo = video
+                print("\(video.videoId)모달 선택")
               }
             )
           }
@@ -57,10 +63,24 @@ struct VideoGrid: View {
             title: video.videoTitle,
             duration: video.videoDuration,
             uploadDate: video.createdAt ?? Date(),
-            action: {
+            editAction: {
               self.selectedTrack = track
+            },
+            deleteAction: {
+              self.showDeleteModal = true
             }
           )
+          .sheet(isPresented: $showDeleteModal) {
+            BottomConfirmSheetView(
+              titleText: video.videoTitle,
+              primaryText: "삭제",
+              action: {
+                Task {
+                  await vm.deleteVideo(video: video, tracksId: tracksId)
+                }
+              }
+            )
+          }
         }
       }
 #endif
@@ -76,6 +96,20 @@ struct VideoGrid: View {
             tracksId: tracksId
           )
         }
+      }
+    }
+    .sheet(item: $selectedVideo) { _ in
+      if let video = selectedVideo {
+        BottomConfirmSheetView(
+          titleText: "\(video.videoTitle)\n영상을 삭제하시겠어요?",
+          primaryText: "삭제",
+          action: {
+            Task {
+              await vm.deleteVideo(video: video, tracksId: tracksId)
+              print("\(video.videoId)")
+            }
+          }
+        )
       }
     }
   }
@@ -102,6 +136,10 @@ extension Track: Identifiable {
   var id: String { trackId }
 }
 
+extension Video: Identifiable {
+  var id: String { videoId.uuidString }
+}
+
 #Preview {
   VideoGrid(
     size: 168,
@@ -110,6 +148,7 @@ extension Track: Identifiable {
     tracksId: "",
     videos: .constant([]),
     track: .constant([]),
-    section: .constant([])
+    section: .constant([]),
+    vm: .constant(VideoListViewModel())
   )
 }

@@ -131,7 +131,8 @@ struct VideoListView: View {
           tracksId: tracksId,
           videos: .constant(vm.filteredVideos),
           track: .constant(vm.track),
-          section: .constant(vm.section)
+          section: .constant(vm.section),
+          vm: $vm
         )
         .onTapGesture {
           // TODO: 비디오 플레이 화면 네비게이션 연결
