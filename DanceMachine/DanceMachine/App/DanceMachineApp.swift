@@ -285,3 +285,48 @@ extension UIApplication {
         return base
     }
 }
+
+import UIKit
+import LinkPresentation
+
+final class InviteShareItem: NSObject, UIActivityItemSource {
+    let teamName: String
+    let url: URL
+
+    init(teamName: String, url: URL) {
+        self.teamName = teamName
+        self.url = url
+    }
+
+    // 공유 기본 텍스트
+    func activityViewControllerPlaceholderItem(
+        _ activityViewController: UIActivityViewController
+    ) -> Any {
+        return "\(teamName) 팀스페이스에서 초대하였습니다.\n초대링크: \(url.absoluteString)"
+    }
+
+    func activityViewController(
+        _ activityViewController: UIActivityViewController,
+        itemForActivityType activityType: UIActivity.ActivityType?
+    ) -> Any? {
+        // 대부분의 앱에서 텍스트+링크를 한 문자열로 주면 자연스럽게 링크로 인식됩니다.
+        return "\(teamName) 팀스페이스에서 초대하였습니다.\n초대링크: \(url.absoluteString)"
+    }
+
+    // 메일 등에서 제목(Subject) 지원
+    func activityViewController(
+        _ activityViewController: UIActivityViewController,
+        subjectForActivityType activityType: UIActivity.ActivityType?
+    ) -> String {
+        return "[\(teamName)] 팀 초대"
+    }
+
+    // 미리보기 타이틀(메타데이터)
+    func activityViewControllerLinkMetadata(_ activityViewController: UIActivityViewController) -> LPLinkMetadata? {
+        let md = LPLinkMetadata()
+        md.title = "[\(teamName)] 팀 초대"
+        md.originalURL = url
+        md.url = url
+        return md
+    }
+}

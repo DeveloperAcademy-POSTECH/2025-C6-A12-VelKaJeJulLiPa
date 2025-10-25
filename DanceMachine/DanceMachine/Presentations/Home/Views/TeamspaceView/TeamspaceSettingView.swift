@@ -162,17 +162,23 @@ struct TeamspaceSettingView: View {
                                 print("초대링크 생성 실패: teamspaceId 없음")
                                 return
                             }
-
+                            
+                            guard let teamspaceName = viewModel.currentTeamspace?.teamspaceName else {
+                                print("팀 스페이스 이름 불러오기 실패")
+                                return
+                            }
+                            
                             do {
                                 // 2) 초대 링크 생성
                                 let url = try await InviteService().createInvite(
                                     teamspaceId: teamspaceId,
                                     inviterId: MockData.userId // 로그인 사용자 ID
                                 )
-
+                                
                                 // 3) 공유 시트 표시 (UI는 메인 스레드)
                                 await MainActor.run {
-                                    let av = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+                                    let item = InviteShareItem(teamName: teamspaceName, url: url)
+                                    let av = UIActivityViewController(activityItems: [item], applicationActivities: nil)
                                     UIApplication.shared.topMostViewController()?.present(av, animated: true)
                                 }
                             } catch {
