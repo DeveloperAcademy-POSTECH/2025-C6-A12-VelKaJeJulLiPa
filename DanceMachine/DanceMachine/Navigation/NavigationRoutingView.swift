@@ -48,11 +48,12 @@ struct NavigationRoutingView: View {
                     sectionId: sectionId,
                     trackName: trackName
                   )
-                case .section(let section, let tracksId, let trackName):
+                case .section(let section, let tracksId, let trackName, let sectionId):
                   SectionEditView(
                     sections: section,
                     tracksId: tracksId,
-                    trackName: trackName
+                    trackName: trackName,
+                    sectionId: sectionId
                   )
                 }
             }
