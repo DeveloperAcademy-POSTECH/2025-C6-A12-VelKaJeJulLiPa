@@ -28,9 +28,8 @@ final class FirebaseAuthManager: ObservableObject {
     private var authStateHandler: AuthStateDidChangeListenerHandle?
     private var currentNonce: String?
     
-      /// 현재 선택된 유저의 팀스페이스 입니다.
+    /// 현재 선택된 유저의 팀스페이스 입니다.
     var currentTeamspace: Teamspace?
- 
     var isSigningIn: Bool = false
     
     private init() {
@@ -39,7 +38,7 @@ final class FirebaseAuthManager: ObservableObject {
             do { try self.signOut() }
             catch {
                 errormessage = error.localizedDescription
-                print("❌ Failed to sign out: \(error.localizedDescription)")
+                print("❌ Failed to sign out: \(errormessage)")
             }
             hasLaunchedBefore = true
         }
@@ -94,7 +93,7 @@ final class FirebaseAuthManager: ObservableObject {
         } catch {
             self.authenticationState = .unauthenticated
             errormessage = error.localizedDescription
-            print("❌ Failed to fetch user information: \(error.localizedDescription)")
+            print("❌ Failed to fetch user information: \(errormessage)")
         }
     }
     
@@ -118,13 +117,14 @@ final class FirebaseAuthManager: ObservableObject {
                         try self.signOut()
                     } catch {
                         errormessage = error.localizedDescription
-                        print("🍎 Apple credential revoked — signing out")
+                        print("🍎 Apple credential revoked — signing out: \(errormessage)")
                     }
                 default:
                     break
                 }
             } catch {
-                print("⚠️ verifySignInWithAppleAuthenticationState error: \(error.localizedDescription)")
+                errormessage = error.localizedDescription
+                print("⚠️ verifySignInWithAppleAuthenticationState error: \(errormessage)")
             }
         }
     }
