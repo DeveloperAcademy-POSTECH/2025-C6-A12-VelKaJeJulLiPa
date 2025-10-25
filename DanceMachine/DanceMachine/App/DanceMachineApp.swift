@@ -31,10 +31,12 @@ struct InviteService {
     struct InviteError: Error { }
 
     /// 초대 링크 생성 (Firestore 문서만 생성하고, 커스텀 스킴 링크 반환)
-    func createInvite(teamspaceId: String,
-                      inviterId: String,
-                      role: String = "member",
-                      ttlHours: Int = 24) async throws -> URL {
+    func createInvite(
+        teamspaceId: String,
+        inviterId: String,
+        role: String = "member",
+        ttlHours: Int = 24
+    ) async throws -> URL {
         let token = UUID().uuidString + UUID().uuidString
         let inviteId = UUID().uuidString
 
@@ -46,7 +48,6 @@ struct InviteService {
             "role": role,
             "token": token,
             "status": "pending",   // pending, completed, revoked ...
-            "max_uses": 1,
             "uses": 0,
             "expires_at": expiresAt,
             "created_at": FieldValue.serverTimestamp()
@@ -147,6 +148,7 @@ struct InviteAcceptService {
         case alreadyUsed
         case invalidStatus
         case invalidData
+        case alreadyMember
     }
 
     private func makeNSError(_ code: AcceptError, _ msg: String) -> NSError {
@@ -157,7 +159,10 @@ struct InviteAcceptService {
 
     /// token으로 초대 검증 + 수락 처리
     /// - Returns: teamspaceId
-    func acceptInvite(token: String, currentUserId: String) async throws -> String {
+    func acceptInvite(
+        token: String,
+        currentUserId: String
+    ) async throws -> String {
         let db = Firestore.firestore()
 
         // 1) token으로 초대 문서 조회
@@ -183,14 +188,13 @@ struct InviteAcceptService {
             do {
                 // 최신 스냅샷
                 let freshSnap = try txn.getDocument(doc.reference)
-                guard var fresh = freshSnap.data() else {
+                guard let fresh = freshSnap.data() else {
                     errorPointer?.pointee = self.makeNSError(.notFound, "Invite not found")
                     return nil
                 }
 
                 // 필드 파싱
                 let status    = (fresh["status"] as? String) ?? "pending"
-                let maxUses   = (fresh["max_uses"] as? Int) ?? 1
                 let uses      = (fresh["uses"] as? Int) ?? 0
                 let expiresAt = (fresh["expires_at"] as? Timestamp)?.dateValue()
 
@@ -203,23 +207,33 @@ struct InviteAcceptService {
                     errorPointer?.pointee = self.makeNSError(.invalidStatus, "Invite is not pending")
                     return nil
                 }
-                if uses >= maxUses {
-                    errorPointer?.pointee = self.makeNSError(.alreadyUsed, "Invite already used")
-                    return nil
-                }
-
-                // uses 증가 + 완료 처리
-                var update: [String: Any] = ["uses": uses + 1]
-                if uses + 1 >= maxUses {
-                    update["status"] = "completed"
-                }
-                txn.updateData(update, forDocument: doc.reference)
-
+                
+//                if uses >= maxUses {
+//                    errorPointer?.pointee = self.makeNSError(.alreadyUsed, "Invite already used")
+//                    return nil
+//                }
+                
                 // users/{uid}/userTeamspace/{teamspaceId}
                 let userTeamRef = db.collection("users")
                     .document(currentUserId)
                     .collection("user_teamspace")
                     .document(teamspaceId)
+                
+                
+                let existingUserTeam = try txn.getDocument(userTeamRef)
+                if existingUserTeam.exists {
+                    errorPointer?.pointee = self.makeNSError(.alreadyMember, "User already joined this teamspace")
+                    return nil
+                }
+
+                // uses 증가 + 완료 처리
+                let update: [String: Any] = ["uses": uses + 1]
+//                if uses + 1 >= maxUses {
+//                    update["status"] = "completed"
+//                }
+                txn.updateData(update, forDocument: doc.reference)
+
+
 
                 txn.setData([
                     "teamspace_id": teamspaceId,
