@@ -8,6 +8,7 @@
 import Foundation
 
 struct MockData {
+    //static let userId: String = "4A7DE503-6362-49FF-B110-78E66AECECB8"
     static let userId: String = "319262E2-ADA9-4B5D-A2AF-95227FB0B9E7"
 }
 

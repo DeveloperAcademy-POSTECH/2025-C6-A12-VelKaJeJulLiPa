@@ -22,9 +22,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 }
 
 // TODO: 팀 스페이스 초대 링크 조금 확인? 필드 수정 (대충 음... 링크 만료 시간이나, 최대 인원 횟수 조정 등등)
-// TODO: 링크 타고 팀 스페이스 올 때 뷰 다시 새로고침
+// TODO: 링크 타고 팀 스페이스 올 때 뷰 다시 새로고침 (clear)
 // TODO: 링크 메세지 문구 수정도 해야함.
-// TODO: 
+// TODO:
 
 // InviteService.swift
 struct InviteService {
@@ -70,6 +70,9 @@ struct InviteService {
 
 // 간단한 라우터
 final class InviteRouter: ObservableObject {
+    @Published var lastInviteAcceptedAt = Date.distantPast
+    
+    
     @MainActor
     func handleIncoming(url: URL) {
         // dancemachine://invite?token=...
@@ -81,11 +84,14 @@ final class InviteRouter: ObservableObject {
 
         Task {
             do {
-                // 현재 로그인 사용자 ID는 기존 로직/매니저에서 가져오세요
                 let userId = MockData.userId
                 let teamspaceId = try await InviteAcceptService().acceptInvite(token: token, currentUserId: userId)
-                // 필요하면 여기서 currentTeamspace 셋업/네비게이션 등 진행
-                print("✅ Joined teamspace: \(teamspaceId)")
+                // teamspace 도큐먼트 가져와서 현재 팀스페이스로 설정
+                let teamspace: Teamspace = try await FirestoreManager.shared.get(teamspaceId, from: .teamspace)
+                FirebaseAuthManager.shared.currentTeamspace = teamspace
+
+                // 리로드 트리거
+                self.lastInviteAcceptedAt = Date()
             } catch {
                 print("❌ Invite accept failed: \(error)")
             }
