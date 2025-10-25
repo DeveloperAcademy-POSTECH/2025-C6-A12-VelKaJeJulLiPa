@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct GridCell: View {
+struct GridCell: View { // FIXME: 디자인 수정!
   var size: CGFloat
   
   let thumbnailURL: String?
