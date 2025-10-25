@@ -89,6 +89,8 @@ extension VideoPickerViewModel {
               self.isLoading = false
               self.showSuccessAlert = true
               print("비디오 업로드 성공")
+              
+              NotificationCenter.post(.videoUpload)
             }
             
           } catch let error as VideoError {

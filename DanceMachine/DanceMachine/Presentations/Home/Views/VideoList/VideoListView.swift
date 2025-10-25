@@ -53,41 +53,55 @@ struct VideoListView: View {
     .task {
       await vm.loadFromServer(tracksId: tracksId)
     }
+    // MARK: 섹션 변경 감지 해서 업데이트하는 노티
     .onReceive(NotificationCenter.default.publisher(
       for: .sectionDidUpdate)) { _ in
         Task { await vm.loadFromServer(tracksId: tracksId) }
       }
-    // MARK: 영상 추가 시트
+    // MARK: 영상 피커 시트
     .sheet(isPresented: $showCustomPicker) {
-            VideoPickerView(tracksId: tracksId, sectionId: sectionId)
-          }
+      VideoPickerView(
+        tracksId: tracksId,
+        sectionId: vm.selectedSection?.sectionId ?? sectionId
+      )
+    }
+    // MARK: 글래스 모피즘 사용하여 플로팅 버튼을 rootView에서 관리할때 쓰는 리시버
     .onReceive(
       NotificationCenter.default.publisher(
-        for: .showVideoPicker)) { _ in
+        for: .showVideoPicker)
+    ) { _ in
           self.showCustomPicker = true
         }
-  }
+    // MARK: 비디오 업로드 했을때 리시버
+    .onReceive(
+      NotificationCenter.default.publisher(for: .videoUpload)
+    ) { _ in
+      Task {
+        await vm.loadFromServer(tracksId: tracksId)
+      }
+    }
+}
   
-//  private var glassButton: some View {
-//    GlassEffectContainer {
-//      HStack(spacing: 20) {
-//        homeButton
-//        uploadButton
-//      }
-//    }
-//    .padding(.horizontal, 16)
-//  }
+  //  private var glassButton: some View {
+  //    GlassEffectContainer {
+  //      HStack(spacing: 20) {
+  //        homeButton
+  //        uploadButton
+  //      }
+  //    }
+  //    .padding(.horizontal, 16)
+  //  }
   
-//  private var homeButton: some View {
-//    Button {
-//      // TODO: 여긴 뭐지?
-//    } label: {
-//      Image(systemName: "house.fill")
-//        .foregroundStyle(Color.purple.opacity(0.8))
-//    }
-//    .frame(width: 47, height: 47)
-//    .glassEffect(.clear.interactive(), in: .circle)
-//  }
+  //  private var homeButton: some View {
+  //    Button {
+  //      // TODO: 여긴 뭐지?
+  //    } label: {
+  //      Image(systemName: "house.fill")
+  //        .foregroundStyle(Color.purple.opacity(0.8))
+  //    }
+  //    .frame(width: 47, height: 47)
+  //    .glassEffect(.clear.interactive(), in: .circle)
+  //  }
   
   private var uploadButton: some View {
     Button {
@@ -124,24 +138,24 @@ struct VideoListView: View {
       let itemSize = availableWidth / CGFloat(columns)
       
       ScrollView {
-          VideoGrid(
-            size: itemSize,
-            columns: columns,
-            spacing: spacing,
-            tracksId: tracksId,
-            videos: .constant(vm.filteredVideos),
-            track: .constant(vm.track),
-            section: .constant(vm.section),
-            vm: $vm
-          )
-          .onTapGesture {
-            // TODO: 비디오 플레이 화면 네비게이션 연결
-            print("비디오 클릭")
-          }
+        VideoGrid(
+          size: itemSize,
+          columns: columns,
+          spacing: spacing,
+          tracksId: tracksId,
+          videos: .constant(vm.filteredVideos),
+          track: .constant(vm.track),
+          section: .constant(vm.section),
+          vm: $vm
+        )
+        .onTapGesture {
+          // TODO: 비디오 플레이 화면 네비게이션 연결
+          print("비디오 클릭")
         }
       }
-    .overlay { if vm.filteredVideos.isEmpty && vm.isLoading == false { emptyView }}
     }
+    .overlay { if vm.filteredVideos.isEmpty && vm.isLoading == false { emptyView }}
+  }
   // MARK: 섹션 칩 뷰
   private var sectionView: some View {
     ScrollView(.horizontal, showsIndicators: false) {
@@ -155,7 +169,8 @@ struct VideoListView: View {
                   .section(
                     section: vm.section,
                     tracksId: tracksId,
-                    trackName: trackName
+                    trackName: trackName,
+                    sectionId: sectionId
                   )
                 )
               )
