@@ -11,6 +11,7 @@ import SwiftUI
 /// 뒤로가기 버튼입니다.
 struct ToolbarLeadingBackButton: ToolbarContent {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) var colorScheme
     
     var body: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
@@ -18,10 +19,10 @@ struct ToolbarLeadingBackButton: ToolbarContent {
                 dismiss()
             } label: {
                 Image(systemName: "chevron.left")
-                    .foregroundStyle(Color.gray)
+                    .foregroundStyle(colorScheme == .light ? .gray : .white) //FIXME: 컬러 수정
                     .frame(width: 24, height: 24)
             }
-            .padding(.leading, -8)
+            .padding(.leading, -4)
         }
     }
 }
