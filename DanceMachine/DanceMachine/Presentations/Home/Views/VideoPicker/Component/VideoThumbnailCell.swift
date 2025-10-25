@@ -10,6 +10,7 @@ import Photos
 
 struct VideoThumbnailCell: View {
   let asset: PHAsset
+  let isSelected: Bool
   
   var size: CGFloat
   
@@ -41,7 +42,9 @@ struct VideoThumbnailCell: View {
       Text(formatDuration(asset.duration))
         .font(.caption2)
         .padding(4)
-        .background(Color.black.opacity(0.7))
+        .background(
+          isSelected ? Color.purple : Color.black.opacity(0.7)
+        )
         .foregroundStyle(.white)
         .clipShape(RoundedRectangle(cornerRadius: 4))
         .padding(4)

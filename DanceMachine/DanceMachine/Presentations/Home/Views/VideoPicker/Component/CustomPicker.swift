@@ -34,7 +34,12 @@ struct CustomPicker: View {
         }
       } else {
         ForEach(videos, id: \.localIdentifier) { asset in
-          VideoThumbnailCell(asset: asset, size: itemWidth)
+          VideoThumbnailCell(
+            asset: asset,
+            isSelected:
+              selectedAsset?.localIdentifier == asset.localIdentifier,
+            size: itemWidth
+          )
             .onTapGesture {
               selectedAsset = asset
             }
@@ -42,7 +47,12 @@ struct CustomPicker: View {
       }
 #else
       ForEach(videos, id: \.localIdentifier) { asset in
-        VideoThumbnailCell(asset: asset, size: itemWidth)
+        VideoThumbnailCell(
+          asset: asset,
+          isSelected:
+            selectedAsset?.localIdentifier == asset.localIdentifier,
+          size: itemWidth
+        )
           .onTapGesture {
             print("\(itemWidth)")
             selectedAsset = asset
