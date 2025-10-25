@@ -17,6 +17,7 @@ enum CollectionType: String {
     case feedback = "feedback"
     case notification = "notification"
     case report = "report"
+    case invites = "invites"
     
     // MARK: - 서브 컬렉션
     case userTeamspace = "user_teamspace" // users 서브 컬렉션
