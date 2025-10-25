@@ -25,27 +25,36 @@ struct VideoPickerView: View {
         let spacing: CGFloat = 1
         let totalSpacing = spacing * 2
         let itemWidth = (g.size.width - totalSpacing) / 4
-        ScrollView {
-          VStack(spacing: 16) {
-            VideoPreview(
-              vm: vm,
-              size: 224
-            )
-            .padding(.top, (g.size.height * 0.4) / 3)
-            
-            textField
-            
-            CustomPicker(
-              videos: $vm.videos,
-              selectedAsset: $vm.selectedAsset,
-              spacing: spacing,
-              itemWidth: itemWidth
-            )
+        ScrollViewReader { proxy in
+          ScrollView {
+            VStack(spacing: 16) {
+              Color.clear
+                .frame(height: 0)
+                .id("TOP") // 스크롤 목적지
+              
+              VideoPreview(
+                vm: vm,
+                size: 224
+              )
+//              .padding(.top, (g.size.height * 0.4) / 3)
+              
+              textField
+              
+              CustomPicker(
+                videos: $vm.videos,
+                selectedAsset: $vm.selectedAsset,
+                spacing: spacing,
+                itemWidth: itemWidth
+              )
+            }
+          }
+          .onChange(of: vm.selectedAsset) { oldValue, newValue in
+            withAnimation(.easeInOut) {
+              proxy.scrollTo("TOP", anchor: .top)
+            }
           }
         }
-        .overlay { if vm.isLoading { LoadingView() }}
-        .ignoresSafeArea(.all)
-        
+        .toolbarTitleDisplayMode(.inline)
         .toolbar {
           ToolbarLeadingBackButton(icon: .chevron)
           ToolbarCenterTitle(text: "비디오 선택")
@@ -53,8 +62,14 @@ struct VideoPickerView: View {
             Button {
               vm.exportVideo(tracksId: tracksId, sectionId: sectionId)
             } label: {
-              Text("저장")
+              Image(systemName: "arrow.up")
+                .foregroundStyle(
+                  vm.selectedAsset == nil ? .purple.opacity(0.7) : .white
+                )
             }
+            .buttonStyle(.borderedProminent)
+            .tint(.blue)
+            .disabled(vm.selectedAsset == nil)
           }
         }
         .task {
