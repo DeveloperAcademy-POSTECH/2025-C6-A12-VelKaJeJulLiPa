@@ -10,7 +10,6 @@ import AVKit
 import Photos
 
 struct VideoPreview: View {
-  @State private var isLoading: Bool = false
   
   @Bindable var vm: VideoPickerViewModel
   
@@ -21,8 +20,6 @@ struct VideoPreview: View {
 #if DEBUG
     if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
       ZStack {
-        //        Color.black
-        //          .ignoresSafeArea(edges: .all)
         Rectangle()
           .fill(Color.gray.opacity(0.3))
           .frame(height: 240)
@@ -42,19 +39,15 @@ struct VideoPreview: View {
   
   private var realBody: some View {
     VStack {
-      
-      if isLoading {
+      if vm.isLoading {
         loadingView
           .frame(height: size)
       } else if let p = vm.player {
         VideoPlayer(player: p)
           .aspectRatio(16/9, contentMode: .fit)
-        //          .frame(height: size)
       } else {
         VStack {
-          Text("비디오를 선택해 주세요.")
-            .foregroundStyle(.black)
-            .multilineTextAlignment(.center)
+          Image(.videoEmpty)
         }
         .frame(maxWidth: .infinity)
         .frame(height: size)
