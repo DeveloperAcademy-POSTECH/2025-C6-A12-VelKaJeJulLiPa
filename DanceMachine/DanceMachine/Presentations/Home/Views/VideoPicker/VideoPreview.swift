@@ -21,8 +21,8 @@ struct VideoPreview: View {
 #if DEBUG
     if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
       ZStack {
-//        Color.black
-//          .ignoresSafeArea(edges: .all)
+        //        Color.black
+        //          .ignoresSafeArea(edges: .all)
         Rectangle()
           .fill(Color.gray.opacity(0.3))
           .frame(height: 240)
@@ -37,8 +37,8 @@ struct VideoPreview: View {
 #else
     realBody
 #endif
-  
-}
+    
+  }
   
   private var realBody: some View {
     VStack {
@@ -49,7 +49,7 @@ struct VideoPreview: View {
       } else if let p = vm.player {
         VideoPlayer(player: p)
           .aspectRatio(16/9, contentMode: .fit)
-//          .frame(height: size)
+        //          .frame(height: size)
       } else {
         VStack {
           Text("비디오를 선택해 주세요.")
@@ -80,7 +80,7 @@ struct VideoPreview: View {
         .padding(.top)
     }
   }
-
+}
 //#Preview {
 //  NavigationStack {
 //    VideoPreview(selectedAsset: .constant(PHAsset()), size: 100, onConfirm: { _, _, _ in })
