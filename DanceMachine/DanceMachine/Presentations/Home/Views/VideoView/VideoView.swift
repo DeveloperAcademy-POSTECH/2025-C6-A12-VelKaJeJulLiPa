@@ -12,19 +12,37 @@ struct VideoView: View {
   
   @State private var vm: VideoDetailViewModel
   
-  init(videoURL: String) {
-    _vm = State(initialValue: VideoDetailViewModel(videoURL: videoURL))
+  @State private var showReplyModal: Bool = false
+  
+  // TODO: teamSpaceId, userId 전역 받아오기
+  
+//  init(videoURL: String) {
+//    _vm = State(initialValue: VideoDetailViewModel(videoURL: videoURL))
+//  }
+  init(vm: VideoDetailViewModel, videoTitle: String) {
+    _vm = State(initialValue: vm)
+    self.videoTitle = videoTitle
   }
+  
+  let videoTitle: String
   
   var body: some View {
     GeometryReader { g in
       VStack {
         videoView
-          .frame(maxHeight: g.size.height * 0.4)
+          .frame(maxHeight: g.size.height * 0.33)
+        feedbackSection
+        Divider()
+        feedbackListView
       }
     }
+    .toolbarTitleDisplayMode(.inline)
+    .toolbar {
+      ToolbarLeadingBackButton(icon: .chevron)
+      ToolbarCenterTitle(text: videoTitle)
+    }
   }
-  
+  // MARK: 비디오 섹션
   private var videoView: some View {
     ZStack {
       VideoController(
