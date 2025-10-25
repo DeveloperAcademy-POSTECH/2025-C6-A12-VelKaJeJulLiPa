@@ -39,10 +39,6 @@ final class SectionEditViewModel {
     self.editingSectionid = new.sectionId
     self.isNewSection = true
   }
-  // MARK: 노티 메서드
-  func notify(_ name: Foundation.Notification.Name) {
-    NotificationCenter.default.post(name: name, object: nil)
-  }
 }
 // MARK: - 수정 업데이트 등 서버 연동 메서드
 extension SectionEditViewModel {
@@ -52,6 +48,7 @@ extension SectionEditViewModel {
     section: Section
   ) async {
     guard !editText.isEmpty else { return }
+    guard editText != "일반" else { return }
     
     var updatedSection = section
     updatedSection.sectionTitle = self.editText

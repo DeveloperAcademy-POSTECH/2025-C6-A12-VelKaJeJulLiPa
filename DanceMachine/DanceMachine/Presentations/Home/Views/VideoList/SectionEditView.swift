@@ -14,15 +14,18 @@ struct SectionEditView: View {
   
   let tracksId: String
   let trackName: String
+  let sectionId: String
   
   init(
     sections: [Section],
     tracksId: String,
-    trackName: String
+    trackName: String,
+    sectionId: String
   ) {
     self._vm = State(initialValue: SectionEditViewModel(sections: sections))
     self.tracksId = tracksId
     self.trackName = trackName
+    self.sectionId = sectionId
   }
   
   
@@ -96,6 +99,8 @@ struct SectionEditView: View {
           },
           editText: $vm.editText
         )
+        .disabled(section.sectionId == sectionId)
+        .opacity(section.sectionId == sectionId ? 0.5 : 1.0)
       }
     }
   }
@@ -111,7 +116,7 @@ struct SectionEditView: View {
   
   private var confirmButton: some View {
     RoundedRectangle(cornerRadius: 5)
-      .fill(!vm.editText.isEmpty ? Color.blue : Color.gray.opacity(0.5)) // FIXME: 컬러 수정
+      .fill((!vm.editText.isEmpty && vm.editText != "일반") ? Color.blue : Color.gray.opacity(0.5)) // FIXME: 컬러 수정
       .frame(maxWidth: .infinity)
       .frame(height: 47)
       .overlay {
@@ -120,7 +125,7 @@ struct SectionEditView: View {
           .foregroundStyle(Color.white) // FIXME: - 컬러 수정
       }
       .onTapGesture {
-        if !vm.editText.isEmpty {
+        if !vm.editText.isEmpty && vm.editText != "일반" {
           if let sectionId = vm.editingSectionid,
              let section = vm.sections.first(where: { $0.sectionId == sectionId }) {
             Task { await vm.updateSection(tracksId: tracksId, section: section) }
@@ -136,7 +141,9 @@ struct SectionEditView: View {
     SectionEditView(
       sections: vm.sections,
       tracksId: "",
-      trackName: "벨코의 리치맨")
+      trackName: "벨코의 리치맨",
+      sectionId: ""
+    )
   }
   .environmentObject(NavigationRouter())
 }
