@@ -154,10 +154,51 @@ final class FirebaseAuthManager: ObservableObject {
     func signOut() throws {
         try firebaseAuth.signOut()
     }
+    
+    /// Firebase Authentication 계정 삭제 메서드
+    /// 1. 토큰 취소하기 위해  (Revoke Access / Refresh Token) 애플 로그인
+    /// 2. 마지막 로그인이 현재 기준 5분 넘었다면 Firebase Authentication 에 재인증 필요
+    /// 3. 사용자 DB 정보 삭제
+    /// 4. Firebase Authentication 계정 삭제 후  자동 로그아웃
+    func deleteAccount() async throws {
+        guard let user = user else { return  }
+        guard let lastSignInDate = user.metadata.lastSignInDate else { return  }
+        
+        let needsReauth = !lastSignInDate.isWithinPast(minutes: 5)
+        let needsTokenRevocation = user.providerData.contains { $0.providerID == "apple.com" }
+        
+        do {
+            if needsReauth || needsTokenRevocation {
+                let helper = SignInAppleHelper()
+                let tokens = try await helper.startSignInWithAppleFlow()
+                
+                let credential = OAuthProvider.appleCredential(withIDToken: tokens.token, rawNonce: tokens.nonce, fullName: tokens.fullName)
+                
+                if needsReauth {
+                    try await user.reauthenticate(with: credential)
+                }
+                if needsTokenRevocation {
+                    guard let authorizationCode = tokens.appleIDCredential.authorizationCode else { return }
+                    guard let authCodeString = String(data: authorizationCode, encoding: .utf8) else { return }
+                    
+                    try await Auth.auth().revokeToken(withAuthorizationCode: authCodeString)
+                }
+            }
+            
+            try await FirestoreManager.shared.delete(collectionType: .users, documentID: user.uid)
+            
+            try await user.delete()
+            errormessage = ""
+            return
+        }
+        catch {
+            errormessage = error.localizedDescription
+            print("⚠️ deleteAccount error: \(errormessage)")
+        }
+    }
 }
 
 
-// MARK: - Sign in with Apple
 extension FirebaseAuthManager {
     
     @discardableResult
