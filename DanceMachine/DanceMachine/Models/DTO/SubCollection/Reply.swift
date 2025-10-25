@@ -36,5 +36,9 @@ struct Reply: Codable {
         case content = "content"
         case taggedUserIds = "tagged_user_ids"
     }
-    
+}
+
+extension Reply: EntityRepresentable {
+    var entityName: CollectionType { .feedback }
+    var documentID: String { replyId }
 }
