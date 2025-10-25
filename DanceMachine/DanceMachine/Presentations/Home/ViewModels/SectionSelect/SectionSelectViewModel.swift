@@ -14,11 +14,6 @@ final class SectionSelectViewModel {
   var isLoading: Bool = false
   var errorMsg: String? = nil
   var showAlert: Bool = false
-  
-  // MARK: 노티 메서드
-  func notify(_ name: Foundation.Notification.Name) {
-    NotificationCenter.default.post(name: name, object: nil)
-  }
 }
 
 extension SectionSelectViewModel {
@@ -66,7 +61,7 @@ extension SectionSelectViewModel {
         print("track 이동 성공")
       }
       
-      self.notify(.sectionDidUpdate)
+      NotificationCenter.post(.sectionDidUpdate)
       
     } catch { // TODO: 에러처리
       await MainActor.run {
