@@ -67,7 +67,7 @@ struct AccountSettingView: View {
                 }
         }
         .toolbar {
-            ToolbarLeadingBackButton()
+          ToolbarLeadingBackButton(icon: .chevron)
             ToolbarCenterTitle(text: "계정 설정")
         }
         

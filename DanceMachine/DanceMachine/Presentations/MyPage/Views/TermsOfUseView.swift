@@ -20,7 +20,7 @@ struct TermsOfUseView: View {
             WebView(url: termsOfUseURL, isLoading: $isLoading)
                 .opacity(isLoading ? 0 : 1)
                 .toolbar {
-                    ToolbarLeadingBackButton()
+                    ToolbarLeadingBackButton(icon: .chevron)
                     ToolbarCenterTitle(text: "서비스 이용약관")
                 }
             
