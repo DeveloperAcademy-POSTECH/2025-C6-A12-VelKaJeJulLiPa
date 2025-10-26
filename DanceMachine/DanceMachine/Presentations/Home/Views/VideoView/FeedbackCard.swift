@@ -23,8 +23,8 @@ struct FeedbackCard: View {
     }
     .padding(.horizontal, 8)
     .padding(.vertical, 16)
-//    .background(Color.gray.opacity(0.5))
-    .glassEffect(.clear.tint(Color.gray), in: RoundedRectangle(cornerRadius: 10))
+    .background(Color.gray.opacity(0.5))
+//    .glassEffect(.clear.tint(Color.gray), in: RoundedRectangle(cornerRadius: 10))
     .contentShape(Rectangle())
     .onTapGesture {
       action()
