@@ -17,16 +17,12 @@ struct OverlayController: View {
   var body: some View {
     VStack {
       Spacer()
-      overlayController
+      HStack(spacing: 60) {
+        leftButton
+        centerButton
+        rightButton
+      }
       Spacer()
-    }
-  }
-  
-  private var overlayController: some View {
-    HStack(spacing: 60) {
-      leftButton
-      centerButton
-      rightButton
     }
   }
   
@@ -67,6 +63,7 @@ struct OverlayController: View {
   OverlayController(
     leftAction: {},
     rightAction: {},
-    centerAction: {}, isPlaying: .constant(true)
+    centerAction: {},
+    isPlaying: .constant(true)
   )
 }
