@@ -295,9 +295,9 @@
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = W4ZPYHTRPJ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "영상을 업로드하기 위해 갤러리 접근 권한이 필요합니다.";
 				INFOPLIST_FILE = DanceMachine/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Staging;
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "영상을 업로드하기 위해 갤러리 접근 권한이 필요합니다.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -341,9 +341,9 @@
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = W4ZPYHTRPJ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "영상을 업로드하기 위해 갤러리 접근 권한이 필요합니다.";
 				INFOPLIST_FILE = DanceMachine/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Staging;
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "영상을 업로드하기 위해 갤러리 접근 권한이 필요합니다.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
