@@ -23,7 +23,7 @@ struct EditNameView: View {
                 bottomButtonView
             }
         }
-        .onAppear {
+        .task {
             editedName = viewModel.myName
         }
         .padding(.horizontal, 16)
