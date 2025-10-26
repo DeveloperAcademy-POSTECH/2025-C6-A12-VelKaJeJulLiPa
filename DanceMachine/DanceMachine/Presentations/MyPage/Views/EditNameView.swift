@@ -7,12 +7,14 @@
 
 import SwiftUI
 
+// FIXME: - Hi-fi 반영
 struct EditNameView: View {
-    
     @EnvironmentObject private var router: NavigationRouter
     
     @State private var viewModel = EditNameViewModel()
     @State private var editedName = ""
+    private var isButtonEnabled: Bool { editedName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || editedName == viewModel.myName ? false : true }
+    
     
     var body: some View {
         ZStack {
@@ -33,27 +35,25 @@ struct EditNameView: View {
         }
     }
     
-    
     private var EditNameTextFieldView: some View {
         RoundedRectangle(cornerRadius: 5)
             .fill(Color.gray.opacity(0.2)) // FIXME: - 컬러 수정
             .frame(maxWidth: .infinity)
-            .frame(height: 47) //FIXME: - 버튼 크기 수정
+            .frame(height: 47) // FIXME: - 버튼 크기 수정
             .overlay {
                 TextField("이름을 입력해주세요", text: $editedName)
                     .multilineTextAlignment(.center)
             }
     }
     
-    
     // MARK: - 이름 수정하기 버튼 뷰
     private var bottomButtonView: some View {
         // FIXME: - 버튼 스타일 수정
         ActionButton(
             title: "확인",
-            color: self.editedName.isEmpty ? Color.gray : Color.blue,
+            color: isButtonEnabled ? Color.blue : Color.gray,
             height: 47,
-            isEnabled: self.editedName.isEmpty || editedName == viewModel.myName ? false : true
+            isEnabled: isButtonEnabled
         ) {
             Task {
                 try await self.viewModel.updateMyNameAndReload(
@@ -63,12 +63,8 @@ struct EditNameView: View {
                 dismissKeyboard()
                 await MainActor.run { router.pop() }
             }
-            
         }
     }
-    
-    
-    
 }
 
 #Preview {
