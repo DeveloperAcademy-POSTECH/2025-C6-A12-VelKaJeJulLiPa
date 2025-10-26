@@ -46,7 +46,7 @@ struct RootView: View {
 //                  }
                 })
                 .tint(Color.red)
-                .tabBarMinimizeBehavior(.onScrollDown)
+//                .tabBarMinimizeBehavior(.onScrollDown)
 //                .tabViewBottomAccessory {
 ////                  bottomAccessory(for: .home)
 //                  HStack {
@@ -107,7 +107,7 @@ struct RootView: View {
       }
       .frame(maxWidth: .infinity)
     .frame(height: 47)
-    .glassEffect(.clear.tint(Color.purple.opacity(0.8)).interactive(), in: Capsule())
+//    .glassEffect(.clear.tint(Color.purple.opacity(0.8)).interactive(), in: Capsule())
   }
     
     private func tabLabel(_ tab: TabCase) -> some View {

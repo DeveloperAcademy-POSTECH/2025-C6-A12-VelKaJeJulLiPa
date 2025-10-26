@@ -113,10 +113,10 @@ struct VideoListView: View {
     }
     .frame(maxWidth: .infinity)
     .frame(height: 47)
-    .glassEffect(
-      .clear.tint(Color.purple.opacity(0.7)).interactive(),
-      in: RoundedRectangle(cornerRadius: 1000)
-    )
+//    .glassEffect(
+//      .clear.tint(Color.purple.opacity(0.7)).interactive(),
+//      in: RoundedRectangle(cornerRadius: 1000)
+//    )
   }
   
   private var emptyView: some View {
@@ -159,7 +159,7 @@ struct VideoListView: View {
   // MARK: 섹션 칩 뷰
   private var sectionView: some View {
     ScrollView(.horizontal, showsIndicators: false) {
-      GlassEffectContainer {
+//      GlassEffectContainer {
         HStack {
           SectionChipIcon(
             vm: $vm,
@@ -187,7 +187,7 @@ struct VideoListView: View {
         }
         .padding(.horizontal, 1) // FIXME: 여백 없으면 캡슐이 짤리는 현상 있음
         .padding(.vertical, 1) // FIXME: 여백 없으면 캡슐이 짤리는 현상 있음
-      }
+//      }
     }
     .padding(.horizontal, 16)
   }
