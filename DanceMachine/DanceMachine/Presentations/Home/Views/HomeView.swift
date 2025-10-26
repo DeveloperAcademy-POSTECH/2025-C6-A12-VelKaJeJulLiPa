@@ -73,6 +73,12 @@ struct HomeView: View {
         return false
     }
     
+    
+    
+    @EnvironmentObject private var inviteRouter: InviteRouter
+
+    
+    
     var body: some View {
         ZStack {
             Color.white // FIXME: - 컬러 수정
@@ -151,33 +157,19 @@ struct HomeView: View {
             // TODO: 애니메이션 플로팅버튼 enum 분기처리 구현 때 추가하기
             
         }
-        .task {
-            var userTeamspaces: [UserTeamspace] = []
-            
-            self.isLoading = true
-            defer { isLoading = false }
-            
-            userTeamspaces =  await viewModel.fetchUserTeamspace(userId: MockData.userId) // FIXME: - 유저 아이디 교체
-            self.teamspaceState = userTeamspaces.isEmpty ? .create : .list
-            self.loadTeamspaces =  await viewModel.fetchTeamspaces(userTeamspaces: userTeamspaces)
-            
-            switch didInitialize {
-            case false: // FIXME: - 배열의 첫 번째 요소를 currentTeamspace로 설정 => 추후 마지막 접속 스페이스를 설정할지 논의
-                if let firstTeamspace = loadTeamspaces.first {
-                    self.viewModel.fetchCurrentTeamspace(teamspace: firstTeamspace)
-                    
-                }
-                self.didInitialize = true
-            case true:
-                break
-            }
-            
-            self.loadProjects = await viewModel.fetchCurrentTeamspaceProject()
-            switch self.loadProjects.isEmpty {
-            case true:
-                self.projectState = .none
-            case false:
-                self.projectState = .list
+        // 최초 1회 + teamspaceId 바뀔 때마다 재실행
+        .task(id: FirebaseAuthManager.shared.currentTeamspace?.teamspaceId) {
+            await reloadAll()
+        }
+        // 팀 스페이스 변동시 다시 한 번 데이터 리로드 (팀 스페이스 초대 받았을 시)
+        .task(id: inviteRouter.lastInviteAcceptedAt) {
+            await reloadAll()
+        }
+        // 팀 스페이스 초대 링크 받을 시, 현재 팀 프로젝트를 다시 한 번 리로드
+        .onChange(of: FirebaseAuthManager.shared.currentTeamspace?.teamspaceId) {
+            Task {
+                // 팀스페이스/프로젝트 리로드
+                self.loadProjects = await viewModel.fetchCurrentTeamspaceProject()
             }
         }
     }
@@ -536,6 +528,33 @@ struct HomeView: View {
                     }
                 }
         }
+    }
+    
+    
+    // 공통 로딩 로직을 함수로 추출
+    @MainActor
+    private func reloadAll() async {
+        isLoading = true
+        defer { isLoading = false }
+
+        var userTeamspaces: [UserTeamspace] = []
+
+        userTeamspaces = await viewModel.fetchUserTeamspace(userId: MockData.userId)
+        self.teamspaceState = userTeamspaces.isEmpty ? .create : .list
+        self.loadTeamspaces = await viewModel.fetchTeamspaces(userTeamspaces: userTeamspaces)
+
+        switch didInitialize {
+        case false:
+            if let firstTeamspace = loadTeamspaces.first, viewModel.currentTeamspace == nil {
+                self.viewModel.fetchCurrentTeamspace(teamspace: firstTeamspace)
+            }
+            self.didInitialize = true
+        case true:
+            break
+        }
+
+        self.loadProjects = await viewModel.fetchCurrentTeamspaceProject()
+        self.projectState = self.loadProjects.isEmpty ? .none : .list
     }
 }
 

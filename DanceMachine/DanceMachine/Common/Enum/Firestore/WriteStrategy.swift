@@ -12,10 +12,12 @@ import Foundation
 /// - update: updated_at
 /// - join: joined_at
 /// - userStrategy: last_login_at
+/// - invite:
 enum WriteStrategy: String {
     case create = "created_at"
     case update = "updated_at"
     case join = "joined_at"
     case userStrategy = "last_login_at"
     case userUpdateStrategy
+    case invite = "expires_at"
 }

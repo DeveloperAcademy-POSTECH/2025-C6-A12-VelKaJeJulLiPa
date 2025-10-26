@@ -8,7 +8,7 @@
 import SwiftUI
 import FirebaseCore
 import FirebaseFirestore
-import AuthenticationServices
+
 
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication,
@@ -25,6 +25,7 @@ struct DanceMachineApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @StateObject private var router: NavigationRouter = .init()
     @StateObject private var authManager = FirebaseAuthManager.shared
+    @StateObject private var inviteRouter = InviteRouter()
     
     var body: some Scene {
         WindowGroup {
@@ -42,6 +43,10 @@ struct DanceMachineApp: App {
                             RootView()
                                 .environmentObject(router)
                                 .transition(.move(edge: .trailing))
+                                .environmentObject(inviteRouter)
+                                .onOpenURL { url in
+                                    inviteRouter.handleIncoming(url: url) // 초대 로직
+                                }
                         }
                     }
                     .animation(.easeInOut, value: authManager.needsNameSetting)
@@ -51,3 +56,4 @@ struct DanceMachineApp: App {
         }
     }
 }
+
