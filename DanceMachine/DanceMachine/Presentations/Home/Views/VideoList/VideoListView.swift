@@ -113,6 +113,12 @@ struct VideoListView: View {
     }
     .frame(maxWidth: .infinity)
     .frame(height: 47)
+    .background(
+        RoundedRectangle(cornerRadius: 10)
+            .fill(Color.blue) // FIXME: - 컬러수정
+    )
+    .padding(.horizontal, 16) // FIXME: - 패딩 수정
+    .padding(.bottom, 8) // FIXME: - 패딩 수정
 //    .glassEffect(
 //      .clear.tint(Color.purple.opacity(0.7)).interactive(),
 //      in: RoundedRectangle(cornerRadius: 1000)
