@@ -45,7 +45,6 @@ final class FirebaseAuthManager: ObservableObject {
         if let user = firebaseAuth.currentUser {
             self.user = user
             self.authenticationState = .authenticated
-            Task { await self.fetchUserInfo(for: user.uid) }
         } else {
             self.authenticationState = .unauthenticated
         }
@@ -64,7 +63,7 @@ final class FirebaseAuthManager: ObservableObject {
             guard !self.isSigningIn else { return }
             
             if let user = user {
-                Task { await self.fetchUserInfo(for: user.uid) }
+                Task { try await self.fetchUserInfo(for: user.uid) }
             } else {
                 self.userInfo = nil
                 self.needsNameSetting = false
@@ -78,7 +77,7 @@ final class FirebaseAuthManager: ObservableObject {
     ///  - Parameters:
     ///     - uid: 사용자 id (Firebase Authentication 에서 반환 - users 콜렉션에서 id로 사용중)
     @MainActor
-    func fetchUserInfo(for uid: String) async {
+    func fetchUserInfo(for uid: String) async throws {
         print("Fetch user information for \(uid)")
         do {
             if let user: User = try await FirestoreManager.shared.get(uid, from: .users) {
