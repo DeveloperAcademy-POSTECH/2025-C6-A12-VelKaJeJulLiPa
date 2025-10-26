@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct VideoGrid: View {
+  @EnvironmentObject private var router: NavigationRouter
+  
   let size: CGFloat
   let columns: Int
   let spacing: CGFloat
@@ -49,6 +51,19 @@ struct VideoGrid: View {
               deleteAction: {
                 self.selectedVideo = video
                 print("\(video.videoId)모달 선택")
+              },
+              videoAction: {
+                router.push(
+                  to: .video(
+                    .play(
+                      videoId: video.videoId.uuidString,
+                      videoTitle: video.videoTitle,
+                      videoURL: video.videoURL,
+                      teamspaceId: "",
+                      authorId: ""
+                    )
+                  )
+                )
               }
             )
           }
@@ -68,6 +83,19 @@ struct VideoGrid: View {
             },
             deleteAction: {
               self.showDeleteModal = true
+            },
+            videoAction: {
+              router.push(
+                to: .video(
+                  .play(
+                    videoId: video.videoId.uuidString,
+                    videoTitle: video.videoTitle,
+                    videoURL: video.videoURL,
+                    teamspaceId: "",
+                    authorId: ""
+                  )
+                )
+              )
             }
           )
           .sheet(isPresented: $showDeleteModal) {

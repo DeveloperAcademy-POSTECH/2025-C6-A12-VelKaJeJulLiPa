@@ -18,6 +18,8 @@ struct GridCell: View { // FIXME: 디자인 수정!
   let editAction: () -> Void
   let deleteAction: () -> Void
   
+  let videoAction: () -> Void
+  
   @State private var showMenu: Bool = false
   
   var body: some View {
@@ -30,6 +32,9 @@ struct GridCell: View { // FIXME: 디자인 수정!
           content
         }
         .sensoryFeedback(.success, trigger: showMenu)
+        .onTapGesture {
+          videoAction()
+        }
     }
     .contextMenu {
       contextMenu
@@ -104,6 +109,7 @@ struct GridCell: View { // FIXME: 디자인 수정!
     duration: 14.1414141414,
     uploadDate: Date(),
     editAction: {},
-    deleteAction: {}
+    deleteAction: {},
+    videoAction: {}
   )
 }
