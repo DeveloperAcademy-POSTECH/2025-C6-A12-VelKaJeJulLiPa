@@ -73,35 +73,70 @@ struct VideoView: View {
           },
           isPlaying: $vm.videoVM.isPlaying
         )
-      }
-    }
-  }
-  // MARK: 피드백 리스트
-  private var feedbackListView: some View {
-    ZStack {
-      Image(systemName: "circle")
-        .resizable()
-        .frame(width: 100)
-        .frame(height: 100)
-      ScrollView {
-        LazyVStack {
-          //        if vm.feedbackVM.feedbacks.isEmpty {
-          //          emptyView
-          //        } else {
-          ForEach(vm.feedbackVM.feedbacks, id: \.feedbackId) { f in
-            FeedbackCard(
-              feedback: f,
-              taggedUsers:
-                vm.getTaggedUsers(for: f.taggedUserIds),
-              replyCount: vm.feedbackVM.reply[f.feedbackId.uuidString]?.count ?? 0,
-              action: { self.showReplyModal = true }
-            )
+        
+        CustomSlider(
+          isDragging: $isDragging,
+          currentTime: isDragging ? sliderValue : vm.videoVM.currentTime,
+          duration: vm.videoVM.duration,
+          onSeek: { time in
+            vm.videoVM.seekToTime(to: time)
+          },
+          onDragChanged: { time in
+            sliderValue = time
+          },
+          startTime: vm.videoVM.currentTime.formattedTime(),
+          endTime: vm.videoVM.duration.formattedTime()
+        )
+        .padding(.horizontal, 20)
+        .onChange(of: vm.videoVM.currentTime) { _, newValue in
+          if !isDragging {
+            sliderValue = newValue
           }
         }
-        .padding(.horizontal, 16)
+        
+      }
+    }
+    .overlay { // FIXME: 비디오 로딩뷰 논의 -> 오래동안 보는 뷰라 중요도 있다 생각함
+      if vm.videoVM.isLoading {
+        VStack {
+          ProgressView()
+            .progressViewStyle(CircularProgressViewStyle())
+            .tint(.white)
+            .scaleEffect(1.5)
+          
+          if vm.videoVM.loadingProgress > 0 {
+            Text("다운로드 중... \(Int(vm.videoVM.loadingProgress * 100))%")
+              .foregroundStyle(.white)
+              .font(.system(size: 14))
+          } else {
+            Text("로딩 중...")
+              .foregroundStyle(.white)
+              .font(.system(size: 14))
+          }
+        }
+        .aspectRatio(16/9, contentMode: .fit)
       }
     }
   }
+  
+  // MARK: 피드백 리스트
+  private var feedbackListView: some View {
+    ScrollView {
+      LazyVStack {
+        ForEach(vm.feedbackVM.feedbacks, id: \.feedbackId) { f in
+          FeedbackCard(
+            feedback: f,
+            taggedUsers:
+              vm.getTaggedUsers(for: f.taggedUserIds),
+            replyCount: vm.feedbackVM.reply[f.feedbackId.uuidString]?.count ?? 0,
+            action: { self.showReplyModal = true }
+          )
+        }
+      }
+      .padding(.horizontal, 16)
+    }
+  }
+  
   // MARK: 피드백 섹션
   private var feedbackSection: some View {
     HStack {
