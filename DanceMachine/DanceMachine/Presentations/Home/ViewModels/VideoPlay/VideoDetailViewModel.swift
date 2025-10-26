@@ -16,11 +16,10 @@ final class VideoDetailViewModel {
   var videoVM: VideoViewModel
   var feedbackVM: FeedbackViewModel
   
-  init(videoURL: String) {
+  init() {
     self.videoVM = VideoViewModel()
     self.feedbackVM = FeedbackViewModel()
     
-    videoVM.setupPlayer(from: videoURL)
   }
   
   // 팀 멤버 이름 유틸 함수
@@ -63,7 +62,7 @@ extension VideoDetailViewModel {
 // MARK: - 프리뷰 전용 목데이터
 extension VideoDetailViewModel {
   static var preview: VideoDetailViewModel {
-    let vm = VideoDetailViewModel(videoURL: "https://example.com/video.mp4")
+    let vm = VideoDetailViewModel()
     
     let members = [
       User(
