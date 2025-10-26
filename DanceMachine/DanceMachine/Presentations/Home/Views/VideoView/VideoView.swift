@@ -159,25 +159,63 @@ struct VideoView: View {
     .padding(.horizontal, 16)
   }
   
-//  private var emptyView: some View {
-//    VStack(spacing: 16) {
-//      Spacer()
-//      Image(systemName: "bubble.left.and.bubble.right")
-//        .font(.system(size: 48))
-//        .foregroundStyle(.gray)
-//      Text("피드백이 없습니다")
-//        .font(.headline)
-//        .foregroundStyle(.gray)
-//      Spacer()
-//    }
-//    .frame(maxWidth: .infinity)
-//  }
+  // MARK: 피드백 버튼들
+  private var feedbackButtons: some View {
+    HStack(spacing: 12) {
+      // 시점 피드백 버튼
+      Button {
+        feedbackType = .point
+        self.pointTime = vm.videoVM.currentTime
+        vm.videoVM.togglePlayPause()
+        showFeedbackInput = true
+      } label: {
+        Text("시점 피드백")
+          .font(.system(size: 16, weight: .semibold))
+          .foregroundColor(.white)
+          .frame(maxWidth: .infinity)
+          .padding(.vertical, 16)
+          .background(Color.blue)
+          .cornerRadius(12)
+      }
+      
+      // 구간 피드백 버튼
+      Button {
+        if vm.feedbackVM.isRecordingInterval {
+          // 두 번째 클릭: 종료 시간 기록하고 키보드 올림
+          feedbackType = .interval
+          self.intervalTime = vm.videoVM.currentTime
+          vm.videoVM.togglePlayPause()
+          showFeedbackInput = true
+        } else {
+          // 첫 번째 클릭: 시작 시간 기록
+          feedbackType = .interval
+          self.pointTime = vm.videoVM.currentTime
+          _ = vm.feedbackVM.handleIntervalButtonType(currentTime: vm.videoVM.currentTime)
+        }
+      } label: {
+        Text(vm.feedbackVM.isRecordingInterval ? "구간 피드백 중..." : "구간 피드백")
+          .font(.system(size: 16, weight: .semibold))
+          .foregroundColor(.white)
+          .frame(maxWidth: .infinity)
+          .padding(.vertical, 16)
+          .background(vm.feedbackVM.isRecordingInterval ? Color.purple : Color.blue)
+          .cornerRadius(12)
+      }
+    }
+    .padding(.horizontal, 16)
+    .padding(.vertical, 8)
+  }
 }
 
 #Preview {
-  @Previewable @State var vm: VideoDetailViewModel = .preview
   NavigationStack {
-    VideoView(vm: vm, videoTitle: "벨코의 위플래시")
+    VideoView(
+      teamspaceId: "1",
+      authorId: "2",
+      videoId: "3",
+      videoTitle: "벨코의 리치맨",
+      videoURL: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+    )
   }
   .environmentObject(NavigationRouter())
 }
