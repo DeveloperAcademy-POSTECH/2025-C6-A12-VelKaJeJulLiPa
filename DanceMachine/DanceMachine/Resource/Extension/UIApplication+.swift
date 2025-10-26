@@ -41,5 +41,19 @@ extension UIApplication {
         }
         return controller
     }
-
+    
+    /// 현재 화면 계층에서 가장 위에 표시되고 있는 뷰 컨트롤러를 찾아 반환합니다.
+    func topMostViewController(base: UIViewController? = UIApplication.shared.connectedScenes
+        .compactMap { ($0 as? UIWindowScene)?.keyWindow?.rootViewController }.first) -> UIViewController? {
+        if let nav = base as? UINavigationController {
+            return topMostViewController(base: nav.visibleViewController)
+        }
+        if let tab = base as? UITabBarController {
+            return topMostViewController(base: tab.selectedViewController)
+        }
+        if let presented = base?.presentedViewController {
+            return topMostViewController(base: presented)
+        }
+        return base
+    }
 }

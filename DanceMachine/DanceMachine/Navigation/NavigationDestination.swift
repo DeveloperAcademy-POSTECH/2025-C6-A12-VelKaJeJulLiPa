@@ -51,6 +51,10 @@ enum InboxRoute: Hashable {
 
 enum MyPageRoute: Hashable {
     case profile
+    case editName
+    case privacyPolicy
+    case termsOfUse
+    case accountSetting
 }
 
 enum VideoRoute: Hashable {

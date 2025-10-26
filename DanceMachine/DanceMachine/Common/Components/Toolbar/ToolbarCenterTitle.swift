@@ -8,13 +8,15 @@
 import SwiftUI
 
 struct ToolbarCenterTitle: ToolbarContent {
+    @Environment(\.colorScheme) var colorScheme
+    
     let text: String
     
     var body: some ToolbarContent {
         ToolbarItem(placement: .principal) {
             Text(text)
                 .font(Font.system(size: 18, weight: .semibold))
-                .foregroundStyle(Color.black)
+                .foregroundStyle(colorScheme == .light ? .black : .white) //FIXME: 컬러 수정
                 .allowsHitTesting(false)
         }
     }

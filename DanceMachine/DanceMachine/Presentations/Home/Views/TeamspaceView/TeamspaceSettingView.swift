@@ -156,6 +156,36 @@ struct TeamspaceSettingView: View {
                     switch self.editingState {
                     case .viewing: // 팀원 초대하기
                         print("팀원 초대하기")
+                        Task {
+                            // 1) 현재 팀스페이스 id 안전하게 가져오기
+                            guard let teamspaceId = viewModel.currentTeamspace?.teamspaceId.uuidString else {
+                                print("초대링크 생성 실패: teamspaceId 없음")
+                                return
+                            }
+                            
+                            guard let teamspaceName = viewModel.currentTeamspace?.teamspaceName else {
+                                print("팀 스페이스 이름 불러오기 실패")
+                                return
+                            }
+                            
+                            do {
+                                // 2) 초대 링크 생성
+                                let url = try await InviteService().createInvite(
+                                    teamspaceId: teamspaceId,
+                                    inviterId: MockData.userId // FIXME: - 임시 데이터 수정하기
+                                )
+                                
+                                // 3) 공유 시트 표시 (UI는 메인 스레드)
+                                await MainActor.run {
+                                    let item = InviteShareItem(teamName: teamspaceName, url: url)
+                                    let av = UIActivityViewController(activityItems: [item], applicationActivities: nil)
+                                    UIApplication.shared.topMostViewController()?.present(av, animated: true)
+                                }
+                            } catch {
+                                print("초대링크 생성 실패: \(error)")
+                            }
+                        }
+                        // TODO:
                     case .editing: // 버튼 비활성화
                         break
                     }

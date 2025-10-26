@@ -41,6 +41,10 @@ final class FirestoreManager {
             dict[WriteStrategy.userStrategy.rawValue] = FieldValue.serverTimestamp()
         case .userUpdateStrategy:
             dict[WriteStrategy.userStrategy.rawValue] = FieldValue.serverTimestamp()
+        case .invite:
+            dict[WriteStrategy.create.rawValue] = FieldValue.serverTimestamp()
+            let oneDayLater = Date().addingTimeInterval(60 * 60 * 24)
+            dict[strategy.rawValue] = Timestamp(date: oneDayLater)
         }
         
         let ref = db
@@ -58,6 +62,8 @@ final class FirestoreManager {
             try await ref.setData(dict)
         case .userUpdateStrategy:
             try await ref.updateData(dict)
+        case .invite:
+            try await ref.setData(dict)
         }
         
         return data
@@ -88,6 +94,12 @@ final class FirestoreManager {
     @discardableResult
     func updateUserLastLogin<T: EntityRepresentable>(_ data: T) async throws -> T {
         try await save(data, strategy: .userUpdateStrategy)
+    }
+    
+    // TODO: 코드 논의
+    @discardableResult
+    func createInvite<T: EntityRepresentable>(_ data: T) async throws -> T {
+        try await save(data, strategy: .invite)
     }
     
     /// 특정 필드만 부분 업데이트를 진행하는 메서드입니다.
@@ -145,23 +157,26 @@ final class FirestoreManager {
           strategy: WriteStrategy
       ) async throws -> T {
           guard var dict = data.asDictionary else { throw FirestoreError.encodingFailed }
-
-          // 타임스탬프 처리 (save와 동일한 규칙)
-          switch strategy {
-          case .join:
-              dict[strategy.rawValue] = FieldValue.serverTimestamp()
-          case .create:
-              dict[strategy.rawValue] = FieldValue.serverTimestamp()
-              dict[WriteStrategy.update.rawValue] = FieldValue.serverTimestamp()
-          case .update:
-              dict[strategy.rawValue] = FieldValue.serverTimestamp()
-          case .userStrategy:
-              dict[WriteStrategy.create.rawValue] = FieldValue.serverTimestamp()
-              dict[WriteStrategy.update.rawValue] = FieldValue.serverTimestamp()
-              dict[WriteStrategy.userStrategy.rawValue] = FieldValue.serverTimestamp()
-          case .userUpdateStrategy:
-              dict[WriteStrategy.userStrategy.rawValue] = FieldValue.serverTimestamp()
-          }
+        
+        // 타임스탬프 처리 (save와 동일한 규칙)
+        switch strategy {
+        case .join:
+            dict[strategy.rawValue] = FieldValue.serverTimestamp()
+        case .create:
+            dict[strategy.rawValue] = FieldValue.serverTimestamp()
+            dict[WriteStrategy.update.rawValue] = FieldValue.serverTimestamp()
+        case .update:
+            dict[strategy.rawValue] = FieldValue.serverTimestamp()
+        case .userStrategy:
+            dict[WriteStrategy.create.rawValue] = FieldValue.serverTimestamp()
+            dict[WriteStrategy.update.rawValue] = FieldValue.serverTimestamp()
+            dict[WriteStrategy.userStrategy.rawValue] = FieldValue.serverTimestamp()
+        case .userUpdateStrategy:
+            dict[WriteStrategy.userStrategy.rawValue] = FieldValue.serverTimestamp()
+        case .invite:
+            dict[WriteStrategy.create.rawValue] = FieldValue.serverTimestamp()
+            dict[strategy.rawValue] = Date().addingTimeInterval(60 * 60 * 24)
+        }
 
           let ref = db
               .collection(parentType.rawValue)
@@ -169,13 +184,14 @@ final class FirestoreManager {
               .collection(subType.rawValue)
               .document(data.documentID)
 
-          switch strategy {
-          case .create, .join, .userStrategy:
-              try await ref.setData(dict)
-          case .update, .userUpdateStrategy:
-              try await ref.updateData(dict)
-          }
-
+        switch strategy {
+        case .create, .join, .userStrategy:
+            try await ref.setData(dict)
+        case .update, .userUpdateStrategy:
+            try await ref.updateData(dict)
+        case .invite:
+            try await ref.setData(dict)
+        }
           return data
       }
   

@@ -1,0 +1,42 @@
+<script>
+  (function () {
+    // 1) 경로/쿼리에서 token 추출
+    const url = new URL(window.location.href);
+    const path = url.pathname;               // 예: /invite 또는 /invite/t/XXXX
+    const tokenQS = url.searchParams.get("token");
+    const pathParts = path.split("/").filter(Boolean); // ["invite", "t", "TOKEN"] 형태 가능
+    const tokenPath = (pathParts[0] === "invite" && pathParts[1] === "t" && pathParts[2]) ? pathParts[2] : null;
+    const token = tokenQS || tokenPath;
+
+    // 2) /invite 경로면 → 앱 커스텀 스킴 열고 실패 시 앱스토어 폴백
+    if (path.startsWith("/invite")) {
+      // 필요시 카카오 인앱 브라우저 감지(간단 버전)
+      const ua = navigator.userAgent.toLowerCase();
+      const isKakaoInApp = ua.includes("kakaotalk");
+
+      // 커스텀 스킴으로 앱 열기
+      if (token) {
+        window.location.href = `dancemachine://invite?token=${encodeURIComponent(token)}`;
+      } else {
+        // 토큰이 없으면 그냥 앱 실행만 시도(선택)
+        window.location.href = `dancemachine://invite`;
+      }
+
+      // 앱 미설치 폴백 (앱스토어 ID 교체)
+      setTimeout(function () {
+        // 카카오 인앱 브라우저일 때 새 창 열기가 더 잘 먹힐 수 있음
+        const fallback = "https://apps.apple.com/app/id1234567890";
+        if (isKakaoInApp) {
+          window.location.href = fallback; // 또는 window.open(fallback, "_blank");
+        } else {
+          window.location.href = fallback;
+        }
+      }, 1200);
+
+      // 3) SPA 초기화 방지 (초대 페이지는 여기서 종료)
+      return;
+    }
+
+    // 4) /invite 가 아니면 평소 SPA/웹앱 초기화 계속 진행
+  })();
+</script>

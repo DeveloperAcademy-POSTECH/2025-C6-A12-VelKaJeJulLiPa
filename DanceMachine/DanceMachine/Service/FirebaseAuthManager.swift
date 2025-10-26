@@ -23,14 +23,12 @@ final class FirebaseAuthManager: ObservableObject {
     @Published var userInfo: User?
     @Published var authenticationState: AuthenticationState = .unauthenticated
     @Published var needsNameSetting: Bool = false
-    @Published var errormessage: String = ""
     
     private var authStateHandler: AuthStateDidChangeListenerHandle?
     private var currentNonce: String?
     
-      /// 현재 선택된 유저의 팀스페이스 입니다.
+    /// 현재 선택된 유저의 팀스페이스 입니다.
     var currentTeamspace: Teamspace?
- 
     var isSigningIn: Bool = false
     
     private init() {
@@ -38,8 +36,7 @@ final class FirebaseAuthManager: ObservableObject {
         if !hasLaunchedBefore {
             do { try self.signOut() }
             catch {
-                errormessage = error.localizedDescription
-                print("❌ Failed to sign out: \(error.localizedDescription)")
+                print("Failed to sign out: \(AuthenticationError.signOutFailed(underlying: error).localizedDescription)")
             }
             hasLaunchedBefore = true
         }
@@ -55,7 +52,7 @@ final class FirebaseAuthManager: ObservableObject {
         
         registerAuthStateHandler()
         verifySignInWithAppleAuthenticationState()
-        print("🔥 FirebaseAuthManager initialized")
+        print("FirebaseAuthManager initialized")
     }
     
     /// 사용자 인증 상태를 확인하는 리스너를 등록하는 메서드
@@ -82,7 +79,7 @@ final class FirebaseAuthManager: ObservableObject {
     ///     - uid: 사용자 id (Firebase Authentication 에서 반환 - users 콜렉션에서 id로 사용중)
     @MainActor
     func fetchUserInfo(for uid: String) async {
-        print("🔄 Fetch user information for \(uid)")
+        print("Fetch user information for \(uid)")
         do {
             if let user: User = try await FirestoreManager.shared.get(uid, from: .users) {
                 self.userInfo = user
@@ -93,8 +90,7 @@ final class FirebaseAuthManager: ObservableObject {
             }
         } catch {
             self.authenticationState = .unauthenticated
-            errormessage = error.localizedDescription
-            print("❌ Failed to fetch user information: \(error.localizedDescription)")
+            print("Failed to fetch user information: \(FirestoreError.fetchFailed(underlying: error).localizedDescription)")
         }
     }
     
@@ -111,20 +107,19 @@ final class FirebaseAuthManager: ObservableObject {
                 let credentialState = try await appleIDProvider.credentialState(forUserID: providerData.uid)
                 switch credentialState {
                 case .authorized:
-                    print("🍎 Apple credential still valid")
+                    print("Apple credential still valid")
                     break
                 case .revoked, .notFound:
                     do {
                         try self.signOut()
                     } catch {
-                        errormessage = error.localizedDescription
-                        print("🍎 Apple credential revoked — signing out")
+                        print("Apple credential revoked and Failed to sign out : \(AuthenticationError.signOutFailed(underlying: error).localizedDescription)")
                     }
                 default:
                     break
                 }
             } catch {
-                print("⚠️ verifySignInWithAppleAuthenticationState error: \(error.localizedDescription)")
+                print("verifySignInWithAppleAuthenticationState error: \(AuthenticationError.appleAuthorizationFailed.localizedDescription)")
             }
         }
     }
@@ -154,10 +149,91 @@ final class FirebaseAuthManager: ObservableObject {
     func signOut() throws {
         try firebaseAuth.signOut()
     }
+    
+    /// Firebase Authentication 계정 삭제 메서드
+    /// 1. 토큰 취소하기 위해  (Revoke Access / Refresh Token) 애플 로그인
+    /// 2. 마지막 로그인이 현재 기준 5분 넘었다면 Firebase Authentication 에 재인증 필요
+    /// 3. 사용자 DB 정보 삭제
+    /// 4. Firebase Authentication 계정 삭제 후  자동 로그아웃
+    func deleteAccount() async throws {
+        guard let user = user else {
+            throw AuthenticationError.userNotFound
+        }
+        guard let lastSignInDate = user.metadata.lastSignInDate else {
+            throw AuthenticationError.lastSignInDateMissing
+        }
+        
+        let needsReauth = !lastSignInDate.isWithinPast(minutes: 5)
+        let needsTokenRevocation = user.providerData.contains { $0.providerID == "apple.com" }
+        
+        // Step 1 — 재인증
+        var authCodeString: String?
+        
+        if needsReauth || needsTokenRevocation {
+            let helper = SignInAppleHelper() // 애플 로그인 실행
+            let tokens = try await helper.startSignInWithAppleFlow()
+            let credential = OAuthProvider.appleCredential(
+                withIDToken: tokens.token,
+                rawNonce: tokens.nonce,
+                fullName: tokens.fullName
+            )
+            
+            if needsReauth {
+                do {
+                    try await user.reauthenticate(with: credential) // Firebase Authentication 재인증
+                } catch {
+                    throw AuthenticationError.reauthenticationFailed(underlying: error)
+                }
+            }
+            
+            if needsTokenRevocation {
+                guard let authCodeData = tokens.appleIDCredential.authorizationCode,
+                      let codeString = String(data: authCodeData, encoding: .utf8)
+                else {
+                    throw AuthenticationError.appleAuthorizationFailed
+                }
+                authCodeString = codeString
+            }
+        }
+        
+        // Step 2 — 병렬 작업 실행
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            
+            // 1. 애플 로그인 토큰 취소
+            if let authCode = authCodeString {
+                group.addTask {
+                    do {
+                        try await self.firebaseAuth.revokeToken(withAuthorizationCode: authCode)
+                    } catch {
+                        throw AuthenticationError.revokeTokenFailed(underlying: error)
+                    }
+                }
+            }
+            
+            // 2. Firestore 사용자 데이터 삭제
+            group.addTask {
+                do {
+                    try await FirestoreManager.shared.delete(collectionType: .users, documentID: user.uid)
+                } catch {
+                    throw FirestoreError.deleteFailed(underlying: error)
+                }
+            }
+            
+            // 3. Firebase Authentication 계정 삭제
+            group.addTask {
+                do {
+                    try await user.delete()
+                } catch {
+                    throw AuthenticationError.userAccountDeleteFailed(underlying: error)
+                }
+            }
+            
+            try await group.waitForAll()
+        }
+    }
 }
 
 
-// MARK: - Sign in with Apple
 extension FirebaseAuthManager {
     
     @discardableResult

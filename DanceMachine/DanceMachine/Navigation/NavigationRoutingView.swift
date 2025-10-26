@@ -25,6 +25,14 @@ struct NavigationRoutingView: View {
                 switch route {
                 case .profile:
                     MyPageView()
+                case .editName:
+                    EditNameView()
+                case .privacyPolicy:
+                    PrivacyPolicyView()
+                case .termsOfUse:
+                    TermsOfUseView()
+                case .accountSetting:
+                    AccountSettingView()
                 }
             case .teamspace(let route):
                 switch route {

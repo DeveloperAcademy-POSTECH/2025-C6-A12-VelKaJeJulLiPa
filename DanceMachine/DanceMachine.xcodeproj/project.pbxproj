@@ -19,9 +19,22 @@
 		C999091A2E8A9CC100A6C7CC /* DanceMachine.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DanceMachine.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		C9ECD87E2EACA9CE00F0B96D /* Exceptions for "DanceMachine" folder in "DanceMachine" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = C99909192E8A9CC100A6C7CC /* DanceMachine */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		C999091C2E8A9CC100A6C7CC /* DanceMachine */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				C9ECD87E2EACA9CE00F0B96D /* Exceptions for "DanceMachine" folder in "DanceMachine" target */,
+			);
 			path = DanceMachine;
 			sourceTree = "<group>";
 		};
