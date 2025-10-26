@@ -14,14 +14,13 @@ final class CreateProjectViewModel {
     
     /// 해당 팀스페이스의 프로젝트를 생성하는 메서드입니다.
     /// - Parameters:
-    ///     - creatorId: 프로젝트 생성 유저의 Id
     ///     - projectName: 프로젝트 이름 설정
-    func createProject(creatorId: String, projectName: String) async throws {
+    func createProject(projectName: String) async throws {
         do {
             let project: Project = .init(
                 projectId: UUID(),
                 teamspaceId: self.currentTeamspace?.teamspaceId.uuidString ?? "",
-                creatorId: creatorId,
+                creatorId: FirebaseAuthManager.shared.userInfo?.userId ?? "",
                 projectName: projectName
             )
             try await FirestoreManager.shared.create(project)
