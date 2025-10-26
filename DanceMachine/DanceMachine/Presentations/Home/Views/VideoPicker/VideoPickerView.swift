@@ -1,0 +1,119 @@
+//
+//  CustomPickerView.swift
+//  DanceMachine
+//
+//  Created by 조재훈 on 10/5/25.
+//
+
+import SwiftUI
+import Photos
+import AVKit
+
+struct VideoPickerView: View {
+  @Environment(\.dismiss) private var dismiss
+  
+  @State private var vm: VideoPickerViewModel = .init()
+  
+  @FocusState private var isFocused: Bool
+  
+  let tracksId: String
+  let sectionId: String
+  
+  var body: some View {
+    NavigationStack {
+      GeometryReader { g in
+        let spacing: CGFloat = 1
+        let totalSpacing = spacing * 2
+        let itemWidth = (g.size.width - totalSpacing) / 4
+        ScrollViewReader { proxy in
+          ScrollView {
+            VStack(spacing: 16) {
+              Color.clear
+                .frame(height: 0)
+                .id("TOP") // 스크롤 목적지
+              
+              VideoPreview(
+                vm: vm,
+                size: 224
+              )
+//              .padding(.top, (g.size.height * 0.4) / 3)
+              
+              textField
+              
+              CustomPicker(
+                videos: $vm.videos,
+                selectedAsset: $vm.selectedAsset,
+                spacing: spacing,
+                itemWidth: itemWidth
+              )
+            }
+          }
+          .onChange(of: vm.selectedAsset) { oldValue, newValue in
+            withAnimation(.easeInOut) {
+              proxy.scrollTo("TOP", anchor: .top)
+            }
+          }
+        }
+        .toolbarTitleDisplayMode(.inline)
+        .toolbar {
+          ToolbarLeadingBackButton(icon: .chevron)
+          ToolbarCenterTitle(text: "비디오 선택")
+          ToolbarItemGroup(placement: .topBarTrailing) {
+            Button {
+              vm.exportVideo(tracksId: tracksId, sectionId: sectionId)
+            } label: {
+              Image(systemName: "arrow.up")
+                .foregroundStyle(
+                  vm.selectedAsset == nil ? .purple.opacity(0.7) : .white
+                )
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.blue)
+            .disabled(vm.selectedAsset == nil)
+          }
+        }
+        .task {
+          await vm.requestPermissionAndFetch()
+        }
+        .alert(
+          "업로드 성공",
+          isPresented: $vm.showSuccessAlert
+        ) {
+          Button("확인") {
+            dismiss()
+          }
+        }
+        .alert(
+          "업로드 실패",
+          isPresented: .constant(vm.errorMessage != nil)
+        ) {
+          Button("확인") {
+            vm.errorMessage = nil
+          }
+        } message: {
+          Text(vm.errorMessage ?? "알 수 없는 오류가 발생했습니다.")
+        }
+      }
+    }
+  }
+  
+  private var textField: some View {
+    RoundedRectangle(cornerRadius: 10)
+      .fill(Color.gray.opacity(0.6)) // FIXME: 컬러 수정
+      .frame(maxWidth: .infinity)
+      .frame(height: 51)
+      .overlay {
+        TextField("업로드할 영상을 선택하세요.", text: $vm.videoTitle)
+          .padding()
+          .textFieldStyle(.plain)
+          .font(.system(size: 16)) // FIXME: 폰트 수정
+          .foregroundStyle(Color.gray)
+          .focused($isFocused)
+      }
+      .padding(.horizontal, 16)
+  }
+}
+
+#Preview {
+  VideoPickerView(tracksId: "", sectionId: "")
+}

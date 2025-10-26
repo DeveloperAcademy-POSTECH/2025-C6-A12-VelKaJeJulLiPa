@@ -140,24 +140,24 @@ final class FirestoreManager {
         }
         return data
     }
-    
-    /// 서브컬렉션의 데이터를 생성합니다.
-    /// - Parameters:
-    ///     - data: 데이터 형태
-    ///     - under: 부모 컬렉션 타입
-    ///     - parentId: document 이름
-    ///     - subCollection: 서브 컬렉션 타입
-    ///     - strategy: 전략 타입 (join, create, update, userStrategy)
-    @discardableResult
-    func createToSubcollection<T: EntityRepresentable>(
-        _ data: T,
-        under parentType: CollectionType,
-        parentId: String,
-        subCollection subType: CollectionType,
-        strategy: WriteStrategy
-    ) async throws -> T {
-        guard var dict = data.asDictionary else { throw FirestoreError.encodingFailed }
-
+  
+      /// 서브컬렉션의 데이터를 생성합니다.
+      /// - Parameters:
+      ///     - data: 데이터 형태
+      ///     - under: 부모 컬렉션 타입
+      ///     - parentId: document 이름
+      ///     - subCollection: 서브 컬렉션 타입
+      ///     - strategy: 전략 타입 (join, create, update, userStrategy)
+      @discardableResult
+      func createToSubcollection<T: EntityRepresentable>(
+          _ data: T,
+          under parentType: CollectionType,
+          parentId: String,
+          subCollection subType: CollectionType,
+          strategy: WriteStrategy
+      ) async throws -> T {
+          guard var dict = data.asDictionary else { throw FirestoreError.encodingFailed }
+        
         // 타임스탬프 처리 (save와 동일한 규칙)
         switch strategy {
         case .join:
@@ -178,11 +178,11 @@ final class FirestoreManager {
             dict[strategy.rawValue] = Date().addingTimeInterval(60 * 60 * 24)
         }
 
-        let ref = db
-            .collection(parentType.rawValue)
-            .document(parentId)
-            .collection(subType.rawValue)
-            .document(data.documentID)
+          let ref = db
+              .collection(parentType.rawValue)
+              .document(parentId)
+              .collection(subType.rawValue)
+              .document(data.documentID)
 
         switch strategy {
         case .create, .join, .userStrategy:
@@ -192,10 +192,70 @@ final class FirestoreManager {
         case .invite:
             try await ref.setData(dict)
         }
+          return data
+      }
+  
+      /// 서브서브컬렉션의 데이터를 생성합니다.
+      /// - Parameters:
+      ///     - data: 데이터 형태
+      ///     - in: 상위 부모 컬렉션 타입 ex) Tracks
+      ///     - grandParentId: document 이름
+      ///     - withIn 부모 컬렉션 타입 ex) Section
+      ///     - parentId: document 이름
+      ///     - subCollection: 서브 컬렉션 타입
+      ///     - strategy: 전략 타입 (join, create, update, userStrategy)
+      @discardableResult
+      func createToSubSubcollection<T: EntityRepresentable>(
+          _ data: T,
+          in grandParentType: CollectionType,
+          grandParentId: String,
+          withIn parentType: CollectionType,
+          parentId: String,
+          subCollection subType: CollectionType,
+          strategy: WriteStrategy
+      ) async throws -> T {
+          guard var dict = data.asDictionary else { throw FirestoreError.encodingFailed }
 
-        return data
-    }
-    
+          // 타임스탬프 처리 (save와 동일한 규칙)
+          switch strategy {
+          case .join:
+              dict[strategy.rawValue] = FieldValue.serverTimestamp()
+          case .create:
+              dict[strategy.rawValue] = FieldValue.serverTimestamp()
+              dict[WriteStrategy.update.rawValue] = FieldValue.serverTimestamp()
+          case .update:
+              dict[strategy.rawValue] = FieldValue.serverTimestamp()
+          case .userStrategy:
+              dict[WriteStrategy.create.rawValue] = FieldValue.serverTimestamp()
+              dict[WriteStrategy.update.rawValue] = FieldValue.serverTimestamp()
+              dict[WriteStrategy.userStrategy.rawValue] = FieldValue.serverTimestamp()
+          case .userUpdateStrategy:
+              dict[WriteStrategy.userStrategy.rawValue] = FieldValue.serverTimestamp()
+          case .invite:
+              dict[WriteStrategy.create.rawValue] = FieldValue.serverTimestamp()
+              dict[strategy.rawValue] = Date().addingTimeInterval(60 * 60 * 24)
+          }
+
+          let ref = db
+              .collection(grandParentType.rawValue)
+              .document(grandParentId)
+              .collection(parentType.rawValue)
+              .document(parentId)
+              .collection(subType.rawValue)
+              .document(data.documentID)
+
+          switch strategy {
+          case .create, .join, .userStrategy:
+              try await ref.setData(dict)
+          case .update, .userUpdateStrategy:
+              try await ref.updateData(dict)
+          case .invite:
+              try await ref.setData(dict)
+          }
+
+          return data
+      }
+  
     /// 컬렉션의 모든 데이터를 가져옵니다.
     /// 파이어베이스 색인으로 정렬합니다.
     /// - id: userID
@@ -242,6 +302,37 @@ final class FirestoreManager {
             q = q.order(by: orderKey, descending: descending)
         }
         
+        let snap = try await q.getDocuments()
+        return snap.documents.compactMap { try? $0.data(as: T.self) }
+    }
+    /// 특정 부모 문서 하위의 서브컬렉션을 가져옵니다.
+    /// - Parameters:
+    ///   - parentType: 부모 컬렉션(.user 등)
+    ///   - parentId: 부모 문서 ID(userId 등)
+    ///   - subType: 서브컬렉션(.blocks 등)
+    ///   - orderKey: 정렬 기준(옵션)
+    ///   - descending: 정렬 방향
+    @discardableResult
+    func fetchAllFromSubSubcollection<T: Decodable>(
+        in grandParentType: CollectionType,
+        grandParentId: String,
+        withIn parentType: CollectionType,
+        parentId: String,
+        subCollection subType: CollectionType,
+        orderBy orderKey: String? = nil,
+        descending: Bool = true
+    ) async throws -> [T] {
+        var q: Query = db
+            .collection(grandParentType.rawValue)
+            .document(grandParentId)
+            .collection(parentType.rawValue)
+            .document(parentId)
+            .collection(subType.rawValue)
+      
+        if let orderKey {
+            q = q.order(by: orderKey, descending: descending)
+        }
+      
         let snap = try await q.getDocuments()
         return snap.documents.compactMap { try? $0.data(as: T.self) }
     }
@@ -308,5 +399,23 @@ final class FirestoreManager {
         return totalDeleted
     }
 
+  
+    func deleteFromSubSubcollection(
+        in grandParentType: CollectionType,
+        grandParentId: String,
+        withIn parentType: CollectionType,
+        parentId: String,
+        subCollection subType: CollectionType,
+        target documentID: String
+    ) async throws {
+        try await db
+            .collection(grandParentType.rawValue)
+            .document(grandParentId)
+            .collection(parentType.rawValue)
+            .document(parentId)
+            .collection(subType.rawValue)
+            .document(documentID)
+            .delete()
+    }
 }
 

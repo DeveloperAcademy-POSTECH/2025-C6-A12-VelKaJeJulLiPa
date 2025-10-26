@@ -30,7 +30,7 @@ struct EditNameView: View {
         }
         .padding(.horizontal, 16)
         .toolbar {
-            ToolbarLeadingBackButton()
+            ToolbarLeadingBackButton(icon: .chevron)
             ToolbarCenterTitle(text: "나의 이름")
         }
     }

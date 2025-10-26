@@ -14,6 +14,25 @@ enum AppRoute: Hashable {
     
     case teamspace(TeamspaceRoute)
     case project(ProjectRoute)
+  
+    case video(VideoRoute)
+  
+  // MARK: 플로팅 버튼 글래스 모피즘 적용 테스트를 위한 분기 코드
+  // 전체 기능 구현 이후에 화면 분기처리로 상단 rootView에서 버튼 관리
+//    var floatingButtonType: FloatingButtonType {
+//      switch self {
+//      case .home:
+//        return .none
+//      case .inbox:
+//        return .none
+//      case .mypage:
+//        return .none
+//      case .teamspace:
+//        return .none
+//      case .video:
+//        return .videoList
+//      }
+//    }
 }
 
 enum ProjectRoute: Hashable {
@@ -38,3 +57,12 @@ enum MyPageRoute: Hashable {
     case accountSetting
 }
 
+enum VideoRoute: Hashable {
+    case list(tracksId: String, sectionId: String, trackName: String)
+    case section(section: [Section], tracksId: String, trackName: String, sectionId: String)
+}
+
+enum FloatingButtonType {
+  case videoList
+  case none
+}

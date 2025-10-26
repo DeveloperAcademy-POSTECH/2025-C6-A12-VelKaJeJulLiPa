@@ -23,7 +23,7 @@ struct PrivacyPolicyView: View {
             WebView(url: privacyPolicyURL, isLoading: $isLoading)
                 .opacity(isLoading ? 0 : 1)
                 .toolbar {
-                    ToolbarLeadingBackButton()
+                    ToolbarLeadingBackButton(icon: .chevron)
                     ToolbarCenterTitle(text: "개인정보처리방침")
                 }
             

@@ -203,7 +203,7 @@ extension HomeViewModel {
                 parentId: tracks.tracksId.uuidString,
                 subCollection: .section
             )
-            return section
+            return section.filter { $0.sectionTitle == "일반" }
         } catch {
             print("error: \(error.localizedDescription)") // FIXME: - 적절한 분기 처리
             return []

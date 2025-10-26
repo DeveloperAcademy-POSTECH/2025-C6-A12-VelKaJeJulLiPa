@@ -46,7 +46,7 @@ struct TeamspaceListView: View {
         .padding(.horizontal, 16)
         .overlay { if isLoading { LoadingView() } }
         .toolbar {
-            ToolbarLeadingBackButton()
+            ToolbarLeadingBackButton(icon: .chevron)
             ToolbarCenterTitle(text: "팀 스페이스")
         }
         .task {

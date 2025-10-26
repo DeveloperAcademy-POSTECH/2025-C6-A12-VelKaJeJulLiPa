@@ -30,7 +30,7 @@ struct CreateProjectView: View {
         }
         .padding(.horizontal, 16)
         .toolbar {
-            ToolbarLeadingBackButton()
+            ToolbarLeadingBackButton(icon: .chevron)
         }
     }
     

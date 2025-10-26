@@ -27,7 +27,7 @@ struct CreateTeamspaceView: View {
         }
         .padding(.horizontal, 16)
         .toolbar {
-            ToolbarLeadingBackButton()
+          ToolbarLeadingBackButton(icon: .chevron)
         }
     }
     
