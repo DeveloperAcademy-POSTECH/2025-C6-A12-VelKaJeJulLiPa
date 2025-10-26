@@ -52,9 +52,9 @@ final class LoginViewModel: ObservableObject {
             }
             
             FirebaseAuthManager.shared.authenticationState = .authenticated
-            print("✅ signInApple done with authenticationState updated")
+            print("signInApple done with authenticationState updated")
         } catch {
-            print("⚠️ signInApple error: \(error.localizedDescription)")
+            print("signInApple error: \(error.localizedDescription)")
         }
     }
 }
