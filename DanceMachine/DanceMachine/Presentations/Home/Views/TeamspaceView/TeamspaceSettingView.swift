@@ -171,8 +171,7 @@ struct TeamspaceSettingView: View {
                             do {
                                 // 2) 초대 링크 생성
                                 let url = try await InviteService().createInvite(
-                                    teamspaceId: teamspaceId,
-                                    inviterId: MockData.userId // FIXME: - 임시 데이터 수정하기
+                                    teamspaceId: teamspaceId
                                 )
                                 
                                 // 3) 공유 시트 표시 (UI는 메인 스레드)

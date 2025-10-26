@@ -14,13 +14,11 @@ struct InviteService {
     /// 초대 링크 생성 (Firestore 문서 생성 + 공유 URL 반환)
         /// - Parameters:
         ///   - teamspaceId: 초대를 보낼 팀스페이스 ID
-        ///   - inviterId: 초대를 생성한 사용자 ID
         ///   - role: 초대로 참여한 사용자의 역할 (기본값: member)
         ///   - ttlHours: 초대 링크 만료 시간(시간 단위, 기본값: 24시간)
         /// - Returns: 공유용 유니버설 링크 URL
     func createInvite(
         teamspaceId: String,
-        inviterId: String,
         role: String = "member",
         ttlHours: Int = 24
     ) async throws -> URL {
@@ -31,7 +29,7 @@ struct InviteService {
         let invite: Invite = .init(
             inviteId: inviteId,
             teamspaceId: teamspaceId,
-            inviterId: inviterId,
+            inviterId: FirebaseAuthManager.shared.userInfo?.userId ?? "",
             role: role,
             token: token,
             status: .pending,
@@ -41,7 +39,7 @@ struct InviteService {
         try await FirestoreManager.shared.createInvite(invite)
          
         print("🧪[InviteService] 초대 생성 시작")
-        print("팀스페이스ID=\(teamspaceId), 초대자ID=\(inviterId), 역할=\(role), 만료시간(시간)=\(ttlHours)")
+        print("팀스페이스ID=\(teamspaceId), 초대자ID=\(FirebaseAuthManager.shared.userInfo?.userId ?? ""), 역할=\(role), 만료시간(시간)=\(ttlHours)")
         print("생성된 inviteId=\(inviteId), token=\(token)")
         
         // 공유용 유니버설 링크(예: Firebase Hosting 도메인) 구성

@@ -56,7 +56,7 @@ final class InviteRouter: ObservableObject {
     private func accept(token: String) async {
         do {
             print("🚀 [InviteRouter] 초대 수락 시도. token:", token)
-            let userId = MockData.userId
+            let userId = FirebaseAuthManager.shared.userInfo?.userId ?? ""
             let teamspaceId = try await InviteAcceptService().acceptInvite(token: token, currentUserId: userId)
             print("✅ [InviteRouter] 초대 수락 성공. teamspaceId:", teamspaceId)
 

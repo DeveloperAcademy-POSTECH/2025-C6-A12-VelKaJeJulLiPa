@@ -12,20 +12,18 @@ final class CreateTeamspaceViewModel {
     
     /// 팀스페이스 생성 + 소유자 멤버 추가 + 사용자 userTeamspace 등록까지 한 번에
     /// - Parameters:
-    ///     - ownerId: 팀 스페이스 생성자 아이디
     ///     - teamspaceNameText: 팀 스페이스 이름
-    func createTeamspaceWithInitialMembership(ownerId: String, teamspaceNameText: String) async throws {
+    func createTeamspaceWithInitialMembership(teamspaceNameText: String) async throws {
         do {
             let teamspaceId = try await self.createTeamsapce(
-                userId: ownerId, // FIXME: - Mock데이터 교체
+                userId: FirebaseAuthManager.shared.userInfo?.userId ?? "",
                 teamspaceName: teamspaceNameText
             )
             
             try await self.createTeamspaceMember(
-                userId: ownerId, // FIXME: - Mock데이터 교체
+                userId: FirebaseAuthManager.shared.userInfo?.userId ?? "",
                 teamspaceId: teamspaceId
             )
-            
             try await self.includeUserTeamspace(teamspaceId: teamspaceId)
         } catch {
             print("error: \(error.localizedDescription)") // FIXME: - 에러 분기 처리 추가하기
@@ -74,7 +72,7 @@ extension CreateTeamspaceViewModel {
         try await FirestoreManager.shared.createToSubcollection(
             UserTeamspace(teamspaceId: teamspaceId),
             under: .users,
-            parentId: MockData.userId, // FIXME: - MockData 교체
+            parentId: FirebaseAuthManager.shared.userInfo?.userId ?? "",
             subCollection: .userTeamspace,
             strategy: .join
         )

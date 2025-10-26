@@ -17,7 +17,7 @@ final class TeamspaceSettingViewModel {
     
     /// 팀스페이스 권한 판별 메서드입니다.
     func isTeamspaceOwner() -> Bool {
-        self.currentTeamspace?.ownerId == MockData.userId // FIXME: - MockData를 user_Id로 교체하기 => self.currentTeamspace.teamspaceId
+        self.currentTeamspace?.ownerId == FirebaseAuthManager.shared.userInfo?.userId ?? ""
     }
     
     /// 현재 팀스페이스의 전체 멤버의 Id를 조회한 후, Id를 이용하여 Users 컬렉션에서 멤버 정보를 가져오는 메서드입니다.
@@ -62,8 +62,8 @@ final class TeamspaceSettingViewModel {
     /// 팀 스페이스 나가기
     func leaveTeamspace() async throws {
         do {
-            try await self.removeUserFromCurrentTeamspace(userId: MockData.userId)
-            let userTeamspaces = try await self.fetchUserTeamspace(userId: MockData.userId) // FIXME: - 목 데이터 수정
+            try await self.removeUserFromCurrentTeamspace(userId: FirebaseAuthManager.shared.userInfo?.userId ?? "")
+            let userTeamspaces = try await self.fetchUserTeamspace(userId: FirebaseAuthManager.shared.userInfo?.userId ?? "")
             let loadTeamspaces = try await self.fetchTeamspaces(userTeamspaces: userTeamspaces)
             
             if let firstTeamspace = loadTeamspaces.first {
@@ -199,7 +199,7 @@ extension TeamspaceSettingViewModel {
                 documentID: teamspaceId
             )
             
-            let userTeamspaces = try await self.fetchUserTeamspace(userId: MockData.userId) // FIXME: - 목 데이터 수정
+            let userTeamspaces = try await self.fetchUserTeamspace(userId: FirebaseAuthManager.shared.userInfo?.userId ?? "")
             let loadTeamspaces = try await self.fetchTeamspaces(userTeamspaces: userTeamspaces)
             
             if let firstTeamspace = loadTeamspaces.first {
