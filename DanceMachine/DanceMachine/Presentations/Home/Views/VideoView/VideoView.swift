@@ -10,45 +10,142 @@ import AVKit
 
 struct VideoView: View {
   
-  @State private var vm: VideoDetailViewModel
+  @State private var vm: VideoDetailViewModel = .init()
   
   @State private var showReplyModal: Bool = false
+  @State private var showFeedbackInput: Bool = false
+  @State private var feedbackType: FeedbackType = .point
+  
+  // MARK: 슬라이더 관련
+  @State private var isDragging: Bool = false
+  @State private var sliderValue: Double = 0
+  
+  // MARK: 피드백 시점 관련
+  @State private var pointTime: Double = 0
+  @State private var intervalTime: Double = 0
   
   // TODO: teamSpaceId, userId 전역 받아오기
   
-//  init(videoURL: String) {
-//    _vm = State(initialValue: VideoDetailViewModel(videoURL: videoURL))
-//  }
-  init(vm: VideoDetailViewModel, videoTitle: String) {
-    _vm = State(initialValue: vm)
+  init( // 전역에서 받아온 후 초기화 뺴주기 + 네비게이션 라우터 빼주기
+    teamspaceId: String,
+    authorId: String,
+    videoId: String,
+    videoTitle: String,
+    videoURL: String
+  ) {
+    self.teamspaceId = teamspaceId
+    self.authorId = authorId
+    self.videoId = videoId
     self.videoTitle = videoTitle
+    self.videoURL = videoURL
   }
   
+  let teamspaceId: String
+  let authorId: String // 비디오 작성자가 아닌 피드백 작성자 기준임. 로그인한 사용자
+  let videoId: String
   let videoTitle: String
+  let videoURL: String
   
   var body: some View {
-    GeometryReader { g in
-      VStack {
+    GeometryReader { proxy in
+      VStack(spacing: 0) {
         videoView
-          .frame(maxHeight: g.size.height * 0.33)
-        feedbackSection
-        Divider()
-        feedbackListView
+          .frame(height: proxy.size.width * 9 / 16)
+        
+        VStack(spacing: 0) {
+          feedbackSection
+            .padding(.vertical, 8)
+          Divider()
+          feedbackListView
+            .padding(.top, 16)
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+          if showFeedbackInput {
+            showFeedbackInput = false
+            dismissKeyboard()
+          }
+        }
+      }
+      .onChange(of: showFeedbackInput) { _, newValue in
+        if !newValue {
+          vm.feedbackVM.isRecordingInterval = false
+        }
+      }
+      .safeAreaInset(edge: .bottom) {
+        Group {
+          if showFeedbackInput {
+            FeedbackInPutView(
+              teamMembers: vm.teamMembers,
+              feedbackType: feedbackType,
+              currentTime: pointTime,
+              startTime: intervalTime,
+              onSubmit: { content, taggedUserId in
+                Task {
+                  if feedbackType == .point {
+                    await vm.feedbackVM.createPointFeedback(
+                      videoId: videoId,
+                      authorId: authorId,
+                      content: content,
+                      taggedUserIds: taggedUserId,
+                      atTime: pointTime
+                    )
+                  } else {
+                    await vm.feedbackVM.createIntervalFeedback(
+                      videoId: videoId,
+                      authorId: authorId,
+                      content: content,
+                      taggedUserIds: taggedUserId,
+                      startTime: vm.feedbackVM.intervalStartTime ?? 0,
+                      endTime: vm.videoVM.currentTime
+                    )
+                  }
+                  showFeedbackInput = false
+                }
+              },
+              refresh: {
+                self.showFeedbackInput = false
+                dismissKeyboard()
+              },
+              timeSeek: { vm.videoVM.seekToTime(to: self.pointTime) }
+            )
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(Color(uiColor: .systemBackground))
+          } else {
+            feedbackButtons
+          }
+        }
+      }
+      .toolbar(.hidden, for: .tabBar)
+      .toolbarTitleDisplayMode(.inline)
+      .toolbar {
+        ToolbarLeadingBackButton(icon: .chevron)
+        ToolbarCenterTitle(text: videoTitle)
       }
     }
-    .toolbarTitleDisplayMode(.inline)
-    .toolbar {
-      ToolbarLeadingBackButton(icon: .chevron)
-      ToolbarCenterTitle(text: videoTitle)
+    .task {
+      await vm.videoVM.setupPlayer(from: videoURL, videoId: videoId)
+      // TODO: teamspaceId로 팀 멤버 로드
+      // await vm.loadTeamMemvers(teamspaceId: teamspaceId)
+      // TODO: videoId로 피드백 로드
+      // await vm.feedbackVM.loadFeedbacks(for: videoId)
+    }
+    .onDisappear {
+      vm.videoVM.cleanPlayer()
     }
   }
+  
   // MARK: 비디오 섹션
   private var videoView: some View {
     ZStack {
-      VideoController(
-        player: vm.videoVM.player ?? AVPlayer()
-      )
-      .aspectRatio(16/9, contentMode: .fit)
+      if let player = vm.videoVM.player {
+        VideoController(player: player)
+          .aspectRatio(16/9, contentMode: .fit)
+      } else {
+        Color.black
+          .aspectRatio(16/9, contentMode: .fit)
+      }
       
       TapClearArea(
         leftTap: { vm.videoVM.leftTab() },
@@ -144,7 +241,7 @@ struct VideoView: View {
       Spacer()
       Button {
         // TODO: 피드백 필터링 기능
-      } label: { // FIXME: 디자인 수정
+      } label: {
         Text("마이 피드백")
           .foregroundStyle(Color.white)
           .padding(.horizontal, 11)
