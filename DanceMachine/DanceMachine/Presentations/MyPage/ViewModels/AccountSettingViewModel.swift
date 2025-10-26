@@ -11,16 +11,26 @@ import Foundation
 final class AccountSettingViewModel {
     
     var myId: String { FirebaseAuthManager.shared.userInfo?.email ?? "Unknown" }
+    var errorMessage: String?
     
     //MARK: - 계정 설정
     /// 로그아웃 메서드
     func signOut() throws {
-        try FirebaseAuthManager.shared.signOut()
+        do {
+            try FirebaseAuthManager.shared.signOut()
+        } catch {
+            errorMessage = AuthenticationError.signOutFailed(underlying: error).errorDescription
+            print("Sign out Failed: \(errorMessage as Any)")
+        }
     }
 
     
     /// 회원탈퇴 메서드
     func deleteUserAccount() async throws {
-        try await FirebaseAuthManager.shared.deleteAccount()
+        do {
+            try await FirebaseAuthManager.shared.deleteAccount()
+        } catch {
+            print("Delete User Failed: \(error.localizedDescription)") // FIXME: - 적절한 에러처리
+        }
     }
 }
