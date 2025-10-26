@@ -89,13 +89,22 @@ extension VideoViewModel {
     p.seek(to: cmT)
     currentTime = t
   }
-  
   // MARK: 재생 정지 메서드
   func togglePlayPause() {
     if isPlaying {
       player?.pause()
+      DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+        withAnimation(.easeInOut(duration: 0.6)) {
+          self.showControls = true
+        }
+      }
     } else {
       player?.play()
+      DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+        withAnimation(.easeInOut(duration: 0.6)) {
+          self.showControls = false
+        }
+      }
     }
     isPlaying.toggle()
   }
