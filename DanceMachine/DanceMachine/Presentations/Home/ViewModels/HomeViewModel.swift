@@ -6,12 +6,21 @@
 //
 
 import Foundation
+import FirebaseAuth
 
 @Observable
 final class HomeViewModel {
     
     var currentTeamspace: Teamspace? { FirebaseAuthManager.shared.currentTeamspace }
     
+    /// FirebaseAuthManager의 현재 유저의 정보를 업데이트를 진행하는 메서드입니다.
+    func fetchUserInfo() async throws {
+        do {
+            try await FirebaseAuthManager.shared.fetchUserInfo(for: FirebaseAuthManager.shared.user?.uid ?? "")
+        } catch {
+            print("error: \(error.localizedDescription)") // FIXME: - 에러 케이스 추가하기
+        }
+    }
     
     /// FirebaseAuthManager의 현재 팀 스페이스를 교체하는 메서드 입니다.
     func fetchCurrentTeamspace(teamspace: Teamspace) {
@@ -22,7 +31,7 @@ final class HomeViewModel {
     /// 실패 시 빈 배열 반환 + 로그 출력
     func loadUserTeamspacesAndTeamspaces(userId: String)
     async -> (userTeamspaces: [UserTeamspace], teamspaces: [Teamspace]) {
-        let userTeamspaces = await fetchUserTeamspace(userId: userId)
+        let userTeamspaces = await fetchUserTeamspace()
         let teamspaces = await fetchTeamspaces(userTeamspaces: userTeamspaces)
         return (userTeamspaces, teamspaces)
     }
@@ -37,11 +46,11 @@ extension HomeViewModel {
     /// 현재 로그인 유저의 팀스페이스 목록을 전부 가져옵니다.
     /// - Parameters:
     ///     - userID: 현재 로그인 유저의 UUID
-    func fetchUserTeamspace(userId: String) async -> [UserTeamspace] {
+    func fetchUserTeamspace() async -> [UserTeamspace] {
         do {
             return try await FirestoreManager.shared.fetchAllFromSubcollection(
                 under: .users,
-                parentId: userId,
+                parentId: FirebaseAuthManager.shared.userInfo?.userId ?? "",
                 subCollection: .userTeamspace
             )
         } catch {

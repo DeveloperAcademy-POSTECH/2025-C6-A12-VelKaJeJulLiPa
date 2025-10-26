@@ -76,7 +76,7 @@ struct CreateProjectView: View {
             isEnabled: self.projectNameText.isEmpty ? false : true
         ) {
             Task {
-                try await viewModel.createProject(creatorId: MockData.userId, projectName: self.projectNameText)
+                try await viewModel.createProject(projectName: self.projectNameText)
                 await MainActor.run { router.pop() }
             }
         }

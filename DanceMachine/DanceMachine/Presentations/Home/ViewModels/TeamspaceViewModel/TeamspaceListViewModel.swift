@@ -26,13 +26,12 @@ final class TeamspaceListViewModel {
     /// 2) 가져온 ID들을 기반으로 `teamspace` 컬렉션에서 실제 `Teamspace` 문서를 병렬로 조회합니다.
     /// 3) 중복 ID를 제거하고, 원래 순서를 보존하여 결과를 반환합니다.
     ///
-    /// - Parameter userId: 팀스페이스를 조회할 대상 유저의 UUID(문자열).
     /// - Returns: 해당 유저가 속한 `Teamspace` 배열. 결과는 원래 서브컬렉션 순서를 최대한 보존합니다.
     /// - Throws: 파이어스토어 조회 실패 등 비동기 작업 중 발생한 에러를 던질 수 있습니다.
     /// - Note: 내부적으로 동시성(`withThrowingTaskGroup`)을 사용해 개별 팀스페이스 문서를 병렬 조회합니다.
-    func loadTeamspacesForUser(userId: String) async throws -> [Teamspace] {
+    func loadTeamspacesForUser() async throws -> [Teamspace] {
         do {
-            let userTeamspaces = try await self.fetchUserTeamspace(userId: userId)
+            let userTeamspaces = try await self.fetchUserTeamspace(userId: FirebaseAuthManager.shared.userInfo?.userId ?? "")
             return try await self.fetchTeamspaces(userTeamspaces: userTeamspaces)
         } catch {
             print("error: \(error.localizedDescription)") // FIXME: - 적절한 에러 분기 처리

@@ -53,7 +53,7 @@ struct TeamspaceListView: View {
             self.isLoading = true
             defer { isLoading = false }
             
-            let loaded: [Teamspace] = (try? await viewModel.loadTeamspacesForUser(userId: MockData.userId)) ?? []
+            let loaded: [Teamspace] = (try? await viewModel.loadTeamspacesForUser()) ?? []
             self.loadTeamspaces = loaded
         }
     }

@@ -59,7 +59,6 @@ struct CreateTeamspaceView: View {
         ) {
             Task {
                 try await self.viewModel.createTeamspaceWithInitialMembership(
-                    ownerId: MockData.userId,
                     teamspaceNameText: teamspaceNameText
                 )
                 await MainActor.run { router.pop() }

@@ -22,7 +22,7 @@ final class CreateTracksViewModel {
             let tracks: Tracks = .init(
                 tracksId: UUID(),
                 projectId: projectId,
-                creatorId: MockData.userId, // FIXME: - 데이터 교체
+                creatorId: FirebaseAuthManager.shared.userInfo?.userId ?? "",
                 trackName: tracksName
             )
             try await FirestoreManager.shared.create(tracks)

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import FirebaseAuth
 
 
 struct HomeView: View {
@@ -547,9 +548,11 @@ struct HomeView: View {
         isLoading = true
         defer { isLoading = false }
 
+        try? await viewModel.fetchUserInfo()
+        
         var userTeamspaces: [UserTeamspace] = []
 
-        userTeamspaces = await viewModel.fetchUserTeamspace(userId: MockData.userId)
+        userTeamspaces = await viewModel.fetchUserTeamspace()
         self.teamspaceState = userTeamspaces.isEmpty ? .create : .list
         self.loadTeamspaces = await viewModel.fetchTeamspaces(userTeamspaces: userTeamspaces)
 
