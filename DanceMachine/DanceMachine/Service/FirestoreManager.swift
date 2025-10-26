@@ -231,6 +231,9 @@ final class FirestoreManager {
               dict[WriteStrategy.userStrategy.rawValue] = FieldValue.serverTimestamp()
           case .userUpdateStrategy:
               dict[WriteStrategy.userStrategy.rawValue] = FieldValue.serverTimestamp()
+          case .invite:
+              dict[WriteStrategy.create.rawValue] = FieldValue.serverTimestamp()
+              dict[strategy.rawValue] = Date().addingTimeInterval(60 * 60 * 24)
           }
 
           let ref = db
@@ -246,6 +249,8 @@ final class FirestoreManager {
               try await ref.setData(dict)
           case .update, .userUpdateStrategy:
               try await ref.updateData(dict)
+          case .invite:
+              try await ref.setData(dict)
           }
 
           return data
