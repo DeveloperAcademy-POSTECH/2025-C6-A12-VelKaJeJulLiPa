@@ -149,9 +149,9 @@ struct VideoListView: View {
             columns: columns,
             spacing: spacing,
             tracksId: tracksId,
-            videos: .constant(vm.filteredVideos),
-            track: .constant(vm.track),
-            section: .constant(vm.section),
+            videos: vm.filteredVideos,
+            track: vm.track,
+            section: vm.section,
             vm: $vm
           )
           .onTapGesture {
