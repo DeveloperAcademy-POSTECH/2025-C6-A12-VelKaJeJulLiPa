@@ -25,23 +25,25 @@ struct VideoView: View {
   @State private var intervalTime: Double = 0
   
   // TODO: teamSpaceId, userId 전역 받아오기
+  let teamspaceId = FirebaseAuthManager.shared.currentTeamspace?.teamspaceId
+  let userId = FirebaseAuthManager.shared.userInfo?.userId ?? ""
   
   init( // 전역에서 받아온 후 초기화 뺴주기 + 네비게이션 라우터 빼주기
-    teamspaceId: String,
-    authorId: String,
+    //    teamspaceId: String,
+    //    authorId: String,
     videoId: String,
     videoTitle: String,
     videoURL: String
   ) {
-    self.teamspaceId = teamspaceId
-    self.authorId = authorId
+    //    self.teamspaceId = teamspaceId
+    //    self.authorId = authorId
     self.videoId = videoId
     self.videoTitle = videoTitle
     self.videoURL = videoURL
   }
   
-  let teamspaceId: String
-  let authorId: String // 비디오 작성자가 아닌 피드백 작성자 기준임. 로그인한 사용자
+  //  let teamspaceId: String
+  //  let authorId: String // 비디오 작성자가 아닌 피드백 작성자 기준임. 로그인한 사용자
   let videoId: String
   let videoTitle: String
   let videoURL: String
@@ -85,7 +87,7 @@ struct VideoView: View {
                   if feedbackType == .point {
                     await vm.feedbackVM.createPointFeedback(
                       videoId: videoId,
-                      authorId: authorId,
+                      authorId: userId,
                       content: content,
                       taggedUserIds: taggedUserId,
                       atTime: pointTime
@@ -93,7 +95,7 @@ struct VideoView: View {
                   } else {
                     await vm.feedbackVM.createIntervalFeedback(
                       videoId: videoId,
-                      authorId: authorId,
+                      authorId: userId,
                       content: content,
                       taggedUserIds: taggedUserId,
                       startTime: vm.feedbackVM.intervalStartTime ?? 0,
@@ -127,9 +129,9 @@ struct VideoView: View {
     .task {
       await vm.videoVM.setupPlayer(from: videoURL, videoId: videoId)
       // TODO: teamspaceId로 팀 멤버 로드
-      // await vm.loadTeamMemvers(teamspaceId: teamspaceId)
+      await vm.loadTeamMemvers(teamspaceId: teamspaceId?.uuidString ?? "")
       // TODO: videoId로 피드백 로드
-      // await vm.feedbackVM.loadFeedbacks(for: videoId)
+       await vm.feedbackVM.loadFeedbacks(for: videoId)
     }
     .onDisappear {
       vm.videoVM.cleanPlayer()
@@ -307,8 +309,6 @@ struct VideoView: View {
 #Preview {
   NavigationStack {
     VideoView(
-      teamspaceId: "1",
-      authorId: "2",
       videoId: "3",
       videoTitle: "벨코의 리치맨",
       videoURL: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
