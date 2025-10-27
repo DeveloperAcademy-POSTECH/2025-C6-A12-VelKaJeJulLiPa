@@ -16,6 +16,9 @@ final class VideoDetailViewModel {
   var videoVM: VideoViewModel
   var feedbackVM: FeedbackViewModel
   
+  var isLoading: Bool = false
+  // TODO: 에러메세지 타입 구현!
+  
   init() {
     self.videoVM = VideoViewModel()
     self.feedbackVM = FeedbackViewModel()
@@ -26,11 +29,46 @@ final class VideoDetailViewModel {
   func getTaggedUsers(for ids: [String]) -> [User] {
     teamMembers.filter { ids.contains($0.userId) }
   }
+  
+  func loadAllData(
+    videoId: String,
+    videoURL: String,
+    teamspaceId: String
+  ) async {
+    
+    await MainActor.run {
+      self.isLoading = true
+    }
+    
+    do {
+      try await withThrowingTaskGroup(of: Void.self) { g in
+        g.addTask {
+          try await self.videoVM.setupPlayer(from: videoURL, videoId: videoId)
+        }
+        g.addTask {
+          try await self.loadTeamMemvers(teamspaceId: teamspaceId)
+        }
+        g.addTask {
+          try await self.feedbackVM.loadFeedbacks(for: videoId)
+        }
+        try await g.waitForAll()
+        
+        await MainActor.run {
+          self.isLoading = false
+        }
+      }
+    } catch { // TODO: 에러처리 여기가 1순위!!!!!!!!!!!!!!!!!!
+      print("데이터 불러오기 실패")
+      await MainActor.run {
+        self.isLoading = false
+      }
+    }
+  }
 }
 // MARK: 팀 스페이스 관련
 extension VideoDetailViewModel {
   // 팀 스페이스 멤버 조회
-  func loadTeamMemvers(teamspaceId: String) async {
+  func loadTeamMemvers(teamspaceId: String) async throws {
     do {
       let members: [Members] = try await store.fetchAllFromSubcollection(
         under: .teamspace,
@@ -40,11 +78,12 @@ extension VideoDetailViewModel {
       
       var users: [User] = []
       for member in members {
-        let user: [User] = try await store.get(
+        let user: User = try await store.get(
           member.userId,
           from: .users
         )
-        users.append(contentsOf: user)
+        users.append(user)
+        print("조회된 유저 수: \(users.count)")
       }
       await MainActor.run {
         self.teamMembers = users
