@@ -76,12 +76,19 @@ extension VideoListViewModel {
       var fetchedVideos: [Video] = []
       // 4. 수집한 videoId로 Video 문서들 가져오기
       for videoId in videoIds {
-        let video: Video = try await store.get(videoId, from: .video)
-        print("수집한 개별 videoID: \(videoId)")
-        fetchedVideos.append(video)
-        fetchedVideos.sort {
-          ($0.createdAt ?? .distantPast > ($1.createdAt ?? .distantPast))
+        // 하나라도 문서 오류로 실패하면 함수 자체 catch로 빠져 아무것도 로드 안되는 이슈로 for문을 do catch 구문으로 감싸서 해결
+        do {
+          let video: Video = try await store.get(videoId, from: .video)
+          print("수집한 개별 videoID: \(videoId)")
+          fetchedVideos.append(video)
+        } catch {
+          print("비디오 문서 없음 스킵 : \(error)")
+          print("에러: \(error)")
+          continue
         }
+      }
+      fetchedVideos.sort {
+        ($0.createdAt ?? .distantPast > ($1.createdAt ?? .distantPast))
       }
       // 5. UI 업데이트
       await MainActor.run {
