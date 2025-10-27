@@ -15,9 +15,13 @@ struct VideoGrid: View {
   let spacing: CGFloat
   let tracksId: String
   
-  @Binding var videos: [Video]
-  @Binding var track: [Track]
-  @Binding var section: [Section]
+  let videos: [Video]
+  let track: [Track]
+  let section: [Section]
+  
+//  @Binding var videos: [Video]
+//  @Binding var track: [Track]
+//  @Binding var section: [Section]
   
   @State private var selectedVideo: Video?
   @State private var selectedTrack: Track?
@@ -58,9 +62,7 @@ struct VideoGrid: View {
                     .play(
                       videoId: video.videoId.uuidString,
                       videoTitle: video.videoTitle,
-                      videoURL: video.videoURL,
-                      teamspaceId: "",
-                      authorId: ""
+                      videoURL: video.videoURL
                     )
                   )
                 )
@@ -91,8 +93,6 @@ struct VideoGrid: View {
                     videoId: video.videoId.uuidString,
                     videoTitle: video.videoTitle,
                     videoURL: video.videoURL,
-                    teamspaceId: "",
-                    authorId: ""
                   )
                 )
               )
@@ -167,16 +167,16 @@ extension Track: Identifiable {
 extension Video: Identifiable {
   var id: String { videoId.uuidString }
 }
-
-#Preview {
-  VideoGrid(
-    size: 168,
-    columns: 2,
-    spacing: 16,
-    tracksId: "",
-    videos: .constant([]),
-    track: .constant([]),
-    section: .constant([]),
-    vm: .constant(VideoListViewModel())
-  )
-}
+//
+//#Preview {
+//  VideoGrid(
+//    size: 168,
+//    columns: 2,
+//    spacing: 16,
+//    tracksId: "",
+//    videos: .constant([]),
+//    track: .constant([]),
+//    section: .constant([]),
+//    vm: .constant(VideoListViewModel())
+//  )
+//}
