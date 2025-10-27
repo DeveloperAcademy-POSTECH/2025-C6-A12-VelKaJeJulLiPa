@@ -24,26 +24,20 @@ struct VideoView: View {
   @State private var pointTime: Double = 0
   @State private var intervalTime: Double = 0
   
-  // TODO: teamSpaceId, userId 전역 받아오기
+  // MARK: 전역으로 관리되는 ID
   let teamspaceId = FirebaseAuthManager.shared.currentTeamspace?.teamspaceId
   let userId = FirebaseAuthManager.shared.userInfo?.userId ?? ""
   
-  init( // 전역에서 받아온 후 초기화 뺴주기 + 네비게이션 라우터 빼주기
-    //    teamspaceId: String,
-    //    authorId: String,
+  init(
     videoId: String,
     videoTitle: String,
     videoURL: String
   ) {
-    //    self.teamspaceId = teamspaceId
-    //    self.authorId = authorId
     self.videoId = videoId
     self.videoTitle = videoTitle
     self.videoURL = videoURL
   }
   
-  //  let teamspaceId: String
-  //  let authorId: String // 비디오 작성자가 아닌 피드백 작성자 기준임. 로그인한 사용자
   let videoId: String
   let videoTitle: String
   let videoURL: String
@@ -215,27 +209,27 @@ struct VideoView: View {
         
       }
     }
-    .overlay { // FIXME: 비디오 로딩뷰 논의 -> 오래동안 보는 뷰라 중요도 있다 생각함
-      if vm.videoVM.isLoading {
-        VStack {
-          ProgressView()
-            .progressViewStyle(CircularProgressViewStyle())
-            .tint(.white)
-            .scaleEffect(1.5)
-          
-          if vm.videoVM.loadingProgress > 0 {
-            Text("다운로드 중... \(Int(vm.videoVM.loadingProgress * 100))%")
-              .foregroundStyle(.white)
-              .font(.system(size: 14))
-          } else {
-            Text("로딩 중...")
-              .foregroundStyle(.white)
-              .font(.system(size: 14))
-          }
-        }
-        .aspectRatio(16/9, contentMode: .fit)
-      }
-    }
+//    .overlay { // FIXME: 비디오 로딩뷰 논의 -> 오래동안 보는 뷰라 중요도 있다 생각함
+//      if vm.videoVM.isLoading {
+//        VStack {
+//          ProgressView()
+//            .progressViewStyle(CircularProgressViewStyle())
+//            .tint(.white)
+//            .scaleEffect(1.5)
+//          
+//          if vm.videoVM.loadingProgress > 0 {
+//            Text("다운로드 중... \(Int(vm.videoVM.loadingProgress * 100))%")
+//              .foregroundStyle(.white)
+//              .font(.system(size: 14))
+//          } else {
+//            Text("로딩 중... \(Int(vm.videoVM.loadingProgress * 100))%")
+//              .foregroundStyle(.white)
+//              .font(.system(size: 14))
+//          }
+//        }
+//        .aspectRatio(16/9, contentMode: .fit)
+//      }
+//    }
   }
   
   // MARK: 피드백 리스트
