@@ -7,6 +7,7 @@
 
 import Foundation
 import AVFoundation
+import ObjectiveC
 
 actor VideoCacheManager {
   static let shared = VideoCacheManager()
@@ -56,23 +57,62 @@ actor VideoCacheManager {
     
     print("비디오 다운로드 시작: \(videoId)")
     
-    // URLSession으로 다운로드
-    let (data, response) = try await URLSession.shared.data(from: url)
-    
-    guard let http = response as? HTTPURLResponse,
-          http.statusCode == 200 else {
-      throw URLError(.badServerResponse)
-    }
-    
     let cachedURL = cacheDirectory.appendingPathComponent("\(videoId).mov")
     
-    try data.write(to: cachedURL)
-    
-    print("비디오 캐시 저장완료: \(videoId)")
-    return cachedURL
+    // URLSessionDownloadTask로 진행률 추적
+    return try await withCheckedThrowingContinuation { continuation in
+      let session = URLSession.shared
+      let task = session.downloadTask(with: url) { tempURL, response, error in
+        if let error = error {
+          continuation.resume(throwing: error)
+          return
+        }
+        
+        guard let tempURL = tempURL,
+              let http = response as? HTTPURLResponse,
+              http.statusCode == 200 else {
+          continuation.resume(throwing: URLError(.badServerResponse))
+          return
+        }
+        
+        do {
+          // 기존 파일 삭제
+          if FileManager.default.fileExists(atPath: cachedURL.path) {
+            try FileManager.default.removeItem(at: cachedURL)
+          }
+          // 임시 파일을 캐시 위치로 이동
+          try FileManager.default.moveItem(at: tempURL, to: cachedURL)
+          
+          print("비디오 캐시 저장완료: \(videoId)")
+          continuation.resume(returning: cachedURL)
+        } catch {
+          continuation.resume(throwing: error)
+        }
+      }
+      
+      // 진행률 관찰
+      let observation = task.progress.observe(\.fractionCompleted) { progress, _ in
+        Task { @MainActor in
+          progressHandler(progress.fractionCompleted)
+        }
+      }
+      
+      // observation을 강하게 참조해야 함 (안 그러면 관찰이 중단됨)
+      // task와 함께 유지되도록 objc_setAssociatedObject 사용
+      objc_setAssociatedObject(
+        task,
+        "progressObservation",
+        observation,
+        .OBJC_ASSOCIATION_RETAIN
+      )
+      
+      task.resume()
+    }
   }
   
+  
   // MARK: 캐시 삭제
+  // TODO: 동영상 삭제에 추가 해야함
   func clearCache(for videoId: String) {
     let cachedURL = cacheDirectory.appendingPathComponent("\(videoId).mov")
     try? FileManager.default.removeItem(at: cachedURL)
@@ -80,6 +120,7 @@ actor VideoCacheManager {
   }
   
   // MARK: 전체 캐시 삭제
+  // TODO: 전체 동영상이 삭제되는 케이스에 추가 (트랙 삭제, 곡삭제, 프로젝트 전체 삭제, 팀 삭제 등)
   func clearAllCache() {
     try? FileManager.default.removeItem(at: cacheDirectory)
     print("전체 캐시 삭제")
