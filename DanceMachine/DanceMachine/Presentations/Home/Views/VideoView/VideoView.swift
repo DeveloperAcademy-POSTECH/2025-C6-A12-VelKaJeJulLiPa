@@ -126,12 +126,32 @@ struct VideoView: View {
         ToolbarCenterTitle(text: videoTitle)
       }
     }
+    .overlay {
+      if vm.isLoading {
+        VStack {
+          ProgressView()
+            .progressViewStyle(CircularProgressViewStyle())
+            .tint(.purple)
+            .scaleEffect(2)
+          
+          if vm.videoVM.loadingProgress > 0 {
+            Text("다운로드 중... \(Int(vm.videoVM.loadingProgress * 100))%")
+              .foregroundStyle(.purple)
+              .font(.system(size: 25))
+          } else {
+            Text("로딩 중...")
+              .foregroundStyle(.purple)
+              .font(.system(size: 25))
+          }
+        }
+      }
+    } // FIXME: 임시 로딩 뷰
     .task {
-      await vm.videoVM.setupPlayer(from: videoURL, videoId: videoId)
-      // TODO: teamspaceId로 팀 멤버 로드
-      await vm.loadTeamMemvers(teamspaceId: teamspaceId?.uuidString ?? "")
-      // TODO: videoId로 피드백 로드
-       await vm.feedbackVM.loadFeedbacks(for: videoId)
+      await self.vm.loadAllData(
+        videoId: videoId,
+        videoURL: videoURL,
+        teamspaceId: teamspaceId?.uuidString ?? ""
+      )
     }
     .onDisappear {
       vm.videoVM.cleanPlayer()
