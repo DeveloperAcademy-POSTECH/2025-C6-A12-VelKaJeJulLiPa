@@ -67,9 +67,9 @@ struct VideoPickerView: View {
                   vm.selectedAsset == nil ? .purple.opacity(0.7) : .white
                 )
             }
+            .disabled(vm.selectedAsset == nil || vm.isLoading) // 이중 비활성
             .buttonStyle(.borderedProminent)
             .tint(.blue)
-            .disabled(vm.selectedAsset == nil)
           }
         }
         .task {
@@ -94,7 +94,32 @@ struct VideoPickerView: View {
           Text(vm.errorMessage ?? "알 수 없는 오류가 발생했습니다.")
         }
       }
+      .overlay {
+        if vm.isLoading { // FIXME: 업로드 로딩뷰 구현 필수
+          ZStack {
+            Color.black.opacity(0.7)
+            
+            VStack(spacing: 16) {
+              ProgressView()
+                .progressViewStyle(CircularProgressViewStyle())
+                .tint(.purple)
+                .scaleEffect(2)
+              
+              if vm.uploadProgress > 0 {
+                Text("업로드 중... \(Int(vm.uploadProgress * 100))%")
+                  .foregroundStyle(.purple)
+                  .font(.system(size: 20))
+              } else {
+                Text("준비 중...")
+                  .foregroundStyle(.purple)
+                  .font(.system(size: 20))
+              }
+            }
+          }
+        }
+      }
     }
+    .disabled(vm.isLoading)
   }
   
   private var textField: some View {
