@@ -284,28 +284,54 @@ extension VideoPickerViewModel {
     duration: Double
   ) async throws{
     
-    async let v = storage.uploadStorage(
-      data: videoData,
-      type: .video(videoId)
-    )
-    async let t = storage.uploadStorage(
-      data: thumbData,
-      type: .thumbnail(videoId)
-    )
+    var videoProgress: Double = 0
+    var thumbProgress: Double = 0
     
-    let (video, thumbnail) = try await (v, t)
+    func updateTotalProgress() {
+      Task { @MainActor in
+        self.uploadProgress = (videoProgress * 0.8) + (thumbProgress * 0.2)
+      }
+    }
     
-    async let videoURL = self.getURL(url: video)
-    async let thumbURL = self.getURL(url: thumbnail)
-    
-    let (vU, thumbU) = try await (videoURL, thumbURL)
-    
-    _ = try await self.createVideo(
-      videoId: videoId,
-      duration: duration,
-      downloadURL: vU,
-      thumbnailURL: thumbU
-    )
+    do {
+      async let v = storage.uploadStorage(
+        data: videoData,
+        type: .video(videoId),
+        progressHandler: { progress in
+          videoProgress = progress
+          updateTotalProgress()
+        },
+        timeout: 120.0
+      )
+      async let t = storage.uploadStorage(
+        data: thumbData,
+        type: .thumbnail(videoId),
+        progressHandler: { progress in
+          thumbProgress = progress
+          updateTotalProgress()
+        },
+        timeout: 30.0
+      )
+      
+      let (video, thumbnail) = try await (v, t)
+      
+      async let videoURL = self.getURL(url: video)
+      async let thumbURL = self.getURL(url: thumbnail)
+      
+      let (vU, thumbU) = try await (videoURL, thumbURL)
+      
+      _ = try await self.createVideo(
+        videoId: videoId,
+        duration: duration,
+        downloadURL: vU,
+        thumbnailURL: thumbU
+      )
+      
+    } catch let error as VideoError {
+      throw error
+    } catch {
+      throw VideoError.networkError
+    }
   }
   // MARK: - URL 추출 메서드
   private func getURL(

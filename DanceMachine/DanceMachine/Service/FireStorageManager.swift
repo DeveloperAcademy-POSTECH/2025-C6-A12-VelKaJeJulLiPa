@@ -28,20 +28,61 @@ final class FireStorageManager {
   // MARK: - 스토리지에 업로드하는 메서드
   func uploadStorage(
     data: Data,
-    type: StorageType
+    type: StorageType,
+    progressHandler: ((Double) -> Void)? = nil,
+    timeout: TimeInterval = 60.0
   ) async throws -> String {
     
     let path = type.path
+    let ref = getStorageReference().child(path)
     
-    do {
-      let ref = getStorageReference().child(path)
-      let _ = try await ref.putDataAsync(data)
-      print("스토리지 업로드 성공")
-      return path
-    } catch {
-      throw FirestoreError.addFailed(underlying: error)
+    return try await withThrowingTaskGroup(of: String.self) { group in
+      // 업로드 태스크
+      group.addTask {
+        let uploadTask = ref.putData(data)
+        
+        // 진행률 관찰 (동기 작업)
+        if let progressHandler = progressHandler {
+          uploadTask.observe(.progress) { snapshot in
+            guard let progress = snapshot.progress else { return }
+            let percent = Double(progress.completedUnitCount) / Double(progress.totalUnitCount)
+            Task { @MainActor in
+              progressHandler(percent)
+            }
+          }
+        }
+        
+        // 업로드 완료 대기 (continuation 사용)
+        return try await withCheckedThrowingContinuation { continuation in
+          uploadTask.observe(.success) { _ in
+            print("스토리지 업로드 성공: \(path)")
+            continuation.resume(returning: path)
+          }
+          
+          uploadTask.observe(.failure) { snapshot in
+            if let _ = snapshot.error {
+              continuation.resume(throwing: VideoError.uploadFailed)
+            } else {
+              continuation.resume(throwing: VideoError.uploadFailed)
+            }
+          }
+        }
+      }
+      // 타임아웃 태스크
+      group.addTask {
+        try await Task.sleep(for: .seconds(timeout))
+        throw VideoError.uploadTimeout
+      }
+      
+      guard let result = try await group.next() else {
+        throw VideoError.uploadFailed
+      }
+      
+      group.cancelAll()
+      return result
     }
   }
+  
   // MARK: - 스토리지에서 동영상 삭제하는 메서드
   func deleteVideo(at path: String) async throws -> Bool {
     do {
