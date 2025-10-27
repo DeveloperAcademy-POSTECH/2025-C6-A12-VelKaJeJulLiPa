@@ -20,13 +20,13 @@ final class VideoPickerViewModel {
   
   var player: AVPlayer?
   var videoTitle: String = ""
-//  var videoThumbnail: UIImage? = nil
   var videoDuration: Double = 0
-  var localVideoURL: URL? = nil
+
   
   var isLoading: Bool = false
   var errorMessage: String? = nil
   var showSuccessAlert: Bool = false
+  var uploadProgress: Double = 0.0
   
   // MARK: 동영상 미리보기 로드
   func loadVideo() {
@@ -59,6 +59,7 @@ final class VideoPickerViewModel {
 extension VideoPickerViewModel {
   func exportVideo(tracksId: String, sectionId: String) {
     self.isLoading = true
+    self.cleanupPlayer() // 재생중에 업로드 버튼 누를시 계속 재생되는 현상 
     
     // PHAsset 에서 비디오 파일 추출
     let o = PHVideoRequestOptions()
@@ -107,43 +108,6 @@ extension VideoPickerViewModel {
             }
           }
         }
-        
-        //        Task {
-        //          // 임시 폴더로 복사
-        //          let fileName = "video_\(UUID().uuidString).mov"
-        ////          guard let asset = self.selectedAsset else { return }
-        ////          let sanitizedID = asset.localIdentifier
-        ////            .replacingOccurrences(of: "/", with: "_")
-        ////            .replacingOccurrences(of: "\\", with: "_")
-        ////          let fileName = "video_\(sanitizedID).mov"
-        //          let tempURL = URL.temporaryDirectory.appending(component: fileName)
-        //
-        //          do {
-        //            if FileManager.default.fileExists(atPath: tempURL.path()) {
-        //              try FileManager.default.removeItem(at: tempURL)
-        //              print("임시 디렉토리 삭제")
-        //            }
-        //            try FileManager.default.copyItem(at: urlAsset.url, to: tempURL)
-        //            print("\(tempURL.path()) 임시 디렉토리 추가")
-        //
-        //            async let t = self.generateThumbnail(
-        //              from: urlAsset
-        //            )
-        //            async let d = self.getDuration(
-        //              from: urlAsset
-        //            )
-        //
-        //            let (thumbnail, duration) = try await (t, d)
-        //
-        //            await MainActor.run {
-        //              self.localVideoURL = tempURL
-        //              self.videoThumbnail = thumbnail
-        //              self.videoDuration = duration
-        //            }
-        //          } catch {
-        //            print("비디오 복사 실패")
-        //          }
-        //        }
       }
   }
   
@@ -180,7 +144,7 @@ extension VideoPickerViewModel {
       }
       group.addTask {
         do {
-          try await self.createSectionAndTrack(
+          try await self.createTrack(
             tracksId: tracksId,
             sectionId: sectionId,
             videoId: videoId
@@ -195,19 +159,11 @@ extension VideoPickerViewModel {
     }
     
   }
-  // MARK: Section -> Track 순차 생성 (의존성)
-  // TODO: Section은 전 플로우인 Tracks에서 생성해서 id를 넘겨받고 그걸 통해 tracks를 생성
-  // TODO: 테스트 후 section관련 메서드 삭제하기
-  private func createSectionAndTrack(
+  private func createTrack(
     tracksId: String,
     sectionId: String,
     videoId: String
   ) async throws {
-    
-//    try await self.createSection(
-//      in: tracksId,
-//      from: sectionId.uuidString
-//    )
     
     try await self.createTrack(
       in: tracksId,
@@ -215,25 +171,6 @@ extension VideoPickerViewModel {
       to: videoId
     )
   }
-//  // MARK: 서브컬렉션 Section 생성 메서드
-//  private func createSection(
-//    in tracksId: String,
-//    from sectionId: String
-//  ) async throws{
-//    
-//    let section = Section(
-//      sectionId: sectionId,
-//      sectionTitle: "전체"
-//    )
-//    
-//    try await store.createToSubcollection(
-//      section,
-//      under: .tracks,
-//      parentId: tracksId,
-//      subCollection: .section,
-//      strategy: .create
-//    )
-//  }
   // MARK: 서브서브컬렉션 Track 생성 메서드
   private func createTrack(
     in tracksId: String,
