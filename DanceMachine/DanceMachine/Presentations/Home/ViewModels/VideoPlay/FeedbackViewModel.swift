@@ -37,7 +37,7 @@ final class FeedbackViewModel {
 // MARK: 피드백 관련
 extension FeedbackViewModel {
   // videoId로 모든 피드백 조회
-  func loadFeedbacks(for videoId: String) async {
+  func loadFeedbacks(for videoId: String) async throws {
     await MainActor.run {
       self.isLoading = true
       self.errorMsg = nil
@@ -47,13 +47,13 @@ extension FeedbackViewModel {
       let fetchedFeedback: [Feedback] = try await store.fetchAll(
         videoId,
         from: .feedback,
-        where: "video_id",
-        orderBy: "start_time",
-        descending: false
+        where: "video_id"
       )
       
       await MainActor.run {
-        self.feedbacks = fetchedFeedback
+        self.feedbacks = fetchedFeedback.sorted {
+          ($0.createdAt ?? Date()) < ($1.createdAt ?? Date())
+        }
         self.isLoading = false
       }
       
