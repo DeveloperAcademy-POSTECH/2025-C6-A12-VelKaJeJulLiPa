@@ -258,6 +258,7 @@ final class FirestoreManager {
   
     /// 컬렉션의 모든 데이터를 가져옵니다.
     /// 파이어베이스 색인으로 정렬합니다.
+    /// - Parameters:
     /// - id: userID
     /// - type: 컬렉션 타입
     /// - key: 컬렉션 안의 문서의 대한 조건절
@@ -336,6 +337,36 @@ final class FirestoreManager {
         let snap = try await q.getDocuments()
         return snap.documents.compactMap { try? $0.data(as: T.self) }
     }
+    
+    //TODO: 범용적으로 사용할 수 있도록 리팩토링
+    @discardableResult
+    func fetchNotificationList<T: Decodable>(
+        userId: String,
+        from type: CollectionType = .notification,
+        where key: String = Notification.CodingKeys.receiverIds.rawValue,
+        orderBy orderKey: String = Notification.CodingKeys.createdAt.rawValue,
+        descending: Bool = true,
+        limit: Int = 20,
+        lastDocument: DocumentSnapshot? = nil
+    ) async throws -> ([T], DocumentSnapshot?) {
+        let oneMonthAgo = Calendar.current.date(byAdding: .month, value: -1, to: Date.now)! // FIXME: Force unwrapping이 최선인가...?!
+        let oneMonthAgoTimestamp = Timestamp(date: oneMonthAgo)
+        
+        var q: Query = db.collection(type.rawValue)
+            .whereField(key, arrayContains: userId)
+            .whereField(orderKey, isGreaterThan: oneMonthAgoTimestamp)
+            .order(by: orderKey, descending: descending)
+            .limit(to: limit)
+        
+        if let lastDoc = lastDocument { q = q.start(afterDocument: lastDoc) }
+        
+        let snap = try await q.getDocuments()
+        let notificationList = snap.documents.compactMap { doc -> T? in try? doc.data(as: T.self) }
+        let lastSnap = snap.documents.last
+        
+        return (notificationList, lastSnap)
+    }
+    
     
     func delete(collectionType: CollectionType, documentID: String) async throws {
         try await db
