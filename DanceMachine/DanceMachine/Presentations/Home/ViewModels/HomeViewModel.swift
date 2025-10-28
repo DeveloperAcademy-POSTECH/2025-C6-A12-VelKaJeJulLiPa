@@ -7,45 +7,146 @@
 
 import Foundation
 import FirebaseAuth
+import SwiftUI
 
+
+/// 홈 화면의 뷰모델로, 팀스페이스, 프로젝트, 트랙 관련 상태와 로직을 관리합니다.
 @Observable
 final class HomeViewModel {
-    
+
+    /// 현재 선택된 팀스페이스 (FirebaseAuthManager의 currentTeamspace와 연동)
     var currentTeamspace: Teamspace? { FirebaseAuthManager.shared.currentTeamspace }
-    
-    /// FirebaseAuthManager의 현재 유저의 정보를 업데이트를 진행하는 메서드입니다.
+
+    /// 유저가 속한 팀스페이스 목록 (읽기 전용)
+    private(set) var userTeamspaces: [UserTeamspace] = []
+
+    /// 현재 선택된 프로젝트 (읽기 전용)
+    private(set) var selectedProject: Project?
+
+    /// 프로젝트 목록과 편집 상태를 관리하는 구조체
+    struct ProjectListState {
+        /// 프로젝트 목록 헤더 타이틀
+        var headerTitle: String = "프로젝트 목록"
+        /// 프로젝트 배열
+        var projects: [Project] = []
+        /// 프로젝트 행의 상태 (보기/편집 등)
+        var rowState: ProjectRowState = .viewing
+        /// 편집 중인 프로젝트 ID
+        var editingID: UUID?
+        /// 편집 중인 텍스트
+        var editText: String = ""
+        /// 확장된 프로젝트 ID
+        var expandedID: UUID?
+    }
+
+    /// 트랙 목록과 편집 상태를 관리하는 구조체
+    struct TracksState {
+        /// 트랙 행의 상태 (보기/편집 등)
+        var rowState: TracksRowState = .viewing
+        /// 편집 중인 트랙 ID
+        var editingID: UUID?
+        /// 편집 중인 텍스트
+        var editText: String = ""
+        /// 프로젝트별 트랙 목록 딕셔너리
+        var byProject: [UUID: [Tracks]] = [:]
+        /// 로딩 중인 프로젝트 ID 집합
+        var loading: Set<UUID> = []
+        /// 에러 메시지 딕셔너리 (프로젝트 ID별)
+        var error: [UUID: String] = [:]
+    }
+
+    /// 팀스페이스 UI 상태를 묶은 구조체
+    struct TeamspaceUIState {
+        /// 팀스페이스 상태 (empty / nonEmpty)
+        var state: TeamspaceState = .empty
+        /// 전체 팀스페이스 목록
+        var list: [Teamspace] = []
+        /// 헤더 로딩 상태
+        var isLoading: Bool = false
+        /// 최초 초기화 여부
+        var didInitialize: Bool = false
+    }
+
+    /// 팀스페이스 관련 상태
+    var teamspace = TeamspaceUIState()
+    /// 프로젝트 관련 상태
+    var project = ProjectListState()
+    /// 트랙 관련 상태
+    var tracks  = TracksState()
+
+    /// 프로젝트 상태에 대한 바인딩을 생성합니다.
+    /// - Parameter kp: 프로젝트 상태의 WritableKeyPath
+    /// - Returns: 해당 상태에 대한 Binding
+    func plBinding<T>(_ kp: WritableKeyPath<ProjectListState, T>) -> Binding<T> {
+        Binding(
+            get: { self.project[keyPath: kp] },
+            set: { self.project[keyPath: kp] = $0 }
+        )
+    }
+
+    /// 트랙 상태에 대한 바인딩을 생성합니다.
+    /// - Parameter kp: 트랙 상태의 WritableKeyPath
+    /// - Returns: 해당 상태에 대한 Binding
+    func trBinding<T>(_ kp: WritableKeyPath<TracksState, T>) -> Binding<T> {
+        Binding(
+            get: { self.tracks[keyPath: kp] },
+            set: { self.tracks[keyPath: kp] = $0 }
+        )
+    }
+
+    /// 팀스페이스 UI 상태에 대한 바인딩을 생성합니다.
+    /// - Parameter kp: 팀스페이스 UI 상태의 WritableKeyPath
+    /// - Returns: 해당 상태에 대한 Binding
+    func tsBinding<T>(_ kp: WritableKeyPath<TeamspaceUIState, T>) -> Binding<T> {
+        Binding(
+            get: { self.teamspace[keyPath: kp] },
+            set: { self.teamspace[keyPath: kp] = $0 }
+        )
+    }
+
+    /// 유저 정보를 FirebaseAuthManager를 통해 비동기적으로 가져옵니다.
+    @MainActor
     func fetchUserInfo() async throws {
         do {
             try await FirebaseAuthManager.shared.fetchUserInfo(for: FirebaseAuthManager.shared.user?.uid ?? "")
         } catch {
-            print("error: \(error.localizedDescription)") // FIXME: - 에러 케이스 추가하기
+            print("error: \(error.localizedDescription)")
         }
     }
-    
-    /// FirebaseAuthManager의 현재 팀 스페이스를 교체하는 메서드 입니다.
-    func fetchCurrentTeamspace(teamspace: Teamspace) {
-        FirebaseAuthManager.shared.currentTeamspace = teamspace
-    }
-    
-    /// 유저의 userTeamspace와 실제 Teamspace 목록을 한 번에 로드
-    /// 실패 시 빈 배열 반환 + 로그 출력
-    func loadUserTeamspacesAndTeamspaces(userId: String)
-    async -> (userTeamspaces: [UserTeamspace], teamspaces: [Teamspace]) {
-        let userTeamspaces = await fetchUserTeamspace()
-        let teamspaces = await fetchTeamspaces(userTeamspaces: userTeamspaces)
-        return (userTeamspaces, teamspaces)
-    }
-    
-}
 
+    /// 팀스페이스 목록을 새로고침합니다.
+    /// - Note: 이미 로딩 중이면 중복 실행을 방지합니다.
+    @MainActor
+    func reloadTeamspaces() async {
+        if teamspace.isLoading { return }
+        teamspace.isLoading = true
+        defer { teamspace.isLoading = false }
 
-// MARK: - 파이어베이스 관리 메서드
-extension HomeViewModel {
-    
-    
-    /// 현재 로그인 유저의 팀스페이스 목록을 전부 가져옵니다.
-    /// - Parameters:
-    ///     - userID: 현재 로그인 유저의 UUID
+        self.userTeamspaces = await fetchUserTeamspace()
+        let loaded = await fetchTeamspaces()
+        self.teamspace.list = loaded
+        self.teamspace.state = loaded.isEmpty ? .empty : .nonEmpty
+    }
+
+    /// 앱 최초 실행 또는 재시작 시 기본 팀스페이스를 설정합니다.
+    @MainActor
+    func ensureTeamspaceInitialized() async {
+        if !teamspace.didInitialize {
+            await reloadTeamspaces()
+            if let first = teamspace.list.first, currentTeamspace == nil {
+                setCurrentTeamspace(first)
+            }
+            teamspace.didInitialize = true
+        }
+    }
+
+    /// 현재 팀스페이스 이름 반환
+    var currentTeamspaceName: String {
+        currentTeamspace?.teamspaceName ?? ""
+    }
+
+    /// 유저가 속한 팀스페이스 목록을 Firestore에서 비동기적으로 가져옵니다.
+    /// - Returns: 유저 팀스페이스 배열
     func fetchUserTeamspace() async -> [UserTeamspace] {
         do {
             return try await FirestoreManager.shared.fetchAllFromSubcollection(
@@ -54,33 +155,29 @@ extension HomeViewModel {
                 subCollection: .userTeamspace
             )
         } catch {
-            print("error: \(error.localizedDescription)") // FIXME: - 적절한 에러 분기처리 추가
+            print("error: \(error.localizedDescription)")
             return []
         }
     }
-    
-    
-    /// 현재 로그인 한 유저의 팀 스페이스 서브 컬렉션 아이디를 가져와 팀 스페이스 컬렉션에서 조회 후 리턴하는 메서드입니다.
-    /// - Parameters:
-    ///     - userTeamspaces: 현재 로그인 유저의 UserTeamspace 서브 컬렉션
-    @MainActor
-    func fetchTeamspaces(userTeamspaces: [UserTeamspace]) async -> [Teamspace] {
+
+    /// 팀스페이스 목록을 Firestore에서 비동기적으로 가져옵니다.
+    /// - Returns: 로드된 팀스페이스 배열
+    func fetchTeamspaces() async -> [Teamspace] {
         do {
-            // 순서 보존하며 중복 제거
             var seen = Set<String>()
-            let ids = userTeamspaces.compactMap { ut -> String? in
+            let ids = self.userTeamspaces.compactMap { ut -> String? in
                 if seen.insert(ut.teamspaceId).inserted { return ut.teamspaceId }
                 return nil
             }
             guard !ids.isEmpty else { return [] }
-            
+
             struct Indexed { let index: Int; let item: Teamspace }
-            
+
             let fetched: [Indexed] = try await withThrowingTaskGroup(of: Indexed.self) { group in
                 for (idx, id) in ids.enumerated() {
-                    group.addTask { @MainActor in
-                        let t: Teamspace = try await FirestoreManager.shared.get(id, from: .teamspace)
-                        return Indexed(index: idx, item: t)
+                    group.addTask {
+                        let teamspace: Teamspace = try await FirestoreManager.shared.get(id, from: .teamspace)
+                        return Indexed(index: idx, item: teamspace)
                     }
                 }
                 var acc: [Indexed] = []
@@ -89,66 +186,141 @@ extension HomeViewModel {
             }
             return fetched.sorted { $0.index < $1.index }.map(\.item)
         } catch {
-            print("error: \(error.localizedDescription)") // FIXME: - 적절한 에러 처리
-            return []
-       }
-    }
-}
-
-
-// MARK: - 프로젝트 관련 로직
-extension HomeViewModel {
-    
-    
-    /// 현재 로그인 유저의 선택된 팀스페이스의 프로젝트 목록을 전부 가져옵니다.
-    func fetchCurrentTeamspaceProject() async -> [Project] {
-        do {
-            return try await FirestoreManager.shared.fetchAll(
-                currentTeamspace?.teamspaceId.uuidString ?? "",
-                from: .project,                                   // 프로젝트 컬렉션 enum
-                where: Project.CodingKeys.teamspaceId.stringValue // 필드명: "teamspaceId"
-            )
-        } catch {
             print("error: \(error.localizedDescription)")
             return []
         }
     }
-    
-    /// 프로젝트를 제거하는 메서드입니다.
-    /// - Parameters:
-    ///     - projectId: 프로젝트 Id
-    func removeProject(projectId: String) async throws {
+
+    /// 현재 팀스페이스를 설정합니다.
+    /// - Parameter teamspace: 설정할 팀스페이스
+    func setCurrentTeamspace(_ teamspace: Teamspace) {
+        FirebaseAuthManager.shared.currentTeamspace = teamspace
+    }
+
+    /// 팀스페이스 선택 시 호출, 관련 UI 상태를 초기화하고 프로젝트를 로드합니다.
+    /// - Parameter teamspace: 선택된 팀스페이스
+    @MainActor
+    func selectTeamspace(_ teamspace: Teamspace) async {
+        setCurrentTeamspace(teamspace)
+        project.headerTitle = "프로젝트 목록"
+        project.expandedID = nil
+        selectedProject = nil
+        tracks.rowState = .viewing
+        tracks.editingID = nil
+        tracks.editText = ""
+        tracks.byProject.removeAll()
+        tracks.loading.removeAll()
+        tracks.error.removeAll()
+        _ = await fetchCurrentTeamspaceProject()
+    }
+}
+
+// MARK: - 프로젝트 관리
+extension HomeViewModel {
+    /// 현재 팀스페이스의 프로젝트 목록을 Firestore에서 비동기적으로 가져옵니다.
+    /// - Returns: 프로젝트 배열
+    @discardableResult
+    func fetchCurrentTeamspaceProject() async -> [Project] {
         do {
-            try await FirestoreManager.shared.delete(collectionType: .project, documentID: projectId)
+            let list: [Project] = try await FirestoreManager.shared.fetchAll(
+                currentTeamspace?.teamspaceId.uuidString ?? "",
+                from: .project,
+                where: Project.CodingKeys.teamspaceId.stringValue
+            )
+            self.project.projects = list
+            return list
         } catch {
-            print("error: \(error.localizedDescription)") // FIXME: - 적절한 에러 처리
+            print("error: \(error.localizedDescription)")
+            self.project.projects = []
+            return []
         }
     }
-    
-    /// 프로젝트 이름을 수정하는 메서드입니다.
-    /// - Parameters:
-    ///     - projectId: 프로젝트 Id
-    ///     - newProjectName: 새로운 프로젝트 이름
-    func updateProjectName(projectId: String, newProjectName: String) async throws {
+
+    /// 프로젝트 편집을 커밋합니다. (이름 변경 후 목록 갱신)
+    func commitProjectEdit() async {
+        guard case .editing(.update) = project.rowState,
+              let pid = project.editingID else { return }
+        let name = project.editText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else { return }
         do {
-            try await FirestoreManager.shared.updateFields(
-                collection: .project,
-                documentId: projectId,
-                asDictionary: [ Project.CodingKeys.projectName.stringValue: newProjectName ]
-            )} catch {
-                print("error: \(error.localizedDescription)")
+            try await updateProjectName(projectId: pid.uuidString, newProjectName: name)
+            let refreshed = await fetchCurrentTeamspaceProject()
+            if let sp = selectedProject, sp.projectId == pid,
+               let updated = refreshed.first(where: { $0.projectId == pid }) {
+                project.headerTitle = updated.projectName
+                selectedProject = updated
             }
+            project.editingID = nil
+            project.editText = ""
+            project.rowState = .viewing
+        } catch {
+            print("error: \(error.localizedDescription)")
+        }
     }
-    
-    /// 특정 project_id 에 해당하는 tracks를 반환합니다.
-    /// - Parameters:
-    ///   - projectId: 필터링할 project_id
-    ///   - orderBy: 정렬 기준 (기본값: "created_at")
-    ///   - descending: 정렬 방향 (기본값: true)
-    /// - Returns: [Track]
-    func fetchTracks(
-        projectId: String
-    ) async throws -> [Tracks] {
+
+    /// 프로젝트 이름을 Firestore에 업데이트합니다.
+    func updateProjectName(projectId: String, newProjectName: String) async throws {
+        try await FirestoreManager.shared.updateFields(
+            collection: .project,
+            documentId: projectId,
+            asDictionary: [ Project.CodingKeys.projectName.stringValue: newProjectName ]
+        )
+    }
+
+    /// 프로젝트를 Firestore에서 삭제합니다.
+    func removeProject(projectId: String) async throws {
+        try await FirestoreManager.shared.delete(collectionType: .project, documentID: projectId)
+    }
+
+    /// 프로젝트 확장 토글
+    func toggleExpand(_ project: Project) {
+        let id = project.projectId
+        if self.project.expandedID == id {
+            self.project.expandedID = nil
+            self.selectedProject = nil
+            self.project.headerTitle = "프로젝트 목록"
+            tracks.rowState = .viewing
+            tracks.editingID = nil
+            tracks.editText = ""
+        } else {
+            self.project.expandedID = id
+            self.selectedProject = project
+            self.project.headerTitle = project.projectName
+            if tracks.byProject[id] == nil { loadTracks(for: id) }
+        }
+    }
+
+    /// 주어진 프로젝트가 확장 상태인지 여부
+    func isExpanded(_ project: Project) -> Bool {
+        self.project.expandedID == project.projectId
+    }
+}
+
+// MARK: - 트랙 관리
+extension HomeViewModel {
+    /// 특정 프로젝트의 트랙을 비동기적으로 로드합니다.
+    func loadTracks(for projectID: UUID) {
+        if tracks.loading.contains(projectID) { return }
+        tracks.loading.insert(projectID)
+        tracks.error[projectID] = nil
+        Task {
+            do {
+                let list = try await fetchTracks(projectId: projectID.uuidString)
+                await MainActor.run {
+                    self.tracks.byProject[projectID] = list
+                    self.tracks.loading.remove(projectID)
+                }
+            } catch {
+                await MainActor.run {
+                    self.tracks.error[projectID] = error.localizedDescription
+                    self.tracks.loading.remove(projectID)
+                }
+            }
+        }
+    }
+
+    /// 프로젝트 ID로부터 트랙 목록을 Firestore에서 비동기적으로 가져옵니다.
+    func fetchTracks(projectId: String) async throws -> [Tracks] {
         do {
             return try await FirestoreManager.shared.fetchAll(
                 projectId,
@@ -160,76 +332,101 @@ extension HomeViewModel {
             return []
         }
     }
-    
+
+    /// 트랙 편집을 커밋합니다. (이름 변경 후 목록 갱신)
+    func commitTrackEdit() async {
+        guard case .editing(.update) = tracks.rowState,
+              let tid = tracks.editingID,
+              let project = selectedProject else { return }
+        let name = tracks.editText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else { return }
+        do {
+            try await updateTracksName(tracksId: tid.uuidString, newTracksName: name)
+            if let fresh = try? await fetchTracks(projectId: project.projectId.uuidString) {
+                await MainActor.run { self.tracks.byProject[project.projectId] = fresh }
+            }
+            tracks.editingID = nil
+            tracks.editText = ""
+            tracks.rowState = .viewing
+        } catch {
+            print("error: \(error.localizedDescription)")
+        }
+    }
+
+    /// 트랙 이름을 Firestore에 업데이트합니다.
+    func updateTracksName(tracksId: String, newTracksName: String) async throws {
+        try await FirestoreManager.shared.updateFields(
+            collection: .tracks,
+            documentId: tracksId,
+            asDictionary: [ Tracks.CodingKeys.trackName.stringValue: newTracksName ]
+        )
+    }
+
+    /// 트랙과 해당 섹션들을 Firestore에서 삭제합니다.
+    func removeTracksAndSection(tracksId: String) async throws {
+        try await FirestoreManager.shared.deleteAllDocumentsInSubcollection(
+            under: .tracks, parentId: tracksId, subCollection: .section
+        )
+        try await FirestoreManager.shared.delete(collectionType: .tracks, documentID: tracksId)
+    }
 }
 
-// MARK: - 곡(Tracks) 관련 로직
+// MARK: - 곡 관리 (섹션)
 extension HomeViewModel {
-    
-    /// 곡(Tracks) 이름을 수정하는 메서드입니다.
-    /// - Parameters:
-    ///     - tracksId: 곡(Tracks) Id
-    ///     - newTracksName: 새로운 곡(Tracks) 이름
-    func updateTracksName(tracksId: String, newTracksName: String) async throws {
-        do {
-            try await FirestoreManager.shared.updateFields(
-                collection: .tracks,
-                documentId: tracksId,
-                asDictionary: [ Tracks.CodingKeys.trackName.stringValue: newTracksName ]
-            )} catch {
-                print("error: \(error.localizedDescription)")
-            }
-    }
-    
-    
-    /// 선택된(펼친) 프로젝트의 트랙만 다시 불러오는 메서드입니다.
-    /// - Parameters:
-    ///     - choiceSelectedProject: 선택된 Project
-    func refreshTracksForSelectedProject(choiceSelectedProject: Project?) async throws -> (UUID, [Tracks]) {
-        guard let project = choiceSelectedProject else { throw RefreshError.noSelectedProject }
-        
-        let id = project.projectId
-        let tracks = try await self.fetchTracks(projectId: id.uuidString)
-        return (id, tracks)
-    }
-    
-    
-    
-    /// 곡(Tracks)의 섹션(서브컬렉션)을 조회하는 메서드입니다.
+    /// 특정 트랙의 섹션 목록을 Firestore에서 비동기적으로 가져옵니다.
+    /// - Returns: "일반" 섹션만 필터링한 섹션 배열
     func fetchSection(tracks: Tracks) async throws -> [Section] {
         do {
-            let section: [Section] = try await FirestoreManager.shared.fetchAllFromSubcollection(
+            let secs: [Section] = try await FirestoreManager.shared.fetchAllFromSubcollection(
                 under: .tracks,
                 parentId: tracks.tracksId.uuidString,
                 subCollection: .section
             )
-            return section.filter { $0.sectionTitle == "일반" }
+            return secs.filter { $0.sectionTitle == "일반" }
         } catch {
-            print("error: \(error.localizedDescription)") // FIXME: - 적절한 분기 처리
+            print("error: \(error.localizedDescription)")
             return []
         }
     }
-  
-    /// 곡(Tracks)과 섹션(하위 컬렉션)을 제거하는 메서드입니다.
-    /// - Parameters:
-    ///     - tracksId: 제거하려는 tracksId
-    func removeTracksAndSection(tracksId: String) async throws {
-        
-        do {
-            try await FirestoreManager.shared.deleteAllDocumentsInSubcollection(
-                under: .tracks,
-                parentId: tracksId,
-                subCollection: .section
+}
+
+// MARK: - 플로팅 버튼 / 화면 상태
+extension HomeViewModel {
+    /// 팀스페이스/프로젝트 확장 상태를 보고 어떤 FAB를 보여줄지 결정합니다.
+    var fabMode: FABMode? {
+        guard teamspace.state == .nonEmpty else { return nil }
+        return (project.expandedID == nil) ? .addProject : .addTrack
+    }
+
+    /// 프로젝트가 하나도 없을 때는 라벨 버튼, 있을 때는 원형 버튼을 쓰기 위한 힌트
+    var isProjectListEmpty: Bool { project.projects.isEmpty }
+}
+
+// MARK: - 프리뷰 데이터
+extension HomeViewModel {
+    /// 미리보기용 데이터가 채워진 HomeViewModel 인스턴스를 생성합니다.
+    static func previewFilled() -> HomeViewModel {
+        let viewModel = HomeViewModel()
+        viewModel.teamspace.state = .nonEmpty
+        viewModel.teamspace.list = [
+            Teamspace(
+                teamspaceId: UUID(),
+                ownerId: "",
+                teamspaceName: "이거뭐야"
             )
-            
-            
-            try await FirestoreManager.shared.delete(
-                collectionType: .tracks,
-                documentID: tracksId
-            )
-            
-        } catch {
-            print("error: \(error.localizedDescription)")
-        }
+        ]
+        viewModel.setCurrentTeamspace(viewModel.teamspace.list[0])
+
+        viewModel.project.projects = [
+            Project(projectId: UUID(), teamspaceId: viewModel.currentTeamspace!.teamspaceId.uuidString, creatorId: "preview-user", projectName: "뉴진스"),
+            Project(projectId: UUID(), teamspaceId: viewModel.currentTeamspace!.teamspaceId.uuidString, creatorId: "preview-user", projectName: "르세라핌")
+        ]
+        viewModel.project.headerTitle = "프로젝트 목록"
+        viewModel.project.expandedID = viewModel.project.projects[0].projectId
+        viewModel.selectedProject = viewModel.project.projects[0]
+        viewModel.tracks.byProject[viewModel.project.projects[0].projectId] = [
+            Tracks(tracksId: UUID(), projectId: viewModel.project.projects[0].projectId.uuidString, creatorId: "preview-user", trackName: "Hype Boy (1절)")
+        ]
+        return viewModel
     }
 }
