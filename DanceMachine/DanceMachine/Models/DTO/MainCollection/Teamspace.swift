@@ -7,6 +7,7 @@
 
 import Foundation
 
+nonisolated
 struct Teamspace: Codable {
     let teamspaceId: UUID
     let ownerId: String
