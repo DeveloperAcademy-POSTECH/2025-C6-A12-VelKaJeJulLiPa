@@ -73,16 +73,37 @@ extension VideoListViewModel {
       }
       print("불러온 videoId 개수\(videoIds.count)")
       
+      // 4. 수집한 videoId로 Video 문서들 가져오기 (동시 + 결측 허용)
+      let validIds = videoIds.filter { UUID(uuidString: $0) != nil }
       var fetchedVideos: [Video] = []
-      // 4. 수집한 videoId로 Video 문서들 가져오기
-      for videoId in videoIds {
-        let video: Video = try await store.get(videoId, from: .video)
-        print("수집한 개별 videoID: \(videoId)")
-        fetchedVideos.append(video)
-        fetchedVideos.sort {
-          ($0.createdAt ?? .distantPast > ($1.createdAt ?? .distantPast))
+      
+      await withTaskGroup(of: (Video?).self) { group in
+        for id in validIds {
+          group.addTask {
+            do {
+              let video: Video = try await self.store.get(id, from: .video)
+              print("수집한 개별 videoID: \(id)")
+              return video
+            } catch {
+              print("⚠️ video 문서 누락 또는 접근 실패 id=\(id), error=\(error)")
+              return nil
+            }
+          }
+        }
+        
+        for await maybe in group {
+          if let v = maybe {
+            fetchedVideos.append(v)
+          }
         }
       }
+      
+      if fetchedVideos.isEmpty {
+        print("⚠️ 유효한 Video 문서를 하나도 찾지 못했습니다. (총 수집 id 수: \(validIds.count))")
+      }
+      
+      fetchedVideos.sort { ($0.createdAt ?? .distantPast) > ($1.createdAt ?? .distantPast) }
+      
       // 5. UI 업데이트
       await MainActor.run {
         let previousSelectedId = self.selectedSection?.sectionId
@@ -102,7 +123,11 @@ extension VideoListViewModel {
     } catch {
       await MainActor.run {
         self.isLoading = false
-        self.errorMsg = VideoError.fetchFailed.userMsg
+        // 동작 중 일부 videoId가 누락되어도 전체를 중단하지 않도록,
+        // 이미 로딩된 비디오가 없다면에만 에러 메시지를 표시
+        if self.videos.isEmpty {
+          self.errorMsg = VideoError.fetchFailed.userMsg
+        }
         print("비디오 에러: \(VideoError.fetchFailed.debugMsg)")
         print("상세 에러: \(error)")
       }
