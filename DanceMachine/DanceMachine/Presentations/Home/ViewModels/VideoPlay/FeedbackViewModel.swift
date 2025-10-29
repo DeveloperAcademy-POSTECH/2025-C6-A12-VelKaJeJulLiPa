@@ -52,7 +52,7 @@ extension FeedbackViewModel {
       
       await MainActor.run {
         self.feedbacks = fetchedFeedback.sorted {
-          ($0.createdAt ?? Date()) < ($1.createdAt ?? Date())
+          ($0.createdAt ?? Date()) > ($1.createdAt ?? Date())
         }
         self.isLoading = false
       }
@@ -96,7 +96,7 @@ extension FeedbackViewModel {
       
       await MainActor.run {
         self.feedbacks.append(feedback)
-        self.feedbacks.sort { ($0.startTime ?? 0) < ($1.startTime ?? 0) }
+        self.feedbacks.sort { ($0.createdAt ?? Date()) > ($1.createdAt ?? Date()) }
         self.isLoading = false
       }
     } catch { // TODO: 에러처리
