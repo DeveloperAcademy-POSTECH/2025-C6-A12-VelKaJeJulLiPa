@@ -67,6 +67,7 @@ struct FeedbackCard: View {
         } label: {
           Image(systemName: "ellipsis")
             .foregroundStyle(.gray)
+            .frame(width: 44, height: 44)
             .contentShape(Rectangle())
         }
         .tint(.gray.opacity(0.8))
@@ -77,18 +78,18 @@ struct FeedbackCard: View {
   private var timeStamp: some View {
     HStack {
       Image(systemName: "clock") // FIXME: 이미지 수정
-      if feedback.endTime != nil {
+      if let endTime = feedback.endTime {
 //        Text("\(feedback.startTime?.formattedTime() ?? "00:00") ~ \(endTime.formattedTime())")
 //          .font(.system(size: 16)) // FIXME: 폰트 수정
         TimestampButton(
-          text: "\(currentTime.formattedTime()) ~ \(startTime?.formattedTime() ?? "00:00")",
+          text: "\(feedback.startTime?.formattedTime() ?? "00:00") ~ \(endTime.formattedTime())",
           timeSeek: { timeSeek() }
         )
       } else {
 //        Text(feedback.startTime?.formattedTime() ?? "00:00")
 //          .font(.system(size: 16)) // FIXME: 폰트 수정
         TimestampButton(
-          text: "\(currentTime.formattedTime())",
+          text: "\(feedback.startTime?.formattedTime() ?? "00:00")",
           timeSeek: { timeSeek() }
         )
       }

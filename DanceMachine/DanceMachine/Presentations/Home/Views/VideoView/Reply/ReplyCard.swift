@@ -55,6 +55,7 @@ struct ReplyCard: View {
         } label: {
           Image(systemName: "ellipsis")
             .foregroundStyle(.gray)
+            .frame(width: 44, height: 44)
             .contentShape(Rectangle())
         }
         .tint(.gray.opacity(0.8))
