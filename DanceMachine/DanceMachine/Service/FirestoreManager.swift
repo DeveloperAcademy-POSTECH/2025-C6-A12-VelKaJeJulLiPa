@@ -342,8 +342,10 @@ final class FirestoreManager {
     @discardableResult
     func fetchNotificationList<T: Decodable>(
         userId: String,
+        currentTeamspaceId: String,
         from type: CollectionType = .notification,
-        where key: String = Notification.CodingKeys.receiverIds.rawValue,
+        where receiverIds: String = Notification.CodingKeys.receiverIds.rawValue,
+        teamspaceField: String = Notification.CodingKeys.teamspaceId.rawValue,
         orderBy orderKey: String = Notification.CodingKeys.createdAt.rawValue,
         descending: Bool = true,
         limit: Int = 20,
@@ -353,7 +355,8 @@ final class FirestoreManager {
         let oneMonthAgoTimestamp = Timestamp(date: oneMonthAgo)
         
         var q: Query = db.collection(type.rawValue)
-            .whereField(key, arrayContains: userId)
+            .whereField(receiverIds, arrayContains: userId)
+            .whereField(teamspaceField, isEqualTo: currentTeamspaceId)
             .whereField(orderKey, isGreaterThan: oneMonthAgoTimestamp)
             .order(by: orderKey, descending: descending)
             .limit(to: limit)
