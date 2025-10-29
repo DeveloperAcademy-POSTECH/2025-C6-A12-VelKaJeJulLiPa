@@ -9,12 +9,21 @@ import SwiftUI
 
 struct FeedbackCard: View {
   let feedback: Feedback
+  let authorUser: User?
   let taggedUsers: [User]
   let replyCount: Int
   let action: () -> Void
+  let showReplySheet: () -> Void
+  
+  let currentTime: Double
+  let startTime: Double?
+  let timeSeek: () -> Void
+  
+  let currentUserId: String
+  let onDelete: () -> Void
   
   var body: some View {
-    VStack(alignment: .leading, spacing: 8) {
+    VStack(alignment: .leading, spacing: 4) {
       authorName
       Spacer().frame(height: 4)
       timeStamp
@@ -23,7 +32,10 @@ struct FeedbackCard: View {
     }
     .padding(.horizontal, 8)
     .padding(.vertical, 16)
-    .background(Color.gray.opacity(0.5))
+    .background(
+      Color.gray.opacity(0.5)
+        .clipShape(RoundedRectangle(cornerRadius: 0))
+    )
 //    .glassEffect(.clear.tint(Color.gray), in: RoundedRectangle(cornerRadius: 10))
     .contentShape(Rectangle())
     .onTapGesture {
@@ -33,7 +45,7 @@ struct FeedbackCard: View {
   
   private var authorName: some View {
     HStack {
-      Text(feedback.authorId)
+      Text(authorUser?.name ?? "알 수 없는 사용자")
         .font(.system(size: 14)) // FIXME: 폰트 수정
       Text("·")
         .font(.system(size: 14)) // FIXME: 폰트 수정
@@ -43,35 +55,66 @@ struct FeedbackCard: View {
         )
         .font(.system(size: 14)) // FIXME: 폰트 수정
       }
+      Spacer()
+      
+      if feedback.authorId == currentUserId {
+        Menu { // FIXME: 아이콘 컬러 수정
+          Button(role: .destructive) {
+            onDelete()
+          } label: {
+            Label("삭제", systemImage: "trash")
+          }
+        } label: {
+          Image(systemName: "ellipsis")
+            .foregroundStyle(.gray)
+            .contentShape(Rectangle())
+        }
+        .tint(.gray.opacity(0.8))
+      }
     }
   }
   
   private var timeStamp: some View {
     HStack {
       Image(systemName: "clock") // FIXME: 이미지 수정
-      if let endTime = feedback.endTime {
-        Text("\(feedback.startTime?.formattedTime() ?? "00:00") ~ \(endTime.formattedTime())")
-          .font(.system(size: 16)) // FIXME: 폰트 수정
+      if feedback.endTime != nil {
+//        Text("\(feedback.startTime?.formattedTime() ?? "00:00") ~ \(endTime.formattedTime())")
+//          .font(.system(size: 16)) // FIXME: 폰트 수정
+        TimestampButton(
+          text: "\(currentTime.formattedTime()) ~ \(startTime?.formattedTime() ?? "00:00")",
+          timeSeek: { timeSeek() }
+        )
       } else {
-        Text(feedback.startTime?.formattedTime() ?? "00:00")
-          .font(.system(size: 16)) // FIXME: 폰트 수정
+//        Text(feedback.startTime?.formattedTime() ?? "00:00")
+//          .font(.system(size: 16)) // FIXME: 폰트 수정
+        TimestampButton(
+          text: "\(currentTime.formattedTime())",
+          timeSeek: { timeSeek() }
+        )
       }
-      
-      Spacer()
       
       if !taggedUsers.isEmpty {
-        HStack {
-          ForEach(taggedUsers.prefix(2), id: \.userId) { user in
-            Text("@\(user.name)")
-              .font(.system(size: 16)) // FIXME: 폰트 수정
+        Menu {
+          ForEach(taggedUsers, id: \.userId) { user in
+            Text(user.name)
           }
-          if taggedUsers.count > 2 {
-            Text("+\(taggedUsers.count - 2)")
-              .font(.system(size: 16)) // FIXME: 폰트 수정
+        } label: {
+          HStack {
+            ForEach(taggedUsers.prefix(4), id: \.userId) { user in
+              Text("@\(user.name)")
+                .font(.system(size: 16)) // FIXME: 폰트 수정
+                .foregroundStyle(.blue) // FIXME: 폰트 수정
+            }
+            if taggedUsers.count > 4 {
+              Text("...")
+                .font(.system(size: 16)) // FIXME: 폰트 수정
+                .foregroundStyle(.blue) // FIXME: 폰트 수정
+            }
           }
-          Spacer()
         }
+        .tint(.gray.opacity(0.8))
       }
+      Spacer()
     }
   }
   
@@ -84,7 +127,7 @@ struct FeedbackCard: View {
   
   private var replyButton: some View {
     Button {
-      // TODO: 댓글 화면 이동
+      showReplySheet()
     } label: {
       HStack(spacing: 4) {
         Image(systemName: "message")
@@ -107,6 +150,15 @@ struct FeedbackCard: View {
       startTime: 1.44141414,
       endTime: 1.55555,
       createdAt: Date().addingTimeInterval(-60 * 0.5)
+    ),
+    authorUser: User(
+      userId: "1",
+      email: "",
+      name: "재훈",
+      loginType: LoginType.apple,
+      fcmToken: "",
+      termsAgreed: true,
+      privacyAgreed: true,
     ),
     taggedUsers: [
       User(
@@ -138,6 +190,13 @@ struct FeedbackCard: View {
       )
     ],
     replyCount: 20,
-    action: {}
+    action: {
+    },
+    showReplySheet: {},
+    currentTime: 30.0,
+    startTime: 50.0,
+    timeSeek: {},
+    currentUserId: "",
+    onDelete: {}
   )
 }
