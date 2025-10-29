@@ -12,9 +12,11 @@ import FirebaseCore
 import FirebaseAuth
 import FirebaseMessaging
 
+
 class AppDelegate: UIResponder, UIApplicationDelegate { // TODO: If necessary change UIResponder into NSObject
     var window: UIWindow?
     let gcmMessageIDKey = "gcm.message_id"
+    static var pendingDeeplinkURL: URL?   // 딥링크를 임시 저장하는 변수
     
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
@@ -25,137 +27,62 @@ class AppDelegate: UIResponder, UIApplicationDelegate { // TODO: If necessary ch
         return true
     }
     
-    // [START receive_message]
-    /// 백그라운드에서 푸시 알림을 탭했을 때 실행되는 메서드
-    @MainActor
-    func application(_ application: UIApplication,
-                     didReceiveRemoteNotification userInfo: [AnyHashable: Any]) async
-    -> UIBackgroundFetchResult {
-        // If you are receiving a notification message while your app is in the background,
-        // this callback will not be fired till the user taps on the notification launching the application.
-        // TODO: Handle data of notification
-        
-        // With swizzling disabled you must let Messaging know about the message, for Analytics
-        // Messaging.messaging().appDidReceiveMessage(userInfo)
-        
-        // Print message ID.
-        if let messageID = userInfo[gcmMessageIDKey] {
-            print("Message ID: \(messageID)")
-        }
-        
-        // Print full message.
-        print(userInfo)
-        print("Call exportDeliveryMetricsToBigQuery() from AppDelegate")
-        Messaging.serviceExtension().exportDeliveryMetricsToBigQuery(withMessageInfo: userInfo)
-        return UIBackgroundFetchResult.newData
-    }
-    
-    // [END receive_message]
+    // 푸시 알림 등록 실패 시 호출되는 메서드
+    // 푸시 알림 등록(registerForRemoteNotifications)은 현재 홈화면에서 최초 로그인 하면 실행하고 있음
     func application(_ application: UIApplication,
                      didFailToRegisterForRemoteNotificationsWithError error: Error) {
         print("Unable to register for remote notifications: \(error.localizedDescription)")
     }
-    
-    // This function is added here only for debugging purposes, and can be removed if swizzling is enabled.
-    // If swizzling is disabled then this function must be implemented so that the APNs token can be paired to
-    // the FCM registration token.
-    func application(_ application: UIApplication,
-                     didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
-        let tokenParts = deviceToken.map { data in String(format: "%02.2hhx", data) }
-        let token = tokenParts.joined()
-        print("APNs token retrieved: \(token)")
-        // With swizzling disabled you must set the APNs token here.
-        // Messaging.messaging().apnsToken = deviceToken
-    }
 }
 
-// [START ios_10_message_handling]
 
 extension AppDelegate: UNUserNotificationCenterDelegate {
     // Receive displayed notifications for iOS 10 devices.
     func userNotificationCenter(_ center: UNUserNotificationCenter,
                                 willPresent notification: UNNotification) async
     -> UNNotificationPresentationOptions {
+        print("2️⃣ 2번: 포그라운드에서 알림 올 때 작동함") // FIXME: - 디버그 코드 제거
+        
         let userInfo = notification.request.content.userInfo
+        print("userInfo - 2: \(userInfo)") // FIXME: - 디버그 코드 제거
         
-        // With swizzling disabled you must let Messaging know about the message, for Analytics
-        // Messaging.messaging().appDidReceiveMessage(userInfo)
-        
-        // [START_EXCLUDE]
-        // Print message ID.
-        if let messageID = userInfo[gcmMessageIDKey] {
-            print("Message ID: \(messageID)")
-        }
-        // [END_EXCLUDE]
-        
-        // Print full message.
-        print(userInfo)
-        
-        // Change this to your preferred presentation option
         return [[.list, .banner, .sound]]
     }
     
     func userNotificationCenter(_ center: UNUserNotificationCenter,
                                 didReceive response: UNNotificationResponse) async {
+        print("3️⃣ 3번: 백그라운드에서 푸시 눌렀을 때 작동함") // FIXME: - 디버그 코드 제거
+        
         let userInfo = response.notification.request.content.userInfo
+        print("userInfo - 3: \(userInfo)") // FIXME: - 디버그 코드 제거
         
-        // [START_EXCLUDE]
-        // Print message ID.
-        if let messageID = userInfo[gcmMessageIDKey] {
-            print("Message ID: \(messageID)")
+        if let deeplinkString = userInfo["deeplink"] as? String,
+           let deeplinkURL = URL(string: deeplinkString) {
+            print("🌐 Deeplink detected:", deeplinkURL.absoluteString)
+            
+            print(UIApplication.shared.applicationState)
+            
+            // 포그라운드이면 딥링크 알림(이벤트)를 전달
+            // 종료 또는 백드라운드 상태이면, 나중에 처리할 수 있도록 링크 저장
+            if UIApplication.shared.applicationState == .active {
+                print("🔥 포그라운드")
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(
+                        name: .didReceiveDeeplink,
+                        object: deeplinkURL
+                    )
+                }
+            } else {
+                AppDelegate.pendingDeeplinkURL = deeplinkURL
+            }
+        } else {
+            print("⚠️ No deeplink found in notification payload")
         }
-        // [END_EXCLUDE]
         
-        // With swizzling disabled you must let Messaging know about the message, for Analytics
-        // Messaging.messaging().appDidReceiveMessage(userInfo)
         
-        // Print full message.
-        print(userInfo)
     }
 }
 
-//extension AppDelegate: UNUserNotificationCenterDelegate {
-//
-//    // 백그라운드에서 푸시 알림을 탭했을 때 실행
-//    func application(_ application: UIApplication,
-//                     didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
-//        Messaging.messaging().apnsToken = deviceToken
-//        print("APNS token: \(deviceToken)")
-//    }
-//
-//    // Foreground(앱 켜진 상태)에서도 알림 오는 설정
-//    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
-//        completionHandler([.list, .banner])
-//    }
-//}
-
-// [END ios_10_message_handling]
-
-//extension AppDelegate: MessagingDelegate {
-//    // [START refresh_token]
-//    func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
-//        print("Firebase registration token: \(String(describing: fcmToken))")
-//        
-//        let dataDict: [String: String] = ["token": fcmToken ?? ""]
-//        NotificationCenter.default.post(
-//            name: NSNotification.Name("FCMToken"),
-//            object: nil,
-//            userInfo: dataDict
-//        )
-//        // TODO: If necessary send token to application server.
-//        // Note: This callback is fired at each app startup and whenever a new token is generated.
-//        if let userId = FirebaseAuthManager.shared.user?.uid, let fcmToken = fcmToken {
-//            Task {
-//                try await FirestoreManager.shared.updateFields(collection: .users, documentId: userId, asDictionary: [ User.CodingKeys.fcmToken.rawValue: fcmToken])
-//            }
-//            print("Updated fcmToken")
-//        }
-//        
-//        print("AppDelegate Auth uid", FirebaseAuthManager.shared.user?.uid)
-//        print("AppDelegate fcmToken", fcmToken)
-//        
-//    }
-//}
 
 /// FCM 토큰이 갱신되면 사용자 정보에 업데이트
 extension AppDelegate: MessagingDelegate {
@@ -183,5 +110,3 @@ extension AppDelegate: MessagingDelegate {
         }
     }
 }
-
-// [END refresh_token]
