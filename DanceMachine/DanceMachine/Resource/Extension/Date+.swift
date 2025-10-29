@@ -10,6 +10,12 @@ import Foundation
 
 extension Date {
     
+    func formattedDate() -> String {
+       let formatter = DateFormatter()
+       formatter.dateFormat = "yyyy년 MM월 dd일"
+       return formatter.string(from: self)
+     }
+    
     private static let cachedDateFormatter: DateFormatter = {
           let f = DateFormatter()
           return f
