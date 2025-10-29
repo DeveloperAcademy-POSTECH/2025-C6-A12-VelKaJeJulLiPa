@@ -53,3 +53,7 @@ extension Feedback: EntityRepresentable {
     var entityName: CollectionType { .feedback }
     var documentID: String { feedbackId.uuidString }
 }
+
+extension Feedback: Identifiable {
+  var id: String { feedbackId.uuidString }
+}
