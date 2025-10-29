@@ -155,12 +155,7 @@ struct HomeView: View {
             }
         }
         .task {
-#if DEBUG
-            if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
-                // 프리뷰는 네트워크 호출 건너뜀
-                return
-            }
-#endif
+            if ProcessInfo.isRunningInPreviews { return } // 프리뷰 전용
             isLoading = true
             defer { isLoading = false }
             
