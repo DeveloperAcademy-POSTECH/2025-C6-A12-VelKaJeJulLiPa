@@ -16,6 +16,7 @@ struct Notification: Codable {
     let createdAt: Date
     let videoId: String
     let content: String
+    let teamspaceId: String
     
     init(
         notificationId: UUID,
@@ -25,7 +26,8 @@ struct Notification: Codable {
         replyId: String?,
         createdAt: Date,
         videoId: String,
-        content: String
+        content: String,
+        teamspaceId: String
     ) {
         self.notificationId = notificationId
         self.senderId = senderId
@@ -35,6 +37,7 @@ struct Notification: Codable {
         self.createdAt = createdAt
         self.videoId = videoId
         self.content = content
+        self.teamspaceId = teamspaceId
     }
     
     enum CodingKeys: String, CodingKey {
@@ -46,6 +49,7 @@ struct Notification: Codable {
         case createdAt = "created_at"
         case videoId = "video_id"
         case content = "content"
+        case teamspaceId = "teamspace_id"
     }
     
 }
