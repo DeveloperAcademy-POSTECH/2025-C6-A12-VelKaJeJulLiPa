@@ -146,7 +146,8 @@ struct FeedbackCard: View {
       content: "야이 놈아.야이 놈아.야이 놈아.야이 놈아.야이 놈아.야이 놈아.야이 놈아.야이 놈아.야이 놈아.야이 놈아.야이 놈아.야이 놈아,야이 놈아,야이 놈아,야이 놈아,야이 놈아,야이 놈아",
       startTime: 1.44141414,
       endTime: 1.55555,
-      createdAt: Date().addingTimeInterval(-60 * 0.5)
+      createdAt: Date().addingTimeInterval(-60 * 0.5),
+      teamspaceId: "",
     ),
     authorUser: User(
       userId: "1",
