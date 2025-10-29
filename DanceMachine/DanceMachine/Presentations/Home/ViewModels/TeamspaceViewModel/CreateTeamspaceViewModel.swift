@@ -10,6 +10,9 @@ import Foundation
 @Observable
 final class CreateTeamspaceViewModel {
     
+    
+    
+    
     /// 팀스페이스 생성 + 소유자 멤버 추가 + 사용자 userTeamspace 등록까지 한 번에
     /// - Parameters:
     ///     - teamspaceNameText: 팀 스페이스 이름
@@ -45,6 +48,8 @@ extension CreateTeamspaceViewModel {
             teamspaceName: teamspaceName
         )
         try await FirestoreManager.shared.create(teamspace)
+        
+        FirebaseAuthManager.shared.currentTeamspace = teamspace
         
         let teamspaceId = teamspace.teamspaceId
         return teamspaceId.uuidString
