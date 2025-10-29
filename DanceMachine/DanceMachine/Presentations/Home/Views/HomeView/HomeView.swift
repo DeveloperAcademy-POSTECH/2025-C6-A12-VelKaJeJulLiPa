@@ -167,6 +167,19 @@ struct HomeView: View {
                 
             }
         }
+        // 팀 스페이스 초대 받았을 시
+        .task(id: inviteRouter.lastInviteAcceptedAt) {
+            isLoading = true
+            defer { isLoading = false }
+            
+            do {
+                try await viewModel.fetchUserInfo()
+                await viewModel.ensureTeamspaceInitialized()
+                await viewModel.fetchCurrentTeamspaceProject()
+            } catch {
+                
+            }
+        }
         // 팀스페이스 바뀌면 리로드
         .onChange(of: FirebaseAuthManager.shared.currentTeamspace?.teamspaceId) {
             Task {
