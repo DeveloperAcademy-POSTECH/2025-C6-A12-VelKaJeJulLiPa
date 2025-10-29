@@ -42,22 +42,14 @@ struct VideoView: View {
   let videoTitle: String
   let videoURL: String
   
-  
-  enum FeedbackFilter {
-    case all
-    case mine
-  }
-  
   // 피드백 필터링 (내 피드백, 전체 피드백)
   var filteredFeedbacks: [Feedback] {
     switch feedbackFilter {
     case .all: return vm.feedbackVM.feedbacks
-    case .mine: return vm.feedbackVM.feedbacks.filter { $0.authorId == userId }
+    case .mine: return vm.feedbackVM.feedbacks.filter { $0.taggedUserIds.contains(userId) }
     }
   }
-  
-  
-  
+    
   var body: some View {
     GeometryReader { proxy in
       VStack(spacing: 0) {
@@ -258,7 +250,7 @@ struct VideoView: View {
             showReplySheet: { self.selectedFeedback = f }, // showReplySheet와 동일한 네비게이션
             currentTime: pointTime,
             startTime: intervalTime,
-            timeSeek: { vm.videoVM.seekToTime(to: self.pointTime) },
+            timeSeek: { vm.videoVM.seekToTime(to: f.startTime ?? self.pointTime ) },
             currentUserId: userId,
             onDelete: {
               Task {
