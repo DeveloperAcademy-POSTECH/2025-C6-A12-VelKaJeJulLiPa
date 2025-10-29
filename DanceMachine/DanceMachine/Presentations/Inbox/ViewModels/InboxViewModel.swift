@@ -35,8 +35,10 @@ final class InboxViewModel: ObservableObject {
 
         do {
             let userId = FirebaseAuthManager.shared.userInfo?.userId ?? "lUqpEVMVOIOJ3bO8gI63PX8Y62J2"// FIXME: 태스트할 때는 "lUqpEVMVOIOJ3bO8gI63PX8Y62J2" (파이디온 계정)
+            let currentTeamspaceId = FirebaseAuthManager.shared.currentTeamspace?.teamspaceId.uuidString ?? ""
             let (fetched, lastDoc): ([Notification], DocumentSnapshot?) = try await FirestoreManager.shared.fetchNotificationList(
                 userId: userId,
+                currentTeamspaceId: currentTeamspaceId,
                 lastDocument: reset ? nil : lastDocument
             )
             
@@ -85,15 +87,17 @@ final class InboxViewModel: ObservableObject {
         let transformed: [InboxNotification] = try await withThrowingTaskGroup(of: InboxNotification.self) { group in
             for notification in notifications {
                 group.addTask {
-                    async let videoTitle = self.getVideoTitle(from: notification.videoId)
-                    async let senderName = self.getSenderName(from: notification.senderId)
+                    async let videoDoc = self.getVideoDoc(from: notification.videoId)
+                    async let senderDoc = self.getSenderDoc(from: notification.senderId)
                     let type = self.getInboxNotificationType(from: notification)
                     
                     return InboxNotification(
                         notificationId: notification.notificationId.uuidString,
                         type: type,
-                        videoTitle: try await videoTitle,
-                        senderName: try await senderName,
+                        videoId: notification.videoId,
+                        videoURL: try await videoDoc.videoURL,
+                        videoTitle: try await videoDoc.videoTitle,
+                        senderName: try await senderDoc.name,
                         content: notification.content,
                         date: notification.createdAt
                     )
@@ -118,15 +122,17 @@ final class InboxViewModel: ObservableObject {
         }
     }
 
-    private func getVideoTitle(from id: String) async throws -> String {
+    private func getVideoDoc(from id: String) async throws -> Video {
         let videoDoc: Video = try await FirestoreManager.shared.get(id, from: .video)
-        return videoDoc.videoTitle
+        return videoDoc
+    }
+    
+    
+    private func getSenderDoc(from id: String) async throws -> User {
+        let senderDoc: User = try await FirestoreManager.shared.get(id, from: .users)
+        return senderDoc
     }
 
-    private func getSenderName(from id: String) async throws -> String {
-        let senderDoc: User = try await FirestoreManager.shared.get(id, from: .users)
-        return senderDoc.name
-    }
 
     /// 알림 유형 판별 메서드
     nonisolated private func getInboxNotificationType(from notification: Notification) -> InboxNotificationType {
@@ -138,6 +144,8 @@ final class InboxViewModel: ObservableObject {
 struct InboxNotification: Equatable {
     let notificationId: String
     let type: InboxNotificationType
+    let videoId: String
+    let videoURL: String
     let videoTitle: String
     let senderName: String
     let content: String
