@@ -114,8 +114,7 @@ struct VideoGrid: View {
 #endif
     }
     // MARK: 영상 섹션 이동 뷰
-    .fullScreenCover(item: $selectedTrack) { _ in
-      if let track = selectedTrack {
+    .fullScreenCover(item: $selectedTrack) { track in
         NavigationStack {
           SectionSelectView(
             section: section,
@@ -124,7 +123,6 @@ struct VideoGrid: View {
             tracksId: tracksId
           )
         }
-      }
     }
     .sheet(item: $selectedVideo) { _ in
       if let video = selectedVideo {
