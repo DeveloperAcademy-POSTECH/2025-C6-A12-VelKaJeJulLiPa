@@ -142,7 +142,8 @@ extension VideoDetailViewModel {
       taggedUserIds: [members[1].userId],
       startTime: 12.5,
       endTime: 15.5,
-      createdAt: Date()
+      createdAt: Date(),
+      teamspaceId: FirebaseAuthManager.shared.currentTeamspace?.teamspaceId.uuidString ?? "",
     )
     let feedback2 = Feedback(
       feedbackId: UUID(),
@@ -152,7 +153,8 @@ extension VideoDetailViewModel {
       taggedUserIds: [],
       startTime: 45.0,
       endTime: nil,
-      createdAt: Date() + 100
+      createdAt: Date() + 100,
+      teamspaceId: FirebaseAuthManager.shared.currentTeamspace?.teamspaceId.uuidString ?? "",
     )
     vm.feedbackVM.feedbacks = [feedback1, feedback2]
     
