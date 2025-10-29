@@ -143,7 +143,7 @@ final class HomeViewModel {
             if let first = teamspace.list.first, currentTeamspace == nil {
                 setCurrentTeamspace(first)
             }
-            teamspace.didInitialize = true
+            // teamspace.didInitialize = true
             print("기본 팀스페이스 초기화가 완료되었습니다. 현재 선택: \(self.currentTeamspace?.teamspaceName ?? "없음") (ensureTeamspaceInitialized 종료)")
     }
 
@@ -237,6 +237,49 @@ final class HomeViewModel {
 
 // MARK: - 프로젝트 관리
 extension HomeViewModel {
+    
+    
+    
+    /// 팀스페이스 교체/삭제 후 프로젝트 헤더 및 목록 리로드
+    @MainActor
+    func reloadProjectsAfterTeamspaceChange() async {
+        print("팀스페이스 변경 감지: 프로젝트 헤더/목록 리로드를 시작합니다. (reloadProjectsAfterTeamspaceChange 시작)")
+
+        // 프로젝트/트랙 관련 UI 초기화
+        project.headerTitle = "프로젝트 목록"
+        project.expandedID = nil
+        selectedProject = nil
+
+        tracks.rowState = .viewing
+        tracks.editingID = nil
+        tracks.editText = ""
+        tracks.byProject.removeAll()
+        tracks.loading.removeAll()
+        tracks.error.removeAll()
+
+        // 현재 팀스페이스가 있다면 그 기준으로 프로젝트 재조회
+        let list = await fetchCurrentTeamspaceProject()
+
+        // 프로젝트가 없어도 헤더는 "프로젝트 목록"로 유지
+        if list.isEmpty {
+            print("현재 팀스페이스에 프로젝트가 없습니다. 헤더를 기본값으로 유지합니다.")
+            project.headerTitle = "프로젝트 목록"
+        }
+
+        print("팀스페이스 변경 감지: 프로젝트 헤더/목록 리로드가 완료되었습니다. (reloadProjectsAfterTeamspaceChange 종료)")
+    }
+    
+    
+    /// 팀스페이스가 삭제되어 currentTeamspace 가 nil 인 상황 처리
+    @MainActor
+    func handleTeamspaceDeleted() async {
+        print("팀스페이스 삭제 감지: 프로젝트/헤더 초기화를 시작합니다. (handleTeamspaceDeleted 시작)")
+        teamspace.state = .empty
+        await reloadProjectsAfterTeamspaceChange()
+        print("팀스페이스 삭제 감지: 초기화가 완료되었습니다. (handleTeamspaceDeleted 종료)")
+    }
+    
+    
     /// 현재 팀스페이스의 프로젝트 목록을 Firestore에서 비동기적으로 가져옵니다.
     /// - Returns: 프로젝트 배열
     @discardableResult

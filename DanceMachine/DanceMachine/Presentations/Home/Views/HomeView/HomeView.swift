@@ -169,7 +169,15 @@ struct HomeView: View {
         }
         // 팀스페이스 바뀌면 리로드
         .onChange(of: FirebaseAuthManager.shared.currentTeamspace?.teamspaceId) {
-            Task { _ = await viewModel.fetchCurrentTeamspaceProject() }
+            Task {
+                if FirebaseAuthManager.shared.currentTeamspace == nil {
+                    // 팀스페이스가 사라진 경우(삭제 등)
+                    await viewModel.handleTeamspaceDeleted()
+                } else {
+                    // 팀스페이스가 다른 것으로 교체된 경우
+                    await viewModel.reloadProjectsAfterTeamspaceChange()
+                }
+            }
         }
     }
 }
