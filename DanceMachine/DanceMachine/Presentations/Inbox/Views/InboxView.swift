@@ -9,6 +9,7 @@ import SwiftUI
 
 // FIXME: Hi-fi 반영 및 리팩토링
 struct InboxView: View {
+    @EnvironmentObject private var router: NavigationRouter
     @StateObject private var viewModel = InboxViewModel()
     
     var body: some View {
@@ -94,6 +95,19 @@ struct InboxView: View {
                                 }
                             }
                         }
+                        // 목록 선택 영역 넓게 조정
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            router.push(
+                                to: .video(
+                                    .play(
+                                        videoId: notification.videoId,
+                                        videoTitle: notification.videoTitle,
+                                        videoURL: notification.videoURL
+                                    )
+                                )
+                            )
+                        }
                         // 가져온 알림 중에 마지막 알림일 떄, 다음 알림 목록 정보 로드 트리거
                         .task(id: notification.notificationId) {
                             if notification == viewModel.inboxNotifications.last {
@@ -107,7 +121,7 @@ struct InboxView: View {
                 }
                 .listStyle(.plain) // FIXME: - 알림 스타일 수정
                 
-                if viewModel.isLoading {
+                if viewModel.isLoading {  // FIXME: - 로딩 스타일 수정
                     ProgressView()
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding()
@@ -116,7 +130,6 @@ struct InboxView: View {
         }
         .task {
             // 첫 진입 시 초기 데이터 로드
-            print("첫 진입 시 초기 데이터 로드")
             await viewModel.loadNotifications(reset: true)
         }
         .navigationTitle("수신함")
