@@ -73,15 +73,25 @@ async function sendPushNotification(receiverIds: string[], title: string, body: 
     return
   }
 
-
-  const message: admin.messaging.MulticastMessage = {
-    notification: { title, body },
-    tokens,
+  var deeplink: string = ""
+  if (extra?.video_id && extra?.video_title && extra?.video_url) {
+    const encodedTitle = encodeURIComponent(extra.video_title)
+    const encodedURL = encodeURIComponent(extra.video_url)
+    deeplink = `${URLScheme}://video/view?videoId=${extra.video_id}&videoTitle=${encodedTitle}&videoURL=${encodedURL}`
   }
+
+
+ const message: admin.messaging.MulticastMessage = {
+  tokens,
+  notification: { title, body },
+  data: {
+    deeplink
+  },
+}
 
   try {
     await fcm.sendEachForMulticast(message)
-    logger.info("Push notification sent", { tokens, title, body })
+    logger.info("Push notification sent", { tokens, title, body, deeplink })
   } catch (error) {
     logger.error("Push notification send error", error)
   }
@@ -137,15 +147,24 @@ export const onFeedbackCreated = onDocumentCreated("feedback/{feedbackId}", asyn
   const authorDoc = await db.collection("users").doc(author_id).get()
   const name = authorDoc.exists ? authorDoc.get("name") : null
   if (!name) {
-    logger.warn("Author name not found", { author_id })
+    logger.error("Author name not found", { author_id })
+    return
+  }
+
+  const videoDoc = await db.collection("video").doc(video_id).get()
+  const video_title = videoDoc.exists ? videoDoc.get("video_title") : null
+  const video_url = videoDoc.exists ? videoDoc.get("video_url") : null
+  if (!video_title || !video_url) {
+    logger.error("Video info not found", { video_id })
     return
   }
 
   const title = `${josa(name, "이/가")} 피드백을 남겼어요`
   const body = content // FIXME: 글자수 제한
+  const data = { video_id, video_title, video_url }
 
-  await sendPushNotification(validTaggedUsers, title, body)
-  logger.info("Push notification sent for feedback", { validTaggedUsers, title, body })
+  await sendPushNotification(validTaggedUsers, title, body, data)
+  logger.info("Push notification sent for feedback", { validTaggedUsers, title, body, data })
 })
 
 /**
@@ -221,9 +240,20 @@ export const onReplyCreated = onDocumentCreated("reply/{replyId}", async (event)
     return
   }
 
+  const videoDoc = await db.collection("video").doc(video_id).get()
+  const video_title = videoDoc.exists ? videoDoc.get("video_title") : null
+  const video_url = videoDoc.exists ? videoDoc.get("video_url") : null
+  if (!video_title || !video_url) {
+    logger.error("Video info not found", { video_id })
+    return
+  }
+
   const title = `${josa(name, "이/가")} 댓글을 남겼어요`
   const body = content // FIXME: 글자수 제한
+  const data = { video_id, video_title, video_url }
 
-  await sendPushNotification(validReceivers, title, body)
-  logger.info("Push notification sent for reply", { validReceivers, title, body })
+
+  await sendPushNotification(validReceivers, title, body, data)
+  logger.info("Push notification sent for reply", { validReceivers, title, body, data })
 })
+
