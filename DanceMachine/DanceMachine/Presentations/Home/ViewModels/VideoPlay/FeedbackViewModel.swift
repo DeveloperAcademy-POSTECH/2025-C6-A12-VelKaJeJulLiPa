@@ -151,18 +151,44 @@ extension FeedbackViewModel {
   }
   // TODO: 피드백 삭제
   func deleteFeedback(_ feedback: Feedback) async {
+    await MainActor.run {
+      self.isLoading = true
+      self.errorMsg = nil
+    }
+    
     do {
-      try await store.delete(
-        collectionType: .feedback,
-        documentID: feedback.feedbackId.uuidString
-      )
+      let feedbackId = feedback.feedbackId.uuidString
+      
+      try await withThrowingTaskGroup(of: Void.self) { g in
+        if let replies = self.reply[feedbackId] {
+          for reply in replies {
+            g.addTask {
+              try await self.store.deleteFromSubcollection(
+                under: .feedback,
+                parentId: feedbackId,
+                subCollection: .reply,
+                target: reply.replyId
+              )
+            }
+          }
+        }
+        g.addTask {
+          try await self.store.delete(
+            collectionType: .feedback,
+            documentID: feedbackId
+          )
+        }
+        try await g.waitForAll()
+      }
       
       await MainActor.run {
         self.feedbacks.removeAll { $0.feedbackId == feedback.feedbackId }
         self.reply.removeValue(forKey: feedback.feedbackId.uuidString)
+        self.isLoading = false
       }
     } catch { // TODO: 에러 처리
       print("피드백 삭제 실패: \(error)")
+      self.errorMsg = "피드백 삭제에 실패했습니다."
     }
   }
 }
@@ -220,6 +246,36 @@ extension FeedbackViewModel {
       }
     } catch { // TODO: 에러 처리
       print("댓글 작성 실패: \(error)")
+    }
+  }
+  
+  func deleteReply(replyId: String, from feedbackId: String) async {
+    await MainActor.run {
+      self.isLoading = true
+      self.errorMsg = nil
+    }
+    
+    do {
+      try await store.deleteFromSubcollection(
+        under: .feedback,
+        parentId: feedbackId,
+        subCollection: .reply,
+        target: replyId
+      )
+      
+      await MainActor.run {
+        if var replies = self.reply[feedbackId] {
+          replies.removeAll { $0.replyId == replyId }
+          self.reply[feedbackId] = replies
+        }
+        self.isLoading = false
+      }
+    } catch {
+      await MainActor.run {
+        self.isLoading = false
+        self.errorMsg = "댓글 삭제에 실패했습니다."
+      }
+      print("댓글 삭제 실패: \(error)")
     }
   }
 }
