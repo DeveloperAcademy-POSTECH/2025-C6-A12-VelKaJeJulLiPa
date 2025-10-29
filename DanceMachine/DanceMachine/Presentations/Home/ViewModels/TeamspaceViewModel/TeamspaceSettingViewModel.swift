@@ -77,10 +77,18 @@ final class TeamspaceSettingViewModel {
     }
     
     
-    /// 팀원 내보내기 + 팀 스페이스 현재 멤버 새로고침
+    /// 팀원 내보내기 + 내보내진 팀원 서브컬렉션에서도 팀 스페이스 제거 + 팀 스페이스 현재 멤버 새로고침
     func removeTeamMemberAndReload(userId: String) async throws -> [User] {
         do {
-            try await self.removingTeamspaceMember(userId: userId)
+            try await self.removingTeamspaceMember(userId: userId) // 팀원 내보내기
+            
+            try await FirestoreManager.shared.deleteFromSubcollection(
+                under: .users,
+                parentId: userId,
+                subCollection: .userTeamspace,
+                target: self.currentTeamspace?.teamspaceId.uuidString ?? ""
+            ) // 내보내진 팀원 서브컬렉션에서도 팀 스페이스 제거
+            
             return await self.fetchCurrentTeamspaceAllMember()
         } catch {
             print("error: \(error.localizedDescription)") // FIXME: - 에러에 맞게 로직 수정
