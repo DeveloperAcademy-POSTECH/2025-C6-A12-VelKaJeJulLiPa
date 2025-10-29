@@ -28,6 +28,11 @@ struct VideoView: View {
   // MARK: 답글 관련
   @State private var selectedFeedback: Feedback? = nil
   
+  // MARK: 글래스 이팩트 버튼
+  @Namespace private var buttonNamespace
+  @State private var showIntervalButton: Bool = false
+  @State private var buttonSpacing: CGFloat = 4
+  
   // MARK: 전역으로 관리되는 ID
   let teamspaceId = FirebaseAuthManager.shared.currentTeamspace?.teamspaceId
   let userId = FirebaseAuthManager.shared.userInfo?.userId ?? ""
@@ -117,7 +122,27 @@ struct VideoView: View {
               timeSeek: { vm.videoVM.seekToTime(to: self.pointTime) }
             )
           } else {
-            feedbackButtons
+            FeedbackButton(
+              pointAction: {
+                self.feedbackType = .point
+                self.pointTime = vm.videoVM.currentTime
+                self.showFeedbackInput = true
+                vm.videoVM.togglePlayPause()
+              },
+              intervalAction: {
+                if vm.feedbackVM.isRecordingInterval {
+                  feedbackType = .interval
+                  self.intervalTime = vm.videoVM.currentTime
+                  vm.videoVM.togglePlayPause()
+                  showFeedbackInput = true
+                } else {
+                  feedbackType = .interval
+                  self.pointTime = vm.videoVM.currentTime
+                  _ = vm.feedbackVM.handleIntervalButtonType(currentTime: vm.videoVM.currentTime)
+                }
+              },
+              isRecordingInterval: vm.feedbackVM.isRecordingInterval
+            )
           }
         }
       }
@@ -309,51 +334,51 @@ struct VideoView: View {
   }
   
   // MARK: 피드백 버튼들
-  private var feedbackButtons: some View {
-    HStack(spacing: 12) {
-      // 시점 피드백 버튼
-      Button {
-        feedbackType = .point
-        self.pointTime = vm.videoVM.currentTime
-        vm.videoVM.togglePlayPause()
-        showFeedbackInput = true
-      } label: {
-        Text("시점 피드백")
-          .font(.system(size: 16, weight: .semibold))
-          .foregroundColor(.white)
-          .frame(maxWidth: .infinity)
-          .padding(.vertical, 16)
-          .background(Color.blue)
-          .cornerRadius(12)
-      }
-      
-      // 구간 피드백 버튼
-      Button {
-        if vm.feedbackVM.isRecordingInterval {
-          // 두 번째 클릭: 종료 시간 기록하고 키보드 올림
-          feedbackType = .interval
-          self.intervalTime = vm.videoVM.currentTime
-          vm.videoVM.togglePlayPause()
-          showFeedbackInput = true
-        } else {
-          // 첫 번째 클릭: 시작 시간 기록
-          feedbackType = .interval
-          self.pointTime = vm.videoVM.currentTime
-          _ = vm.feedbackVM.handleIntervalButtonType(currentTime: vm.videoVM.currentTime)
-        }
-      } label: {
-        Text(vm.feedbackVM.isRecordingInterval ? "구간 피드백 중..." : "구간 피드백")
-          .font(.system(size: 16, weight: .semibold))
-          .foregroundColor(.white)
-          .frame(maxWidth: .infinity)
-          .padding(.vertical, 16)
-          .background(vm.feedbackVM.isRecordingInterval ? Color.purple : Color.blue)
-          .cornerRadius(12)
-      }
-    }
-    .padding(.horizontal, 16)
-    .padding(.vertical, 8)
-  }
+//  private var feedbackButtons: some View {
+//    HStack(spacing: 12) {
+//      // 시점 피드백 버튼
+//      Button {
+//        feedbackType = .point
+//        self.pointTime = vm.videoVM.currentTime
+//        vm.videoVM.togglePlayPause()
+//        showFeedbackInput = true
+//      } label: {
+//        Text("시점 피드백")
+//          .font(.system(size: 16, weight: .semibold))
+//          .foregroundColor(.white)
+//          .frame(maxWidth: .infinity)
+//          .padding(.vertical, 16)
+//          .background(Color.blue)
+//          .cornerRadius(12)
+//      }
+//      
+//      // 구간 피드백 버튼
+//      Button {
+//        if vm.feedbackVM.isRecordingInterval {
+//          // 두 번째 클릭: 종료 시간 기록하고 키보드 올림
+//          feedbackType = .interval
+//          self.intervalTime = vm.videoVM.currentTime
+//          vm.videoVM.togglePlayPause()
+//          showFeedbackInput = true
+//        } else {
+//          // 첫 번째 클릭: 시작 시간 기록
+//          feedbackType = .interval
+//          self.pointTime = vm.videoVM.currentTime
+//          _ = vm.feedbackVM.handleIntervalButtonType(currentTime: vm.videoVM.currentTime)
+//        }
+//      } label: {
+//        Text(vm.feedbackVM.isRecordingInterval ? "구간 피드백 중..." : "구간 피드백")
+//          .font(.system(size: 16, weight: .semibold))
+//          .foregroundColor(.white)
+//          .frame(maxWidth: .infinity)
+//          .padding(.vertical, 16)
+//          .background(vm.feedbackVM.isRecordingInterval ? Color.purple : Color.blue)
+//          .cornerRadius(12)
+//      }
+//    }
+//    .padding(.horizontal, 16)
+//    .padding(.vertical, 8)
+//  }
 }
 
 #Preview {
