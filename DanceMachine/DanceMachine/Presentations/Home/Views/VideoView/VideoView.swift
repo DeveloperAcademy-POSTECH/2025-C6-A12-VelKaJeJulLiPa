@@ -15,6 +15,7 @@ struct VideoView: View {
   @State private var showReplyModal: Bool = false
   @State private var showFeedbackInput: Bool = false
   @State private var feedbackType: FeedbackType = .point
+  @State private var feedbackFilter: FeedbackFilter = .all
   
   // MARK: 슬라이더 관련
   @State private var isDragging: Bool = false
@@ -24,23 +25,33 @@ struct VideoView: View {
   @State private var pointTime: Double = 0
   @State private var intervalTime: Double = 0
   
+  // MARK: 답글 관련
+  @State private var selectedFeedback: Feedback? = nil
+  
   // MARK: 전역으로 관리되는 ID
   let teamspaceId = FirebaseAuthManager.shared.currentTeamspace?.teamspaceId
   let userId = FirebaseAuthManager.shared.userInfo?.userId ?? ""
   
-  init(
-    videoId: String,
-    videoTitle: String,
-    videoURL: String
-  ) {
-    self.videoId = videoId
-    self.videoTitle = videoTitle
-    self.videoURL = videoURL
-  }
   
   let videoId: String
   let videoTitle: String
   let videoURL: String
+  
+  
+  enum FeedbackFilter {
+    case all
+    case mine
+  }
+  
+  // 피드백 필터링 (내 피드백, 전체 피드백)
+  var filteredFeedbacks: [Feedback] {
+    switch feedbackFilter {
+    case .all: return vm.feedbackVM.feedbacks
+    case .mine: return vm.feedbackVM.feedbacks.filter { $0.authorId == userId }
+    }
+  }
+  
+  
   
   var body: some View {
     GeometryReader { proxy in
@@ -105,9 +116,6 @@ struct VideoView: View {
               },
               timeSeek: { vm.videoVM.seekToTime(to: self.pointTime) }
             )
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
-            .background(Color(uiColor: .systemBackground))
           } else {
             feedbackButtons
           }
@@ -209,56 +217,84 @@ struct VideoView: View {
         
       }
     }
-//    .overlay { // FIXME: 비디오 로딩뷰 논의 -> 오래동안 보는 뷰라 중요도 있다 생각함
-//      if vm.videoVM.isLoading {
-//        VStack {
-//          ProgressView()
-//            .progressViewStyle(CircularProgressViewStyle())
-//            .tint(.white)
-//            .scaleEffect(1.5)
-//          
-//          if vm.videoVM.loadingProgress > 0 {
-//            Text("다운로드 중... \(Int(vm.videoVM.loadingProgress * 100))%")
-//              .foregroundStyle(.white)
-//              .font(.system(size: 14))
-//          } else {
-//            Text("로딩 중... \(Int(vm.videoVM.loadingProgress * 100))%")
-//              .foregroundStyle(.white)
-//              .font(.system(size: 14))
-//          }
-//        }
-//        .aspectRatio(16/9, contentMode: .fit)
-//      }
-//    }
   }
-  
   // MARK: 피드백 리스트
   private var feedbackListView: some View {
     ScrollView {
       LazyVStack {
-        ForEach(vm.feedbackVM.feedbacks, id: \.feedbackId) { f in
+        ForEach(filteredFeedbacks, id: \.feedbackId) { f in
           FeedbackCard(
             feedback: f,
+            authorUser: vm.getAuthorUser(for: f.authorId),
             taggedUsers:
               vm.getTaggedUsers(for: f.taggedUserIds),
             replyCount: vm.feedbackVM.reply[f.feedbackId.uuidString]?.count ?? 0,
-            action: { self.showReplyModal = true }
+            action: { self.selectedFeedback = f }, // showReplySheet와 동일한 네비게이션
+            showReplySheet: { self.selectedFeedback = f }, // showReplySheet와 동일한 네비게이션
+            currentTime: pointTime,
+            startTime: intervalTime,
+            timeSeek: { vm.videoVM.seekToTime(to: self.pointTime) },
+            currentUserId: userId,
+            onDelete: {
+              Task {
+                await vm.feedbackVM.deleteFeedback(f)
+              }
+            } // TODO: 삭제
           )
         }
       }
       .padding(.horizontal, 16)
+      .sheet(item: $selectedFeedback) { feedback in
+        ReplySheet(
+          reply: vm.feedbackVM.reply[feedback.feedbackId.uuidString] ?? [],
+          feedback: feedback,
+          taggedUsers: vm.getTaggedUsers(for: feedback.taggedUserIds),
+          teamMembers: vm.teamMembers,
+          replyCount: vm.feedbackVM.reply[feedback.feedbackId.uuidString]?.count ?? 0,
+          currentTime: pointTime,
+          startTime: intervalTime,
+          timeSeek: { vm.videoVM.seekToTime(to: self.pointTime) },
+          getTaggedUsers: { ids in vm.getTaggedUsers(for: ids) },
+          getAuthorUser: { ids in vm.getAuthorUser(for: ids) },
+          onReplySubmit: {content, taggedIds in
+            Task {
+              await vm.feedbackVM.addReply(
+                to: feedback.feedbackId.uuidString,
+                authorId: userId,
+                content: content,
+                taggedUserIds: taggedIds
+              )
+            }
+          },
+          currentUserId: userId,
+          onDelete: { replyId, feedbackId in
+            await vm.feedbackVM.deleteReply(
+              replyId: replyId, from: feedbackId)
+          },
+          onFeedbackDelete: {
+            Task {
+              await vm.feedbackVM.deleteFeedback(feedback)
+            } }
+        )
+      }
     }
   }
   
   // MARK: 피드백 섹션
   private var feedbackSection: some View {
     HStack {
-      Text("전체 피드백")
+      Text(feedbackFilter == .all ? "전체 피드백" : "마이 피드백")
       Spacer()
       Button {
-        // TODO: 피드백 필터링 기능
+        switch feedbackFilter {
+        case .all:
+          self.feedbackFilter = .mine
+        case .mine:
+          self.feedbackFilter = .all
+        }
       } label: {
-        Text("마이 피드백")
+        Text(feedbackFilter == .all ? "마이 피드백" : "전체 피드백")
+        // FIXME: 컬러 폰트 수정
           .foregroundStyle(Color.white)
           .padding(.horizontal, 11)
           .padding(.vertical, 7)
