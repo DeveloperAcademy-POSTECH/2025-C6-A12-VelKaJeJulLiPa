@@ -58,7 +58,7 @@ struct ReplySheet: View {
       VStack {
         FeedbackCard(
           feedback: feedback,
-          authorUser: getAuthorUser(""),
+          authorUser: getAuthorUser(feedback.authorId),
           taggedUsers: taggedUsers,
           replyCount: replyCount,
           action: {}, // 아무 기능 없음
