@@ -21,13 +21,16 @@ final class VideoDetailViewModel {
   
   init() {
     self.videoVM = VideoViewModel()
-    self.feedbackVM = FeedbackViewModel()
-    
+    self.feedbackVM = FeedbackViewModel() 
   }
   
-  // 팀 멤버 이름 유틸 함수
+  // 팀 멤버 이름 유틸 함수 (태그 관련)
   func getTaggedUsers(for ids: [String]) -> [User] {
     teamMembers.filter { ids.contains($0.userId) }
+  }
+  // 작성자 이름
+  func getAuthorUser(for authorId: String) -> User? {
+    teamMembers.first { $0.userId == authorId }
   }
   
   func loadAllData(
@@ -35,6 +38,10 @@ final class VideoDetailViewModel {
     videoURL: String,
     teamspaceId: String
   ) async {
+#if DEBUG
+    if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
+      return }
+#endif
     
     await MainActor.run {
       self.isLoading = true
