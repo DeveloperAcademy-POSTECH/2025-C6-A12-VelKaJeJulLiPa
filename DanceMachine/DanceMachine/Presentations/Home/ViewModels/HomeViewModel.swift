@@ -139,14 +139,12 @@ final class HomeViewModel {
     @MainActor
     func ensureTeamspaceInitialized() async {
         print("기본 팀스페이스 초기화를 진행합니다. (ensureTeamspaceInitialized 시작)")
-        if !teamspace.didInitialize {
             await reloadTeamspaces()
             if let first = teamspace.list.first, currentTeamspace == nil {
                 setCurrentTeamspace(first)
             }
             teamspace.didInitialize = true
             print("기본 팀스페이스 초기화가 완료되었습니다. 현재 선택: \(self.currentTeamspace?.teamspaceName ?? "없음") (ensureTeamspaceInitialized 종료)")
-        }
     }
 
     /// 현재 팀스페이스 이름 반환
