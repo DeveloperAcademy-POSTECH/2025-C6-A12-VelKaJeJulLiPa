@@ -25,13 +25,12 @@ struct FeedbackCard: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 4) {
       authorName
-      Spacer().frame(height: 4)
       timeStamp
       content
       replyButton
     }
     .padding(.horizontal, 8)
-    .padding(.vertical, 16)
+    .padding(.vertical, 10)
     .background(
       Color.gray.opacity(0.5)
         .clipShape(RoundedRectangle(cornerRadius: 0))
@@ -77,7 +76,6 @@ struct FeedbackCard: View {
   
   private var timeStamp: some View {
     HStack {
-      Image(systemName: "clock") // FIXME: 이미지 수정
       if let endTime = feedback.endTime {
 //        Text("\(feedback.startTime?.formattedTime() ?? "00:00") ~ \(endTime.formattedTime())")
 //          .font(.system(size: 16)) // FIXME: 폰트 수정
