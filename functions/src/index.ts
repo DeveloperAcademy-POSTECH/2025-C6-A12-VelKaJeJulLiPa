@@ -1,40 +1,20 @@
-/**
- * Import function triggers from their respective submodules:
- *
- * import {onCall} from "firebase-functions/v2/https"
- * import {onDocumentWritten} from "firebase-functions/v2/firestore"
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */
+import * as admin from "firebase-admin";
+import { onDocumentCreated } from "firebase-functions/v2/firestore";
+import { setGlobalOptions } from "firebase-functions";
+import * as logger from "firebase-functions/logger";
+import { josa } from "es-hangul";
+import { v4 as uuidv4 } from "uuid";
 
-// Start writing functions
-// https://firebase.google.com/docs/functions/typescript
+admin.initializeApp();
+setGlobalOptions({ region: "asia-northeast3", maxInstances: 10 });
 
+const db = admin.firestore();
+const fcm = admin.messaging();
 
-// The Cloud Functions for Firebase SDK to create Cloud Functions and triggers.
-// The Firebase Admin SDK to access Firestore.
-import * as admin from "firebase-admin"
-import { onDocumentCreated } from "firebase-functions/v2/firestore"
-import { setGlobalOptions } from "firebase-functions"
-import * as logger from "firebase-functions/logger"
-import { josa } from "es-hangul"
-import { v4 as uuidv4 } from "uuid"
-
-
-admin.initializeApp()
-setGlobalOptions({ region: "asia-northeast3", maxInstances: 10 })
-
-
-const db = admin.firestore()
-const fcm = admin.messaging()
-
-const URLScheme = "dancemachine"
+const URL_SCHEME = "dancemachine";
 
 /**
  * 특정 수신자(receiverId)가 발신자(senderId)를 차단했는지 확인
- *
- * @param {string} receiverId - 수신자 id
- * @param {string} senderId - 발신자 id
  */
 async function isUserBlockedBy(receiverId: string, senderId: string): Promise<boolean> {
   const blockDoc = await db
@@ -42,99 +22,136 @@ async function isUserBlockedBy(receiverId: string, senderId: string): Promise<bo
     .doc(receiverId)
     .collection("blocks")
     .doc(senderId)
-    .get()
-  return blockDoc.exists
+    .get();
+  return blockDoc.exists;
 }
 
 /**
- * FCM 푸시 알림 전송 (여러명에게 알림 전송 가능)
+ * 사용자별로 푸시 알림 전송 (사용자별 badge 포함)
  *
- * @param {string} receiverIds - 수신자 id 배열
- * @param {string} title - 알림 제목
- * @param {string} body - 알림 내용
+ * @param receivers 사용자 ID 배열
+ * @param title 알림 제목
+ * @param body 알림 본문
+ * @param extra 추가 데이터 (video_id, video_title, video_url, notification_id)
  */
-async function sendPushNotification(receiverIds: string[], title: string, body: string, extra?: { video_id: string; video_title: string; video_url: string }) {
-  if (!receiverIds.length) {
-    logger.error("No receiverIds for push", { receiverIds })
-    return
+async function sendPushNotificationsWithBadge(
+  receivers: string[],
+  title: string,
+  body: string,
+  extra: { video_id: string; video_title: string; video_url: string, notification_id: string }
+) {
+  if (receivers.length === 0) {
+    logger.error("sendPushNotificationsWithBadge: no receivers", { receivers });
+    return;
   }
 
-  // Warning: receiverIds must no more than 30
-  // see https://firebase.google.com/docs/firestore/query-data/queries?hl=ko#in_not-in_and_array-contains-any
-  const usersSnap = await db
-    .collection("users")
-    .where(admin.firestore.FieldPath.documentId(), "in", receiverIds)
-    .get()
+  const oneMonthAgo = admin.firestore.Timestamp.fromDate(
+    new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+  );
 
-  const tokens = usersSnap.docs
-    .map((doc) => doc.get("fcm_token"))
-    .filter((token) => typeof token === "string" && token.length > 0)
-  if (!tokens.length) {
-    logger.error("No FCM tokens found for receivers", { receiverIds })
-    return
-  }
+  // 사용자별 badge 카운트 계산
+  const badgeCounts = await Promise.all(
+    receivers.map(async (uid) => {
+      // user_notification 서브컬렉션에서 한 달 전부터, is_read == false 인 문서 수 계산
+      const qSnap = await db
+        .collection("users").doc(uid)
+        .collection("user_notification")
+        .where("created_at", ">=", oneMonthAgo)
+        .where("is_read", "==", false)
+        .get();
 
-  var deeplink: string = ""
-  if (extra?.video_id && extra?.video_title && extra?.video_url) {
-    const encodedTitle = encodeURIComponent(extra.video_title)
-    const encodedURL = encodeURIComponent(extra.video_url)
-    deeplink = `${URLScheme}://video/view?videoId=${extra.video_id}&videoTitle=${encodedTitle}&videoURL=${encodedURL}`
-  }
+      return { uid, unreadCount: qSnap.size };
+    })
+  );
 
+  // 사용자별 토큰 + 메시지 전송
+  await Promise.all(
+    badgeCounts.map(async ({ uid, unreadCount }) => {
+      const userDoc = await db.collection("users").doc(uid).get();
+      if (!userDoc.exists) {
+        logger.error("User doc not found for push", { uid });
+        return;
+      }
+      const token = userDoc.get("fcm_token");
+      if (!token || typeof token !== "string" || token.length === 0) {
+        logger.warn("FCM token missing for user", { uid });
+      }
 
- const message: admin.messaging.MulticastMessage = {
-  tokens,
-  notification: { title, body },
-  data: {
-    deeplink
-  },
-}
+      // 딥링크 생성
+      let deeplink = "";
+      const encodedTitle = encodeURIComponent(extra.video_title);
+      const encodedUrl = encodeURIComponent(extra.video_url);
+      deeplink = `${URL_SCHEME}://video/view?videoId=${extra.video_id}&videoTitle=${encodedTitle}&videoURL=${encodedUrl}`;
+      
 
-  try {
-    await fcm.sendEachForMulticast(message)
-    logger.info("Push notification sent", { tokens, title, body, deeplink })
-  } catch (error) {
-    logger.error("Push notification send error", error)
-  }
+      const message: admin.messaging.Message = {
+        token,
+        notification: {
+          title,
+          body,
+        },
+        apns: {
+          payload: {
+            aps: {
+              alert: { title, body },
+              badge: unreadCount,
+              sound: "default",
+            },
+          },
+        },
+        data: {
+          deeplink,
+          notificationId: extra.notification_id,
+        },
+      };
+
+      try {
+        await fcm.send(message);
+        logger.info("Push sent", { uid, unreadCount, token });
+      } catch (error) {
+        logger.error("Error sending push", { uid, unreadCount, token, error });
+      }
+    })
+  );
 }
 
 /**
- * feedback 문서 생성 시 알림
- * feedback 문서 생성됨 - 태그된 사람 있는지 확인 - 태그된 사람 중 작성자를 차단한 사람 필터링 - notification 문서 생성 - 문서 기반으로 푸시 알림 보냄
+ * feedback 문서 생성 시 알림 처리 트리거
  */
 export const onFeedbackCreated = onDocumentCreated("feedback/{feedbackId}", async (event) => {
-  const snap = event.data
+  const snap = event.data;
   if (!snap) {
-    logger.error("No feedback document found", { eventId: event.id })
-    return
+    logger.error("onFeedbackCreated: no snapshot", { eventId: event.id });
+    return;
   }
-  const feedback = snap.data()
+  const feedback = snap.data();
 
-  const { feedback_id, author_id, tagged_user_ids, content, video_id, teamspace_id } = feedback
+  const { feedback_id, author_id, tagged_user_ids, content, video_id, teamspace_id } = feedback;
 
   if (!tagged_user_ids || tagged_user_ids.length === 0) {
-    logger.info("No tagged users, skipping notification", { feedback_id })
-    return
+    logger.error("onFeedbackCreated: no tagged users", { feedback_id });
+    return;
   }
 
-  const validTaggedUsers: string[] = []
+  const validTaggedUsers: string[] = [];
   await Promise.all(
     tagged_user_ids.map(async (receiverId: string) => {
-      const blocked = await isUserBlockedBy(receiverId, author_id)
-      if (!blocked) validTaggedUsers.push(receiverId)
+      const blocked = await isUserBlockedBy(receiverId, author_id);
+      if (!blocked) validTaggedUsers.push(receiverId);
     })
-  )
+  );
 
-  logger.debug("Valid tagged users after block filter", { validTaggedUsers })
+  logger.debug("Valid tagged users after block filter", { validTaggedUsers });
 
   if (validTaggedUsers.length === 0) {
-    logger.info("No valid tagged users after block filter", { feedback_id })
-    return
+    logger.error("onFeedbackCreated: no valid tagged users after filter", { feedback_id });
+    return;
   }
 
- const notification_id = String(uuidv4()).toUpperCase();
+  const notification_id = uuidv4().toUpperCase();
 
- await db.collection("notification").doc(notification_id).set({
+  // notification 문서 생성
+  await db.collection("notification").doc(notification_id).set({
     notification_id,
     sender_id: author_id,
     receiver_ids: validTaggedUsers,
@@ -143,121 +160,154 @@ export const onFeedbackCreated = onDocumentCreated("feedback/{feedbackId}", asyn
     video_id,
     teamspace_id,
     content,
-  })
-  logger.info("Notification document created by feedback", { feedback_id, validTaggedUsers })
+  });
+  logger.info("Notification doc created (feedback)", { feedback_id, validTaggedUsers, notification_id });
 
-  const authorDoc = await db.collection("users").doc(author_id).get()
-  const name = authorDoc.exists ? authorDoc.get("name") : null
+  // user_notification 생성
+  await Promise.all(
+    validTaggedUsers.map(async (uid) => {
+      await db
+        .collection("users").doc(uid)
+        .collection("user_notification")
+        .doc(notification_id)
+        .set({
+          notification_id,
+          teamspace_id,
+          created_at: admin.firestore.FieldValue.serverTimestamp(),
+          updated_at: admin.firestore.FieldValue.serverTimestamp(),
+          is_read: false,
+        });
+    })
+  );
+  logger.info("user_notification documents created (feedback)", { validTaggedUsers });
+
+  // 푸시 전송
+  const authorDoc = await db.collection("users").doc(author_id).get();
+  const name = authorDoc.exists ? authorDoc.get("name") : null;
   if (!name) {
-    logger.error("Author name not found", { author_id })
-    return
+    logger.error("Author name not found", { author_id });
+    return;
   }
-
-  const videoDoc = await db.collection("video").doc(video_id).get()
-  const video_title = videoDoc.exists ? videoDoc.get("video_title") : null
-  const video_url = videoDoc.exists ? videoDoc.get("video_url") : null
+  const videoDoc = await db.collection("video").doc(video_id).get();
+  const video_title = videoDoc.exists ? videoDoc.get("video_title") : null;
+  const video_url = videoDoc.exists ? videoDoc.get("video_url") : null;
   if (!video_title || !video_url) {
-    logger.error("Video info not found", { video_id })
-    return
+    logger.error("Video info not found", { video_id });
+    return;
   }
 
-  const title = `${josa(name, "이/가")} 피드백을 남겼어요`
-  const body = content // FIXME: 글자수 제한
-  const data = { video_id, video_title, video_url }
+  const title = `${josa(name, "이/가")} 피드백을 남겼어요`;
+  const body = content;
+  const extra = { video_id, video_title, video_url, notification_id };
 
-  await sendPushNotification(validTaggedUsers, title, body, data)
-  logger.info("Push notification sent for feedback", { validTaggedUsers, title, body, data })
-})
+  await sendPushNotificationsWithBadge(validTaggedUsers, title, body, extra);
+  logger.info("Push notification process completed (feedback)", { validTaggedUsers, title, body, extra });
+});
 
 /**
- * reply 문서 생성 시 알림
- * reply 문서 생성됨 - 태그된 사람 있는지 확인 - 태그된 사람 중 작성자를 차단한 사람 필터링 - notification 문서 생성 - 문서 기반으로 푸시 알림 보냄
+ * reply 문서 생성 시 알림 처리 트리거
  */
 export const onReplyCreated = onDocumentCreated("feedback/{feedbackId}/reply/{replyId}", async (event) => {
-  const snap = event.data
+  const snap = event.data;
   if (!snap) {
-    logger.error("No reply doc found", { eventId: event.id })
-    return
+    logger.error("onReplyCreated: no snapshot", { eventId: event.id });
+    return;
+  }
+  const reply = snap.data();
+  const { reply_id, feedback_id, author_id, tagged_user_ids, content } = reply;
+
+  const feedbackDoc = await db.collection("feedback").doc(feedback_id).get();
+  const feedbackAuthorId = feedbackDoc.exists ? feedbackDoc.get("author_id") : null;
+  const teamspace_id = feedbackDoc.exists ? feedbackDoc.get("teamspace_id") : null;
+  const video_id = feedbackDoc.exists ? feedbackDoc.get("video_id") : null;
+  if (!feedbackAuthorId || !teamspace_id || !video_id) {
+    logger.error("Feedback doc incomplete", { feedback_id, feedbackAuthorId, teamspace_id, video_id });
+    return;
   }
 
-  const reply = snap.data()
-  const { reply_id, feedback_id, author_id, tagged_user_ids, content } = reply
- 
-  const feedbackDoc = await db.collection("feedback").doc(feedback_id).get()
-  const feedbackDoc_author_id = feedbackDoc.exists ? feedbackDoc.get("author_id") : null
-  const teamspace_id = feedbackDoc.exists ? feedbackDoc.get("teamspace_id") : null
-  const video_id = feedbackDoc.exists ? feedbackDoc.get("video_id") : null
-  if (!feedbackDoc_author_id || !video_id || !teamspace_id) {
-    logger.error("Feedback document not found", { feedback_id, feedbackDoc_author_id, video_id, teamspace_id })
-    return
-  }
-
-
-  const validTaggedUsers: string[] = []
+  const validTaggedUsers: string[] = [];
   await Promise.all(
     tagged_user_ids.map(async (receiverId: string) => {
-      const blocked = await isUserBlockedBy(receiverId, author_id)
-      if (!blocked) validTaggedUsers.push(receiverId)
+      const blocked = await isUserBlockedBy(receiverId, author_id);
+      if (!blocked) validTaggedUsers.push(receiverId);
     })
-  )
-  logger.debug("Valid tagged users after block filter", { validTaggedUsers })
+  );
+  logger.debug("Valid tagged users after block filter (reply)", { validTaggedUsers });
 
-  // 피드백 작성자와 댓글 작성자가 같고 태그된 사용자 중 유효하게 알림을 보내야할 사람이 없으면 종료
-  if (feedbackDoc_author_id === author_id && validTaggedUsers.length === 0) {
+  // 피드백 작성자 == 댓글 작성자 && 태그된 사용자 없음 → 알림 없음
+  if (feedbackAuthorId === author_id && validTaggedUsers.length === 0) {
     logger.info("Reply author equals to feedback author and no valid tagged users, skipping notification", { reply_id })
-    return
+    return;
   }
 
-  let validReceivers = feedbackDoc_author_id === author_id ?
-    validTaggedUsers : // (1) 자기 피드백에 댓글 → 태그된 사람만
-    validTaggedUsers.length === 0 ?
-      [feedbackDoc_author_id] : // (2) 남의 피드백 + 태그 없음 → 피드백 작성자만
-      [feedbackDoc_author_id, ...validTaggedUsers] // (3) 남의 피드백 + 태그 있음 → 피드백 작성자 + 태그된 사람
-
-  // 댓글 작성자는 댓글로 인해 알림 받지 않도록 하는 조치 (클라이언트 버그 방지)
-  validReceivers = [...new Set(validReceivers)].filter((id) => id !== author_id)
-  logger.debug("Final valid receivers for reply notification", { validReceivers })
+  let validReceivers: string[];
+  if (feedbackAuthorId === author_id) {
+    validReceivers = validTaggedUsers;
+  } else {
+    validReceivers =
+      validTaggedUsers.length === 0
+        ? [feedbackAuthorId]
+        : [feedbackAuthorId, ...validTaggedUsers];
+  }
+  // 작성자 본인은 알림 대상에서 제외
+  validReceivers = validReceivers.filter((uid) => uid !== author_id);
 
   if (validReceivers.length === 0) {
-    logger.info("No valid receivers for reply notification", { reply_id })
-    return
+    logger.info("onReplyCreated: no valid receivers", { reply_id });
+    return;
   }
 
- const notification_id = String(uuidv4()).toUpperCase();
+  const notification_id = uuidv4().toUpperCase();
 
- await db.collection("notification").doc(notification_id).set({
+  await db.collection("notification").doc(notification_id).set({
     notification_id,
     sender_id: author_id,
     receiver_ids: validReceivers,
     feedback_id,
+    reply_id,
     created_at: admin.firestore.FieldValue.serverTimestamp(),
     video_id,
     teamspace_id,
     content,
-  })
-  logger.info("Notification document created by reply", { reply_id, validReceivers })
+  });
+  logger.info("Notification doc created (reply)", { reply_id, validReceivers, notification_id });
 
-  const authorDoc = await db.collection("users").doc(author_id).get()
-  const name = authorDoc.exists ? authorDoc.get("name") : null
+  // user_notification 생성
+  await Promise.all(
+    validReceivers.map(async (uid) => {
+      await db
+        .collection("users").doc(uid)
+        .collection("user_notification")
+        .doc(notification_id)
+        .set({
+          notification_id,
+          teamspace_id,
+          created_at: admin.firestore.FieldValue.serverTimestamp(),
+          updated_at: admin.firestore.FieldValue.serverTimestamp(),
+          is_read: false,
+        });
+    })
+  );
+  logger.info("user_notification documents created (reply)", { validReceivers });
+
+  const authorDoc = await db.collection("users").doc(author_id).get();
+  const name = authorDoc.exists ? authorDoc.get("name") : null;
   if (!name) {
-    logger.error("Reply author name not found", { author_id })
-    return
+    logger.error("Reply author name not found", { author_id });
+    return;
   }
-
-  const videoDoc = await db.collection("video").doc(video_id).get()
-  const video_title = videoDoc.exists ? videoDoc.get("video_title") : null
-  const video_url = videoDoc.exists ? videoDoc.get("video_url") : null
+  const videoDoc = await db.collection("video").doc(video_id).get();
+  const video_title = videoDoc.exists ? videoDoc.get("video_title") : null;
+  const video_url = videoDoc.exists ? videoDoc.get("video_url") : null;
   if (!video_title || !video_url) {
-    logger.error("Video info not found", { video_id })
-    return
+    logger.error("Video info not found", { video_id });
+    return;
   }
 
-  const title = `${josa(name, "이/가")} 댓글을 남겼어요`
-  const body = content // FIXME: 글자수 제한
-  const data = { video_id, video_title, video_url }
+  const title = `${josa(name, "이/가")} 댓글을 남겼어요`;
+  const body = content;
+  const extra = { video_id, video_title, video_url, notification_id };
 
-
-  await sendPushNotification(validReceivers, title, body, data)
-  logger.info("Push notification sent for reply", { validReceivers, title, body, data })
-})
-
+  await sendPushNotificationsWithBadge(validReceivers, title, body, extra);
+  logger.info("Push notification process completed (reply)", { validReceivers, title, body, extra });
+});
