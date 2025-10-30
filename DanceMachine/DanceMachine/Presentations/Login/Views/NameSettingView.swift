@@ -29,50 +29,58 @@ struct NameSettingView: View {
     
     
     var body: some View {
-        VStack {
-            Spacer()
-            Text("환영합니다!")
-                .font(.system(size: 24))
+        ZStack {
+            Color.white.ignoresSafeArea() // FIXME: - 컬러 수정
             
-            //FIXME: 텍스트필드 - Mid-fi Design 반영 (제이콥 확인)
-            TextField(displayText, text: $name)
-                .focused($isFocused)
-                .multilineTextAlignment(.center)
-                .font(.system(size: fontSize, weight: .bold))
-                .textInputAutocapitalization(.never)
-                .disableAutocorrection(true)
-                .overlay {
-                    Rectangle()
-                        .offset(y: 26)
-                        .frame(height: 2)
-                        .frame(width: underlineWidth)
-                        .foregroundStyle(underlineColor)
-                        .animation(.easeInOut(duration: 0.1), value: underlineWidth)
-                }
-                .onChange(of: name, { oldValue, newValue in
-                    if newValue.count > maxLength {
-                        name = oldValue
+            VStack {
+                Spacer()
+                Text("환영합니다!")
+                    .font(.system(size: 24))
+                    .foregroundStyle(Color.black) // FIXME: - 컬러 수정
+                
+                //FIXME: 텍스트필드 - Mid-fi Design 반영 (제이콥 확인)
+                TextField(displayText, text: $name)
+                    .focused($isFocused)
+                    .multilineTextAlignment(.center)
+                    .font(.system(size: fontSize, weight: .bold))
+                    .foregroundStyle(Color.black) // FIXME: - 컬러 수정
+                    .textInputAutocapitalization(.never)
+                    .disableAutocorrection(true)
+                    .overlay {
+                        Rectangle()
+                            .offset(y: 26)
+                            .frame(height: 2)
+                            .frame(width: underlineWidth)
+                            .foregroundStyle(underlineColor)
+                            .animation(.easeInOut(duration: 0.1), value: underlineWidth)
                     }
-                })
-            
-            Spacer()
-            
-            Text("이름이 정확하신가요?")
-            
-            // FIXME: 버튼 스타일 수정
-            ActionButton(
-                title: "확인",
-                color: Color.blue,
-                height: 47,
-                isEnabled: !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            ) {
-                Task {
-                    await viewModel.updateUserName(name: name)
-                    dismissKeyboard()
-                    viewModel.setNeedsNameSettingToFalse()
+                    .onChange(of: name, { oldValue, newValue in
+                        if newValue.count > maxLength {
+                            name = oldValue
+                        }
+                    })
+                
+                Spacer()
+                
+                Text("이름이 정확하신가요?")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundStyle(Color.black) // FIXME: - 컬러 수정
+                
+                // FIXME: 버튼 스타일 수정
+                ActionButton(
+                    title: "확인",
+                    color: Color.blue,
+                    height: 47,
+                    isEnabled: !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                ) {
+                    Task {
+                        await viewModel.updateUserName(name: name)
+                        dismissKeyboard()
+                        viewModel.setNeedsNameSettingToFalse()
+                    }
                 }
+                .padding()
             }
-            .padding()
         }
         .onAppear {
             name = viewModel.displayName
