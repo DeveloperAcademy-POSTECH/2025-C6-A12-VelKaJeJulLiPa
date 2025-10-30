@@ -213,13 +213,93 @@ struct VideoView: View {
   // MARK: 가로모드 레이아웃
   private func landscapeView(proxy: GeometryProxy) -> some View {
     ZStack {
-      // 비디오 + 피드백 패널을 함께 회전
+      // 비디오 + 컨트롤 + 피드백 패널을 함께 회전
       HStack(spacing: 0) {
+        // 비디오 플레이어 + 슬라이더 + 버튼
+        ZStack {
+          // 비디오 (85% width)
+          ZStack {
+            if let player = vm.videoVM.player {
+              VideoController(player: player)
+                .aspectRatio(16/9, contentMode: .fit)
+            } else {
+              Color.black
+                .aspectRatio(16/9, contentMode: .fit)
+            }
 
-        videoView
-//          .frame(
-//            width: showFeedbackPanel ? proxy.size.height * 0.6 : proxy.size.height
-//          )
+            TapClearArea(
+              leftTap: { vm.videoVM.leftTab() },
+              rightTap: { vm.videoVM.rightTap() },
+              showControls: $vm.videoVM.showControls
+            )
+
+            if vm.videoVM.showControls {
+              OverlayController(
+                leftAction: {
+                  vm.videoVM.seekToTime(to: vm.videoVM.currentTime - 5)
+                },
+                rightAction: {
+                  vm.videoVM.seekToTime(to: vm.videoVM.currentTime + 5)
+                },
+                centerAction: {
+                  vm.videoVM.togglePlayPause()
+                },
+                isPlaying: $vm.videoVM.isPlaying
+              )
+              .padding(.bottom, 20)
+            }
+          }
+          .frame(width: showFeedbackPanel ? proxy.size.height * 0.55 : proxy.size.height * 0.83)
+
+          // 슬라이더 (전체 width로 확장)
+          if vm.videoVM.showControls {
+            VStack {
+              Spacer()
+
+              CustomSlider(
+                isDragging: $isDragging,
+                currentTime: isDragging ? sliderValue : vm.videoVM.currentTime,
+                duration: vm.videoVM.duration,
+                onSeek: { time in
+                  vm.videoVM.seekToTime(to: time)
+                },
+                onDragChanged: { time in
+                  sliderValue = time
+                },
+                startTime: vm.videoVM.currentTime.formattedTime(),
+                endTime: vm.videoVM.duration.formattedTime()
+              )
+              .padding(.horizontal, 20)
+              .padding(.bottom, 10)
+              .onChange(of: vm.videoVM.currentTime) { _, newValue in
+                if !isDragging {
+                  sliderValue = newValue
+                }
+              }
+            }
+            .frame(width: showFeedbackPanel ? proxy.size.height * 0.55 : proxy.size.height)
+
+            // 버튼 (전체 width로 확장)
+            VideoSettingButtons(
+              action: { self.showSpeedSheet = true },
+              toggleOrientations: {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                  self.forceShowLandscape.toggle()
+                }
+              },
+              isLandscapeMode: shouldShowLayout,
+              toggleFeedbackPanel: {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                  showFeedbackPanel.toggle()
+                }
+              },
+              showFeedbackPanel: showFeedbackPanel
+            )
+            .frame(width: showFeedbackPanel ? proxy.size.height * 0.55 : proxy.size.height)
+            .padding(.bottom, 10)
+          }
+        }
+        .frame(width: showFeedbackPanel ? proxy.size.height * 0.55 : proxy.size.height)
 
         if showFeedbackPanel {
           VStack(spacing: 0) {
@@ -229,7 +309,7 @@ struct VideoView: View {
             feedbackListView
               .padding(.vertical, 8)
           }
-          .frame(width: proxy.size.height * 0.4)
+          .frame(width: proxy.size.height * 0.45)
           .background(Color.black.opacity(0.95))
           .transition(.move(edge: .trailing))
         }
@@ -311,21 +391,23 @@ struct VideoView: View {
           }
         }
         
-        VideoSettingButtons(
-          action: { self.showSpeedSheet = true },
-          toggleOrientations: {
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-              self.forceShowLandscape.toggle()
-            }
-          },
-          isLandscapeMode: shouldShowLayout,
-          toggleFeedbackPanel: {
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-              showFeedbackPanel.toggle()
-            }
-          },
-          showFeedbackPanel: showFeedbackPanel
-        )
+        if !shouldShowLayout {
+          VideoSettingButtons(
+            action: { self.showSpeedSheet = true },
+            toggleOrientations: {
+              withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                self.forceShowLandscape.toggle()
+              }
+            },
+            isLandscapeMode: shouldShowLayout,
+            toggleFeedbackPanel: {
+              withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                showFeedbackPanel.toggle()
+              }
+            },
+            showFeedbackPanel: showFeedbackPanel
+          )
+        }
       }
     }
     .sheet(isPresented: $showSpeedSheet) {
