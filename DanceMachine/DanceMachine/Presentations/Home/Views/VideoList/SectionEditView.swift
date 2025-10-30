@@ -36,7 +36,9 @@ struct SectionEditView: View {
       Spacer().frame(height: 15)
       listView
     }
+    .toolbar(.hidden, for: .tabBar)
     .padding(.horizontal, 16)
+    .background(Color.white) // FIXME: 다크모드 배경색 명시
     .safeAreaInset(edge: .bottom) {
       Group {
         if vm.editingSectionid == nil {
@@ -62,9 +64,10 @@ struct SectionEditView: View {
       VStack(alignment: .leading, spacing: 4) {
         Text("섹션 관리")
           .font(.system(size: 17, weight: .semibold))
+          .foregroundStyle(.black) // FIXME: 다크모드 컬러 명시
         Text(trackName)
           .font(.system(size: 13))
-          .foregroundStyle(.secondary)
+          .foregroundStyle(.black) // FIXME: 다크모드 컬러 명시
       }
       .onTapGesture {
         router.pop()

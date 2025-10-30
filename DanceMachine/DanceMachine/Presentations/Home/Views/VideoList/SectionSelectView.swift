@@ -45,6 +45,7 @@ struct SectionSelectView: View {
       }
     }
     .padding(.horizontal, 16)
+    .background(Color.white) // FIXME: 다크모드 배경색 명시
     .toolbar {
       ToolbarLeadingBackButton(icon: .xmark)
       ToolbarCenterTitle(text: "섹션 선택")

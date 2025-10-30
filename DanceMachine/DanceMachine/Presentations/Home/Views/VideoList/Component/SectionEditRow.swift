@@ -35,6 +35,7 @@ struct SectionEditRow: View {
         TextField("섹션 이름", text: $editText)
           .textFieldStyle(.plain)
           .font(.system(size: 16)) // FIXME: 폰트 수정
+          .foregroundStyle(.black) // FIXME: 컬러 수정
           .focused($isFocused)
           .overlay {
             Rectangle()
@@ -54,6 +55,7 @@ struct SectionEditRow: View {
       } else { // 일반 모드
         Text(section.sectionTitle)
           .font(.system(size: 16)) // FIXME: 폰트 수정
+          .foregroundStyle(.black) // FIXME: 컬러 수정
         Spacer()
         Button {
           onEditStart()
@@ -67,7 +69,7 @@ struct SectionEditRow: View {
         } label: {
           Text("삭제")
             .font(Font.system(size: 14, weight: .medium)) // FIXME: 폰트 수정
-            .foregroundStyle(Color.blue) // FIXME: 컬러 수정
+            .foregroundStyle(Color.red) // FIXME: 컬러 수정
         }
       }
     }

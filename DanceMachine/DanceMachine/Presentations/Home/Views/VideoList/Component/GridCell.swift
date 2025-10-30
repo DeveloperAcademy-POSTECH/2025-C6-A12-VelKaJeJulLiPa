@@ -37,7 +37,7 @@ struct GridCell: View { // FIXME: 디자인 수정!
         }
     }
     .contextMenu {
-      contextMenu
+      contextRow
     }
   }
   
@@ -45,12 +45,11 @@ struct GridCell: View { // FIXME: 디자인 수정!
     VStack(alignment: .leading) {
       thumbnail
       Spacer().frame(width: 8)
-      Text(title)
+      Text(title).foregroundStyle(.black)
       Spacer().frame(width: 8)
-      Text("\(duration.formattedTime())")
+      Text("\(duration.formattedTime())").foregroundStyle(.black)
       Spacer().frame(width: 4)
-      Text("\(uploadDate.formattedDate())")
-      
+      Text("\(uploadDate.formattedDate())").foregroundStyle(.black)
       Spacer()
     }
   }
@@ -88,12 +87,14 @@ struct GridCell: View { // FIXME: 디자인 수정!
           Text("영상 이동")
         }
       }
-      Button {
+      Button(role: .destructive) {
         deleteAction()
       } label: {
         HStack {
           Image(systemName: "trash")
+            .foregroundStyle(.red) // FIXME: 컬러 수정
           Text("영상 삭제")
+            .foregroundStyle(.red) // FIXME: 컬러 수정
         }
       }
     }

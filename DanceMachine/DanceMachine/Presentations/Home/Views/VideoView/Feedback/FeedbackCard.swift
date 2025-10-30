@@ -33,8 +33,8 @@ struct FeedbackCard: View {
     .padding(.horizontal, 8)
     .padding(.vertical, 16)
     .background(
-      Color.gray.opacity(0.5)
-        .clipShape(RoundedRectangle(cornerRadius: 0))
+      Color.gray.opacity(0.3)
+        .clipShape(RoundedRectangle(cornerRadius: 10))
     )
 //    .glassEffect(.clear.tint(Color.gray), in: RoundedRectangle(cornerRadius: 10))
     .contentShape(Rectangle())
@@ -64,13 +64,16 @@ struct FeedbackCard: View {
     HStack {
       Text(authorUser?.name ?? "알 수 없는 사용자")
         .font(.system(size: 14)) // FIXME: 폰트 수정
+        .foregroundStyle(Color.black)
       Text("·")
         .font(.system(size: 14)) // FIXME: 폰트 수정
+        .foregroundStyle(Color.black)
       if feedback.createdAt != nil {
         Text(
           feedback.createdAt?.listTimeLabel() ?? ""
         )
         .font(.system(size: 14)) // FIXME: 폰트 수정
+        .foregroundStyle(Color.black)
       }
       Spacer()
     }
@@ -118,6 +121,7 @@ struct FeedbackCard: View {
   private var content: some View {
     Text(feedback.content)
       .font(.system(size: 16)) // FIXME: 폰트 수정
+      .foregroundStyle(Color.black) // FIXME: 컬러 수정
       .lineLimit(3) // FIXME: 수정
       .frame(maxWidth: .infinity, alignment: .leading)
   }

@@ -17,14 +17,19 @@ struct TimestampButton: View {
     } label: {
       HStack {
         Image(systemName: "clock")
+          .font(.system(size: 14))
           .foregroundStyle(.purple)
         Text(text)
+          .font(.system(size: 14))
           .foregroundStyle(.purple)
       }
       .padding(.horizontal, 6)
       .padding(.vertical, 4)
-      .background(Color.gray.opacity(0.5))
-      .clipShape(RoundedRectangle(cornerRadius: 1000))
+      .background {
+        RoundedRectangle(cornerRadius: 1000)
+          .fill(Color.gray.opacity(0.6))
+          .stroke(Color.purple)
+      }
     }
   }
 }

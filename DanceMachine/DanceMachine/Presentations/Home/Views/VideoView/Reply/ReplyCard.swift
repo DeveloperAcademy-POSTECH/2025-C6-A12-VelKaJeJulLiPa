@@ -17,8 +17,9 @@ struct ReplyCard: View {
   let onDelete: () -> Void
   
   var body: some View {
-    HStack(alignment: .top, spacing: 16) {
+    HStack(alignment: .top, spacing: 8) {
       Image(systemName: "arrow.turn.down.right") // FIXME: 아이콘 수정
+        .foregroundStyle(.black) // FIXME: 다크모드 배경색 명시
       VStack(alignment: .leading, spacing: 8) {
         topRow
         taggedUserRow
@@ -28,9 +29,24 @@ struct ReplyCard: View {
     }
     .frame(maxWidth: .infinity)
     .padding(.vertical, 10)
-    .background(Color.red.opacity(0.3))
+//    .background(Color.red.opacity(0.3))
     .padding(.horizontal, 16)
-    .overlay(alignment: .topTrailing) {
+  }
+  
+  private var topRow: some View {
+    ZStack(alignment: .topTrailing) {
+      HStack {
+        Text(authorUser?.name ?? "알 수 없는 유저")
+          .font(.system(size: 14)) // FIXME: 폰트수정
+          .foregroundStyle(.black) // FIXME: 다크모드 배경색 명시
+        if reply.createdAt != nil {
+          Text("·")
+            .font(.system(size: 14)) // FIXME: 폰트수정
+          Text(reply.createdAt?.listTimeLabel() ?? "방금 전")
+            .font(.system(size: 14)) // FIXME: 폰트수정
+        }
+        Spacer()
+      }
       if reply.authorId == currentUserId {
         Menu { // FIXME: 아이콘 컬러 수정
           Button(role: .destructive) {
@@ -41,25 +57,11 @@ struct ReplyCard: View {
         } label: {
           Image(systemName: "ellipsis")
             .foregroundStyle(.gray)
-            .frame(width: 44, height: 44)
+            .frame(width: 22, height: 22)
             .contentShape(Rectangle())
         }
-        .tint(.gray.opacity(0.8))
+        .tint(.red)
       }
-    }
-  }
-  
-  private var topRow: some View {
-    HStack {
-      Text(authorUser?.name ?? "알 수 없는 유저")
-        .font(.system(size: 14)) // FIXME: 폰트수정
-      if reply.createdAt != nil {
-        Text("·")
-          .font(.system(size: 14)) // FIXME: 폰트수정
-        Text(reply.createdAt?.listTimeLabel() ?? "방금 전")
-          .font(.system(size: 14)) // FIXME: 폰트수정
-      }
-      Spacer()
     }
   }
   
@@ -69,10 +71,12 @@ struct ReplyCard: View {
         ForEach(taggedUsers, id: \.userId) { user in
           Text("@\(user.name)")
             .font(.system(size: 16)) // FIXME: 폰트수정
+            .foregroundStyle(Color.blue)
         }
       }
       Text(reply.content)
         .font(.system(size: 16)) // FIXME: 폰트 수정
+        .foregroundStyle(Color.black) // FIXME: 색 수정
     }
   }
   
@@ -127,7 +131,7 @@ struct ReplyCard: View {
     ],
     replyAction: {
     },
-    currentUserId: "",
+    currentUserId: "222",
     onDelete: {}
   )
 }

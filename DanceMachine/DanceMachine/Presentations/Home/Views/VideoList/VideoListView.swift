@@ -40,6 +40,7 @@ struct VideoListView: View {
         uploadButton
       }
     }
+    .background(Color.white) // FIXME: 배경색 지정 (다크모드)
     .overlay { if vm.isLoading { LoadingView() }}
     .safeAreaInset(edge: .top, content: {
       sectionView

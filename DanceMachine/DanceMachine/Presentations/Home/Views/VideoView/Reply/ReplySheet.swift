@@ -137,6 +137,7 @@ struct ReplySheet: View {
         ToolbarCenterTitle(text: "댓글")
       }
     }
+    .background(Color.white) // FIXME: 다크모드 배경색 명시
   }
   
   private var replyList: some View {
@@ -197,8 +198,8 @@ struct ReplySheet: View {
         Color.gray
           .ignoresSafeArea()
           .overlay(alignment: .top) {
-            Rectangle().frame(height: 1)
-              .foregroundStyle(.blue)
+            Rectangle().frame(height: 1.5)
+              .foregroundStyle(.white) // FIXME: 다크모드 색 명시
           }
       }
     }
@@ -212,7 +213,7 @@ struct ReplySheet: View {
           },
           taggedUsers: mM.taggedUsers
         )
-        .padding(.bottom, 55)
+        .padding(.bottom, 60)
       }
     }
   }
@@ -221,18 +222,18 @@ struct ReplySheet: View {
     ScrollView(.horizontal, showsIndicators: false) {
       HStack(spacing: 4) {
         ForEach(mM.taggedUsers, id: \.userId) { user in
-          HStack(spacing: 0) {
+          HStack(spacing: 3) {
             Text("@")
               .font(.system(size: 16)) // FIXME: 폰트 수정
-              .foregroundStyle(.purple) // FIXME: 컬러 수정
+              .foregroundStyle(.blue) // FIXME: 컬러 수정
             Text(user.name)
               .font(.system(size: 16)) // FIXME: 폰트 수정
-              .foregroundStyle(.purple) // FIXME: 컬러 수정
+              .foregroundStyle(.blue) // FIXME: 컬러 수정
             Button {
               mM.taggedUsers.removeAll { $0.userId == user.userId }
             } label: {
               Image(systemName: "xmark.circle.fill")
-                .foregroundStyle(Color.red) // FIXME: 컬러 수정
+                .foregroundStyle(Color.gray) // FIXME: 컬러 수정
             }
           }
           .animation(nil, value: mM.taggedUsers)

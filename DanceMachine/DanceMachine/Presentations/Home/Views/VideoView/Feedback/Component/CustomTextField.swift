@@ -19,6 +19,7 @@ struct CustomTextField: View {
   var body: some View {
     VStack(spacing: 8) {
       TextEditor(text: $content)
+        .foregroundStyle(.white)
         .scrollContentBackground(.hidden)
         .padding(.vertical, 6)
         .padding(.horizontal, 10)
@@ -27,15 +28,14 @@ struct CustomTextField: View {
         .frame(height: 49)
         .overlay {
           RoundedRectangle(cornerRadius: 20)
-            .fill(Color.red.opacity(0.5)) // FIXME: 컬러 수정
-            .stroke(Color.gray.opacity(0.3), lineWidth: 2) // FIXME: 스트로크 수정
+            .stroke(Color.white, lineWidth: 2) // FIXME: 스트로크 수정
             .allowsHitTesting(false)
         }
         .overlay(alignment: .leading) {
           if content.isEmpty {
             Text(placeHolder)
               .padding(.horizontal, 16)
-              .foregroundStyle(Color.blue.opacity(0.5))
+              .foregroundStyle(Color.white)
               .allowsHitTesting(false)
           }
         }
@@ -45,6 +45,7 @@ struct CustomTextField: View {
             self.isFocused = false
           } label: {
             Image(systemName: "paperplane.fill")
+              .foregroundStyle(.white)
           }
           .padding(.horizontal, 16)
           .zIndex(1)
