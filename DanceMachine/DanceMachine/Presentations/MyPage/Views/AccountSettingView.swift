@@ -51,8 +51,8 @@ struct AccountSettingView: View {
                 titleText: "로그아웃하시겠어요?",
                 primaryText: "로그아웃") {
                     Task {
+                        // TODO: - 내비게이션 라우팅 처리 수정 (로그아웃하면서 HomeView에서 네크워크 처리해서 버그 발생)
                         try await viewModel.signOut()
-                        router.popToRootView()
                     }
                 }
         }
@@ -61,8 +61,8 @@ struct AccountSettingView: View {
                 titleText: "탈퇴하시겠어요?\n모든 정보가 삭제됩니다.",
                 primaryText: "탈퇴") {
                     Task {
+                        // TODO: - 내비게이션 라우팅 처리 수정 (로그아웃하면서 HomeView에서 네크워크 처리해서 버그 발생)
                         try await viewModel.deleteUserAccount()
-                        router.popToRootView() // TODO: - 내비게이션 처리 확인
                     }
                 }
         }
