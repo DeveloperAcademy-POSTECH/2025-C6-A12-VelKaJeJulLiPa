@@ -18,20 +18,20 @@ struct MyPageNavigationRow: View {  // FIXME: - Hi-fi 스타일 적용
             HStack {
                 Text(title)
                     .font(.system(size: 16))
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(Color.black) // FIXME: - 컬러 수정
 
                 Spacer()
                 
                 if let value = value {
                     Text(value)
                         .font(.system(size: 16))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.black) // FIXME: - 컬러 수정
                         .padding(.trailing, 4)
                 }
                 
                 Image(systemName: "chevron.right")
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.black) // FIXME: - 컬러 수정
             }
             .padding()
         }

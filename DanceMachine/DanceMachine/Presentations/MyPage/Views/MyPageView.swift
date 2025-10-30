@@ -17,14 +17,14 @@ struct MyPageView: View {
     
     var body: some View {
         ZStack {
-            Color(UIColor.systemGroupedBackground) // FIXME: - 컬러 수정
-                .ignoresSafeArea()
+            Color.white.ignoresSafeArea() // FIXME: - 컬러 수정
             
             VStack { // FIXME: - spacing 수정
                 //FIXME: - 글자 스타일 수정
                 HStack {
                     Text("마이페이지")
                         .font(.title)
+                        .foregroundStyle(Color.black) // FIXME: - 컬러 수정
                         .bold()
                     Spacer()
                 }

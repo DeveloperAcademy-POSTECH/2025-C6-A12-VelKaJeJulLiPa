@@ -26,27 +26,27 @@ struct NavigationRoutingView: View {
                 case .profile:
                     MyPageView()
                 case .editName:
-                    EditNameView()
+                    EditNameView().toolbar(.hidden, for: .tabBar)
                 case .privacyPolicy:
-                    PrivacyPolicyView()
+                    PrivacyPolicyView().toolbar(.hidden, for: .tabBar)
                 case .termsOfUse:
-                    TermsOfUseView()
+                    TermsOfUseView().toolbar(.hidden, for: .tabBar)
                 case .accountSetting:
-                    AccountSettingView()
+                    AccountSettingView().toolbar(.hidden, for: .tabBar)
                 }
             case .teamspace(let route):
                 switch route {
                 case .list:
-                    TeamspaceListView()
+                    TeamspaceListView().toolbar(.hidden, for: .tabBar)
                 case .create:
-                    CreateTeamspaceView()
+                    CreateTeamspaceView().toolbar(.hidden, for: .tabBar)
                 case .setting:
-                    TeamspaceSettingView()
+                    TeamspaceSettingView().toolbar(.hidden, for: .tabBar)
                 }
             case .project(let route):
                 switch route {
                 case .create:
-                    CreateProjectView()
+                    CreateProjectView().toolbar(.hidden, for: .tabBar)
                 }
             case .video(let route):
                 switch route {

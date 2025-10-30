@@ -9,7 +9,12 @@ import SwiftUI
 
 struct InboxView: View {
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        ZStack {
+            Color.white.ignoresSafeArea()
+            Text("Coming Soon")
+                .font(Font.system(size: 16, weight: .semibold))
+                .foregroundStyle(Color.black)
+        }
     }
 }
 
