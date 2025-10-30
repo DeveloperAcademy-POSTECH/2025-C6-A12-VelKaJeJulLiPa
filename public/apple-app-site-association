@@ -1,9 +1,16 @@
 {
   "applinks": {
+    "apps": [],
     "details": [
       {
-        "appID": "W4ZPYHTRPJ.com.VelKaJeJulLiPa.DanceMachine",
-        "paths": ["*"]
+        "appIDs": ["W4ZPYHTRPJ.com.VelKaJeJulLiPa.DanceMachine"],
+        "components": [
+          {
+            "/": "/invite",
+            "?": { "token": "*" },
+            "comment": "초대 링크: https://<host>/invite?token=..."
+          }
+        ]
       }
     ]
   }

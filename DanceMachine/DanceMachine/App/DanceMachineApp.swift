@@ -47,6 +47,12 @@ struct DanceMachineApp: App {
                                 .onOpenURL { url in
                                     inviteRouter.handleIncoming(url: url) // 초대 로직
                                 }
+                                // 유저 정보가 갱신되면 보류된 초대 재시도
+                                .task(id: authManager.userInfo?.userId) {
+                                    await MainActor.run {
+                                        inviteRouter.processPendingIfPossible()
+                                    }
+                                }
                         }
                     }
                     .animation(.easeInOut, value: authManager.needsNameSetting)
