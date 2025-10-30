@@ -79,23 +79,23 @@ struct VideoView: View {
       }
       .toolbar(.hidden, for: .tabBar)
     }
-//    .background(Color.black.opacity(0.95))
+    .background(Color.white) // FIXME: 다크모드 배경색 명시
     .overlay {
       if vm.isLoading {
         VStack {
           ProgressView()
             .progressViewStyle(CircularProgressViewStyle())
-            .tint(.purple)
-            .scaleEffect(2)
+            .tint(.black)
+            .scaleEffect(1)
           
           if vm.videoVM.loadingProgress > 0 {
             Text("다운로드 중... \(Int(vm.videoVM.loadingProgress * 100))%")
-              .foregroundStyle(.purple)
-              .font(.system(size: 25))
+              .foregroundStyle(.black)
+              .font(.system(size: 14))
           } else {
             Text("로딩 중...")
-              .foregroundStyle(.purple)
-              .font(.system(size: 25))
+              .foregroundStyle(.black)
+              .font(.system(size: 14))
           }
         }
       }
@@ -110,14 +110,42 @@ struct VideoView: View {
     .onDisappear {
       vm.videoVM.cleanPlayer()
     }
-    .onReceive(NotificationCenter.default.publisher(for: UIDevice.orientationDidChangeNotification)) { _ in
-      withAnimation { // 디바이스 회전 감지
-        updateOrientation()
-      }
-    }
     .onAppear { // 화면이 나타날때 세로모드 가로모드를 정함
       updateOrientation()
     }
+  }
+  
+  // MARK: 피드백 빈 화면
+  private var pointEmptyView: some View {
+    VStack(alignment: .leading) {
+      Spacer()
+      Text("시점 피드백\n동영상 재생 중 원하는 시점에 버튼을 눌러\n타임스탬프를 남겨 피드백을 작성할 수 있습니다.")
+        .font(.system(size: 18))
+        .foregroundStyle(.black)
+      Spacer()
+      Text("구간 피드백\n오른쪽 회색 버튼을 눌러 시작 시점과 끝 시점을\n지정하고, 해당 구간에 대한 피드백을 남길 수 있\n습니다.")
+        .font(.system(size: 18))
+        .foregroundStyle(.black)
+      Spacer()
+    }
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .ignoresSafeArea(.keyboard, edges: .bottom)
+  }
+  
+  private var intervalEmptyView: some View {
+    VStack(alignment: .leading) {
+      Spacer()
+      Text("구간 피드백\n동영상 재생 중 시작 시점과 끝 시점을 지정하고\n타임스탬프를 남겨 피드백을 작성할 수 있습니다.")
+        .font(.system(size: 18))
+        .foregroundStyle(.black)
+      Spacer()
+      Text("시점 피드백\n회색 버튼을 눌러 원하는 시점에 버튼을 눌러\n타임스탬프를 남겨 피드백을 작성할 수 있습니다.")
+        .font(.system(size: 18))
+        .foregroundStyle(.black)
+      Spacer()
+    }
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .ignoresSafeArea(.keyboard, edges: .bottom)
   }
   
   // MARK: 세로모드 레이아웃
@@ -130,9 +158,19 @@ struct VideoView: View {
         feedbackSection
           .padding(.vertical, 8)
         Divider()
-        feedbackListView
-          .padding(.top, 16)
+        if vm.feedbackVM.feedbacks.isEmpty {
+          switch feedbackType {
+          case .point:
+            pointEmptyView
+          case .interval:
+            intervalEmptyView
+          }
+        } else {
+          feedbackListView
+            .padding(.top, 16)
+        }
       }
+      .ignoresSafeArea(.keyboard)
       .contentShape(Rectangle())
       .onTapGesture {
         if showFeedbackInput {
@@ -198,7 +236,10 @@ struct VideoView: View {
                 _ = vm.feedbackVM.handleIntervalButtonType(currentTime: vm.videoVM.currentTime)
               }
             },
-            isRecordingInterval: vm.feedbackVM.isRecordingInterval
+            isRecordingInterval: vm.feedbackVM.isRecordingInterval,
+            startTime: pointTime.formattedTime(),
+            currentTime: vm.videoVM.currentTime.formattedTime(),
+            feedbackType: $feedbackType
           )
         }
       }
@@ -447,7 +488,7 @@ struct VideoView: View {
               Task {
                 await vm.feedbackVM.deleteFeedback(f)
               }
-            } // TODO: 삭제
+            }
           )
         }
       }
@@ -491,7 +532,7 @@ struct VideoView: View {
   private var feedbackSection: some View {
     HStack {
       Text(feedbackFilter == .all ? "전체 피드백" : "마이 피드백")
-        .foregroundStyle(.white)
+        .foregroundStyle(.black) // FIXME: 컬러 수정
       Spacer()
       Button {
         switch feedbackFilter {

@@ -67,7 +67,7 @@ struct ReplyRecycle: View {
           },
           taggedUsers: mM.taggedUsers
         )
-        .padding(.bottom, 55)
+        .padding(.bottom, 60)
       }
     }
   }
@@ -89,7 +89,7 @@ struct ReplyRecycle: View {
       HStack { // FIXME: 아이콘 수정, 폰트 수정
         Image(systemName: "arrow.trianglehead.clockwise.rotate.90")
       }
-      .foregroundStyle(.blue) // FIXME: 컬러 수정
+      .foregroundStyle(.black) // FIXME: 컬러 수정
     }
   }
   // MARK: 태그된 사용자 표시

@@ -25,6 +25,7 @@ struct SectionSelectRow: View {
     HStack {
       Text(section.sectionTitle)
         .font(.system(size: 16)) // FIXME: 폰트 수정
+        .foregroundStyle(.black) // FIXME: 컬러 수정
       Spacer()
       if isSelected {
         Image(systemName: "checkmark.circle.fill")
