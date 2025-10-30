@@ -19,7 +19,7 @@ struct FeedbackButton: View {
   let isRecordingInterval: Bool
   
   var body: some View {
-    GlassEffectContainer {
+//    GlassEffectContainer {
       HStack(spacing: buttonSpacing) {
         // 왼쪽 버튼
         if showIntervalButton {
@@ -47,10 +47,10 @@ struct FeedbackButton: View {
               .frame(width: 50, height: 50)
           }
           .padding(4)
-          .glassEffect(
-            .clear.tint(Color.black.opacity(0.5)).interactive(),
-            in: .circle
-          )
+//          .glassEffect(
+//            .clear.tint(Color.black.opacity(0.5)).interactive(),
+//            in: .circle
+//          )
           .matchedGeometryEffect(id: "leftButton", in: buttonNamespace)
           .transition(.asymmetric(
             insertion: .scale(scale: 0.4).combined(with: .offset(x: -15)).combined(with: .opacity),
@@ -72,10 +72,10 @@ struct FeedbackButton: View {
               .padding(.vertical, 16)
           }
           .padding(4)
-          .glassEffect(
-            .clear.tint(Color.blue.opacity(0.7)).interactive(),
-            in: RoundedRectangle(cornerRadius: 12)
-          )
+//          .glassEffect(
+//            .clear.tint(Color.blue.opacity(0.7)).interactive(),
+//            in: RoundedRectangle(cornerRadius: 12)
+//          )
           .matchedGeometryEffect(id: "leftButton", in: buttonNamespace)
           .transition(.asymmetric(
             insertion: .scale(scale: 0.6).combined(with: .opacity),
@@ -96,12 +96,12 @@ struct FeedbackButton: View {
               .padding(.vertical, 16)
           }
           .padding(4)
-          .glassEffect(
-            .clear.tint(
-              (isRecordingInterval ? Color.purple : Color.blue).opacity(0.7)
-            ).interactive(),
-            in: RoundedRectangle(cornerRadius: 12)
-          )
+//          .glassEffect(
+//            .clear.tint(
+//              (isRecordingInterval ? Color.purple : Color.blue).opacity(0.7)
+//            ).interactive(),
+//            in: RoundedRectangle(cornerRadius: 12)
+//          )
           .matchedGeometryEffect(id: "rightButton", in: buttonNamespace)
           .transition(.asymmetric(
             insertion: .scale(scale: 0.6).combined(with: .opacity),
@@ -132,10 +132,10 @@ struct FeedbackButton: View {
               .frame(width: 50, height: 50)
           }
           .padding(4)
-          .glassEffect(
-            .clear.tint(Color.black.opacity(0.5)).interactive(),
-            in: .circle
-          )
+//          .glassEffect(
+//            .clear.tint(Color.black.opacity(0.5)).interactive(),
+//            in: .circle
+//          )
           .matchedGeometryEffect(id: "rightButton", in: buttonNamespace)
           .transition(.asymmetric(
             insertion: .scale(scale: 0.4).combined(with: .offset(x: 15)).combined(with: .opacity),
@@ -146,7 +146,7 @@ struct FeedbackButton: View {
       .padding(.horizontal, 16)
       .padding(.vertical, 8)
       
-    }
+//    }
   }
 }
 
