@@ -52,30 +52,30 @@ struct DanceMachineApp: App {
               
               // 백그라운드 상태에서 푸시 눌렀을 때 링크 처리 + 알림 읽음 처리
                 .onChange(of: scenePhase) { oldPhase, newPhase in
-                    if newPhase == .active && authManager.currentTeamspace != nil {
-                        Task {
-                            if let pendingDeeplinkURL = AppDelegate.pendingDeeplinkURL {
-                                handleIncomingURL(pendingDeeplinkURL)
-                                AppDelegate.pendingDeeplinkURL = nil
-                            }
-
-                            if let pendingNotificationId = AppDelegate.pendingNotificationId,
-                               let userId = FirebaseAuthManager.shared.userInfo?.userId {
-                                do {
-                                    try await NotificationManager.shared.markNotificationAsRead(
-                                        userId: userId,
-                                        notificationId: pendingNotificationId
-                                    )
-                                    AppDelegate.pendingNotificationId = nil
-                                    print("✅ 보류된 알림 읽음 처리 완료")
-                                } catch {
-                                    print("❌ 알림 읽음 처리 실패:", error.localizedDescription)
-                                }
-                            }
+                  if newPhase == .active && authManager.currentTeamspace != nil {
+                    Task {
+                      if let pendingDeeplinkURL = AppDelegate.pendingDeeplinkURL {
+                        handleIncomingURL(pendingDeeplinkURL)
+                        AppDelegate.pendingDeeplinkURL = nil
+                      }
+                      
+                      if let pendingNotificationId = AppDelegate.pendingNotificationId,
+                         let userId = FirebaseAuthManager.shared.userInfo?.userId {
+                        do {
+                          try await NotificationManager.shared.markNotificationAsRead(
+                            userId: userId,
+                            notificationId: pendingNotificationId
+                          )
+                          AppDelegate.pendingNotificationId = nil
+                          print("✅ 보류된 알림 읽음 처리 완료")
+                        } catch {
+                          print("❌ 알림 읽음 처리 실패:", error.localizedDescription)
                         }
+                      }
                     }
+                  }
                 }
-
+              
               
               // 앱 종료된 상태에서 푸시 눌렀을 때,
               // currentTeamspace 세팅되고 변화 감지해서 화면 링크 처리
@@ -104,27 +104,6 @@ struct DanceMachineApp: App {
                     }
                   }
                 }
-              
-              
-              //FIXME: 아래 코드 커밋하지 않기!
-              Button("피드백 생성") {
-                Task {
-                  do {
-                    let fb = Feedback(
-                      feedbackId: UUID(),
-                      videoId: "DF1B4DAD-2081-4DFF-98CD-B8F3B1A7CC18",
-                      authorId: "HqU0UNmrS5UBhxKZjhz4wqku4XB3",
-                      content: "파이디온 푸시 알림 테스트용입니다!",
-                      taggedUserIds: ["pt53sG8cbrMuwPE4NgKAbTkOoEQ2"],
-                      teamspaceId: "4924D4B8-EB08-4AB8-B89D-CD4E4A4BE4E9")
-                    
-                    try await FirestoreManager.shared.create(fb)
-                  }
-                }
-              }
-              
-              
-              
             }
           }
           .animation(.easeInOut, value: authManager.needsNameSetting)
