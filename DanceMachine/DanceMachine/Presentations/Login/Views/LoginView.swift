@@ -18,7 +18,7 @@ struct LoginView: View {
         VStack(spacing: 24) {
             Spacer()
             
-            Text("Welcome to DanceMachine")
+            Text("Welcome to DirAct")
                 .font(.largeTitle.bold())
                 .multilineTextAlignment(.center)
             
