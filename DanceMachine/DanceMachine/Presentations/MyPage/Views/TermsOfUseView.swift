@@ -8,14 +8,13 @@
 import SwiftUI
 
 struct TermsOfUseView: View {
-    @Environment(\.colorScheme) var colorScheme
     @State private var isLoading = false
     
     private let termsOfUseURL = URL(string: "https://mammoth-eyelash-f4f.notion.site/29610840462c8038a85bf08362518b03?source=copy_link")!
     
     var body: some View {
         ZStack {
-            colorScheme == .light ? Color.white : .black  // FIXME: - 컬러 수정
+            Color.white.ignoresSafeArea()  // FIXME: - 컬러 수정
             
             WebView(url: termsOfUseURL, isLoading: $isLoading)
                 .opacity(isLoading ? 0 : 1)
