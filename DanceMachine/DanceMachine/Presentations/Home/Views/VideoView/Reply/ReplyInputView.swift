@@ -36,7 +36,11 @@ struct ReplyRecycle: View {
         content: $content,
         placeHolder: "답글을 입력해주세요.",
         submitAction: {
-          onSubmit(content, mM.taggedUsers.map { $0.userId })
+          var taggedIds = Set(mM.taggedUsers.map { $0.userId })
+          if let replyToId = replyingTo?.userId {
+            taggedIds.insert(replyToId)
+          }
+          onSubmit(content, Array(taggedIds))
           self.content = ""
         },
         onFocusChange: {_ in },
