@@ -155,6 +155,9 @@ struct HomeView: View {
             }
         }
         .task {
+            await viewModel.setupNotificationAuthorizationIfNeeded()
+        }
+        .task {
             if ProcessInfo.isRunningInPreviews { return } // 프리뷰 전용
             isLoading = true
             defer { isLoading = false }
