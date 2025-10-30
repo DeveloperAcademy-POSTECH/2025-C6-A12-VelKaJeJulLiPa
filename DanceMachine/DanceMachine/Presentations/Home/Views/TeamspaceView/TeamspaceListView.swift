@@ -25,7 +25,7 @@ struct TeamspaceListView: View {
       
     var body: some View {
         ZStack {
-            Color.white // FIXME: - 컬러 수정
+            Color.white.ignoresSafeArea() // FIXME: - 컬러 수정
             List {
                 ForEach(loadTeamspaces, id: \.teamspaceId) { teamspace in
                     Button {
