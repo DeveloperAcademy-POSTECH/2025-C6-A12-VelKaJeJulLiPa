@@ -72,22 +72,18 @@ struct FeedbackCard: View {
         )
         .font(.system(size: 14)) // FIXME: 폰트 수정
       }
-      Spacer()   
+      Spacer()
     }
   }
   
   private var timeStamp: some View {
     HStack {
       if let endTime = feedback.endTime {
-//        Text("\(feedback.startTime?.formattedTime() ?? "00:00") ~ \(endTime.formattedTime())")
-//          .font(.system(size: 16)) // FIXME: 폰트 수정
         TimestampButton(
           text: "\(feedback.startTime?.formattedTime() ?? "00:00") ~ \(endTime.formattedTime())",
           timeSeek: { timeSeek() }
         )
       } else {
-//        Text(feedback.startTime?.formattedTime() ?? "00:00")
-//          .font(.system(size: 16)) // FIXME: 폰트 수정
         TimestampButton(
           text: "\(feedback.startTime?.formattedTime() ?? "00:00")",
           timeSeek: { timeSeek() }
