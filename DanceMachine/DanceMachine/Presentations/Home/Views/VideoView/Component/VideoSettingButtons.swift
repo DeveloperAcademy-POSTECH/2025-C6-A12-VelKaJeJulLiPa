@@ -41,7 +41,7 @@ struct VideoSettingButtons: View {
       }
     } label: {
       Image(systemName: isLandscapeMode
-        ? (showFeedbackPanel ? "xmark" : "message")
+        ? (showFeedbackPanel ? "message" : "message") // FIXME: 수정
         : "deskclock"
       )
       .font(.system(size: 20))
