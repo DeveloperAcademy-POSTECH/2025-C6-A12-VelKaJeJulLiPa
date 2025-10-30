@@ -50,6 +50,7 @@ struct TeamspaceListView: View {
             ToolbarCenterTitle(text: "팀 스페이스")
         }
         .task {
+            if ProcessInfo.isRunningInPreviews { return } // 프리뷰 전용
             self.isLoading = true
             defer { isLoading = false }
             
