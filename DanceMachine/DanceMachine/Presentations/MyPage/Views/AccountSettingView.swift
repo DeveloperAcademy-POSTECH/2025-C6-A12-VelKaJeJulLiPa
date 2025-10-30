@@ -51,7 +51,7 @@ struct AccountSettingView: View {
                 titleText: "로그아웃하시겠어요?",
                 primaryText: "로그아웃") {
                     Task {
-                        try viewModel.signOut()
+                        try await viewModel.signOut()
                         router.popToRootView()
                     }
                 }
@@ -62,7 +62,7 @@ struct AccountSettingView: View {
                 primaryText: "탈퇴") {
                     Task {
                         try await viewModel.deleteUserAccount()
-                        router.popToRootView() // FIXME: - 내비게이션 처리 확인
+                        router.popToRootView() // TODO: - 내비게이션 처리 확인
                     }
                 }
         }
