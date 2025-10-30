@@ -36,6 +36,8 @@ struct TeamspaceSettingView: View {
                 Spacer().frame(height: 32)
                 middleTeamMemberManagementView
                 Spacer()
+                ThickDivider()
+                Spacer().frame(height: 30)
                 bottomDeleteTeamspaceView.padding(.horizontal, 16)
             }
         }
