@@ -16,16 +16,18 @@ struct CreateTeamspaceView: View {
     
     var body: some View {
         ZStack {
-            Color.white // FIXME: - 컬러 수정
+            Color.white.ignoresSafeArea() // FIXME: - 컬러 수정
             
             VStack {
                 Spacer()
                 inputTeamspaceNameView
+                    .padding(.horizontal, 16)
                 Spacer()
                 bottomButtonView
+                    .padding(.horizontal, 16)
             }
         }
-        .padding(.horizontal, 16)
+        
         .toolbar {
           ToolbarLeadingBackButton(icon: .chevron)
         }
