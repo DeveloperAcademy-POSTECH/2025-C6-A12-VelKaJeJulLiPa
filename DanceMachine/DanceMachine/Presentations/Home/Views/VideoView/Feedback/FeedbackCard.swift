@@ -23,14 +23,15 @@ struct FeedbackCard: View {
   let onDelete: () -> Void
   
   var body: some View {
-    VStack(alignment: .leading, spacing: 4) {
+    VStack(alignment: .leading, spacing: 8) {
       authorName
+      Spacer().frame(height: 4)
       timeStamp
       content
       replyButton
     }
     .padding(.horizontal, 8)
-    .padding(.vertical, 10)
+    .padding(.vertical, 16)
     .background(
       Color.gray.opacity(0.5)
         .clipShape(RoundedRectangle(cornerRadius: 0))
@@ -40,22 +41,7 @@ struct FeedbackCard: View {
     .onTapGesture {
       action()
     }
-  }
-  
-  private var authorName: some View {
-    HStack {
-      Text(authorUser?.name ?? "알 수 없는 사용자")
-        .font(.system(size: 14)) // FIXME: 폰트 수정
-      Text("·")
-        .font(.system(size: 14)) // FIXME: 폰트 수정
-      if feedback.createdAt != nil {
-        Text(
-          feedback.createdAt?.listTimeLabel() ?? ""
-        )
-        .font(.system(size: 14)) // FIXME: 폰트 수정
-      }
-      Spacer()
-      
+    .overlay(alignment: .topTrailing) {
       if feedback.authorId == currentUserId {
         Menu { // FIXME: 아이콘 컬러 수정
           Button(role: .destructive) {
@@ -71,6 +57,22 @@ struct FeedbackCard: View {
         }
         .tint(.gray.opacity(0.8))
       }
+    }
+  }
+  
+  private var authorName: some View {
+    HStack {
+      Text(authorUser?.name ?? "알 수 없는 사용자")
+        .font(.system(size: 14)) // FIXME: 폰트 수정
+      Text("·")
+        .font(.system(size: 14)) // FIXME: 폰트 수정
+      if feedback.createdAt != nil {
+        Text(
+          feedback.createdAt?.listTimeLabel() ?? ""
+        )
+        .font(.system(size: 14)) // FIXME: 폰트 수정
+      }
+      Spacer()   
     }
   }
   
