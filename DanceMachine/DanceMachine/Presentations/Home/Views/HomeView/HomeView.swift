@@ -28,12 +28,13 @@ struct HomeView: View {
 
     var body: some View {
         ZStack {
-            Color.white
+            Color.white.ignoresSafeArea() // FIXME: - 컬러 수정
             VStack {
                 TeamspaceTitleView(
                     viewModel: viewModel,
                     teamspaceState: viewModel.tsBinding(\.state)
                 )
+                .padding(.horizontal, 16)
 
                 ProjectListView(
                     viewModel: viewModel,
@@ -98,6 +99,7 @@ struct HomeView: View {
                         viewModel.tracks.editingID = nil
                     }
                 )
+                .padding(.horizontal, 16)
 
                 Spacer()
             }
@@ -142,7 +144,6 @@ struct HomeView: View {
                 .presentationCornerRadius(16)
             }
         }
-        .padding(.horizontal, 16)
         .overlay { if isLoading { LoadingView() } }
         .overlay(alignment: .bottomTrailing) {
             if let mode = viewModel.fabMode {
