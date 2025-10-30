@@ -30,6 +30,9 @@ final class VideoViewModel {
   private let doubleTap: TimeInterval = 0.5
   
   var loadingProgress: Double = 0.0
+  
+  // 배속 변수
+  var playbackSpeed: Float = 1.0
 }
 
 // MARK: - 영상관련 메서드
@@ -114,6 +117,15 @@ extension VideoViewModel {
     p.seek(to: cmT)
     currentTime = t
   }
+  // MARK: 배속 조절
+  func setPlaybackSpeed(_ speed: Float) {
+    self.playbackSpeed = speed
+    self.player?.rate = speed
+    
+    if !isPlaying {
+      self.player?.rate = 0
+    }
+  }
   // MARK: 재생 정지 메서드
   func togglePlayPause() {
     if isPlaying {
@@ -130,6 +142,7 @@ extension VideoViewModel {
           self.showControls = false
         }
       }
+      player?.rate = playbackSpeed
     }
     isPlaying.toggle()
   }
