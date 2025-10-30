@@ -158,6 +158,7 @@ export const onFeedbackCreated = onDocumentCreated("feedback/{feedbackId}", asyn
     feedback_id,
     created_at: admin.firestore.FieldValue.serverTimestamp(),
     video_id,
+    teamspace_id,
     content,
   });
   logger.info("Notification doc created (feedback)", { feedback_id, validTaggedUsers, notification_id });
@@ -266,6 +267,7 @@ export const onReplyCreated = onDocumentCreated("feedback/{feedbackId}/reply/{re
     reply_id,
     created_at: admin.firestore.FieldValue.serverTimestamp(),
     video_id,
+    teamspace_id,
     content,
   });
   logger.info("Notification doc created (reply)", { reply_id, validReceivers, notification_id });
