@@ -144,24 +144,24 @@ struct VideoListView: View {
       let itemSize = availableWidth / CGFloat(columns)
       
       ScrollView {
-        VideoGrid(
-          size: itemSize,
-          columns: columns,
-          spacing: spacing,
-          tracksId: tracksId,
-          videos: .constant(vm.filteredVideos),
-          track: .constant(vm.track),
-          section: .constant(vm.section),
-          vm: $vm
-        )
-        .onTapGesture {
-          // TODO: 비디오 플레이 화면 네비게이션 연결
-          print("비디오 클릭")
+          VideoGrid(
+            size: itemSize,
+            columns: columns,
+            spacing: spacing,
+            tracksId: tracksId,
+            videos: vm.filteredVideos,
+            track: vm.track,
+            section: vm.section,
+            vm: $vm
+          )
+          .onTapGesture {
+            // TODO: 비디오 플레이 화면 네비게이션 연결
+            print("비디오 클릭")
+          }
         }
       }
-    }
     .overlay { if vm.filteredVideos.isEmpty && vm.isLoading == false { emptyView }}
-  }
+    }
   // MARK: 섹션 칩 뷰
   private var sectionView: some View {
     ScrollView(.horizontal, showsIndicators: false) {

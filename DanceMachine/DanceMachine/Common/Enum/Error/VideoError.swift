@@ -8,11 +8,13 @@
 import Foundation
 
 enum VideoError: Error {
-  case thumbnailFailed
-  case uploadFailed
-  case createSectionFailed
-  case fetchFailed
-  case deleteFailed
+  case thumbnailFailed          // 썸네일 업로드 실패
+  case uploadFailed             // 단순 업로드 실패
+  case createSectionFailed      // 섹션 생성 실패
+  case fetchFailed              // 불러오기 실패
+  case deleteFailed             // 삭제 실패
+  case uploadTimeout            // 업로드 타임아웃 (시간 지정)
+  case networkError             // 네트워크 연결 오류
   
   var debugMsg: String {
     switch self {
@@ -26,6 +28,10 @@ enum VideoError: Error {
       "비디오 목록을 불러오는데 실패했습니다."
     case .deleteFailed:
       "비디오 삭제에 실패했습니다."
+    case .uploadTimeout:
+      "업로드 시간 초과"
+    case .networkError:
+      "네트워크 연결 오류"
     }
   }
   
@@ -41,6 +47,10 @@ enum VideoError: Error {
       "영상 목록을 불러올 수 없습니다.\n네트워크 연결을 확인해주세요."
     case .deleteFailed:
       "영상 삭제에 실패했습니다.\n다시 시도해주세요."
+    case .uploadTimeout:
+      "업로드 시간이 초과되었습니다.\n네트워크 연결을 확인하고 다시 시도해주세요."
+    case .networkError:
+      "네트워크 연결이 불안정합니다.\n다시 시도해주세요."
     }
   }
 }

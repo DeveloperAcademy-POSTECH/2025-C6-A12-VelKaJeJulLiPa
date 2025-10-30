@@ -8,14 +8,20 @@
 import SwiftUI
 
 struct VideoGrid: View {
+  @EnvironmentObject private var router: NavigationRouter
+  
   let size: CGFloat
   let columns: Int
   let spacing: CGFloat
   let tracksId: String
   
-  @Binding var videos: [Video]
-  @Binding var track: [Track]
-  @Binding var section: [Section]
+  let videos: [Video]
+  let track: [Track]
+  let section: [Section]
+  
+//  @Binding var videos: [Video]
+//  @Binding var track: [Track]
+//  @Binding var section: [Section]
   
   @State private var selectedVideo: Video?
   @State private var selectedTrack: Track?
@@ -49,6 +55,17 @@ struct VideoGrid: View {
               deleteAction: {
                 self.selectedVideo = video
                 print("\(video.videoId)모달 선택")
+              },
+              videoAction: {
+                router.push(
+                  to: .video(
+                    .play(
+                      videoId: video.videoId.uuidString,
+                      videoTitle: video.videoTitle,
+                      videoURL: video.videoURL
+                    )
+                  )
+                )
               }
             )
           }
@@ -68,6 +85,17 @@ struct VideoGrid: View {
             },
             deleteAction: {
               self.showDeleteModal = true
+            },
+            videoAction: {
+              router.push(
+                to: .video(
+                  .play(
+                    videoId: video.videoId.uuidString,
+                    videoTitle: video.videoTitle,
+                    videoURL: video.videoURL,
+                  )
+                )
+              )
             }
           )
           .sheet(isPresented: $showDeleteModal) {
@@ -86,8 +114,7 @@ struct VideoGrid: View {
 #endif
     }
     // MARK: 영상 섹션 이동 뷰
-    .fullScreenCover(item: $selectedTrack) { _ in
-      if let track = selectedTrack {
+    .fullScreenCover(item: $selectedTrack) { track in
         NavigationStack {
           SectionSelectView(
             section: section,
@@ -96,7 +123,6 @@ struct VideoGrid: View {
             tracksId: tracksId
           )
         }
-      }
     }
     .sheet(item: $selectedVideo) { _ in
       if let video = selectedVideo {
@@ -139,16 +165,16 @@ extension Track: Identifiable {
 extension Video: Identifiable {
   var id: String { videoId.uuidString }
 }
-
-#Preview {
-  VideoGrid(
-    size: 168,
-    columns: 2,
-    spacing: 16,
-    tracksId: "",
-    videos: .constant([]),
-    track: .constant([]),
-    section: .constant([]),
-    vm: .constant(VideoListViewModel())
-  )
-}
+//
+//#Preview {
+//  VideoGrid(
+//    size: 168,
+//    columns: 2,
+//    spacing: 16,
+//    tracksId: "",
+//    videos: .constant([]),
+//    track: .constant([]),
+//    section: .constant([]),
+//    vm: .constant(VideoListViewModel())
+//  )
+//}

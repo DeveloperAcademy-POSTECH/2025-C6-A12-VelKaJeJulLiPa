@@ -35,27 +35,17 @@ struct RootView: View {
                                 tabLabel(tab)
                             })
                     }
-                  Tab(value: tabcase, role: .search) {
-                    Color.clear
-                  } label: {
-                    Image(systemName: "plus.circle.fill")
-//                    Text("영상 추가하기")
-                  }
+//                  Tab(value: tabcase, role: .search) {
+//                    Color.clear
+//                  } label: {
+//                    Image(systemName: "plus.circle.fill")
+////                    Text("영상 추가하기")
+//                  }
 //                  Tab(value: TabCase.myPage, role: .search) {
 //                    Image(systemName: "plus.circle.fill")
 //                  }
                 })
-                .tint(Color.red)
-//                .tabBarMinimizeBehavior(.onScrollDown)
-//                .tabViewBottomAccessory {
-////                  bottomAccessory(for: .home)
-//                  HStack {
-//                    Spacer()
-//                    uploadButton
-//                      .frame(width: 180)
-//                    Spacer()
-//                  }
-//                }
+                .tint(Color.black)
                 .onChange(of: tabcase) { oldValue, newValue in
                      if oldValue != newValue {
                          router.destination.removeAll()

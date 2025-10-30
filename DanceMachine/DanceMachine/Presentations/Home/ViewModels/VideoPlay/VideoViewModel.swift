@@ -11,7 +11,9 @@ import AVKit
 
 @Observable
 final class VideoViewModel {
-  var player: AVPlayer?
+  private let cacheManager = VideoCacheManager.shared
+  
+  var player: AVPlayer? = AVPlayer()
   
   var isPlaying: Bool = false
   var showControls: Bool = false
@@ -26,47 +28,74 @@ final class VideoViewModel {
   var tapCount: Int = .zero
   var autoShowControls: Task<Void, Never>?
   private let doubleTap: TimeInterval = 0.5
-
+  
+  var loadingProgress: Double = 0.0
+  
+  // 배속 변수
+  var playbackSpeed: Float = 1.0
 }
 
 // MARK: - 영상관련 메서드
 extension VideoViewModel {
   // MARK: 동영상 Player 설정 (AVFoundation)
-  func setupPlayer(from videoURL: String) {
-    guard let url = URL(string: videoURL) else
-    { return }
+  func setupPlayer(from videoURL: String, videoId: String) async throws {
+    await MainActor.run {
+      self.loadingProgress = 0.0
+    }
     
-    player = AVPlayer(url: url)
-    
-    // 재생시간 업데이트 옵저버
-    timeObserver = player?.addPeriodicTimeObserver(
-      forInterval: CMTime(
-        seconds: 0.5,
-        preferredTimescale: 600
-      ),
-      queue: DispatchQueue.main,
-      using: { time in
-        self.currentTime = time.seconds
-        print("재생 중: \(time.seconds)초")
+    do {
+      if let cachedURL = await cacheManager.getCachedVideoURL(for: videoId) {
+        print("캐시에서 비디오 로드0")
+        await setupPlayerWithURL(cachedURL)
+        return
       }
-    )
-    
-    // 비디오 전체 길이 가져오기
-    Task {
-      do {
-        if let asset = player?.currentItem?.asset {
-          let duration = try await asset.load(.duration)
-          await MainActor.run {
-            self.duration = duration.seconds
-            print("비디오 길이: \(self.duration)")
+      
+      print("네트워크에서 다운로드 시작")
+      let cachedURL = try await cacheManager.downloadAndCacheVideo(
+        from: videoURL,
+        videoId: videoId) { [weak self] progress in
+          Task { @MainActor in
+            self?.loadingProgress = progress
           }
+        }
+      
+      await setupPlayerWithURL(cachedURL)
+      
+    } catch {
+      print("비디오 로드 실패: \(error)")
+      throw error
+    }
+  }
+  // MARK: URL로 플레이어 설정
+  private func setupPlayerWithURL(_ url: URL) async {
+    let playerItem = AVPlayerItem(url: url)
+    
+    await MainActor.run {
+      self.player = AVPlayer(playerItem: playerItem)
+    }
+    
+    await MainActor.run {
+      timeObserver = player?.addPeriodicTimeObserver(
+        forInterval: CMTime(seconds: 0.5, preferredTimescale: 600),
+        queue: DispatchQueue.main,
+        using: { [weak self] time in
+          self?.currentTime = time.seconds
+        }
+      )
+    }
+    
+    if let asset = playerItem.asset as? AVURLAsset {
+      do {
+        let duration = try await asset.load(.duration)
+        await MainActor.run {
+          self.duration = duration.seconds
+          print("비디오 길이: \(duration)")
         }
       } catch {
         print("전체 영상 길이 가져오기 실패")
       }
     }
   }
-  
   // MARK: Player 해제
   func cleanPlayer() {
     if let p = player,
@@ -75,7 +104,6 @@ extension VideoViewModel {
       self.timeObserver = nil
     }
   }
-  
   // MARK: 시간 이동 메서드
   func seekToTime(to time: Double) {
     guard let p = player else { return }
@@ -89,13 +117,32 @@ extension VideoViewModel {
     p.seek(to: cmT)
     currentTime = t
   }
-  
+  // MARK: 배속 조절
+  func setPlaybackSpeed(_ speed: Float) {
+    self.playbackSpeed = speed
+    self.player?.rate = speed
+    
+    if !isPlaying {
+      self.player?.rate = 0
+    }
+  }
   // MARK: 재생 정지 메서드
   func togglePlayPause() {
     if isPlaying {
       player?.pause()
+      DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+        withAnimation(.easeInOut(duration: 0.6)) {
+          self.showControls = true
+        }
+      }
     } else {
       player?.play()
+      DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+        withAnimation(.easeInOut(duration: 0.6)) {
+          self.showControls = false
+        }
+      }
+      player?.rate = playbackSpeed
     }
     isPlaying.toggle()
   }
