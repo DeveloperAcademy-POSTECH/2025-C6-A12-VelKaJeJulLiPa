@@ -129,7 +129,7 @@ struct VideoListView: View {
   private var emptyView: some View {
     VStack {
       Spacer()
-      Text("업로드 된 영상이 없습니다.")
+      Text("􀣍 를 눌러서 파트를 추가하세요")
       Spacer()
     }
   }
