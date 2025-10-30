@@ -16,7 +16,7 @@ struct ToolbarCenterTitle: ToolbarContent {
         ToolbarItem(placement: .principal) {
             Text(text)
                 .font(Font.system(size: 18, weight: .semibold))
-                .foregroundStyle(colorScheme == .light ? .black : .white) //FIXME: 컬러 수정
+                .foregroundStyle(.black) // FIXME: 다크모드 배경색 명시
                 .allowsHitTesting(false)
         }
     }
