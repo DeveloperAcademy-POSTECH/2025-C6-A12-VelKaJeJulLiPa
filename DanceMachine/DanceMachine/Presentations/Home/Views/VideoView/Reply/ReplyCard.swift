@@ -30,21 +30,7 @@ struct ReplyCard: View {
     .padding(.vertical, 10)
     .background(Color.red.opacity(0.3))
     .padding(.horizontal, 16)
-
-  }
-  
-  private var topRow: some View {
-    HStack {
-      Text(authorUser?.name ?? "알 수 없는 유저")
-        .font(.system(size: 14)) // FIXME: 폰트수정
-      if reply.createdAt != nil {
-        Text("·")
-          .font(.system(size: 14)) // FIXME: 폰트수정
-        Text(reply.createdAt?.listTimeLabel() ?? "방금 전")
-          .font(.system(size: 14)) // FIXME: 폰트수정
-      }
-      Spacer()
-      
+    .overlay(alignment: .topTrailing) {
       if reply.authorId == currentUserId {
         Menu { // FIXME: 아이콘 컬러 수정
           Button(role: .destructive) {
@@ -60,6 +46,20 @@ struct ReplyCard: View {
         }
         .tint(.gray.opacity(0.8))
       }
+    }
+  }
+  
+  private var topRow: some View {
+    HStack {
+      Text(authorUser?.name ?? "알 수 없는 유저")
+        .font(.system(size: 14)) // FIXME: 폰트수정
+      if reply.createdAt != nil {
+        Text("·")
+          .font(.system(size: 14)) // FIXME: 폰트수정
+        Text(reply.createdAt?.listTimeLabel() ?? "방금 전")
+          .font(.system(size: 14)) // FIXME: 폰트수정
+      }
+      Spacer()
     }
   }
   
