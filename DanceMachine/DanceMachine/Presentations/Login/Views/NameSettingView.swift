@@ -31,7 +31,7 @@ struct NameSettingView: View {
     var body: some View {
         VStack {
             Spacer()
-            Text("만나서 반가워요!")
+            Text("환영합니다!")
                 .font(.system(size: 24))
             
             //FIXME: 텍스트필드 - Mid-fi Design 반영 (제이콥 확인)
