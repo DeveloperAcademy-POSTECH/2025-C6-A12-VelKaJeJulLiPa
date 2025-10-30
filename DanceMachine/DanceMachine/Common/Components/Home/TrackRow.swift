@@ -25,6 +25,7 @@ struct TrackRow: View {
     var body: some View {
         HStack(spacing: 10) {
             Image(systemName: "music.note.list")
+                .foregroundStyle(Color.black)
 
             switch rowState {
             case .viewing:
@@ -33,6 +34,7 @@ struct TrackRow: View {
                     .foregroundStyle(.black)
                 Spacer()
                 Image(systemName: "chevron.right")
+                    .foregroundStyle(Color.black)
 
             case .editing(let action):
                 switch action {
@@ -57,6 +59,7 @@ struct TrackRow: View {
                     VStack(spacing: .zero) {
                         TextField("곡 이름", text: $editText)
                             .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(Color.black)
                             .textFieldStyle(.plain)
                             .focused($nameFieldFocused)
                             // update 모드로 바뀌는 순간 1회 초기화
@@ -86,7 +89,7 @@ struct TrackRow: View {
         .padding(.vertical, 12)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(Color.gray.opacity(0.1))
+                .fill(Color.gray)
         )
         .contentShape(Rectangle())
         .onTapGesture {
