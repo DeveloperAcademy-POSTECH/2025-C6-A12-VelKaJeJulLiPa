@@ -73,6 +73,8 @@ extension VideoListViewModel {
       }
       print("불러온 videoId 개수\(videoIds.count)")
       
+      // 4. 수집한 videoId로 Video 문서들 가져오기 (동시 + 결측 허용)
+      let validIds = videoIds.filter { UUID(uuidString: $0) != nil }
       var fetchedVideos: [Video] = []
       // 4. 수집한 videoId로 Video 문서들 가져오기
       for videoId in videoIds {
@@ -109,7 +111,11 @@ extension VideoListViewModel {
     } catch {
       await MainActor.run {
         self.isLoading = false
-        self.errorMsg = VideoError.fetchFailed.userMsg
+        // 동작 중 일부 videoId가 누락되어도 전체를 중단하지 않도록,
+        // 이미 로딩된 비디오가 없다면에만 에러 메시지를 표시
+        if self.videos.isEmpty {
+          self.errorMsg = VideoError.fetchFailed.userMsg
+        }
         print("비디오 에러: \(VideoError.fetchFailed.debugMsg)")
         print("상세 에러: \(error)")
       }

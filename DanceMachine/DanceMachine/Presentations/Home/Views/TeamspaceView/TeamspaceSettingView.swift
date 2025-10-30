@@ -47,7 +47,7 @@ struct TeamspaceSettingView: View {
                     primaryText: "팀 스페이스 나가기") {
                         Task {
                             try await viewModel.leaveTeamspace()
-                            
+                            await MainActor.run { rotuer.pop() }
                         }
                     }
             case .owner:
@@ -78,7 +78,11 @@ struct TeamspaceSettingView: View {
             ToolbarLeadingBackButton(icon: .chevron)
             ToolbarCenterTitle(text: "팀 스페이스 설정")
         }
-        .task(id: viewModel.currentTeamspace?.teamspaceId) {
+        .task {
+            print("시작")
+            
+            if ProcessInfo.isRunningInPreviews { return } // 프리뷰 전용
+            
             // 로그인 유저와 팀 스페이스 ownerId가 일치하면 발생하는 로직 => 팀 스페이스 주인 => 권한 up
             await MainActor.run { self.teamspaceRole = viewModel.isTeamspaceOwner() ? .owner : .viewer }
           
@@ -266,11 +270,11 @@ struct TeamspaceSettingView: View {
 }
 
 
-//#Preview {
-//    NavigationStack {
-//        TeamspaceSettingView()
-//            .environmentObject(NavigationRouter())
-//    }
-//}
+#Preview {
+    NavigationStack {
+        TeamspaceSettingView()
+            .environmentObject(NavigationRouter())
+    }
+}
  
 

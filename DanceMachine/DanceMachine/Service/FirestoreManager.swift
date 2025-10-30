@@ -344,6 +344,34 @@ final class FirestoreManager {
             .delete()
     }
     
+    
+    /// 특정 컬렉션에서 지정된 필드값이 일치하는 모든 문서를 삭제합니다.
+    /// - Parameters:
+    ///   - collectionType: 삭제할 컬렉션
+    ///   - fieldName: 비교할 필드 이름 (예: "teamspaceId", "projectId" 등)
+    ///   - value: 필드 값
+    /// - Throws: Firestore 작업 중 발생한 오류
+    func deleteAllDocuments(
+        from collectionType: CollectionType,
+        whereField fieldName: String,
+        isEqualTo value: String
+    ) async throws {
+        let querySnapshot = try await db
+            .collection(collectionType.rawValue)
+            .whereField(fieldName, isEqualTo: value)
+            .getDocuments()
+        
+        print("삭제 대상 문서 수: \(querySnapshot.documents.count)개 (\(collectionType.rawValue))")
+        
+        // 안정성을 위해 순차적으로 처리
+        for document in querySnapshot.documents {
+            try await document.reference.delete()
+            print("삭제 완료: \(document.documentID)")
+        }
+        
+        print("\(collectionType.rawValue) 컬렉션에서 '\(fieldName)' == '\(value)' 문서 삭제 완료")
+    }
+    
     /// 특정 부모 문서 하위의 서브컬렉션의 특정 문서를 제거합니다.
     /// - Parameters:
     ///   - parentType: 부모 컬렉션(.user 등)
