@@ -68,7 +68,13 @@ final class TeamspaceSettingViewModel {
             
             if let firstTeamspace = loadTeamspaces.first {
                 await MainActor.run {
+                    print("있음: \(firstTeamspace.teamspaceName)")
                     self.fetchCurrentTeamspace(teamspace: firstTeamspace)
+                }
+            } else {
+                await MainActor.run {
+                    print("leave 없음")
+                    FirebaseAuthManager.shared.currentTeamspace = nil
                 }
             }
         } catch {
@@ -77,10 +83,18 @@ final class TeamspaceSettingViewModel {
     }
     
     
-    /// 팀원 내보내기 + 팀 스페이스 현재 멤버 새로고침
+    /// 팀원 내보내기 + 내보내진 팀원 서브컬렉션에서도 팀 스페이스 제거 + 팀 스페이스 현재 멤버 새로고침
     func removeTeamMemberAndReload(userId: String) async throws -> [User] {
         do {
-            try await self.removingTeamspaceMember(userId: userId)
+            try await self.removingTeamspaceMember(userId: userId) // 팀원 내보내기
+            
+            try await FirestoreManager.shared.deleteFromSubcollection(
+                under: .users,
+                parentId: userId,
+                subCollection: .userTeamspace,
+                target: self.currentTeamspace?.teamspaceId.uuidString ?? ""
+            ) // 내보내진 팀원 서브컬렉션에서도 팀 스페이스 제거
+            
             return await self.fetchCurrentTeamspaceAllMember()
         } catch {
             print("error: \(error.localizedDescription)") // FIXME: - 에러에 맞게 로직 수정
@@ -157,6 +171,7 @@ extension TeamspaceSettingViewModel {
     /// 팀스페이스를 삭제하기 전에, 이 팀스페이스에 속한 모든 유저의
     /// users/{userId}/userTeamspace 에서 해당 팀스페이스 참조를 제거하고,
     /// teamspace/{id}/members 를 비운 뒤, teamspace 문서를 삭제합니다.
+    // TODO: 프로젝트도 삭제, tracks
     func removeTeamspaceAndDetachFromAllUsers() async throws {
         do {
             let teamspaceId = self.currentTeamspace?.teamspaceId.uuidString ?? ""
@@ -198,6 +213,19 @@ extension TeamspaceSettingViewModel {
                 collectionType: .teamspace,
                 documentID: teamspaceId
             )
+            
+            // 해당 팀스페이스의 프로젝트를 모두 제거
+            // FIXME: - Funtions를 정말 진지하게 고려해보자 (연쇄 삭제 고려하기)
+            // FIXME: - 곡, 비디오까지 전부 연쇄 삭제를 넣어야 함.
+            try await FirestoreManager.shared.deleteAllDocuments(
+                from: .project,
+                whereField: Project.CodingKeys.teamspaceId.stringValue,
+                isEqualTo: teamspaceId
+            )
+            
+            
+            
+            
             
             let userTeamspaces = try await self.fetchUserTeamspace(userId: FirebaseAuthManager.shared.userInfo?.userId ?? "")
             let loadTeamspaces = try await self.fetchTeamspaces(userTeamspaces: userTeamspaces)

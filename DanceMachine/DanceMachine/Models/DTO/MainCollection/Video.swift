@@ -8,6 +8,7 @@
 import Foundation
 import FirebaseFirestore
 
+nonisolated
 struct Video: Codable {
     let videoId: UUID
     let videoTitle: String
