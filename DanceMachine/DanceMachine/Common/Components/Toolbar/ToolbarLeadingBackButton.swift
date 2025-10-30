@@ -20,7 +20,7 @@ struct ToolbarLeadingBackButton: ToolbarContent {
                 dismiss()
             } label: {
                 Image(systemName: icon.toolIcon)
-                    .foregroundStyle(Color.gray)
+                    .foregroundStyle(Color.black)
                     .frame(width: 24, height: 24)
             }
 //            .padding(.leading, -8)

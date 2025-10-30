@@ -32,8 +32,8 @@ struct TeamspaceTitleView: View {
                 router.push(to: .teamspace(.create))
             } label: {
                 Text("팀 스페이스를 생성해주세요>")
-                    .font(.title3)
-                    .foregroundStyle(Color.black)
+                    .font(.system(size: 18, weight: .medium)) // FIXME: - 폰트 수정
+                    .foregroundStyle(Color.black) // FIXME: - 컬러 수정
             }
             Spacer()
         }
@@ -46,8 +46,8 @@ struct TeamspaceTitleView: View {
                 router.push(to: .teamspace(.list))
             } label: {
                 Text(viewModel.currentTeamspaceName)
-                    .font(.system(size: 18, weight: .medium))
-                    .foregroundStyle(Color.black)
+                    .font(.system(size: 18, weight: .medium)) // FIXME: - 폰트 수정
+                    .foregroundStyle(Color.black) // FIXME: - 컬러 수정
             }
             Spacer()
             Button {

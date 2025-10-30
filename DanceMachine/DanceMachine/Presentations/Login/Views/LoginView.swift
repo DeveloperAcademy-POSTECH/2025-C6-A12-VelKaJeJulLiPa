@@ -10,38 +10,41 @@ import AuthenticationServices
 
 //TODO: Hi-fi 디자인 반영 (현재는 임시)
 struct LoginView: View {
-    @Environment(\.colorScheme) var colorScheme
     @State private var viewModel = LoginViewModel()
     
     
     var body: some View {
-        VStack(spacing: 24) {
-            Spacer()
+        ZStack {
+            Color.white.ignoresSafeArea() // FIXME: - 컬러 수정
             
-            Text("Welcome to DanceMachine")
-                .font(.largeTitle.bold())
-                .multilineTextAlignment(.center)
-            
-            Button {
-                Task {
-                    await viewModel.signInApple()
+            VStack(spacing: 24) {
+                Spacer()
+                
+                Text("Welcome to DirAct")
+                    .font(.largeTitle.bold())
+                    .foregroundStyle(Color.black) // FIXME: - 컬러 수정
+                    .multilineTextAlignment(.center)
+                
+                Button {
+                    Task {
+                        await viewModel.signInApple()
+                    }
+                } label: {
+                    SignInWithAppleButtonViewRepresentable(
+                        type: .default,
+                        style: .black
+                    )
+                    .allowsHitTesting(false)
                 }
-            } label: {
-                SignInWithAppleButtonViewRepresentable(
-                    type: .default,
-                    style: colorScheme == .light ? .black : .white
-                )
-                .allowsHitTesting(false)
+                .frame(height: 50) //FIXME: 버튼 크기
+                .padding(.horizontal, 32) //FIXME: 버튼 여백
+                
+                Spacer()
+                    .overlay {
+                        if viewModel.isLoading { ProgressView() }
+                    }
             }
-            .frame(height: 50) //FIXME: 버튼 크기
-            .padding(.horizontal, 32) //FIXME: 버튼 여백
-            
-            Spacer()
-                .overlay {
-                    if viewModel.isLoading { ProgressView() }
-                }
         }
-        .background(Color(.systemBackground))
     }
 }
 

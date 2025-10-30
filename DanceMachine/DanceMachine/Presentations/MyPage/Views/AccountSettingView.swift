@@ -19,9 +19,8 @@ struct AccountSettingView: View {
     
     var body: some View {
         ZStack {
-            Color(UIColor.systemGroupedBackground) // FIXME: - 컬러 수정
-                .ignoresSafeArea()
-            
+            Color.white.ignoresSafeArea() // FIXME: - 컬러 수정
+                
             VStack {
                 MyPageInfoRow(
                     title: "ID",

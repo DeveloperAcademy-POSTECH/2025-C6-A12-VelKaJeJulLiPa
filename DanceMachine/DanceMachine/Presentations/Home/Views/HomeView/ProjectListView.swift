@@ -83,6 +83,7 @@ struct ProjectListView<ExpandedContent: View>: View {
                             isExpanded: isExpanded(project)
                         )
                         .listRowSeparator(.hidden)
+                       
                         
                         if isExpanded(project) {
                             expandedContent(project)
@@ -90,9 +91,11 @@ struct ProjectListView<ExpandedContent: View>: View {
                         }
                     }
                     .animation(.easeInOut, value: isExpanded(project))
+                    .listRowBackground(Color.white)
                     .listRowSeparator(.hidden)
                 }
                 .listStyle(.plain)
+                .background(Color.white)
             }
         }
     }

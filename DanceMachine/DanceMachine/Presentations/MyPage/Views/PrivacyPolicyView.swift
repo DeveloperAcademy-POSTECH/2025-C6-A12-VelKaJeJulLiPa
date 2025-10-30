@@ -10,7 +10,6 @@ import WebKit
 
 struct PrivacyPolicyView: View {
     
-    @Environment(\.colorScheme) var colorScheme
     @State private var isLoading: Bool = true
     
     private let privacyPolicyURL = URL(string: "https://mammoth-eyelash-f4f.notion.site/29610840462c8014ba1be32d01ef3edb")!
@@ -18,7 +17,7 @@ struct PrivacyPolicyView: View {
     
     var body: some View {
         ZStack {
-            colorScheme == .light ? Color.white : .black  // FIXME: - 컬러 수정
+            Color.white.ignoresSafeArea()  // FIXME: - 컬러 수정
             
             WebView(url: privacyPolicyURL, isLoading: $isLoading)
                 .opacity(isLoading ? 0 : 1)
