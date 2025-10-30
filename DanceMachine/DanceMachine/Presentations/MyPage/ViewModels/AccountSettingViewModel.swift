@@ -15,13 +15,8 @@ final class AccountSettingViewModel {
     
     //MARK: - 계정 설정
     /// 로그아웃 메서드
-    func signOut() throws {
-        do {
-            try FirebaseAuthManager.shared.signOut()
-        } catch {
-            errorMessage = AuthenticationError.signOutFailed(underlying: error).errorDescription
-            print("Sign out Failed: \(errorMessage as Any)")
-        }
+    func signOut() async throws {
+      try await FirebaseAuthManager.shared.signOut()
     }
 
     
