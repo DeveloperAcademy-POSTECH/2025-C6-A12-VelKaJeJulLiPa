@@ -16,14 +16,13 @@ struct OverlayController: View {
   
   var body: some View {
     VStack {
-      Spacer()
       HStack(spacing: 60) {
         leftButton
         centerButton
         rightButton
       }
-      Spacer()
     }
+    .ignoresSafeArea()
   }
   
   private var leftButton: some View {
