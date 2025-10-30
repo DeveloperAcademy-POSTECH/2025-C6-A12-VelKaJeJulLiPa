@@ -51,7 +51,7 @@ final class MentionManager {
   
   func dismissKeyboardAndClear() {
     self.mentionQuery = ""
-//    self.taggedUsers.removeAll() // 많이 태그 했다가 키보드 내려갔을때 다시 태그해야하는 불편함
+    self.taggedUsers.removeAll() // 많이 태그 했다가 키보드 내려갔을때 다시 태그해야하는 불편함
     KeyboardHelper.dismiss()
   }
 }
