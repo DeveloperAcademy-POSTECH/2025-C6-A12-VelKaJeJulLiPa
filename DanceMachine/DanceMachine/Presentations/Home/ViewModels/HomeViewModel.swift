@@ -245,6 +245,13 @@ extension HomeViewModel {
     func reloadProjectsAfterTeamspaceChange() async {
         print("팀스페이스 변경 감지: 프로젝트 헤더/목록 리로드를 시작합니다. (reloadProjectsAfterTeamspaceChange 시작)")
 
+        // 팀 스페이스 상태 변경
+        if FirebaseAuthManager.shared.currentTeamspace == nil {
+            teamspace.state = .empty
+        } else {
+            teamspace.state = .nonEmpty
+        }
+        
         // 프로젝트/트랙 관련 UI 초기화
         project.headerTitle = "프로젝트 목록"
         project.expandedID = nil

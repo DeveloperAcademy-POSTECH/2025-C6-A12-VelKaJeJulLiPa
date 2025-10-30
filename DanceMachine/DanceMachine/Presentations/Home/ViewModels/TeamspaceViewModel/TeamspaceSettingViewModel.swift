@@ -68,7 +68,13 @@ final class TeamspaceSettingViewModel {
             
             if let firstTeamspace = loadTeamspaces.first {
                 await MainActor.run {
+                    print("있음: \(firstTeamspace.teamspaceName)")
                     self.fetchCurrentTeamspace(teamspace: firstTeamspace)
+                }
+            } else {
+                await MainActor.run {
+                    print("leave 없음")
+                    FirebaseAuthManager.shared.currentTeamspace = nil
                 }
             }
         } catch {

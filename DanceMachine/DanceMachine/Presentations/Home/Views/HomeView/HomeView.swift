@@ -158,21 +158,9 @@ struct HomeView: View {
             if ProcessInfo.isRunningInPreviews { return } // 프리뷰 전용
             isLoading = true
             defer { isLoading = false }
+            print("🔥 HomeViewLoding...")
             
-            do {
-                try await viewModel.fetchUserInfo()
-                await viewModel.ensureTeamspaceInitialized()
-                await viewModel.fetchCurrentTeamspaceProject()
-            } catch {
-                
-            }
-        }
-        // 팀 스페이스 초대 받았을 시
-        .task(id: inviteRouter.lastInviteAcceptedAt) {
-            if ProcessInfo.isRunningInPreviews { return } // 프리뷰 전용
-            isLoading = true
-            defer { isLoading = false }
-            
+            // TODO: 딥 링크 타고 들어올때 팀 스페이스 명을 아래 로직을 활용해서 변경해야함.
             do {
                 try await viewModel.fetchUserInfo()
                 await viewModel.ensureTeamspaceInitialized()
