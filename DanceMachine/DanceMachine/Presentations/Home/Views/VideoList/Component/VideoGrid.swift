@@ -31,43 +31,43 @@ struct VideoGrid: View {
       ),
       spacing: spacing
     ) {
-#if DEBUG
-      if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
-        ForEach(0..<10, id: \.self) { _ in
-          cell
-        }
-      } else {
-        ForEach(videos, id: \.videoId) { video in
-          if let track = track.first(where: { $0.videoId == video.videoId.uuidString }) {
-            GridCell(
-              size: size,
-              thumbnailURL: video.thumbnailURL,
-              title: video.videoTitle,
-              duration: video.videoDuration,
-              uploadDate: video.createdAt ?? Date(),
-              editAction: {
-                self.selectedTrack = track
-              },
-              deleteAction: {
-                self.selectedVideo = video
-                print("\(video.videoId)모달 선택")
-              },
-              videoAction: {
-                router.push(
-                  to: .video(
-                    .play(
-                      videoId: video.videoId.uuidString,
-                      videoTitle: video.videoTitle,
-                      videoURL: video.videoURL
-                    )
-                  )
-                )
-              }
-            )
-          }
-        }
-      }
-#else
+//#if DEBUG
+//      if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
+//        ForEach(0..<10, id: \.self) { _ in
+//          cell
+//        }
+//      } else {
+//        ForEach(videos, id: \.videoId) { video in
+//          if let track = track.first(where: { $0.videoId == video.videoId.uuidString }) {
+//            GridCell(
+//              size: size,
+//              thumbnailURL: video.thumbnailURL,
+//              title: video.videoTitle,
+//              duration: video.videoDuration,
+//              uploadDate: video.createdAt ?? Date(),
+//              editAction: {
+//                self.selectedTrack = track
+//              },
+//              deleteAction: {
+//                self.selectedVideo = video
+//                print("\(video.videoId)모달 선택")
+//              },
+//              videoAction: {
+//                router.push(
+//                  to: .video(
+//                    .play(
+//                      videoId: video.videoId.uuidString,
+//                      videoTitle: video.videoTitle,
+//                      videoURL: video.videoURL
+//                    )
+//                  )
+//                )
+//              }
+//            )
+//          }
+//        }
+//      }
+//#else
       ForEach(videos, id: \.videoId) { video in
         if let track = track.first(where: { $0.videoId == video.videoId.uuidString }) {
           GridCell(
@@ -80,7 +80,8 @@ struct VideoGrid: View {
               self.selectedTrack = track
             },
             deleteAction: {
-              self.showDeleteModal = true
+              self.selectedVideo = video
+              print("\(video.videoId)모달 선택")
             },
             videoAction: {
               router.push(
@@ -94,20 +95,23 @@ struct VideoGrid: View {
               )
             }
           )
-          .sheet(isPresented: $showDeleteModal) {
-            BottomConfirmSheetView(
-              titleText: video.videoTitle,
-              primaryText: "삭제",
-              action: {
-                Task {
-                  await vm.deleteVideo(video: video, tracksId: tracksId)
+          .sheet(item: $selectedVideo) { _ in
+            if let video = selectedVideo {
+              BottomConfirmSheetView(
+                titleText: "\(video.videoTitle)\n영상을 삭제하시겠어요?",
+                primaryText: "삭제",
+                action: {
+                  Task {
+                    await vm.deleteVideo(video: video, tracksId: tracksId)
+                    print("\(video.videoId)")
+                  }
                 }
-              }
-            )
+              )
+            }
           }
         }
       }
-#endif
+//#endif
     }
     // MARK: 영상 섹션 이동 뷰
     .fullScreenCover(item: $selectedTrack) { track in
@@ -120,20 +124,7 @@ struct VideoGrid: View {
           )
         }
     }
-    .sheet(item: $selectedVideo) { _ in
-      if let video = selectedVideo {
-        BottomConfirmSheetView(
-          titleText: "\(video.videoTitle)\n영상을 삭제하시겠어요?",
-          primaryText: "삭제",
-          action: {
-            Task {
-              await vm.deleteVideo(video: video, tracksId: tracksId)
-              print("\(video.videoId)")
-            }
-          }
-        )
-      }
-    }
+
   }
   // 디자인 확인용
   private var cell: some View {
