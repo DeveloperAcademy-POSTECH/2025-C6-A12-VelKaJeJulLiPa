@@ -101,9 +101,15 @@ struct ListCell: View {
                 .fill(Color.gray)
         )
         .contentShape(Rectangle())
-        .onTapGesture {
-            if case .viewing = projectRowState { rowTapAction() }
-        }
+//        .onTapGesture {
+//            if case .viewing = projectRowState { rowTapAction() }
+//        }
+        .simultaneousGesture(
+          TapGesture()
+            .onEnded {
+              if case .viewing = projectRowState { rowTapAction() }
+            }
+        )
     }
     
     private var isUpdateMode: Bool {

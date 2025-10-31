@@ -92,9 +92,12 @@ struct TrackRow: View {
                 .fill(Color.gray)
         )
         .contentShape(Rectangle())
-        .onTapGesture {
-            if case .viewing = rowState { rowTapAction() }
-        }
+        .simultaneousGesture(
+          TapGesture()
+            .onEnded {
+              if case .viewing = rowState { rowTapAction() }
+            }
+        )
     }
 }
 

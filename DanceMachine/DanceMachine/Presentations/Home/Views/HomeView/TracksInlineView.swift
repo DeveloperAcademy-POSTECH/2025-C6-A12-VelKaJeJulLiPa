@@ -46,7 +46,7 @@ struct TracksInlineView: View {
                     .frame(maxWidth: .infinity, alignment: .center)
                     .background(
                         RoundedRectangle(cornerRadius: 10)
-                            .fill(Color.gray.opacity(0.1))
+                            .fill(Color.gray)
                     )
             } else {
                 VStack(spacing: 10) {
