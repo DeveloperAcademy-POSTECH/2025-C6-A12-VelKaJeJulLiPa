@@ -36,71 +36,86 @@ struct HomeView: View {
                 )
                 .padding(.horizontal, 16)
 
+              if viewModel.userTeamspaces == [] {
+                VStack {
+                  Spacer()
+                  Image(systemName: "scribble")
+                    .font(.system(size: 110)) // FIXME: - 컬러 수정
+                    .foregroundStyle(Color.black) // FIXME: - 크기 수정
+                    .frame(maxWidth: .infinity)
+                  Spacer().frame(height: 10)
+                  Text("팀 스페이스가 없습니다.")
+                    .font(Font.system(size: 15, weight: .medium))
+                    .foregroundStyle(Color.black)
+                  Spacer()
+                }
+                  
+              } else {
                 ProjectListView(
-                    viewModel: viewModel,
-                    labelText: viewModel.plBinding(\.headerTitle),
-                    projects: viewModel.plBinding(\.projects),
-                    rowState: viewModel.plBinding(\.rowState),
-                    editingProjectID: viewModel.plBinding(\.editingID),
-                    editText: viewModel.plBinding(\.editText),
-                    onCommitEdit: { _, _ in await viewModel.commitProjectEdit() },
-                    onDelete: { project in presentingRemovalSheetProject = project },
-                    onTap: { project in viewModel.toggleExpand(project) },
-                    isExpanded: { project in viewModel.isExpanded(project) },
-                    expandedContent: { project in
-                        TracksInlineView(
-                            viewModel: viewModel,
-                            project: project,
-                            tracks: Binding(
-                                get: { viewModel.tracks.byProject[project.projectId] ?? [] },
-                                set: { viewModel.tracks.byProject[project.projectId] = $0 }
-                            ),
-                            rowState: viewModel.trBinding(\.rowState),
-                            editingTrackID: viewModel.trBinding(\.editingID),
-                            editingText: viewModel.trBinding(\.editText),
-                            isLoading: viewModel.tracks.loading.contains(project.projectId),
-                            errorText: viewModel.tracks.error[project.projectId],
-                            onCommitEdit: { _, _ in await viewModel.commitTrackEdit() },
-                            onDelete: { track in presentingRemovalSheetTracks = track },
-                            onTap: { track in
-                                Task {
-                                    let section = try await viewModel.fetchSection(tracks: track)
-                                    guard let first = section.first else { return }
-                                    
-                                    print("track.tracksId.uuidString: \(track.tracksId.uuidString)")
-                                    print("first.sectionId: \(first.sectionId,)")
-                                    print("track.trackName: \(track.trackName)")
-                                    
-                                    router.push(to: .video(.list(
-                                        tracksId: track.tracksId.uuidString,
-                                        sectionId: first.sectionId,
-                                        trackName: track.trackName
-                                    )))
-                                }
-                            }
-                        )
-                    },
-                    // 추가 헤더 제어 파라미터
-                    isAnyProjectExpanded: viewModel.project.expandedID != nil,
-                    tracksRowState: viewModel.trBinding(\.rowState),
-                    isTracksPrimaryDisabled: {
-                        if case .editing(.update) = viewModel.tracks.rowState {
-                            return viewModel.tracks.editText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                  viewModel: viewModel,
+                  labelText: viewModel.plBinding(\.headerTitle),
+                  projects: viewModel.plBinding(\.projects),
+                  rowState: viewModel.plBinding(\.rowState),
+                  editingProjectID: viewModel.plBinding(\.editingID),
+                  editText: viewModel.plBinding(\.editText),
+                  onCommitEdit: { _, _ in await viewModel.commitProjectEdit() },
+                  onDelete: { project in presentingRemovalSheetProject = project },
+                  onTap: { project in viewModel.toggleExpand(project) },
+                  isExpanded: { project in viewModel.isExpanded(project) },
+                  expandedContent: { project in
+                    TracksInlineView(
+                      viewModel: viewModel,
+                      project: project,
+                      tracks: Binding(
+                        get: { viewModel.tracks.byProject[project.projectId] ?? [] },
+                        set: { viewModel.tracks.byProject[project.projectId] = $0 }
+                      ),
+                      rowState: viewModel.trBinding(\.rowState),
+                      editingTrackID: viewModel.trBinding(\.editingID),
+                      editingText: viewModel.trBinding(\.editText),
+                      isLoading: viewModel.tracks.loading.contains(project.projectId),
+                      errorText: viewModel.tracks.error[project.projectId],
+                      onCommitEdit: { _, _ in await viewModel.commitTrackEdit() },
+                      onDelete: { track in presentingRemovalSheetTracks = track },
+                      onTap: { track in
+                        Task {
+                          let section = try await viewModel.fetchSection(tracks: track)
+                          guard let first = section.first else { return }
+                          
+                          print("track.tracksId.uuidString: \(track.tracksId.uuidString)")
+                          print("first.sectionId: \(first.sectionId,)")
+                          print("track.trackName: \(track.trackName)")
+                          
+                          router.push(to: .video(.list(
+                            tracksId: track.tracksId.uuidString,
+                            sectionId: first.sectionId,
+                            trackName: track.trackName
+                          )))
                         }
-                        return false
-                    }(),
-                    onTracksPrimaryUpdate: { Task { await viewModel.commitTrackEdit() }},
-                    onTracksCancelSideEffects: {
-                        if case .editing(.update) = viewModel.tracks.rowState {
-                            // 업데이트 중이면 텍스트 유지
-                        } else {
-                            viewModel.tracks.editText = ""
-                        }
-                        viewModel.tracks.editingID = nil
+                      }
+                    )
+                  },
+                  // 추가 헤더 제어 파라미터
+                  isAnyProjectExpanded: viewModel.project.expandedID != nil,
+                  tracksRowState: viewModel.trBinding(\.rowState),
+                  isTracksPrimaryDisabled: {
+                    if case .editing(.update) = viewModel.tracks.rowState {
+                      return viewModel.tracks.editText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                     }
+                    return false
+                  }(),
+                  onTracksPrimaryUpdate: { Task { await viewModel.commitTrackEdit() }},
+                  onTracksCancelSideEffects: {
+                    if case .editing(.update) = viewModel.tracks.rowState {
+                      // 업데이트 중이면 텍스트 유지
+                    } else {
+                      viewModel.tracks.editText = ""
+                    }
+                    viewModel.tracks.editingID = nil
+                  }
                 )
                 .padding(.horizontal, 16)
-
+              }
                 Spacer()
             }
             .sheet(item: $presentingRemovalSheetProject) { project in
