@@ -17,6 +17,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate { // TODO: If necessary ch
   static var pendingDeeplinkURL: URL?
   static var pendingNotificationId: String?
   
+  // 전역 잠금 상태 (기본: 세로)
+  static var orientationMask: UIInterfaceOrientationMask = .portrait
+
+  // 전역으로 회전 방지 설정
+  func application(_ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
+      return AppDelegate.orientationMask
+  }
+  
   func application(_ application: UIApplication,
                    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
     FirebaseApp.configure()
