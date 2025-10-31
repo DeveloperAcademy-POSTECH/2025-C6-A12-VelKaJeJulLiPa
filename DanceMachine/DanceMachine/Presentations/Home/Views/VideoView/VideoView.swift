@@ -117,19 +117,23 @@ struct VideoView: View {
   
   // MARK: 피드백 빈 화면
   private var pointEmptyView: some View {
-    VStack(alignment: .leading) {
-      Spacer()
-      Text("시점 피드백\n동영상 재생 중 원하는 시점에 버튼을 눌러\n타임스탬프를 남겨 피드백을 작성할 수 있습니다.")
-        .font(.system(size: 18))
-        .foregroundStyle(.black)
-      Spacer()
-      Text("구간 피드백\n오른쪽 회색 버튼을 눌러 시작 시점과 끝 시점을\n지정하고, 해당 구간에 대한 피드백을 남길 수 있\n습니다.")
-        .font(.system(size: 18))
-        .foregroundStyle(.black)
-      Spacer()
+    ScrollView {
+      VStack(alignment: .leading) {
+              Spacer()
+        Text("시점 피드백\n동영상 재생 중 원하는 시점에 버튼을 눌러\n타임스탬프를 남겨 피드백을 작성할 수 있습니다.")
+          .font(.system(size: 15))
+          .foregroundStyle(.black)
+              Spacer()
+        Text("구간 피드백\n오른쪽 회색 버튼을 눌러 시작 시점과 끝 시점을\n지정하고, 해당 구간에 대한 피드백을 남길 수 있\n습니다.")
+          .font(.system(size: 15))
+          .foregroundStyle(.black)
+              Spacer()
+      }
+      .frame(maxWidth: .infinity)
+      .frame(height: 400)
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .ignoresSafeArea(.keyboard, edges: .bottom)
+//    .ignoresSafeArea(.keyboard, edges: .bottom)
   }
   
   private var intervalEmptyView: some View {
