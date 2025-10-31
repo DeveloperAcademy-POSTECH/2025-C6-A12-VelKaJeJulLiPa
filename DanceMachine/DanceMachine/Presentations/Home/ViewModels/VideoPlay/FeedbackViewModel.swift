@@ -91,13 +91,13 @@ extension FeedbackViewModel {
         taggedUserIds: taggedUserIds,
         startTime: atTime,
         endTime: nil,
+        createdAt: Date(),
         teamspaceId: FirebaseAuthManager.shared.currentTeamspace?.teamspaceId.uuidString ?? "",
       )
       try await store.create(feedback)
-      
+
       await MainActor.run {
-        self.feedbacks.append(feedback)
-        self.feedbacks.sort { ($0.createdAt ?? Date()) > ($1.createdAt ?? Date()) }
+        self.feedbacks.insert(feedback, at: 0)
         self.isLoading = false
       }
     } catch { // TODO: 에러처리
@@ -131,15 +131,15 @@ extension FeedbackViewModel {
         taggedUserIds: taggedUserIds,
         startTime: startTime,
         endTime: endTime,
+        createdAt: Date(),
         teamspaceId: FirebaseAuthManager.shared.currentTeamspace?.teamspaceId.uuidString ?? "",
       )
       try await store.create(feedback)
-      
+
       await MainActor.run {
-        self.feedbacks.append(feedback)
-        self.feedbacks.sort { ($0.startTime ?? 0) < ($1.startTime ?? 0) }
+        self.feedbacks.insert(feedback, at: 0)
         self.isLoading = false
-        
+
         self.isRecordingInterval = false
         self.intervalStartTime = nil
       }

@@ -45,7 +45,10 @@ struct VideoView: View {
   
   // MARK: 배속 좆러
   @State private var showSpeedSheet: Bool = false
-  
+
+  // MARK: 스크롤 관련
+  @State private var scrollProxy: ScrollViewProxy? = nil
+
   // MARK: 전역으로 관리되는 ID
   let teamspaceId = FirebaseAuthManager.shared.currentTeamspace?.teamspaceId
   let userId = FirebaseAuthManager.shared.userInfo?.userId ?? ""
@@ -212,6 +215,13 @@ struct VideoView: View {
                   )
                 }
                 showFeedbackInput = false
+
+                // 피드백 제출 후 스크롤 최상단 이동
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                  withAnimation {
+                    scrollProxy?.scrollTo("topFeedback", anchor: .top)
+                  }
+                }
               }
             },
             refresh: {
@@ -465,10 +475,13 @@ struct VideoView: View {
   }
   // MARK: 피드백 리스트
   private var feedbackListView: some View {
-    ScrollView {
-      LazyVStack {
-        ForEach(filteredFeedbacks, id: \.feedbackId) { f in
-          FeedbackCard(
+    ScrollViewReader { proxy in
+      ScrollView {
+        LazyVStack {
+          Color.clear.frame(height: 1).id("topFeedback")
+
+          ForEach(filteredFeedbacks, id: \.feedbackId) { f in
+            FeedbackCard(
             feedback: f,
             authorUser: vm.getAuthorUser(for: f.authorId),
             taggedUsers:
@@ -497,6 +510,9 @@ struct VideoView: View {
         }
       }
       .padding(.horizontal, 16)
+      .onAppear {
+        self.scrollProxy = proxy
+      }
       .sheet(item: $selectedFeedback) { feedback in
         ReplySheet(
           reply: vm.feedbackVM.reply[feedback.feedbackId.uuidString] ?? [],
@@ -530,6 +546,7 @@ struct VideoView: View {
             } }
         )
       }
+    }
     }
   }
   // MARK: 피드백 섹션
