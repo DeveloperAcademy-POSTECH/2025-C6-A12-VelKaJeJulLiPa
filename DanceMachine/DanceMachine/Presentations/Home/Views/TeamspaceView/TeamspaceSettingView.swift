@@ -27,7 +27,7 @@ struct TeamspaceSettingView: View {
     
     var body: some View {
         ZStack {
-            Color.white // FIXME: - 컬러 수정
+            Color.white.ignoresSafeArea() // FIXME: - 컬러 수정
             
             VStack {
                 topTeamspaceSettingView.padding(.horizontal, 16)
@@ -36,6 +36,8 @@ struct TeamspaceSettingView: View {
                 Spacer().frame(height: 32)
                 middleTeamMemberManagementView
                 Spacer()
+                ThickDivider()
+                Spacer().frame(height: 30)
                 bottomDeleteTeamspaceView.padding(.horizontal, 16)
             }
         }
@@ -222,8 +224,8 @@ struct TeamspaceSettingView: View {
                 }
             } label: {
                 Text("팀원")
-                    .font(Font.caption) // FIXME: - 폰트 수정
-                    .foregroundStyle(Color.gray) // FIXME: - 컬러 수정
+                    .font(Font.system(size: 16, weight: .semibold)) // FIXME: - 폰트 수정
+                    .foregroundStyle(Color.black) // FIXME: - 컬러 수정
             }
             .padding(.horizontal, 16)
             List(users, id: \.userId) { user in
@@ -241,6 +243,7 @@ struct TeamspaceSettingView: View {
                         .font(Font.system(size: 16, weight: .medium)) // FIXME: - 폰트 수정
                         .foregroundStyle(Color.black) // FIXME: - 컬러 수정
                 }
+                .listRowBackground(Color.white)
             }
             .listStyle(.plain)
         }

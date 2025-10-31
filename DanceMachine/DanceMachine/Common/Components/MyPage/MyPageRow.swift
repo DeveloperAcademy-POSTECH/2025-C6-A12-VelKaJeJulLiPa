@@ -16,13 +16,13 @@ struct MyPageInfoRow: View { // FIXME: - Hi-fi 스타일 적용
         HStack {
             Text(title)
                 .font(.system(size: 16))
-                .foregroundStyle(.primary)
+                .foregroundStyle(Color.black) // FIXME: - 컬러 수정
             
             Spacer()
             
             Text(value)
                 .font(.system(size: 16))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.black) // FIXME: - 컬러 수정
         }
         .padding()
     }

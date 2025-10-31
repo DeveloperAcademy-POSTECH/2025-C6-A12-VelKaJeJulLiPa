@@ -83,7 +83,7 @@ struct CreateTracksView: View {
                 .overlay {
                     HStack {
                         // TODO: 컴포넌트 추가하기
-                        TextField("노래 이름", text: $trackNameText)
+                        TextField("예) “세븐틴-만세", text: $trackNameText)
                             .font(Font.system(size: 16, weight: .medium)) // FIXME: - 폰트 수정
                             .foregroundStyle(Color.black) // FIXME: - 컬러 수정
                             .multilineTextAlignment(.center)

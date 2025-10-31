@@ -67,6 +67,7 @@ struct TracksInlineView: View {
                             )
                         )
                         .listRowSeparator(.hidden)
+                        .background(Color.white)
                     }
                 }
             }

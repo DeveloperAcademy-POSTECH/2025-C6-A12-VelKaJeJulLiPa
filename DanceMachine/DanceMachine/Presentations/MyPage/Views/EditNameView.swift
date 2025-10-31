@@ -18,17 +18,20 @@ struct EditNameView: View {
     
     var body: some View {
         ZStack {
+            Color.white.ignoresSafeArea() // FIXME: - 컬러 수정
+            
             VStack {
                 Spacer()
                 EditNameTextFieldView
+                    .padding(.horizontal, 16)
                 Spacer()
                 bottomButtonView
+                    .padding(.horizontal, 16)
             }
         }
         .task {
             editedName = viewModel.myName
         }
-        .padding(.horizontal, 16)
         .toolbar {
             ToolbarLeadingBackButton(icon: .chevron)
             ToolbarCenterTitle(text: "나의 이름")
@@ -42,6 +45,7 @@ struct EditNameView: View {
             .frame(height: 47) // FIXME: - 버튼 크기 수정
             .overlay {
                 TextField("이름을 입력해주세요", text: $editedName)
+                    .foregroundStyle(Color.black) // FIXME: - 컬러 수정
                     .multilineTextAlignment(.center)
             }
     }

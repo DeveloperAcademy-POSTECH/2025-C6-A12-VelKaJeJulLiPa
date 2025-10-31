@@ -35,6 +35,7 @@ struct ListCell: View {
                     .padding(.vertical, 12)
                 Spacer()
                 Image(systemName: "chevron.right")
+                    .foregroundStyle(Color.black) // FIXME: - 컬러 수정
                     .rotationEffect(.degrees(isExpanded ? 90 : 0))
                     .animation(.easeInOut(duration: 0.2), value: isExpanded)
                     .padding(.horizontal, 16)
@@ -97,7 +98,7 @@ struct ListCell: View {
         }
         .background(
             RoundedRectangle(cornerRadius: 5)
-                .fill(Color.gray.opacity(0.1))
+                .fill(Color.gray)
         )
         .contentShape(Rectangle())
         .onTapGesture {

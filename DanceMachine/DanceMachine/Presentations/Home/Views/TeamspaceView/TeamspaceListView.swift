@@ -18,38 +18,47 @@ struct TeamspaceListView: View {
     
     @State private var isLoading: Bool = false
     
+    // 프리뷰·테스트용 주입 이니셜라이저
+    init(previewLoadTeamspaces: [Teamspace] = []) {
+        _loadTeamspaces = State(initialValue: previewLoadTeamspaces)
+    }
+      
     var body: some View {
         ZStack {
-            Color.white // FIXME: - 컬러 수정
-            
-            VStack {
-                Spacer()
-                List(loadTeamspaces, id: \.teamspaceId) { teamspace in
-                    RoundedRectangle(cornerRadius: 5)
-                        .fill(Color.gray) // FIXME: - 컬러 수정
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 43)
-                        .overlay {
-                            Text(teamspace.teamspaceName)
-                                .font(.system(size: 16, weight: .medium))
-                                .foregroundStyle(Color.black)
-                        }
-                        .onTapGesture {
-                            viewModel.fetchCurrentTeamspace(teamspace: teamspace)
-                            router.pop()
-                        }
+            Color.white.ignoresSafeArea() // FIXME: - 컬러 수정
+            List {
+                ForEach(loadTeamspaces, id: \.teamspaceId) { teamspace in
+                    Button {
+                        print("탭탭")
+                        viewModel.fetchCurrentTeamspace(teamspace: teamspace)
+                        router.pop()
+                    } label: {
+                        TeamspaceListItem(title: teamspace.teamspaceName)
+                    }
+                    .buttonStyle(.plain)
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.white)
                 }
-                Spacer()
-                bottomButtonView
+                
+                Button {
+                    router.push(to: .teamspace(.create))
+                } label: {
+                    TeamspaceListItem(title: "+ 팀 스페이스 만들기")
+                }
+                .buttonStyle(.plain)
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.white)
             }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
         }
-        .padding(.horizontal, 16)
         .overlay { if isLoading { LoadingView() } }
         .toolbar {
             ToolbarLeadingBackButton(icon: .chevron)
             ToolbarCenterTitle(text: "팀 스페이스")
         }
         .task {
+            if ProcessInfo.isRunningInPreviews { return } // 프리뷰 전용
             self.isLoading = true
             defer { isLoading = false }
             
@@ -57,29 +66,12 @@ struct TeamspaceListView: View {
             self.loadTeamspaces = loaded
         }
     }
-    
-    // MARK: - 바텀 팀 스페이스 만들기 뷰
-    private var bottomButtonView: some View {
-        Button {
-            router.push(to: .teamspace(.create))
-        }
-        label: {
-            RoundedRectangle(cornerRadius: 5)
-                .fill(Color.gray) // FIXME: - 컬러 수정
-                .frame(maxWidth: .infinity)
-                .frame(height: 47)
-                .overlay {
-                    Text("팀 스페이스 추가하기")
-                        .font(Font.system(size: 15, weight: .medium)) // FIXME: - 폰트 수정
-                        .foregroundStyle(Color.black) // FIXME: - 컬러 수정
-                }
-        }
-    }
 }
 
 #Preview {
     NavigationStack {
-        TeamspaceListView()
+        TeamspaceListView(previewLoadTeamspaces: Teamspace.TeamspaceMockData)
             .environmentObject(NavigationRouter())
     }
 }
+
