@@ -157,9 +157,9 @@ final class FirebaseAuthManager: ObservableObject {
       print("AuthManager 로그아웃 누름")
 
       // ① FCM 토큰 삭제(비활성화) - DB에서 삭제되는 것은 아님
-      // TODO: 재로그인 시 토큰이 다시 갱신되어서 푸시 알림 잘 오는지 확인
-      try await Messaging.messaging().deleteToken()
-      print("🧹 FCM 토큰 삭제 완료")
+      // FIXME: 재로그인 시 토큰이 다시 갱신되어서 푸시 알림 잘 오는지 확인
+//      try await Messaging.messaging().deleteToken()
+//      print("🧹 FCM 토큰 삭제 완료")
 
       // ③ 앱 뱃지 초기화
       try await UNUserNotificationCenter.current().setBadgeCount(0)
