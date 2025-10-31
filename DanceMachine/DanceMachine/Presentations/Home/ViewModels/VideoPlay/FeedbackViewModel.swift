@@ -90,7 +90,8 @@ extension FeedbackViewModel {
         content: content,
         taggedUserIds: taggedUserIds,
         startTime: atTime,
-        endTime: nil
+        endTime: nil,
+        teamspaceId: FirebaseAuthManager.shared.currentTeamspace?.teamspaceId.uuidString ?? "",
       )
       try await store.create(feedback)
       
@@ -129,7 +130,8 @@ extension FeedbackViewModel {
         content: content,
         taggedUserIds: taggedUserIds,
         startTime: startTime,
-        endTime: endTime
+        endTime: endTime,
+        teamspaceId: FirebaseAuthManager.shared.currentTeamspace?.teamspaceId.uuidString ?? "",
       )
       try await store.create(feedback)
       

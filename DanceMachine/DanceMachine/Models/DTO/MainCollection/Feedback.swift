@@ -16,6 +16,7 @@ struct Feedback: Codable {
     let startTime: Double?
     let endTime: Double?
     var createdAt: Date? = nil
+    let teamspaceId: String
 
     init(
         feedbackId: UUID,
@@ -25,7 +26,8 @@ struct Feedback: Codable {
         taggedUserIds: [String] = [],
         startTime: Double? = nil,
         endTime: Double? = nil,
-        createdAt: Date? = nil
+        createdAt: Date? = nil,
+        teamspaceId: String
     ) {
         self.feedbackId = feedbackId
         self.videoId = videoId
@@ -35,6 +37,7 @@ struct Feedback: Codable {
         self.startTime = startTime
         self.endTime = endTime
         self.createdAt = createdAt
+        self.teamspaceId = teamspaceId
     }
 
     enum CodingKeys: String, CodingKey {
@@ -46,6 +49,7 @@ struct Feedback: Codable {
         case startTime     = "start_time"
         case endTime       = "end_time"
         case createdAt     = "created_at"
+        case teamspaceId   = "teamspace_id"
     }
 }
 
