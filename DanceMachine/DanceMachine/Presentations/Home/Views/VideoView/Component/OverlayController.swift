@@ -32,6 +32,7 @@ struct OverlayController: View {
       Image(systemName: "gobackward.5")
         .resizable()
         .frame(width: 40, height: 40)
+        .foregroundStyle(.white)
     }
   }
   
@@ -44,6 +45,7 @@ struct OverlayController: View {
       )
       .resizable()
       .frame(width: 40, height: 40)
+      .foregroundStyle(.white)
     }
   }
   
@@ -54,6 +56,7 @@ struct OverlayController: View {
       Image(systemName: "goforward.5")
         .resizable()
         .frame(width: 40, height: 40)
+        .foregroundStyle(.white)
     }
   }
 }

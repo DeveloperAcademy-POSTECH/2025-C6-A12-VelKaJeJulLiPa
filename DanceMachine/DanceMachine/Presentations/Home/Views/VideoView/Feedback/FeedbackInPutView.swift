@@ -63,7 +63,7 @@ struct FeedbackInPutView: View {
           },
           taggedUsers: mM.taggedUsers
         )
-        .padding(.bottom, 55)
+        .padding(.bottom, 60)
       }
     }
     .animation(.easeInOut(duration: 0.2), value: mM.showPicker)
@@ -74,6 +74,9 @@ struct FeedbackInPutView: View {
   
   private var topRow: some View {
     HStack(spacing: 4) {
+      Text("타임 스탬프:")
+        .font(.system(size: 14))
+        .foregroundStyle(.white)
       switch feedbackType {
       case .point:
         TimestampButton(
@@ -99,7 +102,7 @@ struct FeedbackInPutView: View {
         Image(systemName: "arrow.trianglehead.clockwise.rotate.90")
         Text("초기화")
       }
-      .foregroundStyle(.gray) // FIXME: 컬러 수정
+      .foregroundStyle(.white) // FIXME: 컬러 수정
     }
   }
   // MARK: 태그된 사용자 표시

@@ -19,10 +19,6 @@ struct VideoGrid: View {
   let track: [Track]
   let section: [Section]
   
-//  @Binding var videos: [Video]
-//  @Binding var track: [Track]
-//  @Binding var section: [Section]
-  
   @State private var selectedVideo: Video?
   @State private var selectedTrack: Track?
   @Binding var vm: VideoListViewModel

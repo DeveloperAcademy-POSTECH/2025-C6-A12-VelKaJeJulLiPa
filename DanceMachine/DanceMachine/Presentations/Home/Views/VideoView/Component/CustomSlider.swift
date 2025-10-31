@@ -34,12 +34,12 @@ struct CustomSlider: View {
             .clipShape(RoundedRectangle(cornerRadius: 2))
           
           Rectangle()
-            .fill(Color.blue)
+            .fill(Color.white)
             .frame(width: progressWidth(g.size.width), height: 4)
             .clipShape(RoundedRectangle(cornerRadius: 2))
           
           Circle()
-            .fill(Color.red)
+            .fill(Color.white)
             .frame(
               width: isDragging ? 25 : 20,
               height: isDragging ? 25 : 20
