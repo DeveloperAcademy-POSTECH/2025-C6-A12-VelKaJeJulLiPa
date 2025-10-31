@@ -57,7 +57,7 @@ struct VideoSettingButtons: View {
     Button {
       toggleOrientations()
     } label: {
-      Image(systemName: "arrow.up.left.and.arrow.down.right")
+      Image(isLandscapeMode ? .collapseVideo : .expandVideo)
         .font(.system(size: 20))
         .foregroundStyle(.white)
         .frame(width: 44, height: 44)
