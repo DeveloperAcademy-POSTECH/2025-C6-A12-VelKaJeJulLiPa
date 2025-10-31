@@ -150,13 +150,15 @@ struct ProjectListView<ExpandedContent: View>: View {
     /// - Design: 큰 아이콘과 보조 문구로 빈 상태를 명확히 전달합니다.
     private var emptyView: some View {
         VStack(spacing: 10) {
+          Spacer()
             Image(systemName: "archivebox.fill")
                 .font(.system(size: 110))
-                .foregroundStyle(Color.black)
+                .foregroundStyle(Color.black) 
                 .frame(maxWidth: .infinity)
             Text("프로젝트가 없습니다.")
-                .font(.system(size: 15, weight: .medium))
-                .foregroundStyle(.gray)
+                .font(.system(size: 15, weight: .medium)) // FIXME: - 폰트 수정
+                .foregroundStyle(.gray) // FIXME: - 컬러 수정
+          Spacer()
         }
         .frame(maxWidth: .infinity, alignment: .center)
     }

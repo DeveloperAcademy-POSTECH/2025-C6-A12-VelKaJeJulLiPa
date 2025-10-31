@@ -129,7 +129,14 @@ struct VideoListView: View {
   private var emptyView: some View {
     VStack {
       Spacer()
-      Text("􀣍 를 눌러서 파트를 추가하세요")
+      HStack {
+        Image(systemName: "folder.badge.plus")
+          .foregroundStyle(Color.black) // FIXME: - 컬러 수정
+        
+        Text("폴더 버튼을 눌러서 파트를 추가하세요")
+          .font(.system(size: 18, weight: .semibold)) // FIXME: - 폰트 수정
+          .foregroundStyle(Color.black) // FIXME: - 컬러 수정
+      }
       Spacer()
     }
   }
