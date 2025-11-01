@@ -19,7 +19,6 @@ struct VideoGrid: View {
   let track: [Track]
   let section: [Section]
   
-  @State private var selectedVideo: Video?
   @State private var selectedTrack: Track? // 섹션 이동
   @State private var showDeleteAlert: Bool = false // 삭제
   @Binding var vm: VideoListViewModel
@@ -81,7 +80,6 @@ struct VideoGrid: View {
               self.selectedTrack = track
             },
             deleteAction: {
-              self.selectedVideo = video
               self.showDeleteAlert = true
               print("\(video.videoId)모달 선택")
             },
@@ -98,7 +96,7 @@ struct VideoGrid: View {
             }
           )
           .alert(
-            "\(selectedVideo?.videoTitle ?? "영상")을/를 삭제하시겠어요?",
+            "\(video.videoTitle)을/를 삭제하시겠어요?",
             isPresented: $showDeleteAlert) {
               Button("취소", role: .cancel) { }
               Button("삭제", role: .destructive) {
