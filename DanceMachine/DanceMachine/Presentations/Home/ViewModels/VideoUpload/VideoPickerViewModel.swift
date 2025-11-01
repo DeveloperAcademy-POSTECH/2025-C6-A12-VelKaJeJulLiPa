@@ -28,6 +28,9 @@ final class VideoPickerViewModel {
   var showSuccessAlert: Bool = false
   var uploadProgress: Double = 0.0
   
+  // 현재 갤러리 접근 권한 상태
+  var photoLibraryStatus: PHAuthorizationStatus = .notDetermined
+  
   // MARK: 동영상 미리보기 로드
   func loadVideo() {
     self.cleanupPlayer()
@@ -302,27 +305,31 @@ extension VideoPickerViewModel {
 // MARK: - 권한 설정 관련
 extension VideoPickerViewModel {
   func requestPermissionAndFetch() async {
-#if DEBUG
-    if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
-      Task { @MainActor in
-        self.videos = []
-      }
+    if ProcessInfo.isRunningInPreviews { return } // 프리뷰 전용
+    
+    let currentStatus = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+    
+    await MainActor.run {
+      self.photoLibraryStatus = currentStatus
+    }
+    
+    if currentStatus == .authorized || currentStatus == .limited {
+      self.fetchVideos()
       return
     }
-#endif
+    
     PHPhotoLibrary.requestAuthorization(for: .readWrite) {
       status in
+      Task { @MainActor in
+        self.photoLibraryStatus = status
+      }
       switch status {
-      case .authorized:
+      case .authorized, .limited:
         self.fetchVideos()
-      case .denied, .restricted:
-        print("사진 라이브러리 접근 거부 또는 제한") // TODO: 처리 필요
-      case .notDetermined:
-        print("사용자가 아직 선택하지 않음") // TODO: 처리 필요
-      case .limited:
-        print("권한 제한") // TODO: 처리 필요
+      case .denied, .restricted, .notDetermined:
+        print("사진 라이브러리 접근 거부 또는 제한")
       @unknown default:
-        fatalError("알 수 없는 권한 상태") // TODO: 처리 필요
+        print("알 수 없는 권한 상태")
       }
     }
   }
@@ -350,6 +357,16 @@ extension VideoPickerViewModel {
     
     Task { @MainActor in
       self.videos = fetchedVideos
+    }
+  }
+  
+  func openSettings() {
+    guard let settingsURL = URL(string: UIApplication.openSettingsURLString) else {
+      return
+    }
+    
+    if UIApplication.shared.canOpenURL(settingsURL) {
+      UIApplication.shared.open(settingsURL)
     }
   }
 }
