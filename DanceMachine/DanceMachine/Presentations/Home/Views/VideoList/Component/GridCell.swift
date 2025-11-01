@@ -23,27 +23,32 @@ struct GridCell: View { // FIXME: 디자인 수정!
   @State private var showMenu: Bool = false
   
   var body: some View {
-    ZStack(alignment: .topTrailing) {
-      Rectangle()
-        .fill(Color.white)
-        .frame(width: size, height: size * 1.2)
-        .clipShape(RoundedRectangle(cornerRadius: 10))
-        .overlay {
-          content
-        }
-        .sensoryFeedback(.success, trigger: showMenu)
-        .onTapGesture {
-          videoAction()
-        }
+    VStack(alignment: .leading) {
+      thumbnail
+      content.padding(.leading, 8)
     }
-    .contextMenu {
-      contextRow
+    .frame(width: size, height: size * 1.2)
+    .background(
+      RoundedRectangle(cornerRadius: 12)
+        .fill(Color.gray)
+    )
+    .sensoryFeedback(.success, trigger: showMenu)
+    .onTapGesture { videoAction() }
+    .contextMenu { contextRow }
+    .overlay(alignment: .topTrailing) {
+      Menu {
+        contextRow
+      } label: {
+        Image(systemName: "ellipsis")
+          .foregroundStyle(.white)
+          .rotationEffect(.degrees(90))
+          .frame(width: 44, height: 44)
+      }
     }
   }
   
   private var content: some View {
     VStack(alignment: .leading) {
-      thumbnail
       Spacer().frame(width: 8)
       Text(title).foregroundStyle(.black)
       Spacer().frame(width: 8)
@@ -65,18 +70,7 @@ struct GridCell: View { // FIXME: 디자인 수정!
       }
     }
   }
-  
-  
-  private var contextMenu: some View {
-    RoundedRectangle(cornerRadius: 40)
-      .fill(.ultraThinMaterial)
-      .frame(width: 201)
-      .frame(height: 120)
-      .overlay {
-        contextRow
-      }
-  }
-  
+  // MARK: Menu 실행시 뜨는 Row
   private var contextRow: some View {
     VStack(alignment: .leading, spacing: 16) {
       Button {
