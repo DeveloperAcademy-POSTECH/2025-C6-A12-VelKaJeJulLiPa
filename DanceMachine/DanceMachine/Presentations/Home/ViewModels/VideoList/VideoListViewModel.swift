@@ -72,7 +72,7 @@ extension VideoListViewModel {
       print("불러온 videoId 개수\(videoIds.count)")
       
       // 4. 수집한 videoId로 Video 문서들 가져오기 (동시 + 결측 허용)
-      let validIds = videoIds.filter { UUID(uuidString: $0) != nil }
+      _ = videoIds.filter { UUID(uuidString: $0) != nil }
       var fetchedVideos: [Video] = []
       // 4. 수집한 videoId로 Video 문서들 가져오기
       for videoId in videoIds {
