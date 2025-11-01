@@ -41,10 +41,8 @@ extension VideoListViewModel {
 extension VideoListViewModel {
   // 모든 데이터 불러오기
   func loadFromServer(tracksId: String) async {
-    #if DEBUG
-    if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
-      return }
-    #endif
+    if ProcessInfo.isRunningInPreviews { return } // 프리뷰 전용
+    
     await MainActor.run {
       self.isLoading = true
       self.errorMsg = nil
