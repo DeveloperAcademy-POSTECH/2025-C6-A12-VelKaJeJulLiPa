@@ -24,43 +24,23 @@ struct VideoPickerView: View {
   
   var body: some View {
     NavigationStack {
-      GeometryReader { g in
-        let spacing: CGFloat = 1
-        let totalSpacing = spacing * 2
-        let itemWidth = (g.size.width - totalSpacing) / 4
-        ScrollViewReader { proxy in
-          ScrollView {
-            VStack(spacing: 16) {
-              Color.clear
-                .frame(height: 0)
-                .id("TOP") // 스크롤 목적지
-              
-              VideoPreview(
-                vm: vm,
-                size: 224
-              )
-//              .padding(.top, (g.size.height * 0.4) / 3)
-              
-              textField
-              
-              CustomPicker(
-                videos: $vm.videos,
-                selectedAsset: $vm.selectedAsset,
-                spacing: spacing,
-                itemWidth: itemWidth
-              )
-            }
+      ZStack {
+        // 권한이 없을 때 권한 요청 화면 표시
+        if vm.photoLibraryStatus == .denied || vm.photoLibraryStatus == .restricted {
+          PhotoLibraryPermissionView {
+            vm.openSettings()
           }
-          .onChange(of: vm.selectedAsset) { oldValue, newValue in
-            withAnimation(.easeInOut) {
-              proxy.scrollTo("TOP", anchor: .top)
-            }
-          }
+        } else {
+          // 권한이 있을 때 기존 UI 표시
+          mainContent
         }
-        .toolbarTitleDisplayMode(.inline)
-        .toolbar {
-          ToolbarLeadingBackButton(icon: .chevron)
-          ToolbarCenterTitle(text: "비디오 선택")
+      }
+      .toolbarTitleDisplayMode(.inline)
+      .toolbar {
+        ToolbarLeadingBackButton(icon: .xmark)
+        ToolbarCenterTitle(text: "비디오 선택")
+        
+        if vm.photoLibraryStatus == .authorized || vm.photoLibraryStatus == .limited {
           ToolbarItemGroup(placement: .topBarTrailing) {
             Button {
               if vm.selectedAsset == nil {
@@ -77,39 +57,78 @@ struct VideoPickerView: View {
                   vm.selectedAsset == nil ? .black.opacity(0.7) : .white
                 )
             }
-            .disabled(vm.isLoading) // 이중 비활성
+            .disabled(vm.isLoading)
             .buttonStyle(.borderedProminent)
             .tint(.blue)
           }
         }
-        .task {
-          await vm.requestPermissionAndFetch()
+      }
+      .task {
+        await vm.requestPermissionAndFetch()
+      }
+      .alert("비디오를 선택해주세요!", isPresented: $showEmptyVideoAlert) {
+        Button("확인") {
+          self.showEmptyVideoAlert = false
         }
-        .alert("비디오를 선택해주세요!", isPresented: $showEmptyVideoAlert) {
-          Button("확인") {
-            self.showEmptyVideoAlert = false
+      }
+      .alert("파일명을 입력하세요!", isPresented: $showEmptyTitleAlert) {
+        Button("확인") {
+          self.showEmptyTitleAlert = false
+        }
+      }
+      .alert("업로드 완료", isPresented: $vm.showSuccessAlert) {
+        Button("확인") {
+          dismiss()
+        }
+      }
+      .alert("업로드 실패", isPresented: .constant(vm.errorMessage != nil)) {
+        Button("확인") {
+          vm.errorMessage = nil
+        }
+      } message: {
+        Text(vm.errorMessage ?? "알 수 없는 오류가 발생했습니다.")
+      }
+    }
+    .background(Color.white)
+    .disabled(vm.isLoading)
+  }
+  // MARK: 권한 허용 뷰
+  private var mainContent: some View {
+    GeometryReader { g in
+      let spacing: CGFloat = 1
+      let totalSpacing = spacing * 2
+      let itemWidth = (g.size.width - totalSpacing) / 4
+      
+      ScrollViewReader { proxy in
+        ScrollView {
+          VStack(spacing: 16) {
+            Color.clear
+              .frame(height: 0)
+              .id("TOP")
+            
+            VideoPreview(
+              vm: vm,
+              size: 224
+            )
+            
+            textField
+            
+            CustomPicker(
+              videos: $vm.videos,
+              selectedAsset: $vm.selectedAsset,
+              spacing: spacing,
+              itemWidth: itemWidth
+            )
           }
         }
-        .alert("파일명을 입력하세요!", isPresented: $showEmptyTitleAlert) {
-          Button("확인") {
-            self.showEmptyTitleAlert = false
+        .onChange(of: vm.selectedAsset) { oldValue, newValue in
+          withAnimation(.easeInOut) {
+            proxy.scrollTo("TOP", anchor: .top)
           }
-        }
-        .alert("업로드 완료", isPresented: $vm.showSuccessAlert) {
-          Button("확인") {
-            dismiss()
-          }
-        }
-        .alert("업로드 실패", isPresented: .constant(vm.errorMessage != nil)) {
-          Button("확인") {
-            vm.errorMessage = nil
-          }
-        } message: {
-          Text(vm.errorMessage ?? "알 수 없는 오류가 발생했습니다.")
         }
       }
       .overlay {
-        if vm.isLoading { // FIXME: 업로드 로딩뷰 구현 필수
+        if vm.isLoading {
           ZStack {
             Color.black.opacity(0.7)
             
@@ -134,8 +153,6 @@ struct VideoPickerView: View {
         }
       }
     }
-    .background(Color.white) // FIXME: 다크모드 배경색 명시
-    .disabled(vm.isLoading)
   }
   
   private var textField: some View {
