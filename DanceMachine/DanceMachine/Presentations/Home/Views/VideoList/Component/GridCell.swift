@@ -28,6 +28,7 @@ struct GridCell: View { // FIXME: 디자인 수정!
       content.padding(.leading, 8)
     }
     .frame(width: size, height: size * 1.2)
+    .contentShape(Rectangle())
     .background(
       RoundedRectangle(cornerRadius: 12)
         .fill(Color.gray)
