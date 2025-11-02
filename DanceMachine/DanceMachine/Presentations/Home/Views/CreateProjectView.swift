@@ -8,7 +8,8 @@
 import SwiftUI
 
 struct CreateProjectView: View {
-    
+  
+  @Environment(\.dismiss) private var dismiss
     
     @EnvironmentObject private var router: NavigationRouter
     
@@ -78,7 +79,10 @@ struct CreateProjectView: View {
         ) {
             Task {
                 try await viewModel.createProject(projectName: self.projectNameText)
-                await MainActor.run { router.pop() }
+//                await MainActor.run { router.pop() }
+              await MainActor.run {
+                dismiss()
+              }
             }
         }
     }
