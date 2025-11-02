@@ -34,10 +34,8 @@ struct VideoListView: View {
     ZStack(alignment: .bottom) {
       if vm.videos.isEmpty && !vm.isLoading && !VideoProgressManager.shared.isUploading {
         emptyView
-        uploadButton
       } else {
         listView
-        uploadButton
       }
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
