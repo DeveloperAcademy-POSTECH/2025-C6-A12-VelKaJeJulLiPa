@@ -26,6 +26,10 @@ struct HomeView: View {
     @State private var showCreateTracksView = false
     @State private var isLoading = false
 
+  
+    @State private var showCreateProject: Bool = false
+  
+  
     var body: some View {
         ZStack {
             Color.white.ignoresSafeArea() // FIXME: - 컬러 수정
@@ -159,6 +163,17 @@ struct HomeView: View {
                 .presentationCornerRadius(16)
             }
         }
+        // TODO: Kadan's Edit
+        .sheet(isPresented: $showCreateProject, content: {
+          CreateProjectView()
+        })
+        .onReceive(NotificationCenter.default.publisher(for: .showCreateProject, object: nil), perform: { _ in
+          self.showCreateProject = true
+        })
+        .onReceive(NotificationCenter.default.publisher(for: .showCreateTrack, object: nil), perform: { _ in
+          self.showCreateTracksView = true
+        })
+        //
         .overlay { if isLoading { LoadingView() } }
         .overlay(alignment: .bottomTrailing) {
             if let mode = viewModel.fabMode {
