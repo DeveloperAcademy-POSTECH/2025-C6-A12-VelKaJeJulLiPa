@@ -397,13 +397,46 @@ extension HomeViewModel {
       self.project.headerTitle = project.projectName
       if tracks.byProject[id] == nil { loadTracks(for: id) }
     }
-    print("프로젝트 확장 토글이 완료되었습니다. (toggleExpand 종료)")
-  }
-  
-  /// 주어진 프로젝트가 확장 상태인지 여부
-  func isExpanded(_ project: Project) -> Bool {
-    self.project.expandedID == project.projectId
-  }
+
+    /// 프로젝트를 Firestore에서 삭제합니다.
+    func removeProject(projectId: String) async throws {
+        print("프로젝트 삭제를 시작합니다. 대상: \(projectId) (removeProject 시작)")
+        try await FirestoreManager.shared.delete(collectionType: .project, documentID: projectId)
+        print("프로젝트 삭제가 완료되었습니다. (removeProject 종료)")
+    }
+
+    /// 프로젝트 확장 토글
+    func toggleExpand(_ project: Project) {
+        print("프로젝트 확장 토글을 시작합니다. 대상: \(project.projectName) (toggleExpand 시작)")
+        let id = project.projectId
+        if self.project.expandedID == id {
+            print("프로젝트를 접습니다. (toggleExpand 접기)")
+            self.project.expandedID = nil
+            self.selectedProject = nil
+            self.project.headerTitle = "프로젝트 목록"
+            tracks.rowState = .viewing
+            tracks.editingID = nil
+            tracks.editText = ""
+
+            // 프로젝트 접힘 알림
+            NotificationCenter.default.post(name: .projectDidCollapse, object: nil)
+        } else {
+            print("프로젝트를 펼칩니다. (toggleExpand 펼치기)")
+            self.project.expandedID = id
+            self.selectedProject = project
+            self.project.headerTitle = project.projectName
+            if tracks.byProject[id] == nil { loadTracks(for: id) }
+
+            // 프로젝트 펼침 알림
+            NotificationCenter.default.post(name: .projectDidExpand, object: nil)
+        }
+        print("프로젝트 확장 토글이 완료되었습니다. (toggleExpand 종료)")
+    }
+
+    /// 주어진 프로젝트가 확장 상태인지 여부
+    func isExpanded(_ project: Project) -> Bool {
+        self.project.expandedID == project.projectId
+    }
 }
 
 // MARK: - 트랙 관리
