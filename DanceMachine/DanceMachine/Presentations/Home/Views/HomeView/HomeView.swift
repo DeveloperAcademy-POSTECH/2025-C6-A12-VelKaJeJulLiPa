@@ -116,6 +116,27 @@ struct HomeView: View {
           )
           .padding(.horizontal, 16)
         }
+        // TODO: Kadan's Edit
+        .sheet(isPresented: $showCreateProject, content: {
+          CreateProjectView()
+        })
+        .onReceive(NotificationCenter.default.publisher(for: .showCreateProject, object: nil), perform: { _ in
+          self.showCreateProject = true
+        })
+        .onReceive(NotificationCenter.default.publisher(for: .showCreateTrack, object: nil), perform: { _ in
+          self.showCreateTracksView = true
+        })
+        //
+        .overlay { if isLoading { LoadingView() } }
+        .overlay(alignment: .bottomTrailing) {
+            if let mode = viewModel.fabMode {
+                FloatingActionButton(
+                    mode: mode,
+                    isProjectListEmpty: viewModel.isProjectListEmpty,
+                    onAddProject: { router.push(to: .project(.create)) },
+                    onAddTrack: { showCreateTracksView = true }
+                )
+            }
         Spacer()
       }
       .sheet(item: $presentingRemovalSheetProject) { project in
