@@ -34,19 +34,18 @@ struct VideoListView: View {
     ZStack(alignment: .bottom) {
       if vm.videos.isEmpty && vm.isLoading != true {
         emptyView
-        uploadButton
       } else {
         listView
-        uploadButton
       }
     }
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(Color.white) // FIXME: 배경색 지정 (다크모드)
     .overlay { if vm.isLoading { LoadingView() }}
     .safeAreaInset(edge: .top, content: {
       sectionView
     })
     .navigationBarTitleDisplayMode(.inline)
-    //    .toolbar(.hidden, for: .tabBar)
+    .toolbar(.hidden, for: .tabBar)
     .toolbar {
       ToolbarLeadingBackButton(icon: .chevron)
       ToolbarCenterTitle(text: trackName)
@@ -66,13 +65,6 @@ struct VideoListView: View {
         sectionId: vm.selectedSection?.sectionId ?? sectionId
       )
     }
-    // MARK: 글래스 모피즘 사용하여 플로팅 버튼을 rootView에서 관리할때 쓰는 리시버
-    .onReceive(
-      NotificationCenter.default.publisher(
-        for: .showVideoPicker)
-    ) { _ in
-          self.showCustomPicker = true
-        }
     // MARK: 비디오 업로드 했을때 리시버
     .onReceive(
       NotificationCenter.default.publisher(for: .videoUpload)
@@ -162,11 +154,13 @@ struct VideoListView: View {
             section: vm.section,
             vm: $vm
           )
+          .padding(.horizontal, horizontalPadding)
           .onTapGesture {
             // TODO: 비디오 플레이 화면 네비게이션 연결
             print("비디오 클릭")
           }
         }
+        .background(Color.white) // FIXME: 배경색 지정 (다크모드)
       }
     .overlay { if vm.filteredVideos.isEmpty && vm.isLoading == false { emptyView }}
     }
