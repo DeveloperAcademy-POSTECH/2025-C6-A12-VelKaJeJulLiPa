@@ -6,10 +6,11 @@
 //
 
 import Foundation
+import FirebaseAuth
 
-struct User: Codable {
+struct User: Codable, Equatable {
     
-    let userId: UUID
+    let userId: String
     let email: String
     let name: String
     let loginType: LoginType.RawValue
@@ -19,7 +20,7 @@ struct User: Codable {
     let privacyAgreed: Bool
 
     init(
-        userId: UUID,
+        userId: String,
         email: String,
         name: String,
         loginType: LoginType,
@@ -50,7 +51,11 @@ struct User: Codable {
     }
 }
 
+extension User: Identifiable {
+    var id: String { UUID().uuidString }
+}
+
 extension User: EntityRepresentable {
     var entityName: CollectionType { .users }
-    var documentID: String { userId.uuidString } // FIXME: - document를 FirebaseAuth UUID로 교체
+    var documentID: String { userId }
 }

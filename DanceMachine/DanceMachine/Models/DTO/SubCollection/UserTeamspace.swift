@@ -7,15 +7,22 @@
 
 import Foundation
 
-struct UserTeamspace {
-    
-    let teamspaceID: String
-    
-    init(teamspaceID: String) {
-        self.teamspaceID = teamspaceID
+struct UserTeamspace: Codable, Equatable, Hashable {
+    let teamspaceId: String
+
+    init(teamspaceId: String) {
+        self.teamspaceId = teamspaceId
     }
     
     enum CodingKeys: String, CodingKey {
-        case teamspaceID = "teamspace_id"
+        case teamspaceId = "teamspace_id"
+    }
+}
+
+extension UserTeamspace: EntityRepresentable {
+    var entityName: CollectionType { .userTeamspace }
+    var documentID: String { teamspaceId }
+    var asDictionary: [String: Any]? {
+        [CodingKeys.teamspaceId.rawValue: teamspaceId]
     }
 }

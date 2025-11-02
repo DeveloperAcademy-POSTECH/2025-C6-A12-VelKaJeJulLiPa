@@ -8,13 +8,14 @@
 import SwiftUI
 
 struct ToolbarCenterTitle: ToolbarContent {
+    
     let text: String
     
     var body: some ToolbarContent {
         ToolbarItem(placement: .principal) {
             Text(text)
-                .font(Font.system(size: 18, weight: .semibold))
-                .foregroundStyle(Color.black)
+                .font(Font.system(size: 18, weight: .semibold)) // FIXME: - 폰트 수정
+                .foregroundStyle(Color.black) // FIXME: - 컬러 수정
                 .allowsHitTesting(false)
         }
     }

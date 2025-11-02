@@ -8,15 +8,15 @@
 import Foundation
 
 struct Block: Codable {
-    let blockedUserID: String
+    let blockedUserId: String
 
     init(
-        blockedUserID: String,
+        blockedUserId: String,
     ) {
-        self.blockedUserID = blockedUserID
+        self.blockedUserId = blockedUserId
     }
 
     enum CodingKeys: String, CodingKey {
-        case blockedUserID = "blocked_user_id"
+        case blockedUserId = "blocked_user_id"
     }
 }

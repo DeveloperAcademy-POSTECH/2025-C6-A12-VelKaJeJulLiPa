@@ -15,6 +15,8 @@ struct Feedback: Codable {
     let taggedUserIds: [String]
     let startTime: Double?
     let endTime: Double?
+    var createdAt: Date? = nil
+    let teamspaceId: String
 
     init(
         feedbackId: UUID,
@@ -23,7 +25,9 @@ struct Feedback: Codable {
         content: String,
         taggedUserIds: [String] = [],
         startTime: Double? = nil,
-        endTime: Double? = nil
+        endTime: Double? = nil,
+        createdAt: Date? = nil,
+        teamspaceId: String
     ) {
         self.feedbackId = feedbackId
         self.videoId = videoId
@@ -32,6 +36,8 @@ struct Feedback: Codable {
         self.taggedUserIds = taggedUserIds
         self.startTime = startTime
         self.endTime = endTime
+        self.createdAt = createdAt
+        self.teamspaceId = teamspaceId
     }
 
     enum CodingKeys: String, CodingKey {
@@ -42,10 +48,16 @@ struct Feedback: Codable {
         case taggedUserIds = "tagged_user_ids"
         case startTime     = "start_time"
         case endTime       = "end_time"
+        case createdAt     = "created_at"
+        case teamspaceId   = "teamspace_id"
     }
 }
 
 extension Feedback: EntityRepresentable {
     var entityName: CollectionType { .feedback }
     var documentID: String { feedbackId.uuidString }
+}
+
+extension Feedback: Identifiable {
+  var id: String { feedbackId.uuidString }
 }

@@ -7,14 +7,15 @@
 
 import Foundation
 
+nonisolated
 struct Teamspace: Codable {
     let teamspaceId: UUID
-    let ownerId: UUID
+    let ownerId: String
     let teamspaceName: String
 
     init(
         teamspaceId: UUID,
-        ownerId: UUID,
+        ownerId: String,
         teamspaceName: String
     ) {
         self.teamspaceId = teamspaceId

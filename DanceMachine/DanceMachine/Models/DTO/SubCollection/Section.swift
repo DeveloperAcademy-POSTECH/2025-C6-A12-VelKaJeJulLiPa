@@ -7,10 +7,10 @@
 
 import Foundation
 
-struct Section: Codable {
+struct Section: Codable, Equatable, Hashable {
     
     let sectionId: String
-    let sectionTitle: String
+    var sectionTitle: String
     
     init(
         sectionId: String,
@@ -25,4 +25,16 @@ struct Section: Codable {
         case sectionTitle = "section_title"
     }
     
+}
+
+extension Section: EntityRepresentable {
+    var entityName: CollectionType { .section }
+    var documentID: String { sectionId }
+    var asDictionary: [String: Any]? {
+        let encoder = JSONEncoder()
+        encoder.keyEncodingStrategy = .convertToSnakeCase
+        guard let data = try? encoder.encode(self),
+              let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
+        return dict
+    }
 }

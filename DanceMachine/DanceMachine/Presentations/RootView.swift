@@ -13,27 +13,92 @@ struct RootView: View {
     @State var tabcase: TabCase = .home
     
     var body: some View {
-        NavigationStack(path: $router.destination, root: {
-            TabView(selection: $tabcase, content: {
-                ForEach(TabCase.allCases, id: \.rawValue) { tab in
-                    Tab(
-                        value: tab,
-                        content: {
-                            tabView(tab: tab)
-                                .tag(tab)
-                        },
-                        label: {
-                            tabLabel(tab)
-                        })
-                }
-            })
-            .tint(Color.blue)
-            .navigationDestination(for: NavigationDestination.self, destination: { destination in
-                NavigationRoutingView(destination: destination)
-                    .environmentObject(router)
-            })
-        })
+                TabView(selection: $tabcase, content: {
+                    ForEach(TabCase.allCases, id: \.rawValue) { tab in
+                        Tab(
+                            value: tab,
+                            content: {
+                              NavigationStack(path: $router.destination) {
+                                tabView(tab: tab)
+                                  .navigationDestination(
+                                    for: AppRoute.self,
+                                    destination: { destination in
+                                      NavigationRoutingView(
+                                        destination: destination
+                                      )
+                                      .environmentObject(router)
+                                    })
+                              }
+                                    .tag(tab)
+                            },
+                            label: {
+                                tabLabel(tab)
+                            })
+                    }
+//                  Tab(value: tabcase, role: .search) {
+//                    Color.clear
+//                  } label: {
+//                    Image(systemName: "plus.circle.fill")
+////                    Text("영상 추가하기")
+//                  }
+//                  Tab(value: TabCase.myPage, role: .search) {
+//                    Image(systemName: "plus.circle.fill")
+//                  }
+                })
+                .tint(Color.black)
+                .onChange(of: tabcase) { oldValue, newValue in
+                     if oldValue != newValue {
+                         router.destination.removeAll()
+                     }
+                 }
+
+
+                
     }
+
+    @ViewBuilder
+    private var homeTabAccessory: some View {
+      if router.destination.isEmpty {
+        EmptyView()
+      } else if let current = router.destination.last {
+        switch current {
+        case .video:
+          uploadButton
+        default:
+          EmptyView()
+        }
+      }
+    }
+  
+  @ViewBuilder
+  private func bottomAccessory(for tab: TabCase) -> some View {
+      switch tab {
+      case .home:
+        homeTabAccessory
+      case .inbox:
+          EmptyView()
+      case .myPage:
+          EmptyView()
+      }
+  }
+  
+  private var uploadButton: some View {
+      Button {
+        print("비디오 피커 버튼")
+        NotificationCenter.default.post(
+          name: .showVideoPicker,
+          object: nil
+        )
+      } label: {
+        Text("동영상 업로드")
+          .font(.system(size: 17)) // FIXME: 폰트 수정
+          .foregroundStyle(Color.white)
+          .padding(.horizontal, 20)
+      }
+      .frame(maxWidth: .infinity)
+    .frame(height: 47)
+//    .glassEffect(.clear.tint(Color.purple.opacity(0.8)).interactive(), in: Capsule())
+  }
     
     private func tabLabel(_ tab: TabCase) -> some View {
         VStack(spacing: 8, content: {
@@ -50,11 +115,17 @@ struct RootView: View {
         Group {
             switch tab {
             case .home:
-                HomeView()
+                NavigationRoutingView(
+                    destination: .home
+                )
             case .inbox:
-                InboxView()
+                NavigationRoutingView(
+                    destination: .inbox(.list)
+                )
             case .myPage:
-                MyPageView()
+                NavigationRoutingView(
+                    destination: .mypage(.profile)
+                )
             }
         }
         .environmentObject(router)
@@ -62,5 +133,8 @@ struct RootView: View {
 }
 
 #Preview {
-    RootView()
+    NavigationStack {
+        RootView()
+            .environmentObject(NavigationRouter())
+    }
 }
