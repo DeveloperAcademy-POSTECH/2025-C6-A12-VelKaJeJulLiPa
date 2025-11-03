@@ -123,4 +123,3 @@ struct CreateTeamspaceView: View {
     }
   }
 }
-
