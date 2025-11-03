@@ -140,6 +140,10 @@ struct TeamspaceSettingView: View {
                 }
             }
           case .editing:
+            let isDisabled = editedName
+              .trimmingCharacters(in: .whitespacesAndNewlines)
+              .isEmpty // 활성화/비활성화 여부
+            
             UpdateButton(
               title: "완료",
               titleColor: Color.accentBlueStrong) {
@@ -151,6 +155,7 @@ struct TeamspaceSettingView: View {
                   }
                 }
               }
+              .opacity(isDisabled ? 0.3 : 1.0)
               .disabled(editedName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
           }
         }
@@ -182,9 +187,21 @@ struct TeamspaceSettingView: View {
             //                            }
             //                        }
           }
-        Rectangle()
-          .fill(Color.secondaryNormal)
-          .frame(height: 1)
+          .onChange(of: editedName) { oldValue, newValue in
+            var updated = newValue
+
+            if updated.first == " " {
+              updated = String(updated.drop(while: { $0 == " " }))
+            }
+
+            if updated.count > 20 {
+              updated = String(updated.prefix(20))
+            }
+
+            if updated != editedName {
+              editedName = updated
+            }
+          }
       }
       Spacer().frame(height: 32)
       ActionButton(
