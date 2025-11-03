@@ -113,6 +113,10 @@ struct TeamspaceSettingView: View {
                 self.nameFieldFocused = true
               }
           case .editing:
+            let isDisabled = editedName
+              .trimmingCharacters(in: .whitespacesAndNewlines)
+              .isEmpty // 활성화/비활성화 여부
+            
             UpdateButton(
               title: "완료",
               titleColor: Color.blue) { // FIXME: - 컬러 수정
@@ -124,6 +128,7 @@ struct TeamspaceSettingView: View {
                   }
                 }
               }
+              .opacity(isDisabled ? 0.3 : 1.0)
               .disabled(editedName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
           }
         }
@@ -151,6 +156,21 @@ struct TeamspaceSettingView: View {
                 self.editingState = .viewing
                 self.nameFieldFocused = false
               }
+            }
+          }
+          .onChange(of: editedName) { oldValue, newValue in
+            var updated = newValue
+
+            if updated.first == " " {
+              updated = String(updated.drop(while: { $0 == " " }))
+            }
+
+            if updated.count > 20 {
+              updated = String(updated.prefix(20))
+            }
+
+            if updated != editedName {
+              editedName = updated
             }
           }
       }
