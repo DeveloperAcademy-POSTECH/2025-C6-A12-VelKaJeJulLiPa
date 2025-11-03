@@ -9,33 +9,59 @@ import SwiftUI
 
 struct ThumbnailAsyncImage: View {
   let thumbnailURL: String?
+  let videoId: String // 캐시 키
   
   var size: CGFloat?
   var height: CGFloat?
   
   @State private var isLoading: Bool = false
+  @State private var cachedImage: UIImage? = nil
   
   var body: some View {
     Group {
-      if let url = thumbnailURL,
-          let url = URL(string: url) {
+      if let cached = cachedImage {
+        Image(uiImage: cached)
+          .resizable()
+          .aspectRatio(contentMode: .fill)
+          .clipShape(RoundedRectangle(cornerRadius: 10))
+      } else if let url = thumbnailURL, let url = URL(string: url) {
         AsyncImage(url: url) { i in
           i
             .resizable()
             .aspectRatio(contentMode: .fill)
             .clipShape(RoundedRectangle(cornerRadius: 10))
+            .onAppear {
+              Task {
+                if let uiImage = await loadUIImage(from: url),
+                    let url = thumbnailURL {
+                  _ = try await VideoCacheManager.shared.downloadAndCacheThumbnail(
+                    from: url,
+                    videoId: videoId
+                  )
+                }
+              }
+            }
         } placeholder: {
-          ProgressView()
+          thumbnailSkeletonView
         }
-      } else if isLoading {
-        ProgressView() // FIXME: 기본 로딩?
       } else {
-        defaultImageView // FIXME: 썸네일 추출 실패했을 때 기본 이미지 (앱 로고 표시?)
+        defaultImageView
       }
     }
     .frame(width: size, height: height)
     .clipped()
     .clipShape(RoundedRectangle(cornerRadius: 10))
+    .task {
+      cachedImage = await VideoCacheManager.shared.getCachedThumbnailURL(
+        for: videoId
+      )
+    }
+  }
+
+  private var thumbnailSkeletonView: some View {
+    SkeletonView(
+      RoundedRectangle(cornerRadius: 10)
+    )
   }
   
   private var defaultImageView: some View {
@@ -48,8 +74,16 @@ struct ThumbnailAsyncImage: View {
           .foregroundStyle(.gray)
       }
   }
+  
+  private func loadUIImage(from url: URL) async -> UIImage? {
+    guard let (data, _) = try? await URLSession.shared.data(from: url),
+          let image = UIImage(data: data) else {
+      return nil
+    }
+    return image
+  }
 }
 
 #Preview {
-  ThumbnailAsyncImage(thumbnailURL: "https://picsum.photos/300", size: 179, height: 96)
+  ThumbnailAsyncImage(thumbnailURL: "https://picsum.photos/300", videoId: "", size: 179, height: 96)
 }
