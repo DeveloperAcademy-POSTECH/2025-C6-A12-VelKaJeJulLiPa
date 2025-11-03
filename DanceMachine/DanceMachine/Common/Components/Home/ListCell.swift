@@ -78,7 +78,21 @@ struct ListCell: View {
                 }
               }
               .onChange(of: editText) { _, newValue in
-                
+                // 프로젝트 리스트 글자 제한
+                var updated = newValue
+
+                if updated.first == " " {
+                  updated = String(updated.drop(while: { $0 == " " })) // ❗️공백 금지
+                }
+
+                if updated.count > 20 {
+                  updated = String(updated.prefix(20)) // ❗️20글자 초과 금지
+                }
+
+                if updated != editText {
+                  editText = updated
+                }
+    
                 onTextChanged(newValue)
               }
             

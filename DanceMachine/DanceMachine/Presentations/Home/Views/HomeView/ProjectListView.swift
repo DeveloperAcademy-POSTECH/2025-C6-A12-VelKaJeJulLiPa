@@ -129,14 +129,11 @@ struct ProjectListView<ExpandedContent: View>: View {
   }
   
   /// 헤더의 기본(primary) 버튼 비활성화 여부를 계산합니다.
-  /// - Returns: 이름 변경 커밋 단계(`.editing(.update)`)에서 편집 텍스트가 비어 있으면 `true`, 그 외에는 `false`.
+  /// - Returns: 이름 변경 커밋 단계(`.editing(.update)`)에서 편집 텍스트가 비어 있거나, 20글자 이상이면 `true`, 그 외에는 `false`.
   /// - Important: 버튼 비활성화는 단순한 UI 상태이므로 실제 커밋 방어 로직은 `commitIfPossible()`에서도 한 번 더 수행합니다.
   private var shouldDisablePrimaryButton: Bool {
     if case .editing(.update) = rowState {
-      return editText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-    }
-    if case .editing(.update) = rowState {
-      return editText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+      return editText.count > 19 || editText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
     return false
   }
