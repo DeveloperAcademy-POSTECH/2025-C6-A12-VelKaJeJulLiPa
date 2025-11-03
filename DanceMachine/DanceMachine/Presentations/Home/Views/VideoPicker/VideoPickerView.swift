@@ -51,6 +51,7 @@ struct VideoPickerView: View {
                 return
               }
               vm.exportVideo(tracksId: tracksId, sectionId: sectionId)
+              dismiss()
             } label: {
               Image(systemName: "arrow.up")
                 .foregroundStyle(
@@ -74,11 +75,6 @@ struct VideoPickerView: View {
       .alert("파일명을 입력하세요!", isPresented: $showEmptyTitleAlert) {
         Button("확인") {
           self.showEmptyTitleAlert = false
-        }
-      }
-      .alert("업로드 완료", isPresented: $vm.showSuccessAlert) {
-        Button("확인") {
-          dismiss()
         }
       }
       .alert("업로드 실패", isPresented: .constant(vm.errorMessage != nil)) {
