@@ -11,6 +11,7 @@ import Foundation
 final class VideoListViewModel {
   private let store = FirestoreManager.shared
   private let storage = FireStorageManager.shared
+  private let dataCacheManager = VideoDataCacheManager.shared
   
   var videos: [Video] = []
   var section: [Section] = []
@@ -43,13 +44,38 @@ extension VideoListViewModel {
   func loadFromServer(tracksId: String) async {
     if ProcessInfo.isRunningInPreviews { return } // 프리뷰 전용
     
+    let startTime = Date()
+    
     await MainActor.run {
       self.isLoading = true
       self.errorMsg = nil
     }
     
+    // 1. 캐시 확인 우선
+    if let cachedData = await dataCacheManager.getCachedData(for: tracksId) {
+      print("캐시에서 데이터 로드")
+      
+      // 최소 로딩 시간 보장 (스켈레톤 뷰 1.5초)
+      await TaskTimeUtility.waitForMinimumLoadingTime(
+        startTime: startTime
+      )
+      
+      await MainActor.run {
+        self.section = cachedData.section
+        self.track = cachedData.track
+        self.videos = cachedData.videos
+        
+        if let firstSection = cachedData.section.first {
+          self.selectedSection = firstSection
+        }
+        self.isLoading = false
+      }
+      return
+    }
+    
+    // 2. 캐시 없으면 그때 서버에서 로드
     do {
-      print("tracksId: \(tracksId)")
+      print("서버에서 로드 시작")
       // 1. Tracks -> Section 목록 가져오기
       let fetchSection = try await self.fetchSection(in: tracksId)
       print("불러온 section 개수\(fetchSection.count)")
@@ -90,7 +116,21 @@ extension VideoListViewModel {
       fetchedVideos.sort {
         ($0.createdAt ?? .distantPast > ($1.createdAt ?? .distantPast))
       }
-      // 5. UI 업데이트
+      
+      // 3. 로드 후 캐시에 저장
+      try await dataCacheManager.cache(
+        video: fetchedVideos,
+        track: allTrack,
+        section: fetchSection,
+        for: tracksId
+      )
+      
+      // 최소 로딩 시간 보장 (스켈레톤 뷰 1.5초)
+      await TaskTimeUtility.waitForMinimumLoadingTime(
+        startTime: startTime
+      )
+      
+      // 4. UI 업데이트
       await MainActor.run {
         let previousSelectedId = self.selectedSection?.sectionId
         self.section = fetchSection
@@ -107,6 +147,11 @@ extension VideoListViewModel {
         self.isLoading = false
       }
     } catch {
+      // 최소 로딩 시간 보장 (스켈레톤 뷰 1.5초)
+      await TaskTimeUtility.waitForMinimumLoadingTime(
+        startTime: startTime
+      )
+      
       await MainActor.run {
         self.isLoading = false
         // 동작 중 일부 videoId가 누락되어도 전체를 중단하지 않도록,
@@ -119,20 +164,129 @@ extension VideoListViewModel {
       }
     }
   }
-  
-  // 영상 삭제 메서드 Storage + Firestore(Video + Track)
-  func deleteVideo(video: Video, tracksId: String) async {
+  // MARK: 새 영상 캐시에 추가
+  func addNewVideo(video: Video, track: Track, traksId: String) async {
+    await dataCacheManager.addVideo(
+      video,
+      track: track,
+      to: traksId
+    )
+    await MainActor.run {
+      if !self.videos.contains(where: { $0.videoId == video.videoId }) {
+        self.videos.insert(video, at: 0)
+      }
+      if !self.track.contains(where: { $0.trackId == track.trackId }) {
+        self.track.append(track)
+      }
+      print("새 영상 캐시에 추가: \(video.videoTitle)")
+    }
+  }
+
+  // MARK: 강제 서버 새로고침 (Pull-to-refresh용)
+  func forceRefreshFromServer(tracksId: String) async {
+    if ProcessInfo.isRunningInPreviews { return }
+
+    let startTime = Date()
+
     await MainActor.run {
       self.isLoading = true
       self.errorMsg = nil
     }
-    
+
+    // 캐시 무시하고 무조건 서버에서 로드
+    do {
+      print("강제 서버 새로고침 시작")
+
+      let fetchSection = try await self.fetchSection(in: tracksId)
+      var allTrack: [Track] = []
+      var videoIds: Set<String> = []
+
+      for section in fetchSection {
+        let track = try await self.fetchTrack(
+          in: tracksId,
+          withIn: section.sectionId
+        )
+        allTrack.append(contentsOf: track)
+
+        for t in track {
+          videoIds.insert(t.videoId)
+        }
+      }
+
+      var fetchedVideos: [Video] = []
+      for videoId in videoIds {
+        do {
+          let video: Video = try await store.get(videoId, from: .video)
+          fetchedVideos.append(video)
+        } catch {
+          print("비디오 문서 없음 스킵 : \(error)")
+          continue
+        }
+      }
+
+      fetchedVideos.sort {
+        ($0.createdAt ?? .distantPast > ($1.createdAt ?? .distantPast))
+      }
+
+      // 새로 받은 데이터로 캐시 업데이트
+      try await dataCacheManager.cache(
+        video: fetchedVideos,
+        track: allTrack,
+        section: fetchSection,
+        for: tracksId
+      )
+
+      // 최소 로딩 시간 보장 (1.5초)
+      await TaskTimeUtility.waitForMinimumLoadingTime(
+        startTime: startTime
+      )
+
+      await MainActor.run {
+        let previousSelectedId = self.selectedSection?.sectionId
+        self.section = fetchSection
+        self.track = allTrack
+        self.videos = fetchedVideos
+
+        if let prevId = previousSelectedId,
+           let stillExists = fetchSection.first(where: { $0.sectionId == prevId }) {
+          self.selectedSection = stillExists
+        } else {
+          self.selectedSection = fetchSection.first
+        }
+
+        self.isLoading = false
+        print("강제 새로고침 완료")
+      }
+    } catch {
+      await TaskTimeUtility.waitForMinimumLoadingTime(
+        startTime: startTime
+      )
+
+      await MainActor.run {
+        self.isLoading = false
+        if self.videos.isEmpty {
+          self.errorMsg = VideoError.fetchFailed.userMsg
+        }
+        print("강제 새로고침 실패: \(error)")
+      }
+    }
+  }
+  
+  // 영상 삭제 메서드 Storage + Firestore(Video + Track)
+  func deleteVideo(video: Video, tracksId: String) async {
+    let startTime = Date()
+
+    await MainActor.run {
+      self.isLoading = true
+      self.errorMsg = nil
+    }
+
     do {
       let videoId = video.videoId.uuidString
-      
+
       let videoPath = StorageType.video(videoId).path
       let thumbnailPath = StorageType.thumbnail(videoId).path
-      
+
       try await withThrowingTaskGroup(of: Void.self) { group in
         group.addTask {
           _ = try await self.storage.deleteVideo(at: videoPath)
@@ -149,13 +303,29 @@ extension VideoListViewModel {
         }
         try await group.waitForAll()
       }
-      
+
+      // 캐시도 삭제
+      await dataCacheManager.removeVideo(
+        videoId: videoId,
+        from: tracksId
+      )
+
+      // 최소 로딩 시간 보장 (스켈레톤 뷰 1.5초)
+      await TaskTimeUtility.waitForMinimumLoadingTime(
+        startTime: startTime
+      )
+
       await MainActor.run {
         self.videos.removeAll { $0.videoId == video.videoId }
         self.track.removeAll { $0.videoId == videoId }
         self.isLoading = false
       }
     } catch {
+      // 최소 로딩 시간 보장 (스켈레톤 뷰 1.5초)
+      await TaskTimeUtility.waitForMinimumLoadingTime(
+        startTime: startTime
+      )
+
       await MainActor.run { // TODO: 에러 처리
         self.isLoading = false
         self.errorMsg = "영상 삭제에 실패했습니다. 다시 시도해 주세요."
@@ -212,51 +382,51 @@ private extension VideoListViewModel {
 }
 // MARK: - 프리뷰
 extension VideoListViewModel {
-    static var preview: VideoListViewModel {
-      let vm = VideoListViewModel()
-
-      // 목 데이터 주입
-      vm.section = [
-        Section(sectionId: "1", sectionTitle: "기초"),
-        Section(sectionId: "2", sectionTitle: "중급"),
-        Section(sectionId: "3", sectionTitle: "고급 안무 연습")
-      ]
-
-      vm.track = [
-        Track(trackId: "t1", videoId: "v1", sectionId: "1"),
-        Track(trackId: "t2", videoId: "v2", sectionId: "1"),
-        Track(trackId: "t3", videoId: "v3", sectionId: "2")
-      ]
-
-      vm.videos = [
-        Video(
-          videoId: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
-          videoTitle: "비디오 1",
-          videoDuration: 120.5,
-          videoURL: "https://example.com/video1.mp4",
-          thumbnailURL: "https://example.com/thumb1.jpg",
-          createdAt: Date()
-        ),
-        Video(
-          videoId: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!,
-          videoTitle: "비디오 2",
-          videoDuration: 95.3,
-          videoURL: "https://example.com/video2.mp4",
-          thumbnailURL: "https://example.com/thumb2.jpg",
-          createdAt: Date()
-        ),
-        Video(
-          videoId: UUID(uuidString: "00000000-0000-0000-0000-000000000003")!,
-          videoTitle: "비디오 3",
-          videoDuration: 180.0,
-          videoURL: "https://example.com/video3.mp4",
-          thumbnailURL: "https://example.com/thumb3.jpg",
-          createdAt: Date()
-        )
-      ]
-
-      vm.isLoading = false
-
-      return vm
-    }
+  static var preview: VideoListViewModel {
+    let vm = VideoListViewModel()
+    
+    // 목 데이터 주입
+    vm.section = [
+      Section(sectionId: "1", sectionTitle: "기초"),
+      Section(sectionId: "2", sectionTitle: "중급"),
+      Section(sectionId: "3", sectionTitle: "고급 안무 연습")
+    ]
+    
+    vm.track = [
+      Track(trackId: "t1", videoId: "v1", sectionId: "1"),
+      Track(trackId: "t2", videoId: "v2", sectionId: "1"),
+      Track(trackId: "t3", videoId: "v3", sectionId: "2")
+    ]
+    
+    vm.videos = [
+      Video(
+        videoId: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
+        videoTitle: "비디오 1",
+        videoDuration: 120.5,
+        videoURL: "https://example.com/video1.mp4",
+        thumbnailURL: "https://example.com/thumb1.jpg",
+        createdAt: Date()
+      ),
+      Video(
+        videoId: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!,
+        videoTitle: "비디오 2",
+        videoDuration: 95.3,
+        videoURL: "https://example.com/video2.mp4",
+        thumbnailURL: "https://example.com/thumb2.jpg",
+        createdAt: Date()
+      ),
+      Video(
+        videoId: UUID(uuidString: "00000000-0000-0000-0000-000000000003")!,
+        videoTitle: "비디오 3",
+        videoDuration: 180.0,
+        videoURL: "https://example.com/video3.mp4",
+        thumbnailURL: "https://example.com/thumb3.jpg",
+        createdAt: Date()
+      )
+    ]
+    
+    vm.isLoading = false
+    
+    return vm
   }
+}
