@@ -9,9 +9,9 @@ import SwiftUI
 
 struct VideoListView: View {
   @EnvironmentObject private var router: NavigationRouter
-  
+
   @State private var showCustomPicker: Bool = false
-  
+
   @State var vm: VideoListViewModel
   
   init(
@@ -32,15 +32,16 @@ struct VideoListView: View {
   
   var body: some View {
     ZStack(alignment: .bottom) {
-      if vm.videos.isEmpty && vm.isLoading != true {
+      if vm.videos.isEmpty && !vm.isLoading && !VideoProgressManager.shared.isUploading {
         emptyView
+        uploadButton
       } else {
         listView
+        uploadButton
       }
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(Color.white) // FIXME: 배경색 지정 (다크모드)
-    .overlay { if vm.isLoading { LoadingView() }}
     .safeAreaInset(edge: .top, content: {
       sectionView
     })
@@ -52,6 +53,11 @@ struct VideoListView: View {
     }
     .task {
       await vm.loadFromServer(tracksId: tracksId)
+      VideoProgressManager.shared.onUploadComplete = { video, track in
+        Task {
+          await vm.addNewVideo(video: video, track: track, traksId: tracksId)
+        }
+      }
     }
     // MARK: 섹션 변경 감지 해서 업데이트하는 노티
     .onReceive(NotificationCenter.default.publisher(

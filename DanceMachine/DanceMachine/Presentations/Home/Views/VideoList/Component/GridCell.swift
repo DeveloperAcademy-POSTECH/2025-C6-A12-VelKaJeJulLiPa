@@ -9,15 +9,16 @@ import SwiftUI
 
 struct GridCell: View { // FIXME: 디자인 수정!
   var size: CGFloat
-  
+
+  let videoId: String // 썸네일 캐싱용
   let thumbnailURL: String?
   let title: String
   let duration: Double
   let uploadDate: Date
-  
+
   let editAction: () -> Void
   let deleteAction: () -> Void
-  
+
   let videoAction: () -> Void
   
   @State private var showMenu: Bool = false
@@ -25,13 +26,13 @@ struct GridCell: View { // FIXME: 디자인 수정!
   var body: some View {
     VStack(alignment: .leading) {
       thumbnail
-      content.padding(.leading, 8)
+      content
     }
-    .frame(width: size, height: size * 1.2)
+    .frame(width: size, height: size * 1.22)
     .contentShape(Rectangle())
     .background(
       RoundedRectangle(cornerRadius: 12)
-        .fill(Color.gray)
+        .fill(Color.gray.opacity(0.7))
     )
     .sensoryFeedback(.success, trigger: showMenu)
     .onTapGesture { videoAction() }
@@ -50,14 +51,19 @@ struct GridCell: View { // FIXME: 디자인 수정!
   
   private var content: some View {
     VStack(alignment: .leading) {
-      Spacer().frame(width: 8)
+//      Spacer().frame(width: 8)
       Text(title).foregroundStyle(.black)
-      Spacer().frame(width: 8)
+//      Spacer().frame(width: 8)
       Text("\(duration.formattedTime())").foregroundStyle(.black)
-      Spacer().frame(width: 4)
+        .font(.caption)
+//      Spacer().frame(width: 4)
       Text("\(uploadDate.formattedDate())").foregroundStyle(.black)
+        .font(.caption)
       Spacer()
     }
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .padding(.top, 8)
+    .padding(.horizontal, 8)
   }
   
   private var thumbnail: some View {
@@ -65,6 +71,7 @@ struct GridCell: View { // FIXME: 디자인 수정!
       if let url = thumbnailURL {
         ThumbnailAsyncImage(
           thumbnailURL: url,
+          videoId: videoId,
           size: size,
           height: size / 1.5
         )
@@ -100,6 +107,7 @@ struct GridCell: View { // FIXME: 디자인 수정!
 #Preview {
   GridCell(
     size: 172,
+    videoId: "",
     thumbnailURL: "https://picsum.photos/300",
     title: "제목",
     duration: 14.1414141414,
