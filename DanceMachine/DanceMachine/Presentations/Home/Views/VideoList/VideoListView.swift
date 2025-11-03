@@ -160,9 +160,11 @@ struct VideoListView: View {
             print("비디오 클릭")
           }
         }
+        .refreshable {
+          await vm.forceRefreshFromServer(tracksId: tracksId)
+        }
         .background(Color.white) // FIXME: 배경색 지정 (다크모드)
       }
-    .overlay { if vm.filteredVideos.isEmpty && vm.isLoading == false { emptyView }}
     }
   // MARK: 섹션 칩 뷰
   private var sectionView: some View {
