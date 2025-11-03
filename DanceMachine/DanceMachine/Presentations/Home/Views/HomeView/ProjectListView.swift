@@ -66,6 +66,13 @@ struct ProjectListView<ExpandedContent: View>: View {
       } else {
         List(projects, id: \.projectId) { project in
           VStack(spacing: 8) {
+            
+            // 현재 로그인 유저 id
+            let currentUserId = FirebaseAuthManager.shared.userInfo?.userId ?? "" // FIXME: - 위치
+            // 현재 팀 스페이스
+            let teamspaceOwner = viewModel.currentTeamspace?.ownerId ?? ""
+            let canEdit = (project.creatorId == currentUserId || teamspaceOwner == currentUserId)
+            
             ListCell(
               title: project.projectName,
               projectRowState: perRowState(for: project.projectId),
@@ -80,7 +87,8 @@ struct ProjectListView<ExpandedContent: View>: View {
                 get: { (editingProjectID == project.projectId) ? editText : project.projectName },
                 set: { if editingProjectID == project.projectId { editText = $0 } }
               ),
-              isExpanded: isExpanded(project)
+              isExpanded: isExpanded(project),
+              canEdit: canEdit
             )
             .listRowSeparator(.hidden)
             

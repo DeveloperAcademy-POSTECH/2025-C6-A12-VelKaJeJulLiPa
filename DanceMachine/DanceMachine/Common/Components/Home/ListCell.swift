@@ -22,6 +22,8 @@ struct ListCell: View {
   
   var isExpanded: Bool = false // 화살표 회전 변수
   
+  var canEdit: Bool = false // 이 프로젝트를 수정/삭제할 수 있는지 여부 ( 팀 스페이스 오너, 프로젝트 생성자만 삭제 가능)
+  
   @FocusState private var nameFieldFocused: Bool
   
   var body: some View {
@@ -49,18 +51,20 @@ struct ListCell: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
           Spacer()
-          HStack(spacing: 16) {
-            Button("삭제", action: deleteAction)
-              .font(.headline2Medium)
-              .foregroundStyle(.accentRedNormal)
-              .buttonStyle(.plain)
-            
-            Button("수정", action: editAction) // ← 이걸 누르면 상위에서 .editing(.update)로 전환
-              .font(.headline2Medium)
-              .foregroundStyle(.accentBlueNormal)
-              .buttonStyle(.plain)
+          // 팀 스페이스 주인, 프로젝트 생성자만 삭제 가능
+          if canEdit {
+            HStack(spacing: 16) {
+              Button("삭제", action: deleteAction)
+                .font(.headline2Medium)
+                .foregroundStyle(.accentRedNormal)                .buttonStyle(.plain)
+              
+              Button("수정", action: editAction) // ← 이걸 누르면 상위에서 .editing(.update)로 전환
+                .font(.headline2Medium)
+                .foregroundStyle(.accentBlueNormal)
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 16)
           }
-          .padding(.horizontal, 16)
         case .update:
           VStack(spacing: .zero) {
             TextField("프로젝트 명", text: $editText)
@@ -80,19 +84,19 @@ struct ListCell: View {
               .onChange(of: editText) { _, newValue in
                 // 프로젝트 리스트 글자 제한
                 var updated = newValue
-
+                
                 if updated.first == " " {
                   updated = String(updated.drop(while: { $0 == " " })) // ❗️공백 금지
                 }
-
+                
                 if updated.count > 20 {
                   updated = String(updated.prefix(20)) // ❗️20글자 초과 금지
                 }
-
+                
                 if updated != editText {
                   editText = updated
                 }
-    
+                
                 onTextChanged(newValue)
               }
             
