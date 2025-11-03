@@ -111,7 +111,9 @@ struct TeamspaceSettingView: View {
       if ProcessInfo.isRunningInPreviews { return } // 프리뷰 전용
       
       // 로그인 유저와 팀 스페이스 ownerId가 일치하면 발생하는 로직 => 팀 스페이스 주인 => 권한 up
-      await MainActor.run { self.teamspaceRole = viewModel.isTeamspaceOwner() ? .owner : .viewer }
+      await MainActor.run {
+        self.teamspaceRole = viewModel.isTeamspaceOwner() ? .owner : .viewer
+      }
       
       let users: [User] = await viewModel.fetchCurrentTeamspaceAllMember()
       self.users = users
