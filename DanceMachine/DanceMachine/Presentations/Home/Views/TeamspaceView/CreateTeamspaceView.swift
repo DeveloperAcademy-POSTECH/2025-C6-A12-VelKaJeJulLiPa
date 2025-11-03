@@ -9,6 +9,7 @@ import SwiftUI
 
 struct CreateTeamspaceView: View {
   
+  @Environment(\.dismiss) private var dismiss
   @EnvironmentObject private var router: NavigationRouter
   
   @State private var viewModel: CreateTeamspaceViewModel = .init()
@@ -17,7 +18,6 @@ struct CreateTeamspaceView: View {
   var body: some View {
     ZStack {
       Color.backgroundElevated.ignoresSafeArea()
-      
       VStack {
         Spacer().frame(height: 29)
         topTitleView
@@ -36,7 +36,6 @@ struct CreateTeamspaceView: View {
     HStack {
       // TODO: Xmark 버튼 추가, alert 처리.
       //Image(systemName: "xmark.circle.fill")
-      
       // TODO: 홈 시트 작업 중이였음. (컬러가 아직 피그마 반영이 안돼서, 잠시 빼둠.)
       Text("팀 스페이스 만들기")
         .font(.headline2SemiBold)
@@ -60,12 +59,16 @@ struct CreateTeamspaceView: View {
         .overlay {
           HStack {
             Spacer()
-            
             TextField("팀 이름", text: $teamspaceNameText)
               .font(.headline2Medium)
               .foregroundStyle(Color.labelAssitive)
               .tint(Color.labelAssitive)
               .multilineTextAlignment(.center)
+              .onChange(of: teamspaceNameText) { oldValue, newValue in
+                if newValue.count > 20 {
+                  teamspaceNameText = String(newValue.prefix(20))
+                }
+              }
             
             Spacer()
             
@@ -76,6 +79,17 @@ struct CreateTeamspaceView: View {
             
           }
         }
+        .overlay(
+          RoundedRectangle(cornerRadius: 15)
+            .stroke(teamspaceNameText.count > 19 ? Color.accentRedNormal : Color.clear, lineWidth: 1)
+        )
+      
+      Spacer().frame(height: 16)
+      
+      Text("20자 이내로 입력해주세요.")
+        .font(.footnoteMedium)
+        .foregroundStyle(Color.accentRedNormal)
+        .opacity(teamspaceNameText.count < 20 ? 0 : 1)
     }
   }
   
@@ -91,12 +105,13 @@ struct CreateTeamspaceView: View {
         try await self.viewModel.createTeamspaceWithInitialMembership(
           teamspaceNameText: teamspaceNameText
         )
-        await MainActor.run { router.pop() }
+        await MainActor.run {dismiss() }
       }
       
     }
     .padding(.bottom, 16)
   }
+  
 }
 
 #Preview {
@@ -108,3 +123,4 @@ struct CreateTeamspaceView: View {
     }
   }
 }
+
