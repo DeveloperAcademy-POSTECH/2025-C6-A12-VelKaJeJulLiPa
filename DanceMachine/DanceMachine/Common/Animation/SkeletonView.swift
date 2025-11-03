@@ -45,7 +45,7 @@ struct SkeletonView<S: Shape>: View {
   
   init(
     _ shape: S,
-    _ color: Color = .gray.opacity(0.3) // FIXME: - 컬러 수정
+    _ color: Color = .gray.opacity(0.6) // FIXME: - 컬러 수정
   ) {
     self.shape = shape
     self.color = color
