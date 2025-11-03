@@ -5,22 +5,21 @@
 //  Created by 김진혁 on 10/12/25.
 //
 
-import Foundation
+import SwiftUI
 
 @Observable
 final class TeamspaceListViewModel {
   
-  
-  
-  
   var currentTeamspace: Teamspace? { FirebaseAuthManager.shared.currentTeamspace }
   
+  /// 최근 접속 팀 스페이스 아이디 불러오기 (AppStorage)
+  @ObservationIgnored
+  @AppStorage(AppStorageKey.lastAccessedTeamspaceId.rawValue) private(set) var lastAccessedTeamspaceId: String = ""
   
   /// FirebaseAuthManager의 현재 팀 스페이스를 교체하는 메서드 입니다.
   func fetchCurrentTeamspace(teamspace: Teamspace) {
     FirebaseAuthManager.shared.currentTeamspace = teamspace
-    
-    
+    self.lastAccessedTeamspaceId = teamspace.teamspaceId.uuidString // 팀 스페이스 접속 아이디를 AppStorage에 저장
   }
   
   // 주어진 유저의 팀스페이스 전체를 로드합니다.

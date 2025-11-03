@@ -24,6 +24,11 @@ final class HomeViewModel {
   /// 현재 선택된 프로젝트 (읽기 전용)
   private(set) var selectedProject: Project?
   
+  /// 최근 접속 팀 스페이스 아이디 불러오기 (AppStorage)
+  @ObservationIgnored
+  @AppStorage(AppStorageKey.lastAccessedTeamspaceId.rawValue) private(set) var lastAccessedTeamspaceId: String = ""
+  
+  
   /// 프로젝트 목록과 편집 상태를 관리하는 구조체
   struct ProjectListState {
     /// 프로젝트 목록 헤더 타이틀
@@ -141,8 +146,29 @@ final class HomeViewModel {
   func ensureTeamspaceInitialized() async {
     print("기본 팀스페이스 초기화를 진행합니다. (ensureTeamspaceInitialized 시작)")
     await reloadTeamspaces()
+    
+    
+    // @AppStorage(최근 접속한 팀 스페이스)에 저장된 Teamsapce아이디가 존재하면 그 아이디로 접속 시도.
     if let first = teamspace.list.first, currentTeamspace == nil {
-      setCurrentTeamspace(first)
+        
+        // 1) AppStorage에 저장된 값이 있고
+        // 2) 그 ID가 userTeamspaces 안에 존재하는지 확인
+        let hasLast = !lastAccessedTeamspaceId.isEmpty &&
+        userTeamspaces.contains { $0.teamspaceId == lastAccessedTeamspaceId }
+        
+        if hasLast {
+            // 3) Firestore에서 해당 팀스페이스를 가져오고, 실패하면 first로 fallback
+            if let lastAccessedTeamspace: Teamspace = try? await FirestoreManager.shared.get(
+                lastAccessedTeamspaceId,
+                from: .teamspace
+            ) {
+                setCurrentTeamspace(lastAccessedTeamspace)
+            } else {
+                setCurrentTeamspace(first)
+            }
+        } else {
+            setCurrentTeamspace(first)
+        }
     }
     // teamspace.didInitialize = true
     print("기본 팀스페이스 초기화가 완료되었습니다. 현재 선택: \(self.currentTeamspace?.teamspaceName ?? "없음") (ensureTeamspaceInitialized 종료)")
