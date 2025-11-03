@@ -22,6 +22,8 @@ struct TrackRow: View {
   
   @FocusState private var nameFieldFocused: Bool
   
+  var canEdit: Bool = false // 이 TrackRow를 수정/삭제할 수 있는지 여부 ( 팀 스페이스 오너, 프로젝트 생성자만 삭제 가능)
+  
   var body: some View {
     HStack(spacing: 10) {
       Image(systemName: "music.note.list")
@@ -43,16 +45,19 @@ struct TrackRow: View {
             .font(.system(size: 16, weight: .semibold))
             .foregroundStyle(.black)
           Spacer()
-          HStack(spacing: 16) {
-            Button("삭제", action: deleteAction)
-              .font(.system(size: 15, weight: .medium))
-              .foregroundStyle(.red)
-              .buttonStyle(.plain)
-            
-            Button("수정", action: editAction)
-              .font(.system(size: 15, weight: .medium))
-              .foregroundStyle(.blue)
-              .buttonStyle(.plain)
+          
+          if canEdit {
+            HStack(spacing: 16) {
+              Button("삭제", action: deleteAction)
+                .font(.system(size: 15, weight: .medium))
+                .foregroundStyle(.red)
+                .buttonStyle(.plain)
+              
+              Button("수정", action: editAction)
+                .font(.system(size: 15, weight: .medium))
+                .foregroundStyle(.blue)
+                .buttonStyle(.plain)
+            }
           }
           
         case .update:

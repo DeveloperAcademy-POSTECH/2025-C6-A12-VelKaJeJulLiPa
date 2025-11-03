@@ -10,7 +10,7 @@ import SwiftUI
 struct TracksInlineView: View {
     @Bindable var viewModel: HomeViewModel
 
-    let project: Project
+    let project: Project // FIXME: - 프리뷰 전용
 
     @Binding var tracks: [Tracks]
     @Binding var rowState: TracksRowState
@@ -51,6 +51,13 @@ struct TracksInlineView: View {
             } else {
                 VStack(spacing: 10) {
                     ForEach(tracks, id: \.tracksId) { track in
+                      
+                      // 현재 로그인 유저 id
+                      let currentUserId = FirebaseAuthManager.shared.userInfo?.userId ?? "" // FIXME: - 위치
+                      // 현재 팀 스페이스
+                      let teamspaceOwner = viewModel.currentTeamspace?.ownerId ?? ""
+                      let canEdit = (track.creatorId == currentUserId || teamspaceOwner == currentUserId)
+                      
                         TrackRow(
                             track: track,
                             rowState: perRowState(for: track.tracksId),
@@ -64,7 +71,8 @@ struct TracksInlineView: View {
                             editText: Binding(
                                 get: { (editingTrackID == track.tracksId) ? editingText : track.trackName },
                                 set: { if editingTrackID == track.tracksId { editingText = $0 } }
-                            )
+                            ),
+                            canEdit: canEdit
                         )
                         .listRowSeparator(.hidden)
                         .background(Color.white)
