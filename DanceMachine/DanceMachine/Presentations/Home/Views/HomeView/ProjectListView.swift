@@ -133,7 +133,7 @@ struct ProjectListView<ExpandedContent: View>: View {
   /// - Important: 버튼 비활성화는 단순한 UI 상태이므로 실제 커밋 방어 로직은 `commitIfPossible()`에서도 한 번 더 수행합니다.
   private var shouldDisablePrimaryButton: Bool {
     if case .editing(.update) = rowState {
-      return editText.count > 19 || editText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+      return editText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
     return false
   }
