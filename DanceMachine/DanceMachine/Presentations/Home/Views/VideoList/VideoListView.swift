@@ -103,15 +103,14 @@ struct VideoListView: View {
       Text("동영상 업로드")
         .font(.system(size: 17)) // FIXME: 폰트 수정
         .foregroundStyle(Color.white)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 14)
     }
-    .frame(maxWidth: .infinity)
-    .frame(height: 47)
     .background(
-        RoundedRectangle(cornerRadius: 10)
-            .fill(Color.blue) // FIXME: - 컬러수정
+      RoundedRectangle(cornerRadius: 1000)
+        .fill(Color.purple)
+        .fill(.ultraThinMaterial)
     )
-    .padding(.horizontal, 16) // FIXME: - 패딩 수정
-    .padding(.bottom, 8) // FIXME: - 패딩 수정
 //    .glassEffect(
 //      .clear.tint(Color.purple.opacity(0.7)).interactive(),
 //      in: RoundedRectangle(cornerRadius: 1000)
