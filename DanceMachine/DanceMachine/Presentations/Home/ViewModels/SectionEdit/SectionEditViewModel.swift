@@ -10,6 +10,7 @@ import Foundation
 @Observable
 final class SectionEditViewModel {
   private let store = FirestoreManager.shared
+  private let dataCacheManager = VideoDataCacheManager.shared
   
   var sections: [Section]
   var editingSectionid: String? = nil
@@ -63,6 +64,12 @@ extension SectionEditViewModel {
         subCollection: .section,
         strategy: strategy
       )
+      // 캐시도 수정
+      await dataCacheManager.updateSectionTitle(
+        sectionId: updatedSection.sectionId,
+        newTitle: self.editText,
+        in: tracksId
+      )
       
       await MainActor.run {
         if let index = sections.firstIndex(where: { $0.sectionId == section.sectionId }) {
@@ -95,6 +102,12 @@ extension SectionEditViewModel {
         strategy: .create
       )
       
+      // 캐시 추가
+      await dataCacheManager.addSection(
+        newSection,
+        to: tracksId
+      )
+      
       await MainActor.run {
         sections.append(newSection)
       }
@@ -113,6 +126,11 @@ extension SectionEditViewModel {
         parentId: tracksId,
         subCollection: .section,
         target: section.sectionId
+      )
+      
+      await dataCacheManager.removeSection(
+        sectionId: section.sectionId,
+        from: tracksId
       )
       
       await MainActor.run {

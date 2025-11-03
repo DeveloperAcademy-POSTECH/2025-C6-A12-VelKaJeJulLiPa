@@ -10,6 +10,7 @@ import Foundation
 @Observable
 final class SectionSelectViewModel {
   private let store = FirestoreManager.shared
+  private let dataCacheManager = VideoDataCacheManager.shared
   
   var isLoading: Bool = false
   var errorMsg: String? = nil
@@ -54,6 +55,12 @@ extension SectionSelectViewModel {
         strategy: .create
       )
       
+      await dataCacheManager.moveTrack(
+        trackId: track.trackId,
+        toSectionId: newSectionId,
+        in: tracksId
+      )
+      
       await MainActor.run {
         self.isLoading = false
         self.showAlert = true
@@ -61,7 +68,7 @@ extension SectionSelectViewModel {
         print("track 이동 성공")
       }
       
-      NotificationCenter.post(.sectionDidUpdate)
+//      NotificationCenter.post(.sectionDidUpdate)
       
     } catch { // TODO: 에러처리
       await MainActor.run {
