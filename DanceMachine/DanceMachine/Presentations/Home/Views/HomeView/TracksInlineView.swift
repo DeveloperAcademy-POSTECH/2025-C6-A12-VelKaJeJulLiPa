@@ -42,13 +42,21 @@ struct TracksInlineView: View {
           .padding(.vertical, 12)
           .frame(maxWidth: .infinity, alignment: .center)
           .background(
-            RoundedRectangle(cornerRadius: 10)
+            RoundedRectangle(cornerRadius: 15)
               .fill(Color.fillNormal)
           )
       } else {
-        VStack(spacing: 0) {
-          VStack(spacing: 0) {
+        VStack {
+          VStack {
             ForEach(Array(tracks.enumerated()), id: \.element.tracksId) { index, track in
+              
+              // 현재 로그인 유저 id
+              let currentUserId = FirebaseAuthManager.shared.userInfo?.userId ?? "" // FIXME: - 위치
+              // 현재 팀 스페이스
+              let teamspaceOwner = viewModel.currentTeamspace?.ownerId ?? ""
+              let canEdit = (track.creatorId == currentUserId || teamspaceOwner == currentUserId)
+              
+              
               TrackRow(
                 track: track,
                 rowState: perRowState(for: track.tracksId),
@@ -62,7 +70,8 @@ struct TracksInlineView: View {
                 editText: Binding(
                   get: { (editingTrackID == track.tracksId) ? editingText : track.trackName },
                   set: { if editingTrackID == track.tracksId { editingText = $0 } }
-                )
+                ),
+                canEdit: canEdit
               )
               .padding(.horizontal, 16)
               .padding(.vertical, 12)
@@ -75,10 +84,6 @@ struct TracksInlineView: View {
               }
             }
           }
-          .background(
-            RoundedRectangle(cornerRadius: 10)
-              .fill(Color.fillNormal)
-          )
         }
       }
     }
@@ -143,8 +148,6 @@ struct TracksInlineView: View {
     if !keepText { editingText = "" }
   }
 }
-
-
 
 
 
@@ -263,3 +266,4 @@ private struct PreviewTracksInlineViewLoadingError: View {
     .environmentObject(NavigationRouter())
   }
 }
+
