@@ -51,8 +51,20 @@ struct CreateTeamspaceView: View {
           TextField("팀 이름을 입력해주세요", text: $teamspaceNameText)
             .multilineTextAlignment(.center)
             .onChange(of: teamspaceNameText) { oldValue, newValue in
-              if newValue.count > 20 {
-                teamspaceNameText = String(newValue.prefix(20))
+              var updated = newValue
+
+              // Prevent leading space as the first character
+              if updated.first == " " {
+                updated = String(updated.drop(while: { $0 == " " })) // ❗️공백 금지
+              }
+
+              // Enforce 20-character limit
+              if updated.count > 20 {
+                updated = String(updated.prefix(20)) // ❗️20글자 초과 금지
+              }
+
+              if updated != teamspaceNameText {
+                teamspaceNameText = updated
               }
             }
         }
@@ -94,4 +106,3 @@ struct CreateTeamspaceView: View {
     CreateTeamspaceView()
   }
 }
-
