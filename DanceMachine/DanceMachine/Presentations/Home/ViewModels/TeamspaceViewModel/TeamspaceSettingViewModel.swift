@@ -35,13 +35,17 @@ final class TeamspaceSettingViewModel {
       }
       
       var users: [User] = []
+      
       for id in userIds {
         users.append(try await FirestoreManager.shared.get(id, from: .users))
       }
       
+      // ㄱㄴㄷ순으로 정렬
+      let sortedUsers = users.sorted {
+        $0.name.compare($1.name, locale: Locale(identifier: "ko_KR")) == .orderedAscending
+      }
       
-      
-      return users
+      return sortedUsers
     } catch {
       print("error: \(error.localizedDescription)") // FIXME: - 에러에 맞게 로직 수정
       return []
