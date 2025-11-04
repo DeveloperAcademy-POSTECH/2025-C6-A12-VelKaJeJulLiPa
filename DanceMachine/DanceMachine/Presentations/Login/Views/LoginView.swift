@@ -42,7 +42,10 @@ struct LoginView: View {
         
         Spacer()
           .overlay {
-            if viewModel.isLoading { ProgressView() }
+            if viewModel.isLoading {
+              ProgressView()
+                .tint(.white)
+            }
           }
       }
     }
