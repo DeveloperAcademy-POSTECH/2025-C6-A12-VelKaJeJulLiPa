@@ -319,7 +319,8 @@ struct VideoView: View {
                   vm.videoVM.seekToTime(to: time)
                 },
                 onDragChanged: { time in
-                  sliderValue = time
+                  self.sliderValue = time
+                  vm.videoVM.seekToTime(to: time)
                 },
                 startTime: vm.videoVM.currentTime.formattedTime(),
                 endTime: vm.videoVM.duration.formattedTime()
@@ -434,7 +435,8 @@ struct VideoView: View {
             vm.videoVM.seekToTime(to: time)
           },
           onDragChanged: { time in
-            sliderValue = time
+            self.sliderValue = time
+            vm.videoVM.seekToTime(to: time)
           },
           startTime: vm.videoVM.currentTime.formattedTime(),
           endTime: vm.videoVM.duration.formattedTime()
