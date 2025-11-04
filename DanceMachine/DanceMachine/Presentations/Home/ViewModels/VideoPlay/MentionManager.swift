@@ -48,7 +48,27 @@ final class MentionManager {
     self.showPicker = false
     self.mentionQuery = ""
   }
-  
+
+  // MARK: @All - 모든 팀원 태그
+  func selectAllMembers(members: [User]) {
+    // 기존에 없는 멤버만 추가
+    for member in members {
+      if !taggedUsers.contains(where: { $0.userId == member.userId }) {
+        taggedUsers.append(member)
+      }
+    }
+    self.showPicker = false
+    self.mentionQuery = ""
+  }
+
+  // MARK: @ 이후 텍스트만 제거
+  func removeMentionText(from content: String) -> String {
+    guard let lastAtIndex = content.lastIndex(of: "@") else {
+      return content
+    }
+    return String(content[..<lastAtIndex])
+  }
+
   func dismissKeyboardAndClear() {
     self.mentionQuery = ""
     self.taggedUsers.removeAll() // 많이 태그 했다가 키보드 내려갔을때 다시 태그해야하는 불편함
