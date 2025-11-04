@@ -8,42 +8,64 @@
 import SwiftUI
 
 struct RootView: View {
-
-  @EnvironmentObject private var router: NavigationRouter
-  @Environment(TabRouter.self) private var tabRouter
-  @State private var isProjectExpanded = false
-
-  // 현재 탭에 따른 커스텀 액션 표시 여부
-  private var shouldShowCustomAction: Bool {
-    tabRouter.currentTab == .home
-  }
-
-  // 커스텀 액션 아이콘 (expand 상태에 따라)
-  private var customActionIcon: String {
-    isProjectExpanded ? "music.note.list" : "folder.badge.plus"
-  }
-
-  // 커스텀 액션 실행
-  private func handleCustomAction() {
-    if isProjectExpanded {
-      // 프로젝트 펼쳐진 상태: 곡 생성
-      NotificationCenter.default.post(name: .showCreateTrack, object: nil)
-    } else {
-      // 프로젝트 접힌 상태: 프로젝트 생성
-      NotificationCenter.default.post(name: .showCreateProject, object: nil)
-    }
-  }
-
+  
+  @EnvironmentObject private var router: MainRouter
+  @State var tabcase: TabCase = .home
+  
   var body: some View {
-    TabView(selection: Binding(
-      get: { tabRouter.currentTab },
-      set: { newValue in
-        if newValue == .custom {
-          handleCustomAction()
-        } else {
-          tabRouter.switchTab(to: newValue)
-          router.destination.removeAll()
-        }
+    TabView(selection: $tabcase, content: {
+      ForEach(TabCase.allCases, id: \.rawValue) { tab in
+        Tab(
+          value: tab,
+          content: {
+            NavigationStack(path: $router.destination) {
+              tabView(tab: tab)
+                .navigationDestination(
+                  for: MainRoute.self,
+                  destination: { destination in
+                    MainNavigationRoutingView(
+                      destination: destination
+                    )
+                    .environmentObject(router)
+                  })
+            }
+            .tag(tab)
+          },
+          label: {
+            tabLabel(tab)
+          })
+      }
+      //                  Tab(value: tabcase, role: .search) {
+      //                    Color.clear
+      //                  } label: {
+      //                    Image(systemName: "plus.circle.fill")
+      ////                    Text("영상 추가하기")
+      //                  }
+      //                  Tab(value: TabCase.myPage, role: .search) {
+      //                    Image(systemName: "plus.circle.fill")
+      //                  }
+    })
+    .tint(Color.black)
+    .onChange(of: tabcase) { oldValue, newValue in
+      if oldValue != newValue {
+        router.destination.removeAll()
+      }
+    }
+    
+    
+    
+  }
+  
+  @ViewBuilder
+  private var homeTabAccessory: some View {
+    if router.destination.isEmpty {
+      EmptyView()
+    } else if let current = router.destination.last {
+      switch current {
+      case .video:
+        uploadButton
+      default:
+        EmptyView()
       }
     )) {
       // 일반 탭들
@@ -92,19 +114,46 @@ struct RootView: View {
         }
       }
     }
-    .tint(Color.black)
-    // 곡 리스트 열려있을 때 (곡 생성 버튼)
-    .onReceive(NotificationCenter.default.publisher(for: .projectDidExpand)) { _ in
-      isProjectExpanded = true
+  }
+  
+  private func tabLabel(_ tab: TabCase) -> some View {
+    VStack(spacing: 8, content: {
+      Image(systemName: tab.icon)
+      
+      Text(tab.rawValue)
+        .font(Font.system(size: 12))
+        .foregroundStyle(Color.black)
+    })
+  }
+  
+  @ViewBuilder
+  private func bottomAccessory(for tab: TabCase) -> some View {
+    switch tab {
+    case .home:
+      homeTabAccessory
+    case .inbox:
+      EmptyView()
+    case .myPage:
+      EmptyView()
     }
-    // 곡 리스트 닫혀있을 때 (프로젝트 생성 버튼)
-    .onReceive(NotificationCenter.default.publisher(for: .projectDidCollapse)) { _ in
-      isProjectExpanded = false
+  }
+  
+  private var uploadButton: some View {
+    Button {
+      print("비디오 피커 버튼")
+      NotificationCenter.default.post(
+        name: .showVideoPicker,
+        object: nil
+      )
+    } label: {
+      Text("동영상 업로드")
+        .font(.system(size: 17)) // FIXME: 폰트 수정
+        .foregroundStyle(Color.white)
+        .padding(.horizontal, 20)
     }
-    // 곡 리스트 열린 상태로 팀스페이스 변경시 액션버튼 상태 업데이트
-    .onChange(of: FirebaseAuthManager.shared.currentTeamspace?.teamspaceId) { oldValue, newValue in
-      self.isProjectExpanded = false
-    }
+    .frame(maxWidth: .infinity)
+    .frame(height: 47)
+    //    .glassEffect(.clear.tint(Color.purple.opacity(0.8)).interactive(), in: Capsule())
   }
   
   private func tabLabel(_ tab: TabCase) -> some View {
@@ -122,19 +171,17 @@ struct RootView: View {
     Group {
       switch tab {
       case .home:
-        NavigationRoutingView(
+        MainNavigationRoutingView(
           destination: .home
         )
       case .inbox:
-        NavigationRoutingView(
+        MainNavigationRoutingView(
           destination: .inbox(.list)
         )
       case .myPage:
-        NavigationRoutingView(
+        MainNavigationRoutingView(
           destination: .mypage(.profile)
         )
-      case .custom:
-        EmptyView()
       }
     }
     .environmentObject(router)
@@ -144,6 +191,6 @@ struct RootView: View {
 #Preview {
   NavigationStack {
     RootView()
-      .environmentObject(NavigationRouter())
+      .environmentObject(MainRouter())
   }
 }

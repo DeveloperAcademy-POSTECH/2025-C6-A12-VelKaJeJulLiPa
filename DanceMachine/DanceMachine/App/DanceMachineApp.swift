@@ -29,7 +29,8 @@ struct DanceMachineApp: App {
       Group {
         switch authManager.authenticationState {
         case .unauthenticated:
-          LoginView()
+          OnboardingView()
+            .environmentObject(authRouter)
             .transition(.opacity)
           
         case .authenticated:

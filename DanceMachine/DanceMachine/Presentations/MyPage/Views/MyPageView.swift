@@ -10,7 +10,7 @@ import UserNotifications
 
 struct MyPageView: View {
     
-    @EnvironmentObject private var router: NavigationRouter
+    @EnvironmentObject private var router: MainRouter
     
     @State private var viewModel = MyPageViewModel()
     

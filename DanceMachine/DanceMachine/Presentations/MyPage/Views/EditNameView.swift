@@ -9,7 +9,7 @@ import SwiftUI
 
 // FIXME: - Hi-fi 반영
 struct EditNameView: View {
-    @EnvironmentObject private var router: NavigationRouter
+    @EnvironmentObject private var router: MainRouter
     
     @State private var viewModel = EditNameViewModel()
     @State private var editedName = ""

@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct VideoListView: View {
-  @EnvironmentObject private var router: NavigationRouter
+  @EnvironmentObject private var router: MainRouter
   
   @State private var showCustomPicker: Bool = false
 
@@ -292,7 +292,7 @@ struct VideoListView: View {
   NavigationStack {
     VideoListView(vm: vm, tracksId: "", sectionId: "", trackName: "벨코의 리치맨")
   }
-  .environmentObject(NavigationRouter())
+  .environmentObject(MainRouter())
 }
 
 struct ScrollOffsetPreferenceKey: PreferenceKey {

@@ -9,7 +9,7 @@ import SwiftUI
 
 // FIXME: Hi-fi 반영 및 리팩토링
 struct InboxView: View {
-  @EnvironmentObject private var router: NavigationRouter
+  @EnvironmentObject private var router: MainRouter
   @StateObject private var viewModel = InboxViewModel()
   
   var body: some View {

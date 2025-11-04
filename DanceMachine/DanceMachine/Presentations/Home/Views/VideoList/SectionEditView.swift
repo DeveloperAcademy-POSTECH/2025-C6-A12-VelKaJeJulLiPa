@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct SectionEditView: View {
-  @EnvironmentObject private var router: NavigationRouter
+  @EnvironmentObject private var router: MainRouter
   @State private var vm: SectionEditViewModel
   
   
@@ -157,5 +157,5 @@ struct SectionEditView: View {
       sectionId: ""
     )
   }
-  .environmentObject(NavigationRouter())
+  .environmentObject(MainRouter())
 }

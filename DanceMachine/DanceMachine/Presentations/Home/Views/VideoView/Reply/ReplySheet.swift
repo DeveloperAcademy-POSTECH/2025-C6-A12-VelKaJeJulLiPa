@@ -382,5 +382,5 @@ struct ReplySheet: View {
       onFeedbackDelete: {}
     )
   }
-  .environmentObject(NavigationRouter())
+  .environmentObject(MainRouter())
 }
