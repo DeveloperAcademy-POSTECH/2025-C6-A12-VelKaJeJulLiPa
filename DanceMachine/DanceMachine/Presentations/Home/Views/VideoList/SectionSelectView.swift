@@ -13,10 +13,10 @@ struct SectionSelectView: View {
   let sectionId: String
   let track: Track
   let tracksId: String
-  
+
   @State private var vm: SectionSelectViewModel = .init()
   @State private var selectedSectionId: String
-  
+
   init(
     section: [Section],
     sectionId: String,
@@ -74,6 +74,7 @@ struct SectionSelectView: View {
             tracksId: tracksId,
             oldSectionId: sectionId
           )
+          SectionUpdateManager.shared.onTrackMoved?(track.trackId, selectedSectionId)
         }
       }
     )
