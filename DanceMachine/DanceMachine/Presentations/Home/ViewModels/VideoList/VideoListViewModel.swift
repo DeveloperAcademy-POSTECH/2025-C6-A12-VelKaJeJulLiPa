@@ -38,6 +38,85 @@ extension VideoListViewModel {
     return videos.filter { videoIds.contains($0.videoId.uuidString) }
   }
 }
+// MARK: - 로컬 상태 업데이트 (캐시와 동기화)
+extension VideoListViewModel {
+  /// 섹션 추가
+  @MainActor
+  func addSection(_ section: Section) {
+    if !self.section.contains(where: { $0.sectionId == section.sectionId }) {
+      self.section.append(section)
+      print("VideoListViewModel: 섹션 추가됨 - \(section.sectionTitle)")
+    }
+  }
+
+  /// 섹션 삭제
+  @MainActor
+  func removeSection(sectionId: String) {
+    self.section.removeAll { $0.sectionId == sectionId }
+    self.track.removeAll { $0.sectionId == sectionId }
+
+    // 삭제된 섹션이 선택되어 있었다면 첫 번째 섹션으로 변경
+    if selectedSection?.sectionId == sectionId {
+      selectedSection = section.first
+    }
+    print("VideoListViewModel: 섹션 삭제됨 - \(sectionId)")
+  }
+
+  /// 섹션 제목 수정
+  @MainActor
+  func updateSectionTitle(sectionId: String, newTitle: String) {
+    if let index = self.section.firstIndex(where: { $0.sectionId == sectionId }) {
+      var updatedSection = self.section[index]
+      updatedSection.sectionTitle = newTitle
+      self.section[index] = updatedSection
+
+      // 선택된 섹션도 업데이트
+      if selectedSection?.sectionId == sectionId {
+        selectedSection = updatedSection
+      }
+      print("VideoListViewModel: 섹션 제목 수정됨 - \(newTitle)")
+    }
+  }
+
+  /// 트랙(영상) 섹션 이동
+  @MainActor
+  func moveTrack(trackId: String, toSectionId: String) {
+    if let index = self.track.firstIndex(where: { $0.trackId == trackId }) {
+      var updatedTrack = self.track[index]
+      updatedTrack.sectionId = toSectionId
+      self.track[index] = updatedTrack
+      print("VideoListViewModel: 트랙 이동됨 - \(trackId) → \(toSectionId)")
+    }
+  }
+
+  /// 섹션 삭제 시 하위 비디오/트랙 모두 삭제
+  @MainActor
+  func removeSectionWithVideos(sectionId: String) {
+    // 해당 섹션의 트랙들 찾기
+    let tracksToDelete = self.track.filter { $0.sectionId == sectionId }
+    let videoIdsToDelete = Set(tracksToDelete.map { $0.videoId })
+
+    // 트랙 삭제
+    self.track.removeAll { $0.sectionId == sectionId }
+
+    // 비디오 삭제 (해당 비디오가 다른 섹션에 없는 경우만)
+    for videoId in videoIdsToDelete {
+      let stillExists = self.track.contains { $0.videoId == videoId }
+      if !stillExists {
+        self.videos.removeAll { $0.videoId.uuidString == videoId }
+      }
+    }
+
+    // 섹션 삭제
+    self.section.removeAll { $0.sectionId == sectionId }
+
+    // 삭제된 섹션이 선택되어 있었다면 첫 번째 섹션으로 변경
+    if selectedSection?.sectionId == sectionId {
+      selectedSection = section.first
+    }
+    print("VideoListViewModel: 섹션 및 하위 데이터 삭제됨 - \(sectionId)")
+  }
+}
 // MARK: - 서버 메서드
 extension VideoListViewModel {
   // 모든 데이터 불러오기
