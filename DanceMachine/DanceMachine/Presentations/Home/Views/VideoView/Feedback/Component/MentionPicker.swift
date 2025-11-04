@@ -11,7 +11,8 @@ import SwiftUI
 struct MentionPicker: View { // FIXME: 디자인 필요
   let filteredMembers: [User]
   let action: (User) -> Void
-  
+  let selectAll: () -> Void // 팀원 전체 태그
+
   var taggedUsers: [User]
   
   var body: some View {
@@ -25,18 +26,35 @@ struct MentionPicker: View { // FIXME: 디자인 필요
 
       ScrollView {
         LazyVStack(alignment: .leading, spacing: 4) {
+          // @All 버튼
+          Button {
+            selectAll()
+          } label: {
+            HStack(spacing: 8) {
+              Text("@All")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(.white)
+
+              Spacer()
+
+              
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(
+              taggedUsers.count == filteredMembers.count && !filteredMembers.isEmpty
+              ? Color.purple.opacity(0.1)
+              : Color.clear
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .contentShape(Rectangle())
+          }
+
           ForEach(filteredMembers, id: \.userId) { user in
             Button {
               action(user)
-//              self.content = ""
             } label: {
               HStack(spacing: 8) {
-                Image(systemName: "person.circle.fill")
-                  .foregroundStyle(
-                    taggedUsers.contains(where: { $0.userId == user.userId })
-                    ? .purple
-                    : .gray
-                  )
 
                 Text(user.name)
                   .font(.system(size: 16))
@@ -44,10 +62,6 @@ struct MentionPicker: View { // FIXME: 디자인 필요
 
                 Spacer()
 
-                if taggedUsers.contains(where: { $0.userId == user.userId }) {
-                  Image(systemName: "checkmark.circle.fill")
-                    .foregroundStyle(.purple)
-                }
               }
               .padding(.horizontal, 16)
               .padding(.vertical, 12)
