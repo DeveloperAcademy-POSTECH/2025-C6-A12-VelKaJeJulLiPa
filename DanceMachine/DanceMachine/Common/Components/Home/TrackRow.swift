@@ -11,22 +11,21 @@ import SwiftUI
 struct TrackRow: View {
   let track: Tracks
   var rowState: TracksRowState = .viewing
-  
-  let deleteAction: () -> Void       // 삭제 버튼 탭
-  let editAction: () -> Void         // “수정” 버튼 탭 → 상위에서 .editing(.update)로 전환
-  let rowTapAction: () -> Void       // 보기 모드에서 행 탭
-  
-  // 상위(HomeView 등)와 텍스트 동기화
+
+  let deleteAction: () -> Void
+  let editAction: () -> Void
+  let rowTapAction: () -> Void
+
   @Binding var editText: String
   var onTextChanged: (String) -> Void = { _ in }
-  
+
   @FocusState private var nameFieldFocused: Bool
-  
+
   var body: some View {
     HStack(spacing: 10) {
       Image(systemName: "music.note.list")
         .foregroundStyle(Color.labelStrong)
-      
+
       switch rowState {
       case .viewing:
         Text(track.trackName)
@@ -35,7 +34,7 @@ struct TrackRow: View {
         Spacer()
         Image(systemName: "chevron.right")
           .foregroundStyle(Color.labelNormal)
-        
+
       case .editing(let action):
         switch action {
         case .none, .delete:
@@ -48,13 +47,13 @@ struct TrackRow: View {
               .font(.headline2Medium)
               .foregroundStyle(.accentRedNormal)
               .buttonStyle(.plain)
-            
+
             Button("수정", action: editAction)
               .font(.headline2Medium)
               .foregroundStyle(.accentBlueNormal)
               .buttonStyle(.plain)
           }
-          
+
         case .update:
           VStack(spacing: .zero) {
             TextField("곡 이름", text: $editText)
@@ -62,7 +61,6 @@ struct TrackRow: View {
               .foregroundStyle(Color.labelStrong)
               .textFieldStyle(.plain)
               .focused($nameFieldFocused)
-            // update 모드로 바뀌는 순간 1회 초기화
               .onChange(of: rowState) { _, new in
                 if case .editing(.update) = new {
                   editText = track.trackName
@@ -73,26 +71,18 @@ struct TrackRow: View {
               .onChange(of: editText) { _, new in
                 onTextChanged(new)
               }
-            
+
             Rectangle()
               .fill(Color.secondaryNormal)
               .frame(height: 1)
-              .padding(.leading, 16)
-              .padding(.bottom, 12)
           }
-          
+
           Spacer()
-          
+
           XmarkButton { self.editText = "" }
         }
       }
     }
-    .padding(.horizontal, 16)
-    .padding(.vertical, 12)
-    .background(
-      RoundedRectangle(cornerRadius: 10)
-        .fill(Color.fillNormal)
-    )
     .contentShape(Rectangle())
     .simultaneousGesture(
       TapGesture()

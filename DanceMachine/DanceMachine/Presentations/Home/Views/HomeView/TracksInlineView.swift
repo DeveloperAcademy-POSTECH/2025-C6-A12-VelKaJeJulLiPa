@@ -46,29 +46,39 @@ struct TracksInlineView: View {
               .fill(Color.fillNormal)
           )
       } else {
-        VStack(spacing: 10) {
-          ForEach(tracks, id: \.tracksId) { track in
-            TrackRow(
-              track: track,
-              rowState: perRowState(for: track.tracksId),
-              deleteAction: { onDelete(track) },
-              editAction: {
-                editingText    = track.trackName
-                editingTrackID = track.tracksId
-                rowState       = .editing(.update)
-              },
-              rowTapAction: { onTap(track) },
-              editText: Binding(
-                get: { (editingTrackID == track.tracksId) ? editingText : track.trackName },
-                set: { if editingTrackID == track.tracksId { editingText = $0 } }
+        VStack(spacing: 0) {
+          VStack(spacing: 0) {
+            ForEach(Array(tracks.enumerated()), id: \.element.tracksId) { index, track in
+              TrackRow(
+                track: track,
+                rowState: perRowState(for: track.tracksId),
+                deleteAction: { onDelete(track) },
+                editAction: {
+                  editingText    = track.trackName
+                  editingTrackID = track.tracksId
+                  rowState       = .editing(.update)
+                },
+                rowTapAction: { onTap(track) },
+                editText: Binding(
+                  get: { (editingTrackID == track.tracksId) ? editingText : track.trackName },
+                  set: { if editingTrackID == track.tracksId { editingText = $0 } }
+                )
               )
-            )
-            .listRowSeparator(.hidden)
-            .background(
-              RoundedRectangle(cornerRadius: 10)
-                .fill(Color.fillNormal)
-            )
+              .padding(.horizontal, 16)
+              .padding(.vertical, 12)
+              
+              // 중간중간 구분선
+              if index != tracks.count - 1 {
+                Divider()
+                  .background(Color.strokeNormal)
+                  .padding(.horizontal, 16)
+              }
+            }
           }
+          .background(
+            RoundedRectangle(cornerRadius: 10)
+              .fill(Color.fillNormal)
+          )
         }
       }
     }
