@@ -15,7 +15,10 @@ import AuthenticationServices
 struct DanceMachineApp: App {
   @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
   @Environment(\.scenePhase) private var scenePhase
-  @StateObject private var router: NavigationRouter = .init()
+  @StateObject private var authRouter = AuthRouter()
+  @StateObject private var mainRouter = MainRouter()
+  
+  
   @StateObject private var authManager = FirebaseAuthManager.shared
   @StateObject private var inviteRouter = InviteRouter()
   @State private var tabRouter = TabRouter()
@@ -35,10 +38,10 @@ struct DanceMachineApp: App {
               NameSettingView()
             } else {
               RootView()
-                .environmentObject(router)
+                .environmentObject(mainRouter)
                 .environment(tabRouter)
-                .transition(.move(edge: .trailing))
                 .environmentObject(inviteRouter)
+                .transition(.move(edge: .trailing))
               
               // URL Scheme 또는 Universal Link로 들어온 경우 처리
                 .onOpenURL { url in
@@ -145,7 +148,7 @@ extension DanceMachineApp {
     }
     
     // videoView (영상 화면)으로 이동
-    router.push(to: .video(.play(videoId: videoId, videoTitle: videoTitle, videoURL: videoURL)))
+    mainRouter.push(to: .video(.play(videoId: videoId, videoTitle: videoTitle, videoURL: videoURL)))
     
     print("🎬 Navigate to VideoView:", videoTitle)
   }

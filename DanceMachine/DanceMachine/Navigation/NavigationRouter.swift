@@ -8,10 +8,10 @@
 import Foundation
 import Combine
 
-class NavigationRouter: ObservableObject, NavigationRoutable {
-    @Published var destination: [AppRoute] = []
-
-    func push(to view: AppRoute) { destination.append(view) }
-    func pop() { _ = destination.popLast() }
-    func popToRootView() {  destination.removeAll() }
+class NavigationRouter<Route: Hashable>: NavigationRoutable {
+  @Published var destination: [Route] = []
+  
+  func push(to view: Route) { destination.append(view) }
+  func pop() { _ = destination.popLast() }
+  func popToRootView() {  destination.removeAll() }
 }

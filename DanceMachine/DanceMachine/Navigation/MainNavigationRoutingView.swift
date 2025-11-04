@@ -1,5 +1,5 @@
 //
-//  NavigationRoutingView.swift
+//  MainNavigationRoutingView.swift
 //  DanceMachine
 //
 //  Created by 김진혁 on 9/29/25.
@@ -7,9 +7,9 @@
 
 import SwiftUI
 
-struct NavigationRoutingView: View {
-    @EnvironmentObject var router: NavigationRouter
-    @State var destination: AppRoute
+struct MainNavigationRoutingView: View {
+    @EnvironmentObject var router: MainRouter
+    @State var destination: MainRoute
     
     var body: some View {
         Group {
