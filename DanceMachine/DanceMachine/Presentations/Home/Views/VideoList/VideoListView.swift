@@ -81,12 +81,20 @@ struct VideoListView: View {
           await vm.addNewVideo(video: video, track: track, traksId: tracksId)
         }
       }
-    }
-    // MARK: 섹션 변경 감지 해서 업데이트하는 노티
-    .onReceive(NotificationCenter.default.publisher(
-      for: .sectionDidUpdate)) { _ in
-        Task { await vm.loadFromServer(tracksId: tracksId) }
+      // 섹션 업데이트 콜백 설정
+      SectionUpdateManager.shared.onSectionAdded = { section in
+        vm.addSection(section)
       }
+      SectionUpdateManager.shared.onSectionDeleted = { sectionId in
+        vm.removeSectionWithVideos(sectionId: sectionId)
+      }
+      SectionUpdateManager.shared.onSectionUpdated = { sectionId, newTitle in
+        vm.updateSectionTitle(sectionId: sectionId, newTitle: newTitle)
+      }
+      SectionUpdateManager.shared.onTrackMoved = { trackId, newSectionId in
+        vm.moveTrack(trackId: trackId, toSectionId: newSectionId)
+      }
+    }
     // MARK: 영상 피커 시트
       .sheet(isPresented: $showCustomPicker) {
         VideoPickerView(
