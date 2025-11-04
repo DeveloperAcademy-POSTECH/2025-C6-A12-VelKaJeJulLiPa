@@ -37,7 +37,7 @@ struct FeedbackInPutView: View {
       CustomTextField(
         content: $content,
         placeHolder: (
-          mM.taggedUsers.isEmpty ? "피드백 받을 사람을 선택해주세요" : "피드백을 입력하세요."
+          mM.taggedUsers.isEmpty ? "@팀원 태그" : "피드백을 입력하세요."
         ),
         submitAction: {
           onSubmit(content, mM.taggedUsers.map { $0.userId })
