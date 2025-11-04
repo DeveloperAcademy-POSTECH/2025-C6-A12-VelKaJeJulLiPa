@@ -68,8 +68,6 @@ extension SectionSelectViewModel {
         print("track 이동 성공")
       }
       
-//      NotificationCenter.post(.sectionDidUpdate)
-      
     } catch { // TODO: 에러처리
       await MainActor.run {
         self.isLoading = false
