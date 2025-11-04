@@ -34,10 +34,10 @@ struct VideoListView: View {
     ZStack(alignment: .bottom) {
       if vm.videos.isEmpty && vm.isLoading != true {
         emptyView
-        uploadButton
+        uploadButtons
       } else {
         listView
-        uploadButton
+        uploadButtons
       }
     }
     .background(Color.white) // FIXME: 배경색 지정 (다크모드)
@@ -83,6 +83,22 @@ struct VideoListView: View {
     }
 }
   
+  private var uploadButtons: some View {
+    Button {
+      self.showCustomPicker = true
+    } label: {
+      RoundedRectangle(cornerRadius: 10)
+        .fill(Color.blue)
+        .frame(maxWidth: .infinity)
+        .frame(height: 47)
+        .padding(.horizontal, 16)
+        .overlay {
+          Text("동영상 업로드")
+            .foregroundStyle(.white)
+        }
+    }
+  }
+  
   //  private var glassButton: some View {
   //    GlassEffectContainer {
   //      HStack(spacing: 20) {
@@ -103,28 +119,6 @@ struct VideoListView: View {
   //    .frame(width: 47, height: 47)
   //    .glassEffect(.clear.interactive(), in: .circle)
   //  }
-  
-  private var uploadButton: some View {
-    Button {
-      self.showCustomPicker = true
-    } label: {
-      Text("동영상 업로드")
-        .font(.system(size: 17)) // FIXME: 폰트 수정
-        .foregroundStyle(Color.white)
-    }
-    .frame(maxWidth: .infinity)
-    .frame(height: 47)
-    .background(
-        RoundedRectangle(cornerRadius: 10)
-            .fill(Color.blue) // FIXME: - 컬러수정
-    )
-    .padding(.horizontal, 16) // FIXME: - 패딩 수정
-    .padding(.bottom, 8) // FIXME: - 패딩 수정
-//    .glassEffect(
-//      .clear.tint(Color.purple.opacity(0.7)).interactive(),
-//      in: RoundedRectangle(cornerRadius: 1000)
-//    )
-  }
   
   private var emptyView: some View {
     VStack {
