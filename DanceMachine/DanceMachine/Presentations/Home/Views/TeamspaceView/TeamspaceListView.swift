@@ -25,7 +25,7 @@ struct TeamspaceListView: View {
   
   var body: some View {
     ZStack {
-      Color.white.ignoresSafeArea() // FIXME: - 컬러 수정
+      Color.backgroundNormal.ignoresSafeArea() // FIXME: - 컬러 수정
       List {
         ForEach(loadTeamspaces, id: \.teamspaceId) { teamspace in
           TeamspaceListItem(title: teamspace.teamspaceName)
@@ -35,20 +35,21 @@ struct TeamspaceListView: View {
                 router.pop()
               }
             )
-            .buttonStyle(.plain)
             .listRowSeparator(.hidden)
-            .listRowBackground(Color.white)
+            .listRowBackground(Color.backgroundNormal)
         }
-
-        TeamspaceListItem(title: "+ 팀 스페이스 만들기")
-          .simultaneousGesture(
-            TapGesture().onEnded {
-              router.push(to: .teamspace(.create))
-            }
-          )
-          .buttonStyle(.plain)
-          .listRowSeparator(.hidden)
-          .listRowBackground(Color.white)
+        
+        TeamspaceListItem(
+          title: "팀 스페이스 만들기",
+          isCreated: true
+        )
+        .simultaneousGesture(
+          TapGesture().onEnded {
+            router.push(to: .teamspace(.create))
+          }
+        )
+        .listRowSeparator(.hidden)
+        .listRowBackground(Color.backgroundNormal)
       }
       .listStyle(.plain)
       .scrollContentBackground(.hidden)
