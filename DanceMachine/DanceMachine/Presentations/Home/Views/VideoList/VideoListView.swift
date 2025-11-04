@@ -40,7 +40,7 @@ struct VideoListView: View {
         listView
       }
     }
-    .background(Color.black) // FIXME: 배경색 지정 (다크모드)
+    .background(Color.white) // FIXME: 배경색 지정 (다크모드)
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .safeAreaInset(edge: .top, content: {
       sectionView
@@ -213,7 +213,7 @@ struct VideoListView: View {
       .refreshable {
         await vm.forceRefreshFromServer(tracksId: tracksId)
       }
-      .background(Color.black) // FIXME: 배경색 지정 (다크모드)
+      .background(Color.white) // FIXME: 배경색 지정 (다크모드)
     }
   }
   
