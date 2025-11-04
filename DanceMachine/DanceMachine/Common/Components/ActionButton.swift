@@ -39,11 +39,11 @@ struct ActionButton: View {
       action()
     } label: {
       RoundedRectangle(cornerRadius: 15)
-        .fill(color)
+        .fill(isEnabled ? color : .fillAssitive)
         .overlay {
           Text(title)
             .font(.headline2Medium)
-            .foregroundStyle(Color.labelStrong)
+            .foregroundStyle(isEnabled ? .labelStrong : .labelAssitive)
         }
     }
     .frame(maxWidth: .infinity)
