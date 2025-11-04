@@ -16,9 +16,10 @@ struct SectionChipIcon: View {
       action()
     } label: {
       Image(systemName: "folder.badge.gearshape") // FIXME: 아이콘 수정?
+        .font(.system(size: 16)) // FIMXE: 크기 수정
         .foregroundStyle(.black)
-        .padding(.horizontal, 12)
-        .padding(.vertical, 4)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
         .background(
           Capsule()
             .fill(Color.clear)
@@ -46,8 +47,8 @@ struct CustomSectionChip: View {
         .font(.system(size: 18)) // FIXME: 폰트 수정
         .fontWeight(vm.selectedSection?.sectionId == id ? .semibold : .regular) // FIXME: 폰트 수정
         .foregroundStyle(vm.selectedSection?.sectionId == id ? Color.blue : Color.black) // FIXME: 폰트 수정
-        .padding(.horizontal, 12)
-        .padding(.vertical, 4)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
         .background(
           Capsule()
             .fill(vm.selectedSection?.sectionId == id ? Color.blue.opacity(0.15) : Color.white.opacity(0.1))

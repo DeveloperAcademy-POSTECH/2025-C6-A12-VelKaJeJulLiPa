@@ -186,13 +186,19 @@ struct VideoListView: View {
               )
             }
           )
-          ForEach(vm.section, id: \.sectionId) { section in
-            CustomSectionChip(
-              vm: $vm,
-              action: { vm.selectedSection = section },
-              title: section.sectionTitle,
-              id: section.sectionId
-            )
+          if vm.isLoading {
+            ForEach(0..<5, id: \.self) { _ in
+              SkeletonChipVIew()
+            }
+          } else {
+            ForEach(vm.section, id: \.sectionId) { section in
+              CustomSectionChip(
+                vm: $vm,
+                action: { vm.selectedSection = section },
+                title: section.sectionTitle,
+                id: section.sectionId
+              )
+            }
           }
         }
         .padding(.horizontal, 1) // FIXME: 여백 없으면 캡슐이 짤리는 현상 있음
