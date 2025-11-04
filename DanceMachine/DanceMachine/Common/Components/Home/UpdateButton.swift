@@ -8,26 +8,29 @@
 import SwiftUI
 
 struct UpdateButton: View {
-    let title: String
-    let titleColor: Color
-    let action: () -> Void
-    
-    var body: some View {
-        Button {
-            action()
-        } label: {
-            Text(title)
-                .font(Font.system(size: 16, weight: .semibold)) // FIXME: - 폰트 수정
-                .foregroundStyle(titleColor)
-        }
+  let title: String
+  let titleColor: Color
+  let action: () -> Void
+  
+  var body: some View {
+    Button {
+      action()
+    } label: {
+      Text(title)
+        .font(.headline2SemiBold)
+        .foregroundStyle(titleColor)
     }
+  }
 }
 
 #Preview {
+  ZStack {
+    Color.backgroundNormal.ignoresSafeArea()
     UpdateButton(
-        title: "수정하기",
-        titleColor: Color.gray
+      title: "수정하기",
+      titleColor: Color.primitiveNormal
     ) {
-        
+      
     }
+  }
 }
