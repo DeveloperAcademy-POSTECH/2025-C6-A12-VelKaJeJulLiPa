@@ -236,14 +236,18 @@ struct VideoView: View {
               self.feedbackType = .point
               self.pointTime = vm.videoVM.currentTime
               self.showFeedbackInput = true
-              vm.videoVM.togglePlayPause()
+              if vm.videoVM.isPlaying {
+                vm.videoVM.togglePlayPause()
+              }
             },
             intervalAction: {
               if vm.feedbackVM.isRecordingInterval {
                 feedbackType = .interval
                 self.intervalTime = vm.videoVM.currentTime
-                vm.videoVM.togglePlayPause()
                 showFeedbackInput = true
+                if vm.videoVM.isPlaying {
+                  vm.videoVM.togglePlayPause()
+                }
               } else {
                 feedbackType = .interval
                 self.pointTime = vm.videoVM.currentTime
