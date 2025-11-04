@@ -236,14 +236,18 @@ struct VideoView: View {
               self.feedbackType = .point
               self.pointTime = vm.videoVM.currentTime
               self.showFeedbackInput = true
-              vm.videoVM.togglePlayPause()
+              if vm.videoVM.isPlaying {
+                vm.videoVM.togglePlayPause()
+              }
             },
             intervalAction: {
               if vm.feedbackVM.isRecordingInterval {
                 feedbackType = .interval
                 self.intervalTime = vm.videoVM.currentTime
-                vm.videoVM.togglePlayPause()
                 showFeedbackInput = true
+                if vm.videoVM.isPlaying {
+                  vm.videoVM.togglePlayPause()
+                }
               } else {
                 feedbackType = .interval
                 self.pointTime = vm.videoVM.currentTime
@@ -319,7 +323,8 @@ struct VideoView: View {
                   vm.videoVM.seekToTime(to: time)
                 },
                 onDragChanged: { time in
-                  sliderValue = time
+                  self.sliderValue = time
+                  vm.videoVM.seekToTime(to: time)
                 },
                 startTime: vm.videoVM.currentTime.formattedTime(),
                 endTime: vm.videoVM.duration.formattedTime()
@@ -434,7 +439,8 @@ struct VideoView: View {
             vm.videoVM.seekToTime(to: time)
           },
           onDragChanged: { time in
-            sliderValue = time
+            self.sliderValue = time
+            vm.videoVM.seekToTime(to: time)
           },
           startTime: vm.videoVM.currentTime.formattedTime(),
           endTime: vm.videoVM.duration.formattedTime()

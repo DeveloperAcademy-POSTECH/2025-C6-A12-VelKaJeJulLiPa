@@ -36,7 +36,9 @@ struct FeedbackInPutView: View {
       taggedView
       CustomTextField(
         content: $content,
-        placeHolder: "피드백을 입력해주세요.",
+        placeHolder: (
+          mM.taggedUsers.isEmpty ? "@팀원 태그" : "피드백을 입력하세요."
+        ),
         submitAction: {
           onSubmit(content, mM.taggedUsers.map { $0.userId })
         },
@@ -59,7 +61,11 @@ struct FeedbackInPutView: View {
           filteredMembers: filteredMembers,
           action: {
             mM.selectMention(user: $0)
-            self.content = ""
+            self.content = mM.removeMentionText(from: self.content)
+          },
+          selectAll: {
+            mM.selectAllMembers(members: filteredMembers)
+            self.content = mM.removeMentionText(from: self.content)
           },
           taggedUsers: mM.taggedUsers
         )
@@ -107,21 +113,42 @@ struct FeedbackInPutView: View {
   }
   // MARK: 태그된 사용자 표시
   private var taggedView: some View {
-    ScrollView(.horizontal, showsIndicators: false) {
+    let isAllTagged = !teamMembers.isEmpty && mM.taggedUsers.count == teamMembers.count
+
+    return ScrollView(.horizontal, showsIndicators: false) {
       HStack(spacing: 4) {
-        ForEach(mM.taggedUsers, id: \.userId) { user in
+        if isAllTagged {
+          // @All 태그 표시
           HStack(spacing: 0) {
             Text("@")
               .font(.system(size: 16)) // FIXME: 폰트 수정
               .foregroundStyle(.purple) // FIXME: 컬러 수정
-            Text(user.name)
-              .font(.system(size: 16)) // FIXME: 폰트 수정
+            Text("All")
+              .font(.system(size: 16, weight: .semibold)) // FIXME: 폰트 수정
               .foregroundStyle(.purple) // FIXME: 컬러 수정
             Button {
-              mM.taggedUsers.removeAll { $0.userId == user.userId }
+              mM.taggedUsers.removeAll()
             } label: {
               Image(systemName: "xmark.circle.fill")
-                .foregroundStyle(Color.gray.opacity(0.8))
+                .foregroundStyle(Color.red)
+            }
+          }
+        } else {
+          // 개별 태그 표시
+          ForEach(mM.taggedUsers, id: \.userId) { user in
+            HStack(spacing: 0) {
+              Text("@")
+                .font(.system(size: 16)) // FIXME: 폰트 수정
+                .foregroundStyle(.purple) // FIXME: 컬러 수정
+              Text(user.name)
+                .font(.system(size: 16)) // FIXME: 폰트 수정
+                .foregroundStyle(.purple) // FIXME: 컬러 수정
+              Button {
+                mM.taggedUsers.removeAll { $0.userId == user.userId }
+              } label: {
+                Image(systemName: "xmark.circle.fill")
+                  .foregroundStyle(Color.red)
+              }
             }
           }
         }
