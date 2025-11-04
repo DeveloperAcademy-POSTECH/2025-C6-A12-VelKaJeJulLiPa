@@ -8,8 +8,6 @@
 import Foundation
 
 extension Foundation.Notification.Name {
-  // 섹션 업데이트 후 자동 서버 호출
-  static let sectionDidUpdate = Foundation.Notification.Name("sectionDidUpdate")
   // 비디오 업로드 후 자동 서버 호출
   static let videoUpload = Foundation.Notification.Name("videoUpload")
   static let didReceiveDeeplink = Foundation.Notification.Name("didReceiveDeeplink")
@@ -25,7 +23,6 @@ extension Foundation.Notification.Name {
 }
 
 enum NotificationEvent {
-  case sectionDidUpdate
   case videoUpload
   case didReceiveDeeplink
   case needToMarkAsRead
@@ -33,10 +30,9 @@ enum NotificationEvent {
   case showCreateTrack
   case projectDidExpand
   case projectDidCollapse
-
+  
   var name: Foundation.Notification.Name {
     switch self {
-    case .sectionDidUpdate: .sectionDidUpdate
     case .videoUpload: .videoUpload
     case .didReceiveDeeplink: .didReceiveDeeplink
     case .needToMarkAsRead: .needToMarkAsRead

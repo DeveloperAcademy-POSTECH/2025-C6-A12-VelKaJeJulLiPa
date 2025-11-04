@@ -54,7 +54,6 @@ struct SectionEditView: View {
   private var customHeader: some View { // FIXME: 컬러 폰트 수정
     HStack(alignment: .top, spacing: 16) {
       Button {
-        NotificationCenter.post(.sectionDidUpdate)
         router.pop()
       } label: {
         Image(systemName: "chevron.left")
