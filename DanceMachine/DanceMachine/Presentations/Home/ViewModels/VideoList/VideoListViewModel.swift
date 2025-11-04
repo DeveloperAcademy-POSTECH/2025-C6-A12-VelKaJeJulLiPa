@@ -125,7 +125,7 @@ extension VideoListViewModel {
         for: tracksId
       )
       
-      // 최소 로딩 시간 보장 (스켈레톤 뷰 1.5초)
+      // 최소 로딩 시간 보장 (스켈레톤 뷰 0.8초)
       await TaskTimeUtility.waitForMinimumLoadingTime(
         startTime: startTime
       )
