@@ -28,7 +28,7 @@ struct HomeView: View {
   
   var body: some View {
     ZStack {
-      Color.white.ignoresSafeArea() // FIXME: - 컬러 수정
+      Color.backgroundNormal.ignoresSafeArea() // FIXME: - 컬러 수정
       VStack {
         TeamspaceTitleView(
           viewModel: viewModel,
@@ -36,20 +36,20 @@ struct HomeView: View {
         )
         .padding(.horizontal, 16)
         
+        // 팀 스페이스 비어져있을 시,
         if viewModel.userTeamspaces == [] {
           VStack {
             Spacer()
             Image(systemName: "scribble")
-              .font(.system(size: 110)) // FIXME: - 컬러 수정
-              .foregroundStyle(Color.black) // FIXME: - 크기 수정
+              .font(.system(size: 110))
+              .foregroundStyle(Color.fillAlternative)
               .frame(maxWidth: .infinity)
             Spacer().frame(height: 10)
             Text("팀 스페이스가 없습니다.")
-              .font(Font.system(size: 15, weight: .medium))
-              .foregroundStyle(Color.black)
+              .font(.headline2Medium)
+              .foregroundStyle(Color.labelAssitive)
             Spacer()
           }
-          
         } else {
           ProjectListView(
             viewModel: viewModel,
