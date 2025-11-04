@@ -32,7 +32,7 @@ struct ThumbnailAsyncImage: View {
             .clipShape(RoundedRectangle(cornerRadius: 10))
             .onAppear {
               Task {
-                if let uiImage = await loadUIImage(from: url),
+                if let _ = await loadUIImage(from: url),
                     let url = thumbnailURL {
                   _ = try await VideoCacheManager.shared.downloadAndCacheThumbnail(
                     from: url,
