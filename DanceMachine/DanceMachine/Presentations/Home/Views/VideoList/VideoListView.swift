@@ -9,10 +9,12 @@ import SwiftUI
 
 struct VideoListView: View {
   @EnvironmentObject private var router: NavigationRouter
-
+  
   @State private var showCustomPicker: Bool = false
 
   @State var vm: VideoListViewModel
+
+  @State private var isScrollDown: Bool = false
   
   init(
     vm: VideoListViewModel = .init(),
@@ -31,19 +33,40 @@ struct VideoListView: View {
   let trackName: String
   
   var body: some View {
-    ZStack(alignment: .bottom) {
+    ZStack {
       if vm.videos.isEmpty && !vm.isLoading && !VideoProgressManager.shared.isUploading {
         emptyView
-        uploadButton
       } else {
         listView
-        uploadButton
       }
     }
+    .background(Color.black) // FIXME: 배경색 지정 (다크모드)
     .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .background(Color.white) // FIXME: 배경색 지정 (다크모드)
     .safeAreaInset(edge: .top, content: {
       sectionView
+    })
+    .safeAreaInset(edge: .bottom, content: {
+      uploadButton
+        .background(
+          ZStack {
+            // 2. 그 위에 그라데이션 (맨 앞)
+            Color.black.opacity(0.1)
+                .blur(radius: 10)
+            
+            LinearGradient(
+              colors: [
+                Color.clear,
+                Color.black.opacity(0.4),
+                Color.black.opacity(0.8),
+                Color.black.opacity(0.98),
+              ],
+              startPoint: .top,
+              endPoint: .bottom
+            )
+          }
+          .ignoresSafeArea(edges: .bottom)
+        )
+
     })
     .navigationBarTitleDisplayMode(.inline)
     .toolbar(.hidden, for: .tabBar)
@@ -65,21 +88,21 @@ struct VideoListView: View {
         Task { await vm.loadFromServer(tracksId: tracksId) }
       }
     // MARK: 영상 피커 시트
-    .sheet(isPresented: $showCustomPicker) {
-      VideoPickerView(
-        tracksId: tracksId,
-        sectionId: vm.selectedSection?.sectionId ?? sectionId
-      )
-    }
-    // MARK: 비디오 업로드 했을때 리시버
-    .onReceive(
-      NotificationCenter.default.publisher(for: .videoUpload)
-    ) { _ in
-      Task {
-        await vm.loadFromServer(tracksId: tracksId)
+      .sheet(isPresented: $showCustomPicker) {
+        VideoPickerView(
+          tracksId: tracksId,
+          sectionId: vm.selectedSection?.sectionId ?? sectionId
+        )
       }
-    }
-}
+    // MARK: 비디오 업로드 했을때 리시버
+      .onReceive(
+        NotificationCenter.default.publisher(for: .videoUpload)
+      ) { _ in
+        Task {
+          await vm.loadFromServer(tracksId: tracksId)
+        }
+      }
+  }
   
   private var uploadButtons: some View {
     Button {
@@ -118,6 +141,46 @@ struct VideoListView: View {
   //    .glassEffect(.clear.interactive(), in: .circle)
   //  }
   
+  private var uploadButton: some View {
+    HStack {
+      if isScrollDown {
+        Spacer()
+      }
+
+      Button {
+        self.showCustomPicker = true
+      } label: {
+        ZStack {
+          // 작은 버튼 (원형)
+          if isScrollDown {
+            Image(systemName: "plus")
+              .font(.system(size: 22))
+              .foregroundStyle(.white)
+              .transition(.opacity)
+          }
+          // 큰 버튼 (직사각형)
+          if !isScrollDown {
+            Text("동영상 업로드")
+              .font(.system(size: 17))
+              .foregroundStyle(Color.white)
+              .frame(maxWidth: .infinity)
+              .transition(.opacity)
+          }
+        }
+        .padding(.horizontal, isScrollDown ? 12 : 20)
+        .padding(.vertical, isScrollDown ? 12 : 14)
+        .frame(maxWidth: isScrollDown ? nil : .infinity)
+      }
+      .background(
+        RoundedRectangle(cornerRadius: isScrollDown ? 24 : 1000)
+          .fill(Color.blue)
+      )
+      .shadow(radius: 5)
+    }
+    .padding(.horizontal, 16)
+    .animation(.spring(response: 0.4, dampingFraction: 0.9), value: isScrollDown)
+  }
+  
   private var emptyView: some View {
     VStack {
       Spacer()
@@ -138,76 +201,82 @@ struct VideoListView: View {
       let horizontalPadding: CGFloat = 16
       let spacing: CGFloat = 16
       let columns = 2
-      
+
       let totalSpacing = spacing * CGFloat(columns - 1)
       let availableWidth = g.size.width - (horizontalPadding * 2) - totalSpacing
       let itemSize = availableWidth / CGFloat(columns)
-      
+
       ScrollView {
-          VideoGrid(
-            size: itemSize,
-            columns: columns,
-            spacing: spacing,
-            tracksId: tracksId,
-            videos: vm.filteredVideos,
-            track: vm.track,
-            section: vm.section,
-            vm: $vm
-          )
-          .padding(.horizontal, horizontalPadding)
-          .onTapGesture {
-            // TODO: 비디오 플레이 화면 네비게이션 연결
-            print("비디오 클릭")
-          }
-        }
-        .refreshable {
-          await vm.forceRefreshFromServer(tracksId: tracksId)
-        }
-        .background(Color.white) // FIXME: 배경색 지정 (다크모드)
+        VideoGrid(
+          size: itemSize,
+          columns: columns,
+          spacing: spacing,
+          tracksId: tracksId,
+          videos: vm.filteredVideos,
+          track: vm.track,
+          section: vm.section,
+          vm: $vm
+        )
+        .padding(.horizontal, horizontalPadding)
       }
+      .onScrollGeometryChange(for: CGFloat.self) { geometry in
+        geometry.contentOffset.y
+      } action: { oldValue, newValue in
+        withAnimation(.spring()) {
+          isScrollDown = newValue > 50
+        }
+      }
+      .refreshable {
+        await vm.forceRefreshFromServer(tracksId: tracksId)
+      }
+      .background(Color.black) // FIXME: 배경색 지정 (다크모드)
     }
+  }
+  
+  
   // MARK: 섹션 칩 뷰
   private var sectionView: some View {
     ScrollView(.horizontal, showsIndicators: false) {
-//      GlassEffectContainer {
-        HStack {
-          SectionChipIcon(
-            vm: $vm,
-            action: {
-              router.push(
-                to: .video(
-                  .section(
-                    section: vm.section,
-                    tracksId: tracksId,
-                    trackName: trackName,
-                    sectionId: sectionId
-                  )
+      //      GlassEffectContainer {
+      HStack {
+        SectionChipIcon(
+          vm: $vm,
+          action: {
+            router.push(
+              to: .video(
+                .section(
+                  section: vm.section,
+                  tracksId: tracksId,
+                  trackName: trackName,
+                  sectionId: sectionId
                 )
               )
-            }
-          )
-          if vm.isLoading {
-            ForEach(0..<5, id: \.self) { _ in
-              SkeletonChipVIew()
-            }
-          } else {
-            ForEach(vm.section, id: \.sectionId) { section in
-              CustomSectionChip(
-                vm: $vm,
-                action: { vm.selectedSection = section },
-                title: section.sectionTitle,
-                id: section.sectionId
-              )
-            }
+            )
+          }
+        )
+        if vm.isLoading {
+          ForEach(0..<5, id: \.self) { _ in
+            SkeletonChipVIew()
+          }
+        } else {
+          ForEach(vm.section, id: \.sectionId) { section in
+            CustomSectionChip(
+              vm: $vm,
+              action: { vm.selectedSection = section },
+              title: section.sectionTitle,
+              id: section.sectionId
+            )
           }
         }
-        .padding(.horizontal, 1) // FIXME: 여백 없으면 캡슐이 짤리는 현상 있음
-        .padding(.vertical, 1) // FIXME: 여백 없으면 캡슐이 짤리는 현상 있음
-//      }
+      }
+      .padding(.horizontal, 1) // FIXME: 여백 없으면 캡슐이 짤리는 현상 있음
+      .padding(.vertical, 1) // FIXME: 여백 없으면 캡슐이 짤리는 현상 있음
+      //      }
     }
     .padding(.horizontal, 16)
   }
 }
+
 
 #Preview {
   @Previewable @State var vm: VideoListViewModel = .preview
@@ -215,4 +284,11 @@ struct VideoListView: View {
     VideoListView(vm: vm, tracksId: "", sectionId: "", trackName: "벨코의 리치맨")
   }
   .environmentObject(NavigationRouter())
+}
+
+struct ScrollOffsetPreferenceKey: PreferenceKey {
+  static var defaultValue: CGFloat = 0
+  static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+    value = nextValue()
+  }
 }
