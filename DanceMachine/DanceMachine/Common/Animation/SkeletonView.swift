@@ -72,7 +72,7 @@ struct SkeletonView<S: Shape>: View {
           let size = $0.size
           let skeletonWidth = size.width / 2
           
-          let blurRadius = max(skeletonWidth / 2, 30)
+          let blurRadius = max(skeletonWidth / 1.5, 40)
           let blurDiameter = blurRadius * 2
           
           let minX = -(skeletonWidth + blurDiameter)
@@ -80,8 +80,20 @@ struct SkeletonView<S: Shape>: View {
           
           
           Rectangle()
-            .fill(.gray)
-            .frame(width: skeletonWidth, height: size.height * 2)
+//            .fill(.gray)
+//            .frame(width: skeletonWidth, height: size.height * 2)
+            .fill(
+              LinearGradient(
+                colors: [
+                  .white.opacity(0.6),
+                  .white.opacity(0.25),
+                  .white.opacity(0.6)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+              )
+            )
+            .frame(width: skeletonWidth * 1.5, height: size.height * 2)
             .frame(height: size.height)
             .blur(radius: blurRadius)
             .rotationEffect(.init(degrees: rotation)) // rotation(도 단위) 값만큼 사각형을 회전시킴 (애니메이션용)
