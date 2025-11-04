@@ -170,7 +170,7 @@ struct ReplySheet: View {
       
       CustomTextField(
         content: $content,
-        placeHolder: "답글을 입력해주세요.",
+        placeHolder: mM.taggedUsers.isEmpty ? "@팀원 태그" : "답글을 입력해주세요.",
         submitAction: {
           onReplySubmit(
             content, mM.taggedUsers.map { $0.userId }
