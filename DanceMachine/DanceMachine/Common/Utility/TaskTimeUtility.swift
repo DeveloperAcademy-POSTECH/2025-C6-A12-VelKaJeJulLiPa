@@ -11,7 +11,7 @@ import Foundation
 struct TaskTimeUtility {
   static func waitForMinimumLoadingTime(
     startTime: Date,
-    minimim: TimeInterval = 1.5
+    minimim: TimeInterval = 1.0
   ) async {
     let elapedTime = Date().timeIntervalSince(startTime)
     if elapedTime < minimim {
