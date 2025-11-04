@@ -9,86 +9,93 @@ import SwiftUI
 import FirebaseAuth
 
 struct NameSettingView: View {
-    @State private var viewModel = NameSettingViewModel()
-    @State private var name: String = ""
-    @FocusState private var isFocused: Bool
+  @State private var viewModel = NameSettingViewModel()
+  @State private var name: String = ""
+  @FocusState private var isFocused: Bool
+  
+  let placeholder = "이름을 입력하세요"
+  let fontSize: CGFloat = 32
+  let maxLength = 10
+  
+  var displayText: String { name.isEmpty ? placeholder : name }
+  var underlineColor: Color {
+    displayText.count >= maxLength ? Color.accentRedNormal : isFocused ? Color.secondaryNormal : Color.labelNormal
+  }
+  var underlineWidth: CGFloat {
+    let textCount = displayText.count
+    let base: CGFloat = fontSize * 0.8
+    let minimumWidth = name.isEmpty ? CGFloat(placeholder.count) * base : base
     
-    let placeholder = "이름을 입력하세요"
-    let fontSize: CGFloat = 32 //FIXME: 폰트 크기 수정
-    let maxLength = 15 //FIXME: 입력 제한 길이 수정
-    
-    var displayText: String { name.isEmpty ? placeholder : name }
-    var underlineColor: Color { isFocused ? Color.accentColor : Color(.systemGray4) }
-    var underlineWidth: CGFloat {
-        let textCount = displayText.count
-        let base: CGFloat = fontSize * 0.8
-        let minimumWidth = name.isEmpty ? CGFloat(placeholder.count) * base : base
+    return max(CGFloat(textCount) * base, minimumWidth)
+  }
+  
+  
+  var body: some View {
+    ZStack {
+      Color.backgroundNormal.ignoresSafeArea()
+      
+      VStack {
+        Spacer()
+        Text("만나서 반가워요!")
+          .font(.title2SemiBold)
+          .foregroundStyle(Color.labelNormal)
         
-        return max(CGFloat(textCount) * base, minimumWidth)
-    }
-    
-    
-    var body: some View {
-        ZStack {
-            Color.white.ignoresSafeArea() // FIXME: - 컬러 수정
-            
-            VStack {
-                Spacer()
-                Text("환영합니다!")
-                    .font(.system(size: 24))
-                    .foregroundStyle(Color.black) // FIXME: - 컬러 수정
-                
-                //FIXME: 텍스트필드 - Mid-fi Design 반영 (제이콥 확인)
-                TextField(displayText, text: $name)
-                    .focused($isFocused)
-                    .multilineTextAlignment(.center)
-                    .font(.system(size: fontSize, weight: .bold))
-                    .foregroundStyle(Color.black) // FIXME: - 컬러 수정
-                    .textInputAutocapitalization(.never)
-                    .disableAutocorrection(true)
-                    .overlay {
-                        Rectangle()
-                            .offset(y: 26)
-                            .frame(height: 2)
-                            .frame(width: underlineWidth)
-                            .foregroundStyle(underlineColor)
-                            .animation(.easeInOut(duration: 0.1), value: underlineWidth)
-                    }
-                    .onChange(of: name, { oldValue, newValue in
-                        if newValue.count > maxLength {
-                            name = oldValue
-                        }
-                    })
-                
-                Spacer()
-                
-                Text("이름이 정확하신가요?")
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(Color.black) // FIXME: - 컬러 수정
-                
-                // FIXME: 버튼 스타일 수정
-                ActionButton(
-                    title: "확인",
-                    color: Color.blue,
-                    height: 47,
-                    isEnabled: !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                ) {
-                    Task {
-                        await viewModel.updateUserName(name: name)
-                        dismissKeyboard()
-                        viewModel.setNeedsNameSettingToFalse()
-                    }
-                }
-                .padding()
-            }
+        TextField(
+          text: $name,
+          prompt: Text(displayText).foregroundStyle(.labelAssitive)
+        ) {
+          Text("사용자 이름")
         }
-        .onAppear {
-            name = viewModel.displayName
+        .focused($isFocused)
+        .multilineTextAlignment(.center)
+        .font(.title1SemiBold)
+        .tint(.secondaryNormal)
+        .foregroundStyle(Color.labelStrong)
+        .textInputAutocapitalization(.never)
+        .disableAutocorrection(true)
+        .overlay {
+          Rectangle()
+            .offset(y: 26)
+            .frame(height: 2)
+            .frame(width: underlineWidth)
+            .foregroundStyle(underlineColor)
+            .animation(.easeInOut(duration: 0.1), value: underlineWidth)
         }
-        .dismissKeyboardOnTap()
+        .onChange(of: name) { oldValue, newValue in
+          if newValue.count > maxLength {
+            name = oldValue
+            HapticManager.shared.trigger(.medium)
+          }
+        }
+        
+        Spacer()
+        
+        Text("이름이 정확하신가요?")
+          .font(.headline2Medium)
+          .foregroundStyle(Color.labelNormal)
+        
+        ActionButton(
+          title: "확인",
+          color: Color.secondaryNormal,
+          height: 47,
+          isEnabled: !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        ) {
+          Task {
+            await viewModel.updateUserName(name: name)
+            dismissKeyboard()
+            viewModel.setNeedsNameSettingToFalse()
+          }
+        }
+        .padding()
+      }
     }
+    .onAppear {
+      name = viewModel.displayName
+    }
+    .dismissKeyboardOnTap()
+  }
 }
 
 #Preview {
-    NameSettingView()
+  NameSettingView()
 }
