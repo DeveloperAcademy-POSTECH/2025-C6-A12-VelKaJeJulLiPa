@@ -10,6 +10,7 @@ import Foundation
 @Observable
 final class SectionEditViewModel {
   private let store = FirestoreManager.shared
+  private let storage = FireStorageManager.shared
   private let dataCacheManager = VideoDataCacheManager.shared
   
   var sections: [Section]
@@ -115,20 +116,72 @@ extension SectionEditViewModel {
       print("섹션 추가 실패: \(error)")
     }
   }
-  // MARK: 섹션 삭제 메서드
+  // MARK: 섹션 삭제 메서드 (하위 track, video, storage 파일도 함께 삭제)
   func deleteSection(
     tracksId: String,
     section: Section
   ) async {
     do {
+      // 1. 섹션에 속한 모든 track 가져오기
+      let tracks: [Track] = try await store.fetchAllFromSubSubcollection(
+        in: .tracks,
+        grandParentId: tracksId,
+        withIn: .section,
+        parentId: section.sectionId,
+        subCollection: .track
+      )
+      
+      // 2. 각 track의 video와 storage 파일 삭제
+      for track in tracks {
+        let videoId = track.videoId
+        
+        // Storage에서 영상과 썸네일 삭제 (병렬 처리)
+        try? await withThrowingTaskGroup(of: Void.self) { group in
+          group.addTask {
+            _ = try await self.storage.deleteVideo(
+              at: "video/\(videoId)/\(videoId).video.mov"
+            )
+            print("\(videoId): 스토리지 영상 삭제")
+          }
+          group.addTask {
+            _ = try await self.storage.deleteVideo(
+              at: "video/\(videoId)/\(videoId).jpg"
+            )
+            print("\(videoId): 스토리지 썸네일 삭제")
+          }
+          try await group.waitForAll()
+        }
+        
+        // DB에서 video 삭제
+        try? await store.delete(
+          collectionType: .video,
+          documentID: videoId
+        )
+        print("\(videoId): DB 영상 삭제")
+        
+        // DB에서 track 삭제
+        try? await store.deleteFromSubSubcollection(
+          in: .tracks,
+          grandParentId: tracksId,
+          withIn: .section,
+          parentId: section.sectionId,
+          subCollection: .track,
+          target: track.trackId
+        )
+        print("\(videoId): DB 트랙 삭제")
+      }
+      
+      // 3. DB에서 섹션 삭제
       try await store.deleteFromSubcollection(
         under: .tracks,
         parentId: tracksId,
         subCollection: .section,
         target: section.sectionId
       )
+      print("\(section.sectionTitle) 삭제")
       
-      await dataCacheManager.removeSection(
+      // 4. 캐시에서 섹션과 하위 데이터 삭제
+      await dataCacheManager.removeSectionWithVideos(
         sectionId: section.sectionId,
         from: tracksId
       )
@@ -143,14 +196,14 @@ extension SectionEditViewModel {
 }
 // MARK: - 프리뷰 전용 목데이터
 extension SectionEditViewModel {
-    static var preview: SectionEditViewModel {
-      let vm = SectionEditViewModel(
-        sections: [
-          Section(sectionId: "ㅇㅇ", sectionTitle: "A구간"),
-          Section(sectionId: "ㅇㅇd", sectionTitle: "B구간"),
-          Section(sectionId: "ㅇㅇdd", sectionTitle: "C구간")],
-      )
-
-      return vm
-    }
+  static var preview: SectionEditViewModel {
+    let vm = SectionEditViewModel(
+      sections: [
+        Section(sectionId: "ㅇㅇ", sectionTitle: "A구간"),
+        Section(sectionId: "ㅇㅇd", sectionTitle: "B구간"),
+        Section(sectionId: "ㅇㅇdd", sectionTitle: "C구간")],
+    )
+    
+    return vm
   }
+}

@@ -244,24 +244,39 @@ extension VideoDataCacheManager {
       print("캐시에 섹션 추가: \(section.sectionTitle)")
     }
   }
-  // MARK: - Section 삭제
-  func removeSection(
+  // MARK: - Section 삭제 (하위 video와 track도 함께 삭제)
+  func removeSectionWithVideos(
     sectionId: String,
     from tracksId: String
   ) async {
     guard var data = await getCachedData(for: tracksId) else { return }
-    
-    data.section.removeAll { $0.sectionId == sectionId }
+
+    // 1. 해당 섹션의 track들 찾기
+    let tracksToDelete = data.track.filter { $0.sectionId == sectionId }
+    let videoIdsToDelete = Set(tracksToDelete.map { $0.videoId })
+
+    // 2. track 삭제
     data.track.removeAll { $0.sectionId == sectionId }
+
+    // 3. video 삭제 (해당 video가 다른 섹션에 없는 경우만)
+    for videoId in videoIdsToDelete {
+      let stillExists = data.track.contains { $0.videoId == videoId }
+      if !stillExists {
+        data.videos.removeAll { $0.videoId.uuidString == videoId }
+      }
+    }
+
+    // 4. section 삭제
+    data.section.removeAll { $0.sectionId == sectionId }
     data.lastUpdated = Date()
-    
+
     try? await cache(
       video: data.videos,
       track: data.track,
       section: data.section,
       for: tracksId
     )
-    print("캐시에서 섹션 삭제: \(sectionId)")
+    print("캐시에서 섹션과 하위 데이터 삭제: \(sectionId)")
   }
   // MARK: - Section 제목 수정
   func updateSectionTitle(
