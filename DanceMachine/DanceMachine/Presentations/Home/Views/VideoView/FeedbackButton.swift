@@ -10,7 +10,6 @@ import SwiftUI
 // FIXME: 컬러 폰트 수정
 ///  ios26 미만 버전 고려 하지 않은 버전입니다.
 struct FeedbackButton: View {
-  @State private var buttonSpacing: CGFloat = 4
   @State private var showIntervalButton: Bool = false
   @Namespace private var buttonNamespace
   
@@ -25,26 +24,14 @@ struct FeedbackButton: View {
   
   var body: some View {
 //    GlassEffectContainer {
-      HStack(spacing: buttonSpacing) {
+      HStack(spacing: 8) {
         // 왼쪽 버튼
         if showIntervalButton {
           // 구간 피드백 모드일 때: 작은 원형 버튼 (시점으로 전환)
           Button {
-            self.feedbackType = .point
-            // 일시적으로 spacing 줄여서 물방울 합치기
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.68)) {
-              buttonSpacing = -20
-            }
-
-            withAnimation(.spring(response: 0.5, dampingFraction: 0.68)) {
+            withAnimation(.smooth(duration: 0.35)) {
+              self.feedbackType = .point
               showIntervalButton = false
-            }
-
-            // 0.2초 후 spacing 복원
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-              withAnimation(.spring(response: 0.4, dampingFraction: 0.68)) {
-                buttonSpacing = 4
-              }
             }
           } label: {
             Image(systemName: "circle.fill")
@@ -146,21 +133,9 @@ struct FeedbackButton: View {
         } else {
           // 시점 피드백 모드일 때: 작은 원형 버튼 (구간으로 전환)
           Button {
-            self.feedbackType = .interval
-            // 일시적으로 spacing 줄여서 물방울 합치기
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.68)) {
-              buttonSpacing = -20
-            }
-
-            withAnimation(.spring(response: 0.5, dampingFraction: 0.68)) {
+            withAnimation(.smooth(duration: 0.35)) {
+              self.feedbackType = .interval
               showIntervalButton = true
-            }
-
-            // 0.2초 후 spacing 복원
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-              withAnimation(.spring(response: 0.4, dampingFraction: 0.68)) {
-                buttonSpacing = 4
-              }
             }
           } label: {
             Image(systemName: "circle.fill")
