@@ -39,7 +39,7 @@ struct VideoGrid: View {
         )
       }
       if vm.isLoading {
-        ForEach(0..<5, id: \.self) { _ in
+        ForEach(0..<6, id: \.self) { _ in
           SkeletonCardView(cardSize: size)
         }
       } else {
