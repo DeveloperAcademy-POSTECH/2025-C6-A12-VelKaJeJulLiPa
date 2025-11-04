@@ -11,7 +11,7 @@ struct SkeletonCardView: View {
   let cardSize: CGFloat
   
   var body: some View {
-    VStack {
+    VStack(alignment: .leading) {
       thumbnail
       content
       Spacer()

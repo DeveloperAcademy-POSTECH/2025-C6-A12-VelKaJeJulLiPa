@@ -45,10 +45,10 @@ struct VideoView: View {
   
   // MARK: 배속 좆러
   @State private var showSpeedSheet: Bool = false
-
+  
   // MARK: 스크롤 관련
   @State private var scrollProxy: ScrollViewProxy? = nil
-
+  
   // MARK: 전역으로 관리되는 ID
   let teamspaceId = FirebaseAuthManager.shared.currentTeamspace?.teamspaceId
   let userId = FirebaseAuthManager.shared.userInfo?.userId ?? ""
@@ -65,7 +65,7 @@ struct VideoView: View {
     case .mine: return vm.feedbackVM.feedbacks.filter { $0.taggedUserIds.contains(userId) }
     }
   }
-    
+  
   var body: some View {
     GeometryReader { proxy in
       Group {
@@ -83,26 +83,26 @@ struct VideoView: View {
       .toolbar(.hidden, for: .tabBar)
     }
     .background(Color.white) // FIXME: 다크모드 배경색 명시
-    .overlay {
-      if vm.isLoading {
-        VStack {
-          ProgressView()
-            .progressViewStyle(CircularProgressViewStyle())
-            .tint(.black)
-            .scaleEffect(1)
-          
-          if vm.videoVM.loadingProgress > 0 {
-            Text("다운로드 중... \(Int(vm.videoVM.loadingProgress * 100))%")
-              .foregroundStyle(.black)
-              .font(.system(size: 14))
-          } else {
-            Text("로딩 중...")
-              .foregroundStyle(.black)
-              .font(.system(size: 14))
-          }
-        }
-      }
-    } // FIXME: 임시 로딩 뷰
+    //    .overlay {
+    //      if vm.isLoading {
+    //        VStack {
+    //          ProgressView()
+    //            .progressViewStyle(CircularProgressViewStyle())
+    //            .tint(.black)
+    //            .scaleEffect(1)
+    //
+    //          if vm.videoVM.loadingProgress > 0 {
+    //            Text("다운로드 중... \(Int(vm.videoVM.loadingProgress * 100))%")
+    //              .foregroundStyle(.black)
+    //              .font(.system(size: 14))
+    //          } else {
+    //            Text("로딩 중...")
+    //              .foregroundStyle(.black)
+    //              .font(.system(size: 14))
+    //          }
+    //        }
+    //      }
+    //    } // FIXME: 임시 로딩 뷰
     .task {
       await self.vm.loadAllData(
         videoId: videoId,
@@ -122,15 +122,15 @@ struct VideoView: View {
   private var pointEmptyView: some View {
     ScrollView {
       VStack(alignment: .leading) {
-              Spacer()
+        Spacer()
         Text("시점 피드백\n동영상 재생 중 원하는 시점에 버튼을 눌러\n타임스탬프를 남겨 피드백을 작성할 수 있습니다.")
           .font(.system(size: 15))
           .foregroundStyle(.black)
-              Spacer()
+        Spacer()
         Text("구간 피드백\n오른쪽 회색 버튼을 눌러 시작 시점과 끝 시점을\n지정하고, 해당 구간에 대한 피드백을 남길 수 있\n습니다.")
           .font(.system(size: 15))
           .foregroundStyle(.black)
-              Spacer()
+        Spacer()
       }
       .frame(maxWidth: .infinity)
       .frame(height: 400)
@@ -161,20 +161,9 @@ struct VideoView: View {
         .frame(height: proxy.size.width * 9 / 16)
       
       VStack(spacing: 0) {
-        feedbackSection
-          .padding(.vertical, 8)
+        feedbackSection.padding(.vertical, 8)
         Divider()
-        if vm.feedbackVM.feedbacks.isEmpty {
-          switch feedbackType {
-          case .point:
-            pointEmptyView
-          case .interval:
-            intervalEmptyView
-          }
-        } else {
-          feedbackListView
-            .padding(.top, 16)
-        }
+        feedbackListView.padding(.top, 16)
       }
       .ignoresSafeArea(.keyboard)
       .contentShape(Rectangle())
@@ -214,7 +203,7 @@ struct VideoView: View {
                   )
                 }
                 showFeedbackInput = false
-
+                
                 // 피드백 제출 후 스크롤 최상단 이동
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                   withAnimation {
@@ -284,13 +273,13 @@ struct VideoView: View {
               Color.black
                 .aspectRatio(16/9, contentMode: .fit)
             }
-
+            
             TapClearArea(
               leftTap: { vm.videoVM.leftTab() },
               rightTap: { vm.videoVM.rightTap() },
               showControls: $vm.videoVM.showControls
             )
-
+            
             if vm.videoVM.showControls {
               OverlayController(
                 leftAction: {
@@ -308,12 +297,12 @@ struct VideoView: View {
             }
           }
           .frame(width: showFeedbackPanel ? proxy.size.height * 0.55 : proxy.size.height * 0.83)
-
+          
           // 슬라이더 (전체 width로 확장)
           if vm.videoVM.showControls {
             VStack {
               Spacer()
-
+              
               CustomSlider(
                 isDragging: $isDragging,
                 currentTime: isDragging ? sliderValue : vm.videoVM.currentTime,
@@ -337,7 +326,7 @@ struct VideoView: View {
               }
             }
             .frame(width: showFeedbackPanel ? proxy.size.height * 0.55 : proxy.size.height)
-
+            
             // 버튼 (전체 width로 확장)
             VideoSettingButtons(
               action: { self.showSpeedSheet = true },
@@ -359,7 +348,7 @@ struct VideoView: View {
           }
         }
         .frame(width: showFeedbackPanel ? proxy.size.height * 0.55 : proxy.size.height)
-
+        
         if showFeedbackPanel {
           VStack(spacing: 0) {
             feedbackSection
@@ -470,6 +459,26 @@ struct VideoView: View {
         }
       }
     }
+    .overlay { // FIXME: 로딩뷰 디자인 받기전까지 임시
+      if vm.videoVM.isLoading {
+        VStack {
+          ProgressView()
+            .progressViewStyle(CircularProgressViewStyle())
+            .tint(.black)
+            .scaleEffect(1)
+          
+          if vm.videoVM.loadingProgress > 0 {
+            Text("다운로드 중... \(Int(vm.videoVM.loadingProgress * 100))%")
+              .foregroundStyle(.white)
+              .font(.system(size: 14))
+          } else {
+            Text("로딩 중...")
+              .foregroundStyle(.white)
+              .font(.system(size: 14))
+          }
+        }
+      }
+    }
     .sheet(isPresented: $showSpeedSheet) {
       PlaybackSpeedSheet(
         playbackSpeed: $vm.videoVM.playbackSpeed) { speed in
@@ -484,74 +493,88 @@ struct VideoView: View {
       ScrollView {
         LazyVStack {
           Color.clear.frame(height: 1).id("topFeedback")
-
-          ForEach(filteredFeedbacks, id: \.feedbackId) { f in
-            FeedbackCard(
-            feedback: f,
-            authorUser: vm.getAuthorUser(for: f.authorId),
-            taggedUsers:
-              vm.getTaggedUsers(for: f.taggedUserIds),
-            replyCount: vm.feedbackVM.reply[f.feedbackId.uuidString]?.count ?? 0,
-            action: { // showReplySheet와 동일한 네비게이션
-              if !shouldShowLayout { // 가로모드 시트 x
-                self.selectedFeedback = f
-              }
-            },
-            showReplySheet: { // showReplySheet와 동일한 네비게이션
-              if !shouldShowLayout {
-                self.selectedFeedback = f
-              }
-            },
+          
+          if vm.feedbackVM.isLoading {
+            ForEach(0..<3, id: \.self) { _ in
+              SkeletonFeedbackCard()
+            }
+          } else if vm.feedbackVM.feedbacks.isEmpty && !vm.feedbackVM.isLoading {
+            switch feedbackType {
+            case .point:
+              pointEmptyView
+            case .interval:
+              intervalEmptyView
+            }
+          } else {
+            ForEach(filteredFeedbacks, id: \.feedbackId) { f in
+              FeedbackCard(
+                feedback: f,
+                authorUser: vm.getAuthorUser(for: f.authorId),
+                taggedUsers:
+                  vm.getTaggedUsers(for: f.taggedUserIds),
+                replyCount: vm.feedbackVM.reply[f.feedbackId.uuidString]?.count ?? 0,
+                action: { // showReplySheet와 동일한 네비게이션
+                  if !shouldShowLayout { // 가로모드 시트 x
+                    self.selectedFeedback = f
+                  }
+                },
+                showReplySheet: { // showReplySheet와 동일한 네비게이션
+                  if !shouldShowLayout {
+                    self.selectedFeedback = f
+                  }
+                },
+                currentTime: pointTime,
+                startTime: intervalTime,
+                timeSeek: { vm.videoVM.seekToTime(to: f.startTime ?? self.pointTime ) },
+                currentUserId: userId,
+                onDelete: {
+                  Task {
+                    await vm.feedbackVM.deleteFeedback(f)
+                  }
+                }
+              )
+            }            
+          }
+          
+        }
+        .padding(.horizontal, 16)
+        .onAppear {
+          self.scrollProxy = proxy
+        }
+        .sheet(item: $selectedFeedback) { feedback in
+          ReplySheet(
+            reply: vm.feedbackVM.reply[feedback.feedbackId.uuidString] ?? [],
+            feedback: feedback,
+            taggedUsers: vm.getTaggedUsers(for: feedback.taggedUserIds),
+            teamMembers: vm.teamMembers,
+            replyCount: vm.feedbackVM.reply[feedback.feedbackId.uuidString]?.count ?? 0,
             currentTime: pointTime,
             startTime: intervalTime,
-            timeSeek: { vm.videoVM.seekToTime(to: f.startTime ?? self.pointTime ) },
-            currentUserId: userId,
-            onDelete: {
+            timeSeek: { vm.videoVM.seekToTime(to: self.pointTime) },
+            getTaggedUsers: { ids in vm.getTaggedUsers(for: ids) },
+            getAuthorUser: { ids in vm.getAuthorUser(for: ids) },
+            onReplySubmit: {content, taggedIds in
               Task {
-                await vm.feedbackVM.deleteFeedback(f)
+                await vm.feedbackVM.addReply(
+                  to: feedback.feedbackId.uuidString,
+                  authorId: userId,
+                  content: content,
+                  taggedUserIds: taggedIds
+                )
               }
-            }
+            },
+            currentUserId: userId,
+            onDelete: { replyId, feedbackId in
+              await vm.feedbackVM.deleteReply(
+                replyId: replyId, from: feedbackId)
+            },
+            onFeedbackDelete: {
+              Task {
+                await vm.feedbackVM.deleteFeedback(feedback)
+              } }
           )
         }
       }
-      .padding(.horizontal, 16)
-      .onAppear {
-        self.scrollProxy = proxy
-      }
-      .sheet(item: $selectedFeedback) { feedback in
-        ReplySheet(
-          reply: vm.feedbackVM.reply[feedback.feedbackId.uuidString] ?? [],
-          feedback: feedback,
-          taggedUsers: vm.getTaggedUsers(for: feedback.taggedUserIds),
-          teamMembers: vm.teamMembers,
-          replyCount: vm.feedbackVM.reply[feedback.feedbackId.uuidString]?.count ?? 0,
-          currentTime: pointTime,
-          startTime: intervalTime,
-          timeSeek: { vm.videoVM.seekToTime(to: self.pointTime) },
-          getTaggedUsers: { ids in vm.getTaggedUsers(for: ids) },
-          getAuthorUser: { ids in vm.getAuthorUser(for: ids) },
-          onReplySubmit: {content, taggedIds in
-            Task {
-              await vm.feedbackVM.addReply(
-                to: feedback.feedbackId.uuidString,
-                authorId: userId,
-                content: content,
-                taggedUserIds: taggedIds
-              )
-            }
-          },
-          currentUserId: userId,
-          onDelete: { replyId, feedbackId in
-            await vm.feedbackVM.deleteReply(
-              replyId: replyId, from: feedbackId)
-          },
-          onFeedbackDelete: {
-            Task {
-              await vm.feedbackVM.deleteFeedback(feedback)
-            } }
-        )
-      }
-    }
     }
   }
   // MARK: 피드백 섹션
