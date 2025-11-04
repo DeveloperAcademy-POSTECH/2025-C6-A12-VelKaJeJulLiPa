@@ -57,8 +57,8 @@ struct VideoListView: View {
               colors: [
                 Color.clear,
                 Color.black.opacity(0.4),
-                Color.black.opacity(0.8),
-                Color.black.opacity(0.98),
+                Color.black.opacity(0.7),
+                Color.black.opacity(0.9),
               ],
               startPoint: .top,
               endPoint: .bottom

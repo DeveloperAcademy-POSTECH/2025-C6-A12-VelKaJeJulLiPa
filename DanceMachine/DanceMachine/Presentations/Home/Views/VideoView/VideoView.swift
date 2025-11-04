@@ -120,7 +120,6 @@ struct VideoView: View {
   
   // MARK: 피드백 빈 화면
   private var pointEmptyView: some View {
-    ScrollView {
       VStack(alignment: .leading) {
         Spacer()
         Text("시점 피드백\n동영상 재생 중 원하는 시점에 버튼을 눌러\n타임스탬프를 남겨 피드백을 작성할 수 있습니다.")
@@ -134,8 +133,6 @@ struct VideoView: View {
       }
       .frame(maxWidth: .infinity)
       .frame(height: 400)
-    }
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
   }
   
   private var intervalEmptyView: some View {
@@ -150,8 +147,8 @@ struct VideoView: View {
         .foregroundStyle(.black)
       Spacer()
     }
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .ignoresSafeArea(.keyboard, edges: .bottom)
+    .frame(maxWidth: .infinity)
+    .frame(height: 400)
   }
   
   // MARK: 세로모드 레이아웃
