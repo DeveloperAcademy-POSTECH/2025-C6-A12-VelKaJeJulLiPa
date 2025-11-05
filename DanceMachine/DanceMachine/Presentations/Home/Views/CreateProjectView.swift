@@ -56,10 +56,10 @@ struct CreateProjectView: View {
       
       Spacer().frame(height: 32)
       
-      RoundedRectangle(cornerRadius: 16)
+      RoundedRectangle(cornerRadius: 15)
         .fill(Color.fillStrong)
         .overlay(
-          RoundedRectangle(cornerRadius: 16)
+          RoundedRectangle(cornerRadius: 15)
             .stroke(
               isFocusTextField ? Color.secondaryStrong : Color.clear,
               lineWidth: isFocusTextField ? 1 : 0

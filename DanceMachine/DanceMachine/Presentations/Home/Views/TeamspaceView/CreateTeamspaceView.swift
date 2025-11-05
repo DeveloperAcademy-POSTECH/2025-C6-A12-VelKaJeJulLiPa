@@ -15,6 +15,8 @@ struct CreateTeamspaceView: View {
   @State private var viewModel: CreateTeamspaceViewModel = .init()
   @State private var teamspaceNameText = ""
   
+  @FocusState private var isFocusTextField: Bool
+  
   var body: some View {
     ZStack {
       Color.backgroundElevated.ignoresSafeArea()
@@ -54,6 +56,13 @@ struct CreateTeamspaceView: View {
       
       RoundedRectangle(cornerRadius: 15)
         .fill(Color.fillStrong)
+        .overlay(
+          RoundedRectangle(cornerRadius: 15)
+            .stroke(
+              isFocusTextField ? Color.secondaryStrong : Color.clear,
+              lineWidth: isFocusTextField ? 1 : 0
+            )
+        )
         .frame(maxWidth: .infinity)
         .frame(height: 51)
         .overlay {
@@ -83,6 +92,7 @@ struct CreateTeamspaceView: View {
           RoundedRectangle(cornerRadius: 15)
             .stroke(teamspaceNameText.count > 19 ? Color.accentRedNormal : Color.clear, lineWidth: 1)
         )
+        .focused($isFocusTextField)
       
       Spacer().frame(height: 16)
       
