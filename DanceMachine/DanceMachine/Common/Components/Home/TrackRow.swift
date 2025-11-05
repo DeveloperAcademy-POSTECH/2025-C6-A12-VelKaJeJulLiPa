@@ -48,13 +48,13 @@ struct TrackRow: View {
           if canEdit {
             HStack(spacing: 16) {
               Button("삭제", action: deleteAction)
-                .font(.system(size: 15, weight: .medium))
-                .foregroundStyle(.red)
+                .font(.headline2Medium)
+                .foregroundStyle(.accentRedNormal)
                 .buttonStyle(.plain)
               
               Button("수정", action: editAction)
-                .font(.system(size: 15, weight: .medium))
-                .foregroundStyle(.blue)
+                .font(.headline2Medium)
+                .foregroundStyle(.accentBlueNormal)
                 .buttonStyle(.plain)
             }
           }

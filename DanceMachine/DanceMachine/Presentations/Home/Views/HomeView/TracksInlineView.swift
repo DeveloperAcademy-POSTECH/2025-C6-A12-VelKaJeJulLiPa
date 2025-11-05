@@ -46,45 +46,45 @@ struct TracksInlineView: View {
               .fill(Color.fillNormal)
           )
       } else {
-        VStack {
-          VStack {
-            ForEach(Array(tracks.enumerated()), id: \.element.tracksId) { index, track in
-              
-              // 현재 로그인 유저 id
-              let currentUserId = FirebaseAuthManager.shared.userInfo?.userId ?? "" // FIXME: - 위치
-              // 현재 팀 스페이스
-              let teamspaceOwner = viewModel.currentTeamspace?.ownerId ?? ""
-              let canEdit = (track.creatorId == currentUserId || teamspaceOwner == currentUserId)
-              
-              
-              TrackRow(
-                track: track,
-                rowState: perRowState(for: track.tracksId),
-                deleteAction: { onDelete(track) },
-                editAction: {
-                  editingText    = track.trackName
-                  editingTrackID = track.tracksId
-                  rowState       = .editing(.update)
-                },
-                rowTapAction: { onTap(track) },
-                editText: Binding(
-                  get: { (editingTrackID == track.tracksId) ? editingText : track.trackName },
-                  set: { if editingTrackID == track.tracksId { editingText = $0 } }
-                ),
-                canEdit: canEdit
-              )
-              .padding(.horizontal, 16)
-              .padding(.vertical, 12)
-              
-              // 중간중간 구분선
-              if index != tracks.count - 1 {
-                Divider()
-                  .background(Color.strokeNormal)
-                  .padding(.horizontal, 16)
-              }
-            }
+        // 카드 컨테이너
+        VStack(spacing: 0) {
+          ForEach(Array(tracks.enumerated()), id: \.element.tracksId) { index, track in
+            
+            let currentUserId = FirebaseAuthManager.shared.userInfo?.userId ?? ""
+            let teamspaceOwner = viewModel.currentTeamspace?.ownerId ?? ""
+            let canEdit = (track.creatorId == currentUserId || teamspaceOwner == currentUserId)
+            
+            TrackRow(
+              track: track,
+              rowState: perRowState(for: track.tracksId),
+              deleteAction: { onDelete(track) },
+              editAction: {
+                editingText    = track.trackName
+                editingTrackID = track.tracksId
+                rowState       = .editing(.update)
+              },
+              rowTapAction: { onTap(track) },
+              editText: Binding(
+                get: { (editingTrackID == track.tracksId) ? editingText : track.trackName },
+                set: { if editingTrackID == track.tracksId { editingText = $0 } }
+              ),
+              canEdit: canEdit
+            )
+            // 여기서는 가로/세로 패딩만 (카드와 텍스트 사이 여백)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
           }
         }
+        // 카드 전체 여백
+        .padding(.horizontal, 16)
+        .padding(.vertical, 4)
+        // 카드 배경 + 둥근 모서리
+        .background(
+          Color.fillNormal
+        )
+        .clipShape(
+          RoundedRectangle(cornerRadius: 15)
+        )
       }
     }
   }
