@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Project: Codable {
+struct Project: Codable, Equatable {
     let projectId: UUID
     let teamspaceId: String
     let creatorId: String

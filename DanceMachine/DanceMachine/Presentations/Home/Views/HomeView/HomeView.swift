@@ -27,6 +27,7 @@ struct HomeView: View {
   @State private var isLoading = false
   
   @State private var presentingCreateTeamspaceSheet: Bool = false
+  @State private var presentingCreateProjectSheet: Bool = false
   
   var body: some View {
     ZStack {
@@ -161,13 +162,34 @@ struct HomeView: View {
         .presentationDetents([.fraction(0.9)])
         .presentationCornerRadius(16)
       }
+      // 팀 스페이스 생성 시트
       .sheet(isPresented: $presentingCreateTeamspaceSheet) {
         CreateTeamspaceView()
           .presentationDragIndicator(.visible)
           .presentationDetents([.fraction(0.9)])
           .presentationCornerRadius(16)
       }
-      
+      // 프로젝트 생성 시트
+      .sheet(isPresented: $presentingCreateProjectSheet) {
+        CreateProjectView()
+          .presentationDragIndicator(.visible)
+          .presentationDetents([.fraction(0.9)])
+          .presentationCornerRadius(16)
+          .onDisappear {
+            Task {
+              self.isLoading = true
+              defer { isLoading = false }
+              
+              // TODO: 캐싱 처리하기
+              let newloaded = await viewModel.fetchCurrentTeamspaceProject()
+              
+              // 프로젝트 추가 시, 프로젝트 리로드
+              if newloaded != self.viewModel.project.projects {
+                self.viewModel.project.projects = newloaded
+              }
+            }
+          }
+      }
     }
     .overlay { if isLoading { LoadingView() } }
     .overlay(alignment: .bottomTrailing) {
@@ -175,7 +197,7 @@ struct HomeView: View {
         FloatingActionButton(
           mode: mode,
           isProjectListEmpty: viewModel.isProjectListEmpty,
-          onAddProject: { router.push(to: .project(.create)) },
+          onAddProject: { self.presentingCreateProjectSheet = true },
           onAddTrack: { showCreateTracksView = true }
         )
       }
