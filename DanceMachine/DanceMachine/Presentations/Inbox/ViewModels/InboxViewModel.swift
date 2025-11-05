@@ -150,7 +150,7 @@ final class InboxViewModel: ObservableObject {
         .getDocument()
       
       if let data = snapshot.data(),
-         let isRead = data["is_read"] as? Bool {
+         let isRead = data[UserNotification.CodingKeys.isRead.rawValue] as? Bool {
         return isRead
       } else {
         return false // 문서가 없거나 필드가 없으면 읽지 않은 것으로 간주
