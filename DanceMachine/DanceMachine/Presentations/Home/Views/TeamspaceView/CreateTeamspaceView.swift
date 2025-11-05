@@ -105,7 +105,7 @@ struct CreateTeamspaceView: View {
         try await self.viewModel.createTeamspaceWithInitialMembership(
           teamspaceNameText: teamspaceNameText
         )
-        await MainActor.run {dismiss() }
+        await MainActor.run { dismiss() }
       }
       
     }

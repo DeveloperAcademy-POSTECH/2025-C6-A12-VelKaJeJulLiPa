@@ -18,6 +18,8 @@ struct TeamspaceListView: View {
   
   @State private var isLoading: Bool = false
   
+  @State private var presentingCreateTeamspaceSheet: Bool = false
+  
   // 프리뷰·테스트용 주입 이니셜라이저
   init(previewLoadTeamspaces: [Teamspace] = []) {
     _loadTeamspaces = State(initialValue: previewLoadTeamspaces)
@@ -45,7 +47,7 @@ struct TeamspaceListView: View {
         )
         .simultaneousGesture(
           TapGesture().onEnded {
-            router.push(to: .teamspace(.create))
+            self.presentingCreateTeamspaceSheet = true
           }
         )
         .listRowSeparator(.hidden)
@@ -58,6 +60,26 @@ struct TeamspaceListView: View {
     .toolbar {
       ToolbarLeadingBackButton(icon: .chevron)
       ToolbarCenterTitle(text: "팀 스페이스")
+    }
+    .sheet(isPresented: $presentingCreateTeamspaceSheet) {
+      CreateTeamspaceView()
+        .presentationDragIndicator(.visible)
+        .presentationDetents([.fraction(0.9)])
+        .presentationCornerRadius(16)
+        .onDisappear {
+          Task {
+            self.isLoading = true
+            defer { isLoading = false }
+            
+            // TODO: 캐싱 처리하기
+            let newloaded = (try? await viewModel.loadTeamspacesForUser()) ?? []
+            
+            if newloaded != self.loadTeamspaces {
+              let loaded: [Teamspace] = (try? await viewModel.loadTeamspacesForUser()) ?? []
+              self.loadTeamspaces = loaded
+            }
+          }
+        }
     }
     .task {
       if ProcessInfo.isRunningInPreviews { return } // 프리뷰 전용
