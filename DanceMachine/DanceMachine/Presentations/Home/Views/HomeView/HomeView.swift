@@ -155,24 +155,17 @@ struct HomeView: View {
       }
       // 프로젝트 생성 시트
       .sheet(isPresented: $presentingCreateProjectSheet) {
-        CreateProjectView()
-          .presentationDragIndicator(.visible)
-          .presentationDetents([.fraction(0.9)])
-          .presentationCornerRadius(16)
-          .onDisappear {
-            Task {
-              self.isLoading = true
-              defer { isLoading = false }
-              
-              // TODO: 캐싱 처리하기
-              let newloaded = await viewModel.fetchCurrentTeamspaceProject()
-              
-              // 프로젝트 추가 시, 프로젝트 리로드
-              if newloaded != self.viewModel.project.projects {
-                self.viewModel.project.projects = newloaded
-              }
-            }
+        CreateProjectView(onCreated: {
+          Task {
+            self.isLoading = true
+            defer { isLoading = false }
+            let newloaded = await viewModel.fetchCurrentTeamspaceProject()
+            self.viewModel.project.projects = newloaded
           }
+        })
+        .presentationDragIndicator(.visible)
+        .presentationDetents([.fraction(0.9)])
+        .presentationCornerRadius(16)
       }
       // 곡 생성 시트
       .sheet(isPresented: $showCreateTracksView) {

@@ -17,6 +17,8 @@ struct CreateProjectView: View {
   
   @FocusState private var isFocusTextField: Bool
   
+  var onCreated: () -> Void = {}
+  
   var body: some View {
     ZStack {
       Color.backgroundElevated.ignoresSafeArea()
@@ -124,6 +126,7 @@ struct CreateProjectView: View {
     ) {
       Task {
         try await viewModel.createProject(projectName: self.projectNameText)
+        self.onCreated()
         await MainActor.run { dismiss() }
       }
     }
