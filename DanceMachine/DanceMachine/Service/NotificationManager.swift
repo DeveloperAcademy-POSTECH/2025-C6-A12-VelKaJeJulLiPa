@@ -55,7 +55,7 @@ final class NotificationManager {
         parentId: userId,
         subCollection: .userNotification,
         documentId: notificationId,
-        asDictionary: ["is_read": true]
+        asDictionary: [UserNotification.CodingKeys.isRead.rawValue:  true]
       )
       
       print("📬 알림 \(notificationId) 읽음 처리 완료")
