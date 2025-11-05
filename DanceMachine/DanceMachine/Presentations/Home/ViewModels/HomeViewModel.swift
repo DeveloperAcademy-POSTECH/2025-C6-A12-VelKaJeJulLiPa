@@ -150,25 +150,25 @@ final class HomeViewModel {
     
     // @AppStorage(최근 접속한 팀 스페이스)에 저장된 Teamsapce아이디가 존재하면 그 아이디로 접속 시도.
     if let first = teamspace.list.first, currentTeamspace == nil {
-        
-        // 1) AppStorage에 저장된 값이 있고
-        // 2) 그 ID가 userTeamspaces 안에 존재하는지 확인
-        let hasLast = !lastAccessedTeamspaceId.isEmpty &&
-        userTeamspaces.contains { $0.teamspaceId == lastAccessedTeamspaceId }
-        
-        if hasLast {
-            // 3) Firestore에서 해당 팀스페이스를 가져오고, 실패하면 first로 fallback
-            if let lastAccessedTeamspace: Teamspace = try? await FirestoreManager.shared.get(
-                lastAccessedTeamspaceId,
-                from: .teamspace
-            ) {
-                setCurrentTeamspace(lastAccessedTeamspace)
-            } else {
-                setCurrentTeamspace(first)
-            }
+      
+      // 1) AppStorage에 저장된 값이 있고
+      // 2) 그 ID가 userTeamspaces 안에 존재하는지 확인
+      let hasLast = !lastAccessedTeamspaceId.isEmpty &&
+      userTeamspaces.contains { $0.teamspaceId == lastAccessedTeamspaceId }
+      
+      if hasLast {
+        // 3) Firestore에서 해당 팀스페이스를 가져오고, 실패하면 first로 fallback
+        if let lastAccessedTeamspace: Teamspace = try? await FirestoreManager.shared.get(
+          lastAccessedTeamspaceId,
+          from: .teamspace
+        ) {
+          setCurrentTeamspace(lastAccessedTeamspace)
         } else {
-            setCurrentTeamspace(first)
+          setCurrentTeamspace(first)
         }
+      } else {
+        setCurrentTeamspace(first)
+      }
     }
     // teamspace.didInitialize = true
     print("기본 팀스페이스 초기화가 완료되었습니다. 현재 선택: \(self.currentTeamspace?.teamspaceName ?? "없음") (ensureTeamspaceInitialized 종료)")
@@ -390,53 +390,26 @@ extension HomeViewModel {
       tracks.rowState = .viewing
       tracks.editingID = nil
       tracks.editText = ""
+      
+      // 프로젝트 접힘 알림
+      NotificationCenter.default.post(name: .projectDidCollapse, object: nil)
     } else {
       print("프로젝트를 펼칩니다. (toggleExpand 펼치기)")
       self.project.expandedID = id
       self.selectedProject = project
       self.project.headerTitle = project.projectName
       if tracks.byProject[id] == nil { loadTracks(for: id) }
+      
+      // 프로젝트 펼침 알림
+      NotificationCenter.default.post(name: .projectDidExpand, object: nil)
     }
-
-    /// 프로젝트를 Firestore에서 삭제합니다.
-    func removeProject(projectId: String) async throws {
-        print("프로젝트 삭제를 시작합니다. 대상: \(projectId) (removeProject 시작)")
-        try await FirestoreManager.shared.delete(collectionType: .project, documentID: projectId)
-        print("프로젝트 삭제가 완료되었습니다. (removeProject 종료)")
-    }
-
-    /// 프로젝트 확장 토글
-    func toggleExpand(_ project: Project) {
-        print("프로젝트 확장 토글을 시작합니다. 대상: \(project.projectName) (toggleExpand 시작)")
-        let id = project.projectId
-        if self.project.expandedID == id {
-            print("프로젝트를 접습니다. (toggleExpand 접기)")
-            self.project.expandedID = nil
-            self.selectedProject = nil
-            self.project.headerTitle = "프로젝트 목록"
-            tracks.rowState = .viewing
-            tracks.editingID = nil
-            tracks.editText = ""
-
-            // 프로젝트 접힘 알림
-            NotificationCenter.default.post(name: .projectDidCollapse, object: nil)
-        } else {
-            print("프로젝트를 펼칩니다. (toggleExpand 펼치기)")
-            self.project.expandedID = id
-            self.selectedProject = project
-            self.project.headerTitle = project.projectName
-            if tracks.byProject[id] == nil { loadTracks(for: id) }
-
-            // 프로젝트 펼침 알림
-            NotificationCenter.default.post(name: .projectDidExpand, object: nil)
-        }
-        print("프로젝트 확장 토글이 완료되었습니다. (toggleExpand 종료)")
-    }
-
-    /// 주어진 프로젝트가 확장 상태인지 여부
-    func isExpanded(_ project: Project) -> Bool {
-        self.project.expandedID == project.projectId
-    }
+    print("프로젝트 확장 토글이 완료되었습니다. (toggleExpand 종료)")
+  }
+  
+  /// 주어진 프로젝트가 확장 상태인지 여부
+  func isExpanded(_ project: Project) -> Bool {
+    self.project.expandedID == project.projectId
+  }
 }
 
 // MARK: - 트랙 관리

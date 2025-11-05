@@ -9,6 +9,7 @@ import SwiftUI
 
 struct CreateProjectView: View {
   
+  @Environment(\.dismiss) private var dismiss
   
   @EnvironmentObject private var router: NavigationRouter
   
@@ -94,23 +95,23 @@ struct CreateProjectView: View {
         .foregroundStyle(Color.red) // FIXME: - 컬러 수정
         .opacity(projectNameText.count < 20 ? 0 : 1)
     }
-    
-    // MARK: - 바텀 팀 스페이스 만들기 뷰
-    private var bottomButtonView: some View {
-        ActionButton(
-            title: "확인",
-            color: self.projectNameText.isEmpty ? Color.gray : Color.blue, // FIXME: - 컬러 수정
-            height: 47,
-            isEnabled: self.projectNameText.isEmpty ? false : true
-        ) {
-            Task {
-                try await viewModel.createProject(projectName: self.projectNameText)
-//                await MainActor.run { router.pop() }
-              await MainActor.run {
-                dismiss()
-              }
-            }
+  }
+  
+  // MARK: - 바텀 팀 스페이스 만들기 뷰
+  private var bottomButtonView: some View {
+    ActionButton(
+      title: "확인",
+      color: self.projectNameText.isEmpty ? Color.gray : Color.blue, // FIXME: - 컬러 수정
+      height: 47,
+      isEnabled: self.projectNameText.isEmpty ? false : true
+    ) {
+      Task {
+        try await viewModel.createProject(projectName: self.projectNameText)
+        //                await MainActor.run { router.pop() }
+        await MainActor.run {
+          dismiss()
         }
+      }
     }
   }
 }

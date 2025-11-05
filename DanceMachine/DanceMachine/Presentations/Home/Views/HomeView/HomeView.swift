@@ -26,6 +26,8 @@ struct HomeView: View {
   @State private var showCreateTracksView = false
   @State private var isLoading = false
   
+  @State private var showCreateProject: Bool = false
+  
   var body: some View {
     ZStack {
       Color.white.ignoresSafeArea() // FIXME: - 컬러 수정
@@ -116,69 +118,58 @@ struct HomeView: View {
           )
           .padding(.horizontal, 16)
         }
-        // TODO: Kadan's Edit
-        .sheet(isPresented: $showCreateProject, content: {
-          CreateProjectView()
-        })
-        .onReceive(NotificationCenter.default.publisher(for: .showCreateProject, object: nil), perform: { _ in
-          self.showCreateProject = true
-        })
-        .onReceive(NotificationCenter.default.publisher(for: .showCreateTrack, object: nil), perform: { _ in
-          self.showCreateTracksView = true
-        })
-        //
-        .overlay { if isLoading { LoadingView() } }
-        .overlay(alignment: .bottomTrailing) {
-            if let mode = viewModel.fabMode {
-                FloatingActionButton(
-                    mode: mode,
-                    isProjectListEmpty: viewModel.isProjectListEmpty,
-                    onAddProject: { router.push(to: .project(.create)) },
-                    onAddTrack: { showCreateTracksView = true }
-                )
-            }
-        Spacer()
       }
-      .sheet(item: $presentingRemovalSheetProject) { project in
-        BottomConfirmSheetView(
-          titleText: "\(project.projectName)\n프로젝트의 내용이 모두 삭제됩니다.\n 계속하시겠어요?",
-          primaryText: "모두 삭제"
-        ) {
-          Task {
-            try await viewModel.removeProject(projectId: project.projectId.uuidString)
-            _ = await viewModel.fetchCurrentTeamspaceProject()
+    }
+    
+    // TODO: Kadan's Edit
+    .sheet(isPresented: $showCreateProject, content: {
+      CreateProjectView()
+    })
+    .onReceive(NotificationCenter.default.publisher(for: .showCreateProject, object: nil), perform: { _ in
+      self.showCreateProject = true
+    })
+    .onReceive(NotificationCenter.default.publisher(for: .showCreateTrack, object: nil), perform: { _ in
+      self.showCreateTracksView = true
+    })
+    .sheet(item: $presentingRemovalSheetProject) { project in
+      BottomConfirmSheetView(
+        titleText: "\(project.projectName)\n프로젝트의 내용이 모두 삭제됩니다.\n 계속하시겠어요?",
+        primaryText: "모두 삭제"
+      ) {
+        Task {
+          try await viewModel.removeProject(projectId: project.projectId.uuidString)
+          _ = await viewModel.fetchCurrentTeamspaceProject()
+        }
+      }
+    }
+    .sheet(item: $presentingRemovalSheetTracks) { tracks in
+      BottomConfirmSheetView(
+        titleText: "\(tracks.trackName)\n곡과 영상을 모두 삭제하시겠어요?",
+        primaryText: "모두 삭제"
+      ) {
+        Task {
+          try await viewModel.removeTracksAndSection(tracksId: tracks.tracksId.uuidString)
+          if let pid = viewModel.project.expandedID {
+            viewModel.loadTracks(for: pid) // 삭제 후 갱신
           }
         }
       }
-      .sheet(item: $presentingRemovalSheetTracks) { tracks in
-        BottomConfirmSheetView(
-          titleText: "\(tracks.trackName)\n곡과 영상을 모두 삭제하시겠어요?",
-          primaryText: "모두 삭제"
-        ) {
-          Task {
-            try await viewModel.removeTracksAndSection(tracksId: tracks.tracksId.uuidString)
-            if let pid = viewModel.project.expandedID {
-              viewModel.loadTracks(for: pid) // 삭제 후 갱신
-            }
+    }
+    .sheet(isPresented: $showCreateTracksView) {
+      // 기존 CreateTracksView API 그대로 쓴다고 가정
+      CreateTracksView(
+        choiceSelectedProject: Binding(
+          get: { viewModel.selectedProject },
+          set: { _ in } // 외부에서 바꾸지 않음(읽기 전용 바인딩)
+        ),
+        onCreated: {
+          if let pid = viewModel.project.expandedID {
+            viewModel.loadTracks(for: pid) // 생성 후 갱신
           }
         }
-      }
-      .sheet(isPresented: $showCreateTracksView) {
-        // 기존 CreateTracksView API 그대로 쓴다고 가정
-        CreateTracksView(
-          choiceSelectedProject: Binding(
-            get: { viewModel.selectedProject },
-            set: { _ in } // 외부에서 바꾸지 않음(읽기 전용 바인딩)
-          ),
-          onCreated: {
-            if let pid = viewModel.project.expandedID {
-              viewModel.loadTracks(for: pid) // 생성 후 갱신
-            }
-          }
-        )
-        .presentationDetents([.fraction(0.9)])
-        .presentationCornerRadius(16)
-      }
+      )
+      .presentationDetents([.fraction(0.9)])
+      .presentationCornerRadius(16)
     }
     .overlay { if isLoading { LoadingView() } }
     .overlay(alignment: .bottomTrailing) {
