@@ -62,9 +62,18 @@ struct NameSettingView: View {
             .animation(.easeInOut(duration: 0.1), value: underlineWidth)
         }
         .onChange(of: name) { oldValue, newValue in
-          if newValue.count > maxLength {
-            name = oldValue
+          var updated = newValue
+          
+          if updated.first == " " {
+            updated = String(updated.drop(while: { $0 == " " }))
+          }
+          if updated.count > maxLength {
+            updated = String(updated.prefix(maxLength))
             HapticManager.shared.trigger(.medium)
+          }
+          
+          if updated != name {
+            name = updated
           }
         }
         
