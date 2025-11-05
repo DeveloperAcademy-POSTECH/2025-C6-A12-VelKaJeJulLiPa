@@ -197,6 +197,12 @@ struct HomeView: View {
                 } else {
                     // 팀스페이스가 다른 것으로 교체된 경우
                     await viewModel.reloadProjectsAfterTeamspaceChange()
+                  
+                    // 팀스페이스가 교체되면 탭바 수신함의 뱃지 카운트를 교체된 팀스페이스에 맞췃 갱신
+                    try await NotificationManager.shared.fetchUnreadNotificationCount(
+                    userId: FirebaseAuthManager.shared.user?.uid ?? "",
+                    teamspaceId: FirebaseAuthManager.shared.currentTeamspace?.teamspaceId.uuidString ?? ""
+                  )
                 }
             }
         }
