@@ -26,6 +26,8 @@ struct ListCell: View {
   
   @FocusState private var nameFieldFocused: Bool
   
+  @Binding var showToastMessage: Bool
+  
   var body: some View {
     HStack {
       switch projectRowState {
@@ -56,7 +58,8 @@ struct ListCell: View {
             HStack(spacing: 16) {
               Button("삭제", action: deleteAction)
                 .font(.headline2Medium)
-                .foregroundStyle(.accentRedNormal)                .buttonStyle(.plain)
+                .foregroundStyle(.accentRedNormal)
+                .buttonStyle(.plain)
               
               Button("수정", action: editAction) // ← 이걸 누르면 상위에서 .editing(.update)로 전환
                 .font(.headline2Medium)
@@ -91,6 +94,10 @@ struct ListCell: View {
                 
                 if updated.count > 20 {
                   updated = String(updated.prefix(20)) // ❗️20글자 초과 금지
+                }
+                
+                if updated.count == 20 {
+                  self.showToastMessage = true
                 }
                 
                 if updated != editText {
@@ -151,8 +158,12 @@ struct ListCell: View {
       },
       rowTapAction: {
         
-      }, editText: .constant("")
+      },
+      editText: .constant(""),
+      showToastMessage: .constant(false)
     )
     .padding(.horizontal, 16)
   }
 }
+
+

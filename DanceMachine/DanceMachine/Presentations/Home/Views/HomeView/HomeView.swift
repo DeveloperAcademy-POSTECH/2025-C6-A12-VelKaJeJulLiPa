@@ -29,6 +29,8 @@ struct HomeView: View {
   @State private var presentingCreateTeamspaceSheet: Bool = false
   @State private var presentingCreateProjectSheet: Bool = false
   
+  @State private var showToastMessage: Bool = false
+  
   var body: some View {
     ZStack {
       Color.backgroundNormal.ignoresSafeArea() // FIXME: - 컬러 수정
@@ -116,11 +118,19 @@ struct HomeView: View {
                 viewModel.tracks.editText = ""
               }
               viewModel.tracks.editingID = nil
-            }
+            }, showToastMessage: $showToastMessage
           )
           .padding(.horizontal, 16)
         }
         Spacer()
+      }
+      .toast(
+          isPresented: $showToastMessage,
+          duration: 2,
+          position: .bottom,
+          bottomPadding: 16   // 하단에서 얼마나 띄울지(버튼 위치)
+      ) {
+          ToastView(text: "프로젝트 이름은 20자 이내로 입력해주세요.")
       }
       .sheet(item: $presentingRemovalSheetProject) { project in
         BottomConfirmSheetView(
