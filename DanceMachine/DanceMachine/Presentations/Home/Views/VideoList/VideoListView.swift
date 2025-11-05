@@ -111,6 +111,7 @@ struct VideoListView: View {
         }
       }
   }
+  }
   
   private var uploadButtons: some View {
     Button {
