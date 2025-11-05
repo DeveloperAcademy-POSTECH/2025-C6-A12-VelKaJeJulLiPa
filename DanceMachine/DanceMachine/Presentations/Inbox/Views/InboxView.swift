@@ -44,6 +44,10 @@ struct InboxView: View {
                         notificationId: notification.notificationId
                       )
                       
+                      if NotificationManager.shared.unreadNotificationCount > 0 {
+                        NotificationManager.shared.unreadNotificationCount -= 1
+                      }
+                      
                       router.push(
                         to: .video(
                           .play(
