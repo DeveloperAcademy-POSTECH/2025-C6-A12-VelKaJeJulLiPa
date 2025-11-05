@@ -26,13 +26,16 @@ struct HomeView: View {
   @State private var showCreateTracksView = false
   @State private var isLoading = false
   
+  @State private var presentingCreateTeamspaceSheet: Bool = false
+  
   var body: some View {
     ZStack {
       Color.backgroundNormal.ignoresSafeArea() // FIXME: - 컬러 수정
       VStack {
         TeamspaceTitleView(
           viewModel: viewModel,
-          teamspaceState: viewModel.tsBinding(\.state)
+          teamspaceState: viewModel.tsBinding(\.state),
+          presentingCreateTeamspaceSheet: $presentingCreateTeamspaceSheet // 팀 스페이스 생성 시트 제어
         )
         .padding(.horizontal, 16)
         
@@ -158,6 +161,13 @@ struct HomeView: View {
         .presentationDetents([.fraction(0.9)])
         .presentationCornerRadius(16)
       }
+      .sheet(isPresented: $presentingCreateTeamspaceSheet) {
+        CreateTeamspaceView()
+          .presentationDragIndicator(.visible)
+          .presentationDetents([.fraction(0.9)])
+          .presentationCornerRadius(16)
+      }
+      
     }
     .overlay { if isLoading { LoadingView() } }
     .overlay(alignment: .bottomTrailing) {

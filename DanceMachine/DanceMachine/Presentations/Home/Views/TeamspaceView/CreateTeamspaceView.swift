@@ -16,9 +16,11 @@ struct CreateTeamspaceView: View {
   
   var body: some View {
     ZStack {
-      Color.backgroundNormal.ignoresSafeArea()
+      Color.backgroundElevated.ignoresSafeArea()
       
       VStack {
+        Spacer().frame(height: 29)
+        topTitleView
         Spacer()
         inputTeamspaceNameView
           .padding(.horizontal, 16)
@@ -27,26 +29,52 @@ struct CreateTeamspaceView: View {
           .padding(.horizontal, 16)
       }
     }
-    
-    .toolbar {
-      ToolbarLeadingBackButton(icon: .chevron)
+  }
+  
+  // MARK: - 탑 타이틀
+  private var topTitleView: some View {
+    HStack {
+      // TODO: Xmark 버튼 추가, alert 처리.
+      //Image(systemName: "xmark.circle.fill")
+      
+      // TODO: 홈 시트 작업 중이였음. (컬러가 아직 피그마 반영이 안돼서, 잠시 빼둠.)
+      Text("팀 스페이스 만들기")
+        .font(.headline2SemiBold)
+        .foregroundStyle(Color.labelStrong)
     }
   }
   
   // MARK: - 팀 스페이스 텍스트 필드 뷰 ("팀 스페이스 이름" + 텍스트 필드)
   private var inputTeamspaceNameView: some View {
-    VStack(spacing: 10) {
-      Text("팀 스페이스 이름")
-        .font(Font.system(size: 20, weight: .semibold)) // FIXME: - 폰트 수정
-        .foregroundStyle(Color.black) // FIXME: - 컬러 수정
+    VStack {
+      Text("팀 스페이스 이름을 입력하세요.")
+        .font(.title2SemiBold)
+        .foregroundStyle(Color.labelStrong)
       
-      RoundedRectangle(cornerRadius: 5)
-        .fill(Color.gray) // FIXME: - 컬러 수정
+      Spacer().frame(height: 32)
+      
+      RoundedRectangle(cornerRadius: 15)
+        .fill(Color.fillStrong)
         .frame(maxWidth: .infinity)
-        .frame(height: 47)
+        .frame(height: 51)
         .overlay {
-          TextField("팀 이름을 입력해주세요", text: $teamspaceNameText)
-            .multilineTextAlignment(.center)
+          HStack {
+            Spacer()
+            
+            TextField("팀 이름", text: $teamspaceNameText)
+              .font(.headline2Medium)
+              .foregroundStyle(Color.labelAssitive)
+              .tint(Color.labelAssitive)
+              .multilineTextAlignment(.center)
+            
+            Spacer()
+            
+            XmarkButton {
+              self.teamspaceNameText = ""
+            }
+            .padding(.trailing, 8)
+            
+          }
         }
     }
   }
@@ -54,8 +82,8 @@ struct CreateTeamspaceView: View {
   // MARK: - 바텀 팀 스페이스 만들기 뷰
   private var bottomButtonView: some View {
     ActionButton(
-      title: "확인",
-      color: self.teamspaceNameText.isEmpty ? Color.gray : Color.blue, // FIXME: - 컬러 수정
+      title: "팀 스페이스 만들기",
+      color: self.teamspaceNameText.isEmpty ? Color.fillAssitive : Color.secondaryStrong,
       height: 47,
       isEnabled: self.teamspaceNameText.isEmpty ? false : true
     ) {
@@ -67,6 +95,7 @@ struct CreateTeamspaceView: View {
       }
       
     }
+    .padding(.bottom, 16)
   }
 }
 

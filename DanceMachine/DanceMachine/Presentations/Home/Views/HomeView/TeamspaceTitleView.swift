@@ -14,6 +14,8 @@ struct TeamspaceTitleView: View {
   
   @Binding var teamspaceState: TeamspaceState
   
+  @Binding var presentingCreateTeamspaceSheet: Bool
+  
   var body: some View {
     Group {
       switch teamspaceState {
@@ -28,8 +30,7 @@ struct TeamspaceTitleView: View {
   private var emptyTeamspaceView: some View {
     HStack {
       Button {
-        print("router.push(to: .teamspace(.create))")
-        router.push(to: .teamspace(.create))
+        self.presentingCreateTeamspaceSheet = true
       } label: {
         HStack {
           HStack(spacing: 8) {
@@ -48,7 +49,7 @@ struct TeamspaceTitleView: View {
   }
   
   private var nonEmptyTeamspaceView: some View {
-    HStack {
+    HStack(spacing: 8) {
       Button {
         print("router.push(to: .teamspace(.list))")
         router.push(to: .teamspace(.list))
@@ -59,16 +60,18 @@ struct TeamspaceTitleView: View {
       }
       .clearGlassButtonIfAvailable()
       
-      Spacer()
-      
       Button {
         router.push(to: .teamspace(.setting))
       } label: {
-        Text("편집")
-          .font(.headline1Medium)
+        Image(systemName: "person.2.badge.gearshape.fill")
           .foregroundStyle(Color.labelStrong)
+//        Text("편집")
+//          .font(.headline1Medium)
+//          .foregroundStyle(Color.labelStrong)
       }
       .clearGlassButtonIfAvailable()
+      
+      Spacer()
     }
   }
 }
@@ -82,7 +85,8 @@ struct TeamspaceTitleView: View {
     
     TeamspaceTitleView(
       viewModel: HomeViewModel(),
-      teamspaceState: .constant(.empty)
+      teamspaceState: .constant(.empty),
+      presentingCreateTeamspaceSheet: .constant(false)
     )
     .environmentObject(NavigationRouter())
   }
@@ -103,7 +107,8 @@ private struct PreviewTeamspaceTitleNonEmpty: View {
       
       TeamspaceTitleView(
         viewModel: vm,
-        teamspaceState: $state
+        teamspaceState: $state,
+        presentingCreateTeamspaceSheet: .constant(false)
       )
       .environmentObject(NavigationRouter())
       .task {
