@@ -148,7 +148,14 @@ struct HomeView: View {
       }
       // 팀 스페이스 생성 시트
       .sheet(isPresented: $presentingCreateTeamspaceSheet) {
-        CreateTeamspaceView()
+        CreateTeamspaceView(onCreated: {
+          Task {
+            self.isLoading = true
+            defer { isLoading = false }
+            await viewModel.ensureTeamspaceInitialized()
+            await viewModel.fetchCurrentTeamspaceProject()
+          }
+        })
           .presentationDragIndicator(.visible)
           .presentationDetents([.fraction(0.9)])
           .presentationCornerRadius(16)

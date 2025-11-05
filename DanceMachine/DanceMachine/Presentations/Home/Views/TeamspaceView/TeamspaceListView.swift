@@ -62,24 +62,20 @@ struct TeamspaceListView: View {
       ToolbarCenterTitle(text: "팀 스페이스")
     }
     .sheet(isPresented: $presentingCreateTeamspaceSheet) {
-      CreateTeamspaceView()
-        .presentationDragIndicator(.visible)
-        .presentationDetents([.fraction(0.9)])
-        .presentationCornerRadius(16)
-        .onDisappear {
-          Task {
-            self.isLoading = true
-            defer { isLoading = false }
-            
-            // TODO: 캐싱 처리하기
-            let newloaded = (try? await viewModel.loadTeamspacesForUser()) ?? []
-            
-            if newloaded != self.loadTeamspaces {
-              let loaded: [Teamspace] = (try? await viewModel.loadTeamspacesForUser()) ?? []
-              self.loadTeamspaces = loaded
-            }
+      CreateTeamspaceView(onCreated: {
+        Task {
+          self.isLoading = true
+          defer { isLoading = false }
+          let newloaded = (try? await viewModel.loadTeamspacesForUser()) ?? []
+          if newloaded != self.loadTeamspaces {
+            let loaded: [Teamspace] = (try? await viewModel.loadTeamspacesForUser()) ?? []
+            self.loadTeamspaces = loaded
           }
         }
+      })
+      .presentationDragIndicator(.visible)
+      .presentationDetents([.fraction(0.9)])
+      .presentationCornerRadius(16)
     }
     .task {
       if ProcessInfo.isRunningInPreviews { return } // 프리뷰 전용

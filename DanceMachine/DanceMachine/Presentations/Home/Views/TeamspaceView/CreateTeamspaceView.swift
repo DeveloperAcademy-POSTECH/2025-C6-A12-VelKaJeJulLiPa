@@ -17,6 +17,8 @@ struct CreateTeamspaceView: View {
   
   @FocusState private var isFocusTextField: Bool
   
+  var onCreated: () -> Void = {}
+  
   var body: some View {
     ZStack {
       Color.backgroundElevated.ignoresSafeArea()
@@ -115,9 +117,9 @@ struct CreateTeamspaceView: View {
         try await self.viewModel.createTeamspaceWithInitialMembership(
           teamspaceNameText: teamspaceNameText
         )
+        self.onCreated()
         await MainActor.run { dismiss() }
       }
-      
     }
     .padding(.bottom, 16)
   }
