@@ -14,9 +14,9 @@ struct ToolbarCenterTitle: ToolbarContent {
     var body: some ToolbarContent {
         ToolbarItem(placement: .principal) {
             Text(text)
-                .font(Font.system(size: 18, weight: .semibold)) // FIXME: - 폰트 수정
-                .foregroundStyle(Color.black) // FIXME: - 컬러 수정
-                .allowsHitTesting(false)
+            .font(.heading1Medium)
+            .foregroundStyle(.labelStrong)
+            .allowsHitTesting(false)
         }
     }
 }
