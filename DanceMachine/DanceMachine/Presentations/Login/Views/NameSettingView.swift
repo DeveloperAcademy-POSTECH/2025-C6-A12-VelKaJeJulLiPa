@@ -11,6 +11,7 @@ import FirebaseAuth
 struct NameSettingView: View {
   @State private var viewModel = NameSettingViewModel()
   @State private var name: String = ""
+  @State private var showToastMessage: Bool = false
   @FocusState private var isFocused: Bool
   
   let placeholder = "이름을 입력하세요"
@@ -67,8 +68,10 @@ struct NameSettingView: View {
           if updated.first == " " {
             updated = String(updated.drop(while: { $0 == " " }))
           }
+          
           if updated.count > maxLength {
             updated = String(updated.prefix(maxLength))
+            showToastMessage = true
             HapticManager.shared.trigger(.medium)
           }
           
@@ -100,6 +103,14 @@ struct NameSettingView: View {
     }
     .onAppear {
       name = viewModel.displayName
+    }
+    .toast(
+      isPresented: $showToastMessage,
+      duration: 2,
+      position: .bottom,
+      bottomPadding: 16 + 47 + 16 // 아래 빈공간 + 버튼 크기 + 윗 빈공간
+    ) {
+      ToastView(text: "이름은 10자 이내로 입력해주세요.")
     }
     .dismissKeyboardOnTap()
   }
