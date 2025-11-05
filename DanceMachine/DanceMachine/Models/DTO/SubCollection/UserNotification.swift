@@ -26,11 +26,4 @@ struct UserNotification: Codable, Equatable, Hashable {
 extension UserNotification: EntityRepresentable {
   var entityName: CollectionType { .userNotification }
   var documentID: String { notificationId }
-  var asDictionary: [String: Any]? {
-    [
-      CodingKeys.notificationId.rawValue: notificationId,
-      CodingKeys.teamspaceId.rawValue: teamspaceId,
-      CodingKeys.isRead.rawValue: isRead
-    ]
-  }
 }
