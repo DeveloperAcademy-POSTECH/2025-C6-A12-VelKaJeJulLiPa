@@ -10,6 +10,7 @@ import SwiftUI
 struct AccountSettingView: View {
   
   @EnvironmentObject private var router: MainRouter
+  @Environment(TabRouter.self) private var tabRouter
   
   @State private var viewModel = AccountSettingViewModel()
   
@@ -52,7 +53,11 @@ struct AccountSettingView: View {
     ) {
       Button("취소", role: .cancel) {}
       Button("로그아웃", role: .destructive) {
-        Task { try await viewModel.signOut() }
+        Task {
+          try await viewModel.signOut()
+          tabRouter.switchTab(to: .home)
+          router.destination.removeAll()
+        }
       }
     } message: {
       Text("정말 로그아웃하시겠어요?")
@@ -63,7 +68,10 @@ struct AccountSettingView: View {
     ) {
       Button("취소", role: .cancel) {}
       Button("탈퇴", role: .destructive) {
-        Task { try await viewModel.deleteUserAccount() }
+        Task {
+          try await viewModel.deleteUserAccount()
+          tabRouter.switchTab(to: .home)
+          router.destination.removeAll()
       }
     } message: {
       Text("회원 정보가 삭제되고 되돌릴 수 없습니다.")
