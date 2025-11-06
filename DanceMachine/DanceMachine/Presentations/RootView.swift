@@ -12,7 +12,8 @@ struct RootView: View {
   @EnvironmentObject private var router: MainRouter
   @Environment(TabRouter.self) private var tabRouter
   @State private var isProjectExpanded = false
-
+  @StateObject private var notificationManager = NotificationManager.shared
+  
   // 현재 탭에 따른 커스텀 액션 표시 여부
   private var shouldShowCustomAction: Bool {
     tabRouter.currentTab == .home
@@ -70,6 +71,7 @@ struct RootView: View {
       } label: {
         tabLabel(.inbox)
       }
+      .badge(notificationManager.unreadNotificationCount)
 
       Tab(value: .myPage) {
         NavigationStack(path: $router.destination) {
