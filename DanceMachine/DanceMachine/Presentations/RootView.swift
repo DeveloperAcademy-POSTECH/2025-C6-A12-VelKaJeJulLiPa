@@ -48,7 +48,7 @@ struct RootView: View {
       //                    Image(systemName: "plus.circle.fill")
       //                  }
     })
-    .tint(.secondaryStrong)
+    .tint(Color.black)
     .onChange(of: tabcase) { oldValue, newValue in
       if oldValue != newValue {
         router.destination.removeAll()
