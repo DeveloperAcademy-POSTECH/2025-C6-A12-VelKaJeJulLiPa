@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct VideoGrid: View {
-  @EnvironmentObject private var router: NavigationRouter
+  @EnvironmentObject private var router: MainRouter
   
   let size: CGFloat
   let columns: Int

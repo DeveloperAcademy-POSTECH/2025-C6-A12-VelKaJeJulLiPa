@@ -91,7 +91,7 @@ struct TeamspaceListView: View {
 //#Preview {
 //  NavigationStack {
 //    TeamspaceListView(previewLoadTeamspaces: Teamspace.TeamspaceMockData)
-//      .environmentObject(NavigationRouter())
+//      .environmentObject(MainRouter())
 //  }
 //}
 

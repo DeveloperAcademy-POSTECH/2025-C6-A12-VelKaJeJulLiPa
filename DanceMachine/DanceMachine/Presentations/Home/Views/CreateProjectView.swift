@@ -10,7 +10,7 @@ import SwiftUI
 struct CreateProjectView: View {
   
   @Environment(\.dismiss) private var dismiss
-  @EnvironmentObject private var router: NavigationRouter
+  @EnvironmentObject private var router: MainRouter
   
   @State private var viewModel: CreateProjectViewModel = .init()
   @State private var projectNameText = ""

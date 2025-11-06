@@ -11,7 +11,7 @@ import FirebaseAuth
 
 struct HomeView: View {
   
-  @EnvironmentObject private var router: NavigationRouter
+  @EnvironmentObject private var router: MainRouter
   @EnvironmentObject private var inviteRouter: InviteRouter
   
   @State private var viewModel: HomeViewModel
@@ -218,6 +218,12 @@ struct HomeView: View {
     }
     .task {
       if ProcessInfo.isRunningInPreviews { return } // 프리뷰 전용
+      guard FirebaseAuthManager.shared.user != nil else {
+        print("🚫 HomeView.task 중간: 로그인 상태 아님")
+        return
+      }
+      
+      
       isLoading = true
       defer { isLoading = false }
       print("🔥 HomeViewLoding...")
@@ -249,7 +255,7 @@ struct HomeView: View {
 #Preview("HomeView · 프리뷰 목 데이터") {
   NavigationStack {
     HomeView(previewVM: .previewFilled())
-      .environmentObject(NavigationRouter())
+      .environmentObject(MainRouter())
       .environmentObject(InviteRouter())
   }
 }

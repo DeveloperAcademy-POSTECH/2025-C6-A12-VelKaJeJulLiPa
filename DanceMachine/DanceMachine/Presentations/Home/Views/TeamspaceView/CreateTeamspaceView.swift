@@ -10,7 +10,7 @@ import SwiftUI
 struct CreateTeamspaceView: View {
   
   @Environment(\.dismiss) private var dismiss
-  @EnvironmentObject private var router: NavigationRouter
+  @EnvironmentObject private var router: MainRouter
   
   @State private var viewModel: CreateTeamspaceViewModel = .init()
   @State private var teamspaceNameText = ""
@@ -131,7 +131,7 @@ struct CreateTeamspaceView: View {
     ZStack {
       Color.backgroundNormal.ignoresSafeArea()
       CreateTeamspaceView()
-        .environmentObject(NavigationRouter())
+        .environmentObject(MainRouter())
     }
   }
 }

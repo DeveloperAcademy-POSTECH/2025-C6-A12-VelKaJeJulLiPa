@@ -10,7 +10,7 @@ import SwiftUI
 // TODO: Owner 팀 나가기 케이스 추가하기
 struct TeamspaceSettingView: View {
   
-  @EnvironmentObject private var rotuer: NavigationRouter
+  @EnvironmentObject private var rotuer: MainRouter
   
   @State private var viewModel: TeamspaceSettingViewModel = .init()
   @State private var editingState: EditingState = .viewing
@@ -361,7 +361,7 @@ struct TeamspaceSettingView: View {
 #Preview {
   NavigationStack {
     TeamspaceSettingView()
-      .environmentObject(NavigationRouter())
+      .environmentObject(MainRouter())
   }
 }
 
