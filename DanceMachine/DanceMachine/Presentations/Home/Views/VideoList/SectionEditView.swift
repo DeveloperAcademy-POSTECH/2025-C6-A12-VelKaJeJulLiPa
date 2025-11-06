@@ -10,8 +10,9 @@ import SwiftUI
 struct SectionEditView: View {
   @EnvironmentObject private var router: NavigationRouter
   @State private var vm: SectionEditViewModel
-  
-  
+  @State private var showToast: Bool = false
+  @State private var showExitAlert: Bool = false
+
   let tracksId: String
   let trackName: String
   let sectionId: String
@@ -31,14 +32,18 @@ struct SectionEditView: View {
   
   var body: some View {
     VStack {
-      customHeader
       text
       Spacer().frame(height: 15)
       listView
     }
+    .onReceive(NotificationCenter.default.publisher(for: .showEditWarningToast, object: nil), perform: { _ in
+      self.showToast = true
+    })
+    .padding(.top, 16)
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
     .toolbar(.hidden, for: .tabBar)
     .padding(.horizontal, 16)
-    .background(Color.white) // FIXME: 다크모드 배경색 명시
+    .background(.backgroundNormal)
     .safeAreaInset(edge: .bottom) {
       Group {
         if vm.editingSectionid == nil {
@@ -49,40 +54,45 @@ struct SectionEditView: View {
       }
       .padding(.horizontal, 16)
     }
-  }
-  
-  private var customHeader: some View { // FIXME: 컬러 폰트 수정
-    HStack(alignment: .top, spacing: 16) {
-      Button {
-        NotificationCenter.post(.sectionDidUpdate)
-        router.pop()
-      } label: {
-        Image(systemName: "chevron.left")
-          .font(.system(size: 17, weight: .semibold))
-          .foregroundStyle(.black)
+    .toolbarTitleDisplayMode(.inline)
+    .toolbar {
+      ToolbarLeadingBackButton(icon: .chevron) {
+        if vm.isEditing {
+          self.showExitAlert = true
+        } else {
+          router.pop()
+        }
       }
-      VStack(alignment: .leading, spacing: 4) {
-        Text("섹션 관리")
-          .font(.system(size: 17, weight: .semibold))
-          .foregroundStyle(.black) // FIXME: 다크모드 컬러 명시
-        Text(trackName)
-          .font(.system(size: 13))
-          .foregroundStyle(.black) // FIXME: 다크모드 컬러 명시
+      ToolbarItem(placement: .title) {
+        VStack(alignment: .center) {
+          Text("파트 관리")
+            .font(.headline2SemiBold)
+            .foregroundStyle(.labelStrong)
+          Text("\(trackName)")
+            .font(.caption1Medium)
+            .foregroundStyle(.labelNormal)
+        }
       }
-      .onTapGesture {
-        router.pop()
-      }
-      Spacer()
     }
-    .padding(.vertical, 12)
+    .navigationBarBackButtonHidden(true)
+    .toast(
+      isPresented: $showToast,
+      duration: 2,
+      position: .bottom,
+      bottomPadding: 63) {
+        ToastView(text: "10자 이내로 입력해주세요.", icon: .warning)
+      }
+      .unsavedChangesAlert(
+        isPresented: $showExitAlert,
+        onConfirm: { router.pop() }
+      )
   }
-  
   
   private var text: some View {
     HStack {
-      Text("섹션 리스트")
-        .font(Font.system(size: 14, weight: .semibold)) // FIXME: 폰트 수정
-        .foregroundStyle(Color.gray.opacity(0.8)) // FIXME: 컬러 수정
+      Text("파트 리스트")
+        .font(.headline2Medium)
+        .foregroundStyle(.labelAssitive)
       Spacer()
     }
   }
@@ -100,7 +110,14 @@ struct SectionEditView: View {
               await vm.deleteSection(tracksId: tracksId, section: section)
             }
           },
-          editText: $vm.editText
+          onDeleteIfEmpty: {
+            Task {
+              await vm.deleteSection(tracksId: tracksId, section: section)
+              vm.editingSectionid = nil
+            }
+          },
+          editText: $vm.editText,
+          showToast: $showToast
         )
         .disabled(section.sectionId == sectionId)
         .opacity(section.sectionId == sectionId ? 0.5 : 1.0)
@@ -110,22 +127,23 @@ struct SectionEditView: View {
   // 평상시 버튼
   private var addButton: some View {
     ActionButton(
-      title: "섹션 추가하기",
-      color: Color.blue,
+      title: "파트 추가하기",
+      color: .secondaryStrong,
       height: 47,
       action: { vm.addNewSection() }
     )
+    .padding(.bottom, 8)
   }
   
   private var confirmButton: some View {
     RoundedRectangle(cornerRadius: 5)
-      .fill((!vm.editText.isEmpty && vm.editText != "일반") ? Color.blue : Color.gray.opacity(0.5)) // FIXME: 컬러 수정
+      .fill((!vm.editText.isEmpty && vm.editText != "일반") ? .secondaryStrong : .fillAssitive)
       .frame(maxWidth: .infinity)
       .frame(height: 47)
       .overlay {
         Text("확인")
-          .font(Font.system(size: 16, weight: .medium)) // FIXME: - 폰트 수정
-          .foregroundStyle(Color.white) // FIXME: - 컬러 수정
+          .font(.headline2Medium)
+          .foregroundStyle(vm.editText.isEmpty ? .labelAssitive : .labelStrong)
       }
       .onTapGesture {
         if !vm.editText.isEmpty && vm.editText != "일반" {
@@ -135,6 +153,7 @@ struct SectionEditView: View {
           }
         }
       }
+      .padding(.bottom, 8)
   }
 }
 

@@ -21,6 +21,7 @@ struct VideoGrid: View {
   
   @State private var selectedVideo: Video?
   @State private var selectedTrack: Track?
+  @State private var showEditVideoTitle: Video?
   @Binding var vm: VideoListViewModel
   
   var body: some View {
@@ -83,6 +84,7 @@ struct VideoGrid: View {
               self.selectedVideo = video
               print("\(video.videoId)모달 선택")
             },
+            showEditSheet: { self.showEditVideoTitle = video },
             videoAction: {
               router.push(
                 to: .video(
@@ -93,7 +95,8 @@ struct VideoGrid: View {
                   )
                 )
               )
-            }
+            },
+            sectionCount: section.count
           )
           .sheet(item: $selectedVideo) { _ in
             if let video = selectedVideo {
@@ -104,6 +107,7 @@ struct VideoGrid: View {
                   Task {
                     await vm.deleteVideo(video: video, tracksId: tracksId)
                     print("\(video.videoId)")
+                    NotificationCenter.post(.showDeleteToast, object: nil)
                   }
                 }
               )
@@ -113,8 +117,13 @@ struct VideoGrid: View {
       }
 //#endif
     }
+    .sheet(item: $showEditVideoTitle, content: { video in
+      NavigationStack {
+        VideoTitleEditView(video: video, vm: $vm, videoTitle: video.videoTitle)
+      }
+    })
     // MARK: 영상 섹션 이동 뷰
-    .fullScreenCover(item: $selectedTrack) { track in
+    .sheet(item: $selectedTrack) { track in
         NavigationStack {
           SectionSelectView(
             section: section,

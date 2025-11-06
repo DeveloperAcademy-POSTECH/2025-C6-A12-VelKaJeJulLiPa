@@ -14,6 +14,10 @@ struct VideoListView: View {
   
   @State var vm: VideoListViewModel
   
+  @State private var showDeleteToast: Bool = false
+  @State private var showEditToast: Bool = false
+  @State private var showEditVideoTitleToast: Bool = false
+  
   init(
     vm: VideoListViewModel = .init(),
     tracksId: String,
@@ -31,22 +35,26 @@ struct VideoListView: View {
   let trackName: String
   
   var body: some View {
-    ZStack(alignment: .bottom) {
+    VStack(spacing: 0) {
       if vm.videos.isEmpty && vm.isLoading != true {
         emptyView
-        uploadButtons
+        //        uploadButtons
       } else {
         listView
-        uploadButtons
+        //        uploadButtons
       }
     }
-    .background(Color.white) // FIXME: 배경색 지정 (다크모드)
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .background(.backgroundNormal)
     .overlay { if vm.isLoading { LoadingView() }}
     .safeAreaInset(edge: .top, content: {
       sectionView
     })
+    .safeAreaInset(edge: .bottom, content: {
+      uploadButtons
+    })
     .navigationBarTitleDisplayMode(.inline)
-    //    .toolbar(.hidden, for: .tabBar)
+    .toolbar(.hidden, for: .tabBar)
     .toolbar {
       ToolbarLeadingBackButton(icon: .chevron)
       ToolbarCenterTitle(text: trackName)
@@ -66,6 +74,36 @@ struct VideoListView: View {
         sectionId: vm.selectedSection?.sectionId ?? sectionId
       )
     }
+    .toast(
+      isPresented: $showDeleteToast,
+      duration: 2,
+      position: .bottom,
+      bottomPadding: 63,
+      content: {
+        ToastView(
+          text: "동영상이 삭제되었습니다.",
+          icon: .check
+        )
+      }
+    )
+    .toast(
+      isPresented: $showEditToast,
+      duration: 2,
+      position: .bottom,
+      bottomPadding: 63,
+      content: {
+        ToastView(text: "영상이 이동되었습니다.", icon: .check)
+      }
+    )
+    .toast(
+      isPresented: $showEditVideoTitleToast,
+      duration: 2,
+      position: .bottom,
+      bottomPadding: 63,
+      content: {
+        ToastView(text: "영상 이름이 수정되었습니다.", icon: .check)
+      }
+    )
     // MARK: 글래스 모피즘 사용하여 플로팅 버튼을 rootView에서 관리할때 쓰는 리시버
     .onReceive(
       NotificationCenter.default.publisher(
@@ -81,22 +119,34 @@ struct VideoListView: View {
         await vm.loadFromServer(tracksId: tracksId)
       }
     }
+    // MARK: 영상 이동 토스트 리시버
+    .onReceive(NotificationCenter.default.publisher(for: .showEditToast)) { _ in
+      self.showEditToast = true
+    }
+    // MARK: 영상 삭제 토스트 리시버
+    .onReceive(NotificationCenter.default.publisher(for: .showDeleteToast)) { _ in
+      self.showDeleteToast = true
+    }
+    // MARK: 영상 이름 수정 토스트 리시버
+    .onReceive(NotificationCenter.default.publisher(for: .showEditVideoTitleToast, object: nil)) { _ in
+      self.showEditVideoTitleToast = true
+    }
 }
   
   private var uploadButtons: some View {
     Button {
       self.showCustomPicker = true
     } label: {
-      RoundedRectangle(cornerRadius: 10)
-        .fill(Color.blue)
+      Text("동영상 업로드")
+        .font(.headline1Medium)
+        .foregroundStyle(.labelStrong)
+        .padding(.vertical, 14)
         .frame(maxWidth: .infinity)
-        .frame(height: 47)
         .padding(.horizontal, 16)
-        .overlay {
-          Text("동영상 업로드")
-            .foregroundStyle(.white)
-        }
+        .uploadGlassButton()
     }
+    .padding(.horizontal, 16)
+    .environment(\.colorScheme, .light)
   }
   
   //  private var glassButton: some View {
@@ -123,16 +173,19 @@ struct VideoListView: View {
   private var emptyView: some View {
     VStack {
       Spacer()
-      HStack {
-        Image(systemName: "folder.badge.plus")
-          .foregroundStyle(Color.black) // FIXME: - 컬러 수정
+        Image(systemName: "movieclapper.fill")
+          .font(.system(size: 75))
+          .foregroundStyle(.labelAssitive)
+      
+      Spacer().frame(height: 25)
         
-        Text("폴더 버튼을 눌러서 파트를 추가하세요")
-          .font(.system(size: 18, weight: .semibold)) // FIXME: - 폰트 수정
-          .foregroundStyle(Color.black) // FIXME: - 컬러 수정
-      }
+        Text("비디오가 없습니다.")
+          .font(.caption1Medium)
+          .foregroundStyle(.labelAssitive)
       Spacer()
     }
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .offset(y: -40)
   }
   // MARK: 영상 그리드 뷰
   private var listView: some View {
@@ -193,11 +246,11 @@ struct VideoListView: View {
             )
           }
         }
-        .padding(.horizontal, 1) // FIXME: 여백 없으면 캡슐이 짤리는 현상 있음
-        .padding(.vertical, 1) // FIXME: 여백 없으면 캡슐이 짤리는 현상 있음
-//      }
+//        .padding([.horizontal, .vertical], 16)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
     }
-    .padding(.horizontal, 16)
+    .environment(\.colorScheme, .light)
   }
 }
 
