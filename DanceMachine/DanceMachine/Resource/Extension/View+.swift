@@ -33,7 +33,6 @@ extension View {
     UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
   }
   
-  
   /// iOS 26 이상에서만 `.glass` 버튼 스타일과 `.glassEffect(.clear)`를 적용하는 뷰 빌더입니다.
   ///
   /// 이 메서드는 주로 `Button` 에 체이닝해서 사용하도록 설계되었습니다.

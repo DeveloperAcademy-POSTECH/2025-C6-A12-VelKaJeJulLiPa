@@ -26,18 +26,20 @@ struct ListCell: View {
   
   @FocusState private var nameFieldFocused: Bool
   
+  @Binding var showToastMessage: Bool
+  
   var body: some View {
     HStack {
       switch projectRowState {
       case .viewing:
         Text(title)
-          .font(.system(size: 16, weight: .semibold))
-          .foregroundStyle(.black)
+          .font(.headline2Medium)
+          .foregroundStyle(Color.labelStrong)
           .padding(.horizontal, 16)
           .padding(.vertical, 12)
         Spacer()
         Image(systemName: "chevron.right")
-          .foregroundStyle(Color.black) // FIXME: - 컬러 수정
+          .foregroundStyle(Color.labelNormal)
           .rotationEffect(.degrees(isExpanded ? 90 : 0))
           .animation(.easeInOut(duration: 0.2), value: isExpanded)
           .padding(.horizontal, 16)
@@ -46,8 +48,8 @@ struct ListCell: View {
         switch action {
         case .none, .delete:
           Text(title)
-            .font(.system(size: 16, weight: .semibold))
-            .foregroundStyle(.black)
+            .font(.headline2Medium)
+            .foregroundStyle(Color.labelStrong)
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
           Spacer()
@@ -55,13 +57,13 @@ struct ListCell: View {
           if canEdit {
             HStack(spacing: 16) {
               Button("삭제", action: deleteAction)
-                .font(.system(size: 15, weight: .medium))
-                .foregroundStyle(.red)
+                .font(.headline2Medium)
+                .foregroundStyle(.accentRedNormal)
                 .buttonStyle(.plain)
               
               Button("수정", action: editAction) // ← 이걸 누르면 상위에서 .editing(.update)로 전환
-                .font(.system(size: 15, weight: .medium))
-                .foregroundStyle(.blue)
+                .font(.headline2Medium)
+                .foregroundStyle(.accentBlueNormal)
                 .buttonStyle(.plain)
             }
             .padding(.horizontal, 16)
@@ -69,7 +71,7 @@ struct ListCell: View {
         case .update:
           VStack(spacing: .zero) {
             TextField("프로젝트 명", text: $editText)
-              .font(.system(size: 16, weight: .semibold))
+              .font(.headline2Medium)
               .textFieldStyle(.plain)
               .padding(.leading, 16)
               .padding(.top, 12)
@@ -85,24 +87,28 @@ struct ListCell: View {
               .onChange(of: editText) { _, newValue in
                 // 프로젝트 리스트 글자 제한
                 var updated = newValue
-
+                
                 if updated.first == " " {
                   updated = String(updated.drop(while: { $0 == " " })) // ❗️공백 금지
                 }
-
+                
                 if updated.count > 20 {
                   updated = String(updated.prefix(20)) // ❗️20글자 초과 금지
                 }
-
+                
+                if updated.count == 20 {
+                  self.showToastMessage = true
+                }
+                
                 if updated != editText {
                   editText = updated
                 }
-    
+                
                 onTextChanged(newValue)
               }
             
             Rectangle()
-              .fill(Color.blue)
+              .fill(Color.secondaryNormal)
               .frame(height: 1)
               .padding(.leading, 16)
               .padding(.bottom, 12)
@@ -118,7 +124,7 @@ struct ListCell: View {
     }
     .background(
       RoundedRectangle(cornerRadius: 5)
-        .fill(Color.gray)
+        .fill(Color.fillNormal)
     )
     .contentShape(Rectangle())
     //        .onTapGesture {
@@ -139,17 +145,25 @@ struct ListCell: View {
 }
 
 #Preview("수정 x") {
-  ListCell(
-    title: "수정",
-    deleteAction: {
-      
-    },
-    editAction: {
-      
-    },
-    rowTapAction: {
-      
-    }, editText: .constant("")
-  )
-  .padding(.horizontal, 16)
+  ZStack {
+    Color.backgroundNormal.ignoresSafeArea()
+    
+    ListCell(
+      title: "수정",
+      deleteAction: {
+        
+      },
+      editAction: {
+        
+      },
+      rowTapAction: {
+        
+      },
+      editText: .constant(""),
+      showToastMessage: .constant(false)
+    )
+    .padding(.horizontal, 16)
+  }
 }
+
+

@@ -18,6 +18,8 @@ struct TeamspaceListView: View {
   
   @State private var isLoading: Bool = false
   
+  @State private var presentingCreateTeamspaceSheet: Bool = false
+  
   // 프리뷰·테스트용 주입 이니셜라이저
   init(previewLoadTeamspaces: [Teamspace] = []) {
     _loadTeamspaces = State(initialValue: previewLoadTeamspaces)
@@ -25,7 +27,7 @@ struct TeamspaceListView: View {
   
   var body: some View {
     ZStack {
-      Color.white.ignoresSafeArea() // FIXME: - 컬러 수정
+      Color.backgroundNormal.ignoresSafeArea() // FIXME: - 컬러 수정
       List {
         ForEach(loadTeamspaces, id: \.teamspaceId) { teamspace in
           TeamspaceListItem(title: teamspace.teamspaceName)
@@ -35,20 +37,21 @@ struct TeamspaceListView: View {
                 router.pop()
               }
             )
-            .buttonStyle(.plain)
             .listRowSeparator(.hidden)
-            .listRowBackground(Color.white)
+            .listRowBackground(Color.backgroundNormal)
         }
-
-        TeamspaceListItem(title: "+ 팀 스페이스 만들기")
-          .simultaneousGesture(
-            TapGesture().onEnded {
-              router.push(to: .teamspace(.create))
-            }
-          )
-          .buttonStyle(.plain)
-          .listRowSeparator(.hidden)
-          .listRowBackground(Color.white)
+        
+        TeamspaceListItem(
+          title: "팀 스페이스 만들기",
+          isCreated: true
+        )
+        .simultaneousGesture(
+          TapGesture().onEnded {
+            self.presentingCreateTeamspaceSheet = true
+          }
+        )
+        .listRowSeparator(.hidden)
+        .listRowBackground(Color.backgroundNormal)
       }
       .listStyle(.plain)
       .scrollContentBackground(.hidden)
@@ -57,6 +60,22 @@ struct TeamspaceListView: View {
     .toolbar {
       ToolbarLeadingBackButton(icon: .chevron)
       ToolbarCenterTitle(text: "팀 스페이스")
+    }
+    .sheet(isPresented: $presentingCreateTeamspaceSheet) {
+      CreateTeamspaceView(onCreated: {
+        Task {
+          self.isLoading = true
+          defer { isLoading = false }
+          let newloaded = (try? await viewModel.loadTeamspacesForUser()) ?? []
+          if newloaded != self.loadTeamspaces {
+            let loaded: [Teamspace] = (try? await viewModel.loadTeamspacesForUser()) ?? []
+            self.loadTeamspaces = loaded
+          }
+        }
+      })
+      .presentationDragIndicator(.visible)
+      .presentationDetents([.fraction(0.9)])
+      .presentationCornerRadius(16)
     }
     .task {
       if ProcessInfo.isRunningInPreviews { return } // 프리뷰 전용

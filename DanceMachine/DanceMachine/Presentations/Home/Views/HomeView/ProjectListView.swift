@@ -36,7 +36,7 @@ struct ProjectListView<ExpandedContent: View>: View {
   let onTracksPrimaryUpdate: () -> Void
   let onTracksCancelSideEffects: () -> Void
   
-  
+  @Binding var showToastMessage: Bool
   
   var body: some View {
     VStack(alignment: .leading, spacing: 12) {
@@ -76,7 +76,8 @@ struct ProjectListView<ExpandedContent: View>: View {
             ListCell(
               title: project.projectName,
               projectRowState: perRowState(for: project.projectId),
-              deleteAction: { onDelete(project) },
+              deleteAction: { onDelete(project)
+              },
               editAction: {
                 editText         = project.projectName
                 editingProjectID = project.projectId
@@ -88,7 +89,8 @@ struct ProjectListView<ExpandedContent: View>: View {
                 set: { if editingProjectID == project.projectId { editText = $0 } }
               ),
               isExpanded: isExpanded(project),
-              canEdit: canEdit
+              canEdit: canEdit,
+              showToastMessage: $showToastMessage
             )
             .listRowSeparator(.hidden)
             
@@ -99,11 +101,11 @@ struct ProjectListView<ExpandedContent: View>: View {
             }
           }
           .animation(.easeInOut, value: isExpanded(project))
-          .listRowBackground(Color.white)
+          .listRowBackground(Color.backgroundNormal)
           .listRowSeparator(.hidden)
         }
         .listStyle(.plain)
-        .background(Color.white)
+        .background(Color.backgroundNormal)
       }
     }
   }
@@ -161,11 +163,11 @@ struct ProjectListView<ExpandedContent: View>: View {
       Spacer()
       Image(systemName: "archivebox.fill")
         .font(.system(size: 110))
-        .foregroundStyle(Color.black)
+        .foregroundStyle(Color.fillAssitive)
         .frame(maxWidth: .infinity)
       Text("프로젝트가 없습니다.")
-        .font(.system(size: 15, weight: .medium)) // FIXME: - 폰트 수정
-        .foregroundStyle(.gray) // FIXME: - 컬러 수정
+        .font(.headline2Medium) // FIXME: - 폰트 수정
+        .foregroundStyle(Color.labelAssitive) // FIXME: - 컬러 수정
       Spacer()
     }
     .frame(maxWidth: .infinity, alignment: .center)
@@ -224,7 +226,8 @@ private struct PreviewWrapper: View {
       rowState: $rowState,
       editingProjectID: $editingProjectID,
       editText: $editText,
-      onCommitEdit: { _, _ in /* no-op for preview */ },
+      onCommitEdit: { _, _ in /* no-op for preview */
+      },
       onDelete: { _ in /* no-op for preview */ },
       onTap: { project in
         // 토글 + 헤더 타이틀 동기화
@@ -256,7 +259,9 @@ private struct PreviewWrapper: View {
       tracksRowState: $tracksRowState,
       isTracksPrimaryDisabled: false,
       onTracksPrimaryUpdate: {},
-      onTracksCancelSideEffects: {}
+      onTracksCancelSideEffects: {
+      },
+      showToastMessage: .constant(false)
     )
     .padding()
   }

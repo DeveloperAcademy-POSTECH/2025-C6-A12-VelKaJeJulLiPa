@@ -26,32 +26,36 @@ struct HomeView: View {
   @State private var showCreateTracksView = false
   @State private var isLoading = false
   
-  @State private var showCreateProject: Bool = false
+  @State private var presentingCreateTeamspaceSheet: Bool = false
+  @State private var presentingCreateProjectSheet: Bool = false
+  
+  @State private var showToastMessage: Bool = false
   
   var body: some View {
     ZStack {
-      Color.white.ignoresSafeArea() // FIXME: - 컬러 수정
+      Color.backgroundNormal.ignoresSafeArea() // FIXME: - 컬러 수정
       VStack {
         TeamspaceTitleView(
           viewModel: viewModel,
-          teamspaceState: viewModel.tsBinding(\.state)
+          teamspaceState: viewModel.tsBinding(\.state),
+          presentingCreateTeamspaceSheet: $presentingCreateTeamspaceSheet // 팀 스페이스 생성 시트 제어
         )
         .padding(.horizontal, 16)
         
+        // 팀 스페이스 비어져있을 시,
         if viewModel.userTeamspaces == [] {
           VStack {
             Spacer()
             Image(systemName: "scribble")
-              .font(.system(size: 110)) // FIXME: - 컬러 수정
-              .foregroundStyle(Color.black) // FIXME: - 크기 수정
+              .font(.system(size: 110))
+              .foregroundStyle(Color.fillAlternative)
               .frame(maxWidth: .infinity)
             Spacer().frame(height: 10)
             Text("팀 스페이스가 없습니다.")
-              .font(Font.system(size: 15, weight: .medium))
-              .foregroundStyle(Color.black)
+              .font(.headline2Medium)
+              .foregroundStyle(Color.labelAssitive)
             Spacer()
           }
-          
         } else {
           ProjectListView(
             viewModel: viewModel,
@@ -114,31 +118,28 @@ struct HomeView: View {
                 viewModel.tracks.editText = ""
               }
               viewModel.tracks.editingID = nil
-            }
+            }, showToastMessage: $showToastMessage
           )
           .padding(.horizontal, 16)
         }
       }
-    }
-    
-    // TODO: Kadan's Edit
-    .sheet(isPresented: $showCreateProject, content: {
-      CreateProjectView()
-    })
-    .onReceive(NotificationCenter.default.publisher(for: .showCreateProject, object: nil), perform: { _ in
-      self.showCreateProject = true
-    })
-    .onReceive(NotificationCenter.default.publisher(for: .showCreateTrack, object: nil), perform: { _ in
-      self.showCreateTracksView = true
-    })
-    .sheet(item: $presentingRemovalSheetProject) { project in
-      BottomConfirmSheetView(
-        titleText: "\(project.projectName)\n프로젝트의 내용이 모두 삭제됩니다.\n 계속하시겠어요?",
-        primaryText: "모두 삭제"
+      .toast(
+          isPresented: $showToastMessage,
+          duration: 2,
+          position: .bottom,
+          bottomPadding: 16   // 하단에서 얼마나 띄울지(버튼 위치)
       ) {
-        Task {
-          try await viewModel.removeProject(projectId: project.projectId.uuidString)
-          _ = await viewModel.fetchCurrentTeamspaceProject()
+          ToastView(text: "프로젝트 이름은 20자 이내로 입력해주세요.")
+      }
+      .sheet(item: $presentingRemovalSheetProject) { project in
+        BottomConfirmSheetView(
+          titleText: "\(project.projectName)\n프로젝트의 내용이 모두 삭제됩니다.\n 계속하시겠어요?",
+          primaryText: "모두 삭제"
+        ) {
+          Task {
+            try await viewModel.removeProject(projectId: project.projectId.uuidString)
+            _ = await viewModel.fetchCurrentTeamspaceProject()
+          }
         }
       }
     }
@@ -154,22 +155,52 @@ struct HomeView: View {
           }
         }
       }
-    }
-    .sheet(isPresented: $showCreateTracksView) {
-      // 기존 CreateTracksView API 그대로 쓴다고 가정
-      CreateTracksView(
-        choiceSelectedProject: Binding(
-          get: { viewModel.selectedProject },
-          set: { _ in } // 외부에서 바꾸지 않음(읽기 전용 바인딩)
-        ),
-        onCreated: {
-          if let pid = viewModel.project.expandedID {
-            viewModel.loadTracks(for: pid) // 생성 후 갱신
+      // 팀 스페이스 생성 시트
+      .sheet(isPresented: $presentingCreateTeamspaceSheet) {
+        CreateTeamspaceView(onCreated: {
+          Task {
+            self.isLoading = true
+            defer { isLoading = false }
+            await viewModel.ensureTeamspaceInitialized()
+            await viewModel.fetchCurrentTeamspaceProject()
           }
-        }
-      )
-      .presentationDetents([.fraction(0.9)])
-      .presentationCornerRadius(16)
+        })
+          .presentationDragIndicator(.visible)
+          .presentationDetents([.fraction(0.9)])
+          .presentationCornerRadius(16)
+      }
+      // 프로젝트 생성 시트
+      .sheet(isPresented: $presentingCreateProjectSheet) {
+        CreateProjectView(onCreated: {
+          Task {
+            self.isLoading = true
+            defer { isLoading = false }
+            let newloaded = await viewModel.fetchCurrentTeamspaceProject()
+            self.viewModel.project.projects = newloaded
+          }
+        })
+        .presentationDragIndicator(.visible)
+        .presentationDetents([.fraction(0.9)])
+        .presentationCornerRadius(16)
+      }
+      // 곡 생성 시트
+      .sheet(isPresented: $showCreateTracksView) {
+        // 기존 CreateTracksView API 그대로 쓴다고 가정
+        CreateTracksView(
+          choiceSelectedProject: Binding(
+            get: { viewModel.selectedProject },
+            set: { _ in } // 외부에서 바꾸지 않음(읽기 전용 바인딩)
+          ),
+          onCreated: { // 곡 생성 됐을 때, 로직
+            if let pid = viewModel.project.expandedID {
+              viewModel.loadTracks(for: pid) // 생성 후 갱신
+            }
+          }
+        )
+        .presentationDragIndicator(.visible)
+        .presentationDetents([.fraction(0.9)])
+        .presentationCornerRadius(16)
+      }
     }
     .overlay { if isLoading { LoadingView() } }
     .overlay(alignment: .bottomTrailing) {
@@ -177,7 +208,7 @@ struct HomeView: View {
         FloatingActionButton(
           mode: mode,
           isProjectListEmpty: viewModel.isProjectListEmpty,
-          onAddProject: { router.push(to: .project(.create)) },
+          onAddProject: { self.presentingCreateProjectSheet = true },
           onAddTrack: { showCreateTracksView = true }
         )
       }
