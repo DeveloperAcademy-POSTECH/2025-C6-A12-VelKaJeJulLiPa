@@ -7,11 +7,12 @@
 
 import Foundation
 
-protocol NavigationRoutable {
+protocol NavigationRoutable<Route>: ObservableObject {
+    associatedtype Route: Hashable
 
-    var destination: [AppRoute] { get set }
+    var destination: [Route] { get set }
     
-    func push(to view: AppRoute)
+    func push(to view: Route)
     func pop()
     func popToRootView()
 }

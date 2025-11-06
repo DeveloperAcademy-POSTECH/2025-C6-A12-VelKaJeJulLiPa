@@ -9,7 +9,7 @@ import SwiftUI
 
 struct TeamspaceTitleView: View {
   
-  @EnvironmentObject private var router: NavigationRouter
+  @EnvironmentObject private var router: MainRouter
   @Bindable var viewModel: HomeViewModel
   
   @Binding var teamspaceState: TeamspaceState
@@ -88,7 +88,7 @@ struct TeamspaceTitleView: View {
       teamspaceState: .constant(.empty),
       presentingCreateTeamspaceSheet: .constant(false)
     )
-    .environmentObject(NavigationRouter())
+    .environmentObject(MainRouter())
   }
 }
 
@@ -110,7 +110,7 @@ private struct PreviewTeamspaceTitleNonEmpty: View {
         teamspaceState: $state,
         presentingCreateTeamspaceSheet: .constant(false)
       )
-      .environmentObject(NavigationRouter())
+      .environmentObject(MainRouter())
       .task {
         let mock = Teamspace(
           teamspaceId: UUID(),

@@ -210,7 +210,7 @@ private struct PreviewTracksInlineViewDefault: View {
       }
     )
     .padding()
-    .environmentObject(NavigationRouter())
+    .environmentObject(MainRouter())
   }
 }
 
@@ -263,7 +263,7 @@ private struct PreviewTracksInlineViewLoadingError: View {
       )
     }
     .padding()
-    .environmentObject(NavigationRouter())
+    .environmentObject(MainRouter())
   }
 }
 

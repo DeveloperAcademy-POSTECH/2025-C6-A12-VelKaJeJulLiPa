@@ -9,7 +9,7 @@ import SwiftUI
 
 struct TeamspaceListView: View {
   
-  @EnvironmentObject private var router: NavigationRouter
+  @EnvironmentObject private var router: MainRouter
   
   @State private var viewModel: TeamspaceListViewModel = .init()
   
@@ -91,7 +91,7 @@ struct TeamspaceListView: View {
 //#Preview {
 //  NavigationStack {
 //    TeamspaceListView(previewLoadTeamspaces: Teamspace.TeamspaceMockData)
-//      .environmentObject(NavigationRouter())
+//      .environmentObject(MainRouter())
 //  }
 //}
 

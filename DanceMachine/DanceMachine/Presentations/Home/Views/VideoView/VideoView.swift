@@ -612,5 +612,5 @@ struct VideoView: View {
       videoURL: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
     )
   }
-  .environmentObject(NavigationRouter())
+  .environmentObject(MainRouter())
 }

@@ -9,7 +9,7 @@ import SwiftUI
 
 struct RootView: View {
 
-  @EnvironmentObject private var router: NavigationRouter
+  @EnvironmentObject private var router: MainRouter
   @Environment(TabRouter.self) private var tabRouter
   @State private var isProjectExpanded = false
 
@@ -50,8 +50,8 @@ struct RootView: View {
       Tab(value: .home) {
         NavigationStack(path: $router.destination) {
           tabView(tab: .home)
-            .navigationDestination(for: AppRoute.self) { destination in
-              NavigationRoutingView(destination: destination)
+            .navigationDestination(for: MainRoute.self) { destination in
+              MainNavigationRoutingView(destination: destination)
                 .environmentObject(router)
             }
         }
@@ -62,8 +62,8 @@ struct RootView: View {
       Tab(value: .inbox) {
         NavigationStack(path: $router.destination) {
           tabView(tab: .inbox)
-            .navigationDestination(for: AppRoute.self) { destination in
-              NavigationRoutingView(destination: destination)
+            .navigationDestination(for: MainRoute.self) { destination in
+              MainNavigationRoutingView(destination: destination)
                 .environmentObject(router)
             }
         }
@@ -74,8 +74,8 @@ struct RootView: View {
       Tab(value: .myPage) {
         NavigationStack(path: $router.destination) {
           tabView(tab: .myPage)
-            .navigationDestination(for: AppRoute.self) { destination in
-              NavigationRoutingView(destination: destination)
+            .navigationDestination(for: MainRoute.self) { destination in
+              MainNavigationRoutingView(destination: destination)
                 .environmentObject(router)
             }
         }
@@ -122,15 +122,15 @@ struct RootView: View {
     Group {
       switch tab {
       case .home:
-        NavigationRoutingView(
+        MainNavigationRoutingView(
           destination: .home
         )
       case .inbox:
-        NavigationRoutingView(
+        MainNavigationRoutingView(
           destination: .inbox(.list)
         )
       case .myPage:
-        NavigationRoutingView(
+        MainNavigationRoutingView(
           destination: .mypage(.profile)
         )
       case .custom:
@@ -144,6 +144,6 @@ struct RootView: View {
 #Preview {
   NavigationStack {
     RootView()
-      .environmentObject(NavigationRouter())
+      .environmentObject(MainRouter())
   }
 }

@@ -15,16 +15,23 @@ struct LoginView: View {
     
     var body: some View {
         ZStack {
-            Color.white.ignoresSafeArea() // FIXME: - 컬러 수정
+            Color.backgroundNormal.ignoresSafeArea()
             
             VStack(spacing: 24) {
                 Spacer()
-                
-                Text("Welcome to DirAct")
-                    .font(.largeTitle.bold())
-                    .foregroundStyle(Color.black) // FIXME: - 컬러 수정
-                    .multilineTextAlignment(.center)
-                
+              
+              Image(.logo) // FIXME: - 이미지 수정 (임시)
+                  .resizable()
+                  .scaledToFit()
+                  .clipShape(RoundedRectangle(cornerRadius: 15))
+                  .padding(.horizontal, 26) // FIXME: - 공백
+            
+              Text("DirAct") // FIXME: - 글자 (임시)
+                .font(.headline2Medium)
+                .foregroundStyle(.white)
+
+              Spacer()
+              
                 Button {
                     Task {
                         await viewModel.signInApple()
@@ -32,12 +39,12 @@ struct LoginView: View {
                 } label: {
                     SignInWithAppleButtonViewRepresentable(
                         type: .default,
-                        style: .black
+                        style: .white
                     )
                     .allowsHitTesting(false)
                 }
-                .frame(height: 50) //FIXME: 버튼 크기
-                .padding(.horizontal, 32) //FIXME: 버튼 여백
+                .frame(height: 54)
+                .padding(.horizontal, 26) // FIXME: - 공백
                 
                 Spacer()
                     .overlay {
