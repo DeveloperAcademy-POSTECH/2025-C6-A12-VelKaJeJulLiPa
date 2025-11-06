@@ -20,6 +20,11 @@ extension Foundation.Notification.Name {
   static let projectDidExpand = Foundation.Notification.Name("projectDidExpand")
   // rootView에 탭바에서 관리하는 액션 버튼(리스트가 닫혔는지)
   static let projectDidCollapse = Foundation.Notification.Name("projectDidCollapse")
+  
+  static let showEditToast = Foundation.Notification.Name("showEditToast")
+  static let showDeleteToast = Foundation.Notification.Name("showDeleteToast")
+  static let showEditWarningToast = Foundation.Notification.Name("showEditWarningToast")
+  static let showEditVideoTitleToast = Foundation.Notification.Name("showEditVideoTitleToast")
 }
 
 enum NotificationEvent {
@@ -30,6 +35,10 @@ enum NotificationEvent {
   case showCreateTrack
   case projectDidExpand
   case projectDidCollapse
+  case showEditToast
+  case showDeleteToast
+  case showEditWarningToast
+  case showEditVideoTitleToast
   
   var name: Foundation.Notification.Name {
     switch self {
@@ -40,6 +49,10 @@ enum NotificationEvent {
     case .showCreateTrack: .showCreateTrack
     case .projectDidExpand: .projectDidExpand
     case .projectDidCollapse: .projectDidCollapse
+    case .showEditToast: .showEditToast
+    case .showDeleteToast: .showDeleteToast
+    case .showEditWarningToast: .showEditWarningToast
+    case .showEditVideoTitleToast: .showEditVideoTitleToast
     }
   }
 }
