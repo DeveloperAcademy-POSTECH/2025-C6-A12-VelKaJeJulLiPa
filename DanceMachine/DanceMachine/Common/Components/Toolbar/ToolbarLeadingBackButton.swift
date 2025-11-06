@@ -13,11 +13,12 @@ struct ToolbarLeadingBackButton: ToolbarContent {
   @Environment(\.dismiss) private var dismiss
   
   var icon: ToolbarLeadingIcon
+  var onBackTapped: (() -> Void)?
   
   var body: some ToolbarContent {
     ToolbarItem(placement: .topBarLeading) {
       Button {
-        dismiss()
+        onBackTapped?() ?? dismiss()
       } label: {
         Image(systemName: icon.toolIcon)
           .foregroundStyle(.labelNormal)
