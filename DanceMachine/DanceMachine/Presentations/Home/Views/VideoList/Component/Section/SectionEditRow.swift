@@ -14,14 +14,16 @@ struct SectionEditRow: View {
   let isEditing: Bool
   let onEditStart: () -> Void
   let sheetAction: () -> Void
+  let onDeleteIfEmpty: () -> Void
   
   @State private var showDeleteModal: Bool = false
   @Binding var editText: String
+  @Binding var showToast: Bool
   @FocusState private var isFocused: Bool
   
   var body: some View {
-    RoundedRectangle(cornerRadius: 5)
-      .fill(Color.gray.opacity(0.6)) // FIXME: 컬러 수정
+    RoundedRectangle(cornerRadius: 10)
+      .fill(.fillNormal)
       .frame(maxWidth: .infinity)
       .frame(height: 43)
       .overlay {
@@ -32,44 +34,75 @@ struct SectionEditRow: View {
   private var sectionRow: some View {
     HStack {
       if isEditing {
-        TextField("섹션 이름", text: $editText)
+        TextField("파트 이름", text: $editText)
           .textFieldStyle(.plain)
-          .font(.system(size: 16)) // FIXME: 폰트 수정
-          .foregroundStyle(.black) // FIXME: 컬러 수정
+          .font(.headline2Medium)
+          .foregroundStyle(.labelStrong)
           .focused($isFocused)
+          .onChange(of: editText) { oldValue, newValue in
+            var updated = newValue
+            
+            // Prevent leading space as the first character
+            if updated.first == " " {
+              updated = String(updated.drop(while: { $0 == " " })) // ❗️공백 금지
+            }
+            
+            // Enforce 10-character limit
+            if updated.count > 10 {
+              NotificationCenter.post(.showEditWarningToast, object: nil)
+              updated = String(updated.prefix(10)) // ❗️10글자 초과 금지
+            }
+            
+            if updated != editText {
+              editText = updated
+            }
+          }
           .overlay {
             Rectangle()
               .frame(height: 2)
-              .foregroundStyle(Color.blue) // FIXME: 컬러 수정
+              .foregroundStyle(
+                editText.count > 9 ? .accentRedNormal : .secondaryAssitive
+              )
               .padding(.top, 30)
+              .overlay(alignment: .trailing) {
+                if editText.count > 9 {
+                  Text("10/10")
+                    .font(.caption1Medium)
+                    .foregroundStyle(.accentRedNormal)
+                }
+              }
           }
           .onAppear {
             isFocused = true
           }
-        Button {
-          self.editText = ""
+        Button { // xmark: 텍스트 비어있을때는 섹션 제거, 아니면 텍스트 비우기
+          if editText == "" {
+            onDeleteIfEmpty()
+          } else {
+            self.editText = ""
+          }
         } label: {
-          Image(systemName: "xmark.circle.fill") // FIXME: 아이콘 수정
-            .foregroundStyle(.gray)
+          Image(systemName: "xmark.circle.fill")
+            .foregroundStyle(.labelNormal)
         }
       } else { // 일반 모드
         Text(section.sectionTitle)
-          .font(.system(size: 16)) // FIXME: 폰트 수정
-          .foregroundStyle(.black) // FIXME: 컬러 수정
+          .font(.headline2Medium)
+          .foregroundStyle(.labelStrong)
         Spacer()
         Button {
           onEditStart()
         } label: {
           Text("수정")
-            .font(Font.system(size: 14, weight: .medium)) // FIXME: 폰트 수정
-            .foregroundStyle(Color.blue) // FIXME: 컬러 수정
+            .font(.headline2Medium)
+            .foregroundStyle(.accentBlueNormal)
         }
         Button {
           self.showDeleteModal = true
         } label: {
           Text("삭제")
-            .font(Font.system(size: 14, weight: .medium)) // FIXME: 폰트 수정
-            .foregroundStyle(Color.red) // FIXME: 컬러 수정
+            .font(.headline2Medium)
+            .foregroundStyle(.accentRedNormal)
         }
       }
     }
@@ -90,6 +123,7 @@ struct SectionEditRow: View {
     isEditing: true,
     onEditStart: {},
     sheetAction: {},
-    editText: .constant("dd")
+    onDeleteIfEmpty: {},
+    editText: .constant("dd"), showToast: .constant(true)
   )
 }
