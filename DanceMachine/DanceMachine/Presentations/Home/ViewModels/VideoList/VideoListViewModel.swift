@@ -351,6 +351,45 @@ extension VideoListViewModel {
     }
   }
   
+  // 영상 제목 수정 메서드 Firestore(Video)
+  func updateVideoTitle(video: Video, newTitle: String) async {
+    await MainActor.run {
+      self.isLoading = true
+      self.errorMsg = nil
+    }
+
+    do {
+      let videoId = video.videoId.uuidString
+
+      // Firestore에 비디오 제목 업데이트
+      try await store.updateFields(
+        collection: .video,
+        documentId: videoId,
+        asDictionary: ["video_title": newTitle]
+      )
+      print("\(videoId)의 영상 제목 \(newTitle)로 변경 완료")
+      
+      // TODO: 캐시도 업데이트 해야함. #37 브랜치 머지 된 이후
+
+      // 로컬 UI 업데이트
+      await MainActor.run {
+        if let index = self.videos.firstIndex(where: { $0.videoId == video.videoId }) {
+          var updatedVideo = self.videos[index]
+          updatedVideo.videoTitle = newTitle
+          self.videos[index] = updatedVideo
+        }
+        self.isLoading = false
+      }
+      print("비디오 제목 업데이트 성공: \(newTitle)")
+    } catch {
+      await MainActor.run {
+        self.isLoading = false
+        self.errorMsg = "영상 제목 수정에 실패했습니다. 다시 시도해 주세요."
+      }
+      print("영상 제목 수정 실패: \(error)")
+    }
+  }
+
   // 영상 삭제 메서드 Storage + Firestore(Video + Track)
   func deleteVideo(video: Video, tracksId: String) async {
     let startTime = Date()
