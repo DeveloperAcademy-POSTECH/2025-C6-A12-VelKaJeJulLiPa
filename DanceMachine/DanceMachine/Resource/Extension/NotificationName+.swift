@@ -8,27 +8,38 @@
 import Foundation
 
 extension Foundation.Notification.Name {
-  static let sectionDidUpdate = Foundation.Notification.Name("sectionDidUpdate")
-  static let showVideoPicker = Foundation.Notification.Name("showVideoPicker")
+  // 비디오 업로드 후 자동 서버 호출
   static let videoUpload = Foundation.Notification.Name("videoUpload")
   static let didReceiveDeeplink = Foundation.Notification.Name("didReceiveDeeplink")
   static let needToMarkAsRead = Foundation.Notification.Name("needToMarkAsRead")
+  // rootView에 탭바에서 관리하는 액션 버튼(프로젝트 생성 노티)
+  static let showCreateProject = Foundation.Notification.Name("showCreateProject")
+  // rootView에 탭바에서 관리하는 액션 버튼(곡 생성 노티)
+  static let showCreateTrack = Foundation.Notification.Name("showCreateTrack")
+  // rootView에 탭바에서 관리하는 액션 버튼(리스트가 열렸는지)
+  static let projectDidExpand = Foundation.Notification.Name("projectDidExpand")
+  // rootView에 탭바에서 관리하는 액션 버튼(리스트가 닫혔는지)
+  static let projectDidCollapse = Foundation.Notification.Name("projectDidCollapse")
 }
 
 enum NotificationEvent {
-  case sectionDidUpdate
-  case showVideoPicker
   case videoUpload
   case didReceiveDeeplink
   case needToMarkAsRead
+  case showCreateProject
+  case showCreateTrack
+  case projectDidExpand
+  case projectDidCollapse
   
   var name: Foundation.Notification.Name {
     switch self {
-    case .sectionDidUpdate: .sectionDidUpdate
-    case .showVideoPicker: .showVideoPicker
     case .videoUpload: .videoUpload
     case .didReceiveDeeplink: .didReceiveDeeplink
     case .needToMarkAsRead: .needToMarkAsRead
+    case .showCreateProject: .showCreateProject
+    case .showCreateTrack: .showCreateTrack
+    case .projectDidExpand: .projectDidExpand
+    case .projectDidCollapse: .projectDidCollapse
     }
   }
 }

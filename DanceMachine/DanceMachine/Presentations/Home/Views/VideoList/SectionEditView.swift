@@ -54,7 +54,6 @@ struct SectionEditView: View {
   private var customHeader: some View { // FIXME: 컬러 폰트 수정
     HStack(alignment: .top, spacing: 16) {
       Button {
-        NotificationCenter.post(.sectionDidUpdate)
         router.pop()
       } label: {
         Image(systemName: "chevron.left")
@@ -98,6 +97,7 @@ struct SectionEditView: View {
           sheetAction: {
             Task {
               await vm.deleteSection(tracksId: tracksId, section: section)
+              SectionUpdateManager.shared.onSectionDeleted?(section.sectionId)
             }
           },
           editText: $vm.editText
@@ -131,7 +131,16 @@ struct SectionEditView: View {
         if !vm.editText.isEmpty && vm.editText != "일반" {
           if let sectionId = vm.editingSectionid,
              let section = vm.sections.first(where: { $0.sectionId == sectionId }) {
-            Task { await vm.updateSection(tracksId: tracksId, section: section) }
+            Task {
+              await vm.updateSection(tracksId: tracksId, section: section)
+              if vm.isNewSection {
+                // 새 섹션 추가
+                SectionUpdateManager.shared.onSectionAdded?(section)
+              } else {
+                // 기존 섹션 수정
+                SectionUpdateManager.shared.onSectionUpdated?(section.sectionId, vm.editText)
+              }
+            }
           }
         }
       }

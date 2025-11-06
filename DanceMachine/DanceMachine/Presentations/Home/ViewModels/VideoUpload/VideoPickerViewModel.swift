@@ -14,6 +14,8 @@ final class VideoPickerViewModel {
   
   private let store = FirestoreManager.shared
   private let storage = FireStorageManager.shared
+  private let progressManager = VideoProgressManager.shared
+  private let dataCacheManager = VideoCacheManager.shared
   
   var videos: [PHAsset] = [] // 이미지 및 비디오, 라이브포토를 나타내는 모델
   var selectedAsset: PHAsset? = nil // 선택된 에셋
@@ -27,6 +29,9 @@ final class VideoPickerViewModel {
   var errorMessage: String? = nil
   var showSuccessAlert: Bool = false
   var uploadProgress: Double = 0.0
+  
+  // 현재 갤러리 접근 권한 상태
+  var photoLibraryStatus: PHAuthorizationStatus = .notDetermined
   
   // MARK: 동영상 미리보기 로드
   func loadVideo() {
@@ -59,7 +64,11 @@ final class VideoPickerViewModel {
 extension VideoPickerViewModel {
   func exportVideo(tracksId: String, sectionId: String) {
     self.isLoading = true
-    self.cleanupPlayer() // 재생중에 업로드 버튼 누를시 계속 재생되는 현상 
+    self.cleanupPlayer() // 재생중에 업로드 버튼 누를시 계속 재생되는 현상
+    
+    Task { @MainActor in
+      self.progressManager.startUpload()
+    }
     
     // PHAsset 에서 비디오 파일 추출
     let o = PHVideoRequestOptions()
@@ -78,7 +87,7 @@ extension VideoPickerViewModel {
           do {
             let duration = try await self.getDuration(from: urlAsset)
             
-            try await self.generateVideo(
+            let (video, track) = try await self.generateVideo(
               from: urlAsset,
               duration: duration,
               tracksId: tracksId,
@@ -89,9 +98,10 @@ extension VideoPickerViewModel {
               self.videoDuration = duration
               self.isLoading = false
               self.showSuccessAlert = true
+              self.progressManager.finishUpload(video: video, track: track)
               print("비디오 업로드 성공")
               
-              NotificationCenter.post(.videoUpload)
+//              NotificationCenter.post(.videoUpload)
             }
             
           } catch let error as VideoError {
@@ -116,48 +126,70 @@ extension VideoPickerViewModel {
     duration: Double,
     tracksId: String,
     sectionId: String
-  ) async throws {
-    // 1. 비디오 데이터로 변환
+  ) async throws -> (Video, Track) {
     let videoData = try Data(contentsOf: asset.url)
-    
+
     let videoId = UUID().uuidString
-//    let sectionId = UUID() // TODO: 테스트 후 삭제
-    // 2. 썸네일 데이터로 변환
-    let t = try await self.generateThumbnail(from: asset)
-    guard let thumbData = t?.jpegData(compressionQuality: 0.8) else {
-      throw VideoError.thumbnailFailed }
-    
+    let trackId = UUID().uuidString
+
+    // 썸네일 생성
+    let thumbnailImage = try await self.generateThumbnail(from: asset)
+    guard let thumbData = thumbnailImage?.jpegData(compressionQuality: 0.8) else {
+      throw VideoError.thumbnailFailed
+    }
+
+    // 스토리지 업로드
+    let (videoURL, thumbnailURL) = try await uploadStorage(
+      videoData: videoData,
+      thumbData: thumbData,
+      videoId: videoId,
+      duration: duration
+    )
+
+    // Video 객체 생성
+    let video = Video(
+      videoId: UUID(uuidString: videoId) ?? UUID(),
+      videoTitle: videoTitle,
+      videoDuration: duration,
+      videoURL: videoURL,
+      thumbnailURL: thumbnailURL
+    )
+
+    // Track 객체 생성
+    let track = Track(
+      trackId: trackId,
+      videoId: videoId,
+      sectionId: sectionId
+    )
+
+    // Firestore에 저장
     try await withThrowingTaskGroup(of: Void.self) { group in
       group.addTask {
-        do {
-          try await self.uploadStorage(
-            videoData: videoData,
-            thumbData: thumbData,
-            videoId: videoId,
-            duration: duration
-          )
-          print("스토리지 업로드 성공")
-        } catch {
-          print("스토리지 업로드 실패: \(error)")
-          throw VideoError.uploadFailed
-        }
+        try await self.store.create(video)
+        print("Video 문서 생성")
       }
       group.addTask {
-        do {
-          try await self.createTrack(
-            tracksId: tracksId,
-            sectionId: sectionId,
-            videoId: videoId
-          )
-          print("section -> track 컬렉션 생성 완료")
-        } catch {
-          print("section/track 생성 실패: \(error)")
-          throw VideoError.createSectionFailed
-        }
+        try await self.store.createToSubSubcollection(
+          track,
+          in: .tracks,
+          grandParentId: tracksId,
+          withIn: .section,
+          parentId: sectionId,
+          subCollection: .track,
+          strategy: .create
+        )
+        print("Track 문서 생성")
       }
       try await group.waitForAll()
     }
-    
+    // 썸네일 캐싱
+    if let thumb = thumbnailImage {
+      await dataCacheManager.cacheThumbnailForImage(
+        thumb,
+        videoId: videoId
+      )
+    }
+    return (video, track)
   }
   private func createTrack(
     tracksId: String,
@@ -219,17 +251,19 @@ extension VideoPickerViewModel {
     thumbData: Data,
     videoId: String,
     duration: Double
-  ) async throws{
-    
+  ) async throws -> (videoURL: String, thumbnailURL: String) {
+
     var videoProgress: Double = 0
     var thumbProgress: Double = 0
-    
+
     func updateTotalProgress() {
       Task { @MainActor in
-        self.uploadProgress = (videoProgress * 0.8) + (thumbProgress * 0.2)
+        let totalProgress = (videoProgress * 0.8) + (thumbProgress * 0.2)
+        progressManager.uploadProgress = totalProgress
+        progressManager.updateProgress(totalProgress)
       }
     }
-    
+
     do {
       async let v = storage.uploadStorage(
         data: videoData,
@@ -249,21 +283,16 @@ extension VideoPickerViewModel {
         },
         timeout: 30.0
       )
-      
+
       let (video, thumbnail) = try await (v, t)
-      
+
       async let videoURL = self.getURL(url: video)
       async let thumbURL = self.getURL(url: thumbnail)
-      
+
       let (vU, thumbU) = try await (videoURL, thumbURL)
-      
-      _ = try await self.createVideo(
-        videoId: videoId,
-        duration: duration,
-        downloadURL: vU,
-        thumbnailURL: thumbU
-      )
-      
+
+      return (vU, thumbU)
+
     } catch let error as VideoError {
       throw error
     } catch {
@@ -302,27 +331,31 @@ extension VideoPickerViewModel {
 // MARK: - 권한 설정 관련
 extension VideoPickerViewModel {
   func requestPermissionAndFetch() async {
-#if DEBUG
-    if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
-      Task { @MainActor in
-        self.videos = []
-      }
+    if ProcessInfo.isRunningInPreviews { return } // 프리뷰 전용
+    
+    let currentStatus = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+    
+    await MainActor.run {
+      self.photoLibraryStatus = currentStatus
+    }
+    
+    if currentStatus == .authorized || currentStatus == .limited {
+      self.fetchVideos()
       return
     }
-#endif
+    
     PHPhotoLibrary.requestAuthorization(for: .readWrite) {
       status in
+      Task { @MainActor in
+        self.photoLibraryStatus = status
+      }
       switch status {
-      case .authorized:
+      case .authorized, .limited:
         self.fetchVideos()
-      case .denied, .restricted:
-        print("사진 라이브러리 접근 거부 또는 제한") // TODO: 처리 필요
-      case .notDetermined:
-        print("사용자가 아직 선택하지 않음") // TODO: 처리 필요
-      case .limited:
-        print("권한 제한") // TODO: 처리 필요
+      case .denied, .restricted, .notDetermined:
+        print("사진 라이브러리 접근 거부 또는 제한")
       @unknown default:
-        fatalError("알 수 없는 권한 상태") // TODO: 처리 필요
+        print("알 수 없는 권한 상태")
       }
     }
   }
@@ -350,6 +383,16 @@ extension VideoPickerViewModel {
     
     Task { @MainActor in
       self.videos = fetchedVideos
+    }
+  }
+  
+  func openSettings() {
+    guard let settingsURL = URL(string: UIApplication.openSettingsURLString) else {
+      return
+    }
+    
+    if UIApplication.shared.canOpenURL(settingsURL) {
+      UIApplication.shared.open(settingsURL)
     }
   }
 }

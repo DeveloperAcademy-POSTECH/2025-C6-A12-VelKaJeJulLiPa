@@ -11,7 +11,7 @@ import FirebaseFirestore
 nonisolated
 struct Video: Codable {
     let videoId: UUID
-    let videoTitle: String
+    var videoTitle: String
     let videoDuration: Double
     let videoURL: String
     let thumbnailURL: String
