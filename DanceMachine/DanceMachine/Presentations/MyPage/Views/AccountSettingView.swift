@@ -8,76 +8,70 @@
 import SwiftUI
 
 struct AccountSettingView: View {
-    
-    @EnvironmentObject private var router: NavigationRouter
-    
-    @State private var viewModel = AccountSettingViewModel()
-    
-    @State private var isPresentingSignOutSheet: Bool = false     // 로그아웃 시트 제어
-    @State private var isPresentingDeleteUserSheet: Bool = false  // 회원탈퇴 시트 제어
-    
-    
-    var body: some View {
-        ZStack {
-            Color.white.ignoresSafeArea() // FIXME: - 컬러 수정
-                
-            VStack {
-                MyPageInfoRow(
-                    title: "ID",
-                    value: viewModel.myId
-                )
-                
-                Spacer()
-                
-                ActionButton(
-                    title: "로그아웃",
-                    color: Color.orange, // FIXME: - 컬러 수정
-                    height: 47,
-                    action: { isPresentingSignOutSheet = true }
-                )
-                .padding()
-                
-                Button {
-                    isPresentingDeleteUserSheet = true
-                } label: {
-                    Text("회원탈퇴")
-                        .foregroundStyle(.red) // FIXME: - 컬러 수정
-                }
-            }
-        }
-        .sheet(isPresented: $isPresentingSignOutSheet) {
-            BottomConfirmSheetView(
-                titleText: "로그아웃하시겠어요?",
-                primaryText: "로그아웃") {
-                    Task {
-                        // TODO: - 내비게이션 라우팅 처리 수정 (로그아웃하면서 HomeView에서 네크워크 처리해서 버그 발생)
-                        try await viewModel.signOut()
-                    }
-                }
-        }
-        .sheet(isPresented: $isPresentingDeleteUserSheet) {
-            BottomConfirmSheetView(
-                titleText: "탈퇴하시겠어요?\n모든 정보가 삭제됩니다.",
-                primaryText: "탈퇴") {
-                    Task {
-                        // TODO: - 내비게이션 라우팅 처리 수정 (로그아웃하면서 HomeView에서 네크워크 처리해서 버그 발생)
-                        try await viewModel.deleteUserAccount()
-                    }
-                }
-        }
-        .toolbar {
-          ToolbarLeadingBackButton(icon: .chevron)
-            ToolbarCenterTitle(text: "계정 설정")
-        }
+  
+  @EnvironmentObject private var router: NavigationRouter
+  
+  @State private var viewModel = AccountSettingViewModel()
+  
+  @State private var isSignOutAlertPresented: Bool = false
+  @State private var isDeleteUserAlertPresented: Bool = false
+  
+  
+  var body: some View {
+    ZStack {
+      Color.backgroundNormal.ignoresSafeArea()
+      
+      VStack {
+        MyPageInfoRow(title: "ID", value: viewModel.myId)
         
+        Spacer()
+        
+        ActionButton(
+          title: "로그아웃",
+          color: .secondaryStrong,
+          height: 47,
+          action: { isSignOutAlertPresented = true }
+        )
+        .padding()
+        
+        Button {
+          isDeleteUserAlertPresented = true
+        } label: {
+          Text("회원탈퇴")
+            .foregroundStyle(.accentRedStrong)
+        }
+      }
     }
+    .toolbar {
+      ToolbarLeadingBackButton(icon: .chevron)
+      ToolbarCenterTitle(text: "계정 설정")
+    }
+    .alert(
+      "로그아웃",
+      isPresented: $isSignOutAlertPresented
+    ) {
+      Button("취소", role: .cancel) {}
+      Button("로그아웃", role: .destructive) {
+        Task { try await viewModel.signOut() }
+      }
+    } message: {
+      Text("정말 로그아웃하시겠어요?")
+    }
+    .alert(
+      "회원탈퇴",
+      isPresented: $isDeleteUserAlertPresented
+    ) {
+      Button("취소", role: .cancel) {}
+      Button("탈퇴", role: .destructive) {
+        Task { try await viewModel.deleteUserAccount() }
+      }
+    } message: {
+      Text("회원 정보가 삭제되고 되돌릴 수 없습니다.")
+    }
+  }
 }
-
 
 
 #Preview {
-    AccountSettingView()
+  AccountSettingView()
 }
-
-
-
