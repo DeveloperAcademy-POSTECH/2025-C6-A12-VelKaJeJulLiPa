@@ -8,15 +8,15 @@
 import SwiftUI
 
 /// 두꺼운 구분선
-struct ThickDivider: View { // FIXME: - Hi-fi 디자인 반영
-    
-    var body: some View {
-        Rectangle()
-            .foregroundStyle(Color.black) // FIXME: - 컬러 수정
-            .frame(height: 12) // FIXME: - 높이 수정
-    }
+struct ThickDivider: View {
+  
+  var body: some View {
+    Rectangle()
+      .foregroundStyle(.strokeNormal)
+      .frame(height: 12)
+  }
 }
 
 #Preview {
-    ThickDivider()
+  ThickDivider()
 }
