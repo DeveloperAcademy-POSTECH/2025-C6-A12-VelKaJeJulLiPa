@@ -30,6 +30,7 @@ final class VideoViewModel {
   private let doubleTap: TimeInterval = 0.5
   
   var loadingProgress: Double = 0.0
+  var isLoading: Bool = false
   
   // 배속 변수
   var playbackSpeed: Float = 1.0
@@ -40,6 +41,7 @@ extension VideoViewModel {
   // MARK: 동영상 Player 설정 (AVFoundation)
   func setupPlayer(from videoURL: String, videoId: String) async throws {
     await MainActor.run {
+      self.isLoading = true
       self.loadingProgress = 0.0
     }
     
@@ -47,6 +49,9 @@ extension VideoViewModel {
       if let cachedURL = await cacheManager.getCachedVideoURL(for: videoId) {
         print("캐시에서 비디오 로드0")
         await setupPlayerWithURL(cachedURL)
+        await MainActor.run {
+          self.isLoading = false
+        }
         return
       }
       
@@ -60,6 +65,10 @@ extension VideoViewModel {
         }
       
       await setupPlayerWithURL(cachedURL)
+      
+      await MainActor.run {
+        self.isLoading = false
+      }
       
     } catch {
       print("비디오 로드 실패: \(error)")

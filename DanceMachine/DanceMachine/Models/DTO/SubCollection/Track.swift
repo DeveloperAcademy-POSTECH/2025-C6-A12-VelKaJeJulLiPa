@@ -11,7 +11,7 @@ struct Track: Codable {
     
     let trackId: String
     let videoId: String
-    let sectionId: String
+    var sectionId: String
     
     init(
         trackId: String,

@@ -122,7 +122,6 @@ struct HomeView: View {
           )
           .padding(.horizontal, 16)
         }
-        Spacer()
       }
       .toast(
           isPresented: $showToastMessage,
@@ -143,16 +142,16 @@ struct HomeView: View {
           }
         }
       }
-      .sheet(item: $presentingRemovalSheetTracks) { tracks in
-        BottomConfirmSheetView(
-          titleText: "\(tracks.trackName)\n곡과 영상을 모두 삭제하시겠어요?",
-          primaryText: "모두 삭제"
-        ) {
-          Task {
-            try await viewModel.removeTracksAndSection(tracksId: tracks.tracksId.uuidString)
-            if let pid = viewModel.project.expandedID {
-              viewModel.loadTracks(for: pid) // 삭제 후 갱신
-            }
+    }
+    .sheet(item: $presentingRemovalSheetTracks) { tracks in
+      BottomConfirmSheetView(
+        titleText: "\(tracks.trackName)\n곡과 영상을 모두 삭제하시겠어요?",
+        primaryText: "모두 삭제"
+      ) {
+        Task {
+          try await viewModel.removeTracksAndSection(tracksId: tracks.tracksId.uuidString)
+          if let pid = viewModel.project.expandedID {
+            viewModel.loadTracks(for: pid) // 삭제 후 갱신
           }
         }
       }

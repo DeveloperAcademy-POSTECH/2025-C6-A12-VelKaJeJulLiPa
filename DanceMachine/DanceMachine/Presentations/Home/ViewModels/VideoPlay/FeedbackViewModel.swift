@@ -43,6 +43,12 @@ extension FeedbackViewModel {
       self.errorMsg = nil
     }
     
+    let startTime = Date()
+    
+    await TaskTimeUtility.waitForMinimumLoadingTime(
+      startTime: startTime
+    )
+    
     do {
       let fetchedFeedback: [Feedback] = try await store.fetchAll(
         videoId,

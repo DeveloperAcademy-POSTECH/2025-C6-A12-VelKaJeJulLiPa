@@ -34,7 +34,7 @@ struct FeedbackCard: View {
     .padding(.vertical, 16)
     .background(
       Color.gray.opacity(0.3)
-        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .clipShape(RoundedRectangle(cornerRadius: 15))
     )
 //    .glassEffect(.clear.tint(Color.gray), in: RoundedRectangle(cornerRadius: 10))
     .contentShape(Rectangle())
