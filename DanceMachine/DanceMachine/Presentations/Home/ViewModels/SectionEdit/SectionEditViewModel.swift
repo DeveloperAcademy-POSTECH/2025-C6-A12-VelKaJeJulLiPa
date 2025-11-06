@@ -10,15 +10,23 @@ import Foundation
 @Observable
 final class SectionEditViewModel {
   private let store = FirestoreManager.shared
-  
+
   var sections: [Section]
   var editingSectionid: String? = nil
   var editText: String = ""
-  
+
   var isNewSection: Bool = false // 수정모드와 추가모드 플래그
-  
+
+  private let initialSections: [Section] // 초기 상태 저장
+
   init(sections: [Section]) {
     self.sections = sections
+    self.initialSections = sections
+  }
+
+  // 편집/추가 모드인지 체크 (간단 버전)
+  var isEditing: Bool {
+    editingSectionid != nil
   }
   
   func startEdit(section: Section) {
