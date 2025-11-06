@@ -124,12 +124,12 @@ struct HomeView: View {
         }
       }
       .toast(
-          isPresented: $showToastMessage,
-          duration: 2,
-          position: .bottom,
-          bottomPadding: 16   // 하단에서 얼마나 띄울지(버튼 위치)
+        isPresented: $showToastMessage,
+        duration: 2,
+        position: .bottom,
+        bottomPadding: 16   // 하단에서 얼마나 띄울지(버튼 위치)
       ) {
-          ToastView(text: "프로젝트 이름은 20자 이내로 입력해주세요.")
+        ToastView(text: "프로젝트 이름은 20자 이내로 입력해주세요.", icon: .warning)
       }
       .sheet(item: $presentingRemovalSheetProject) { project in
         BottomConfirmSheetView(
@@ -165,9 +165,9 @@ struct HomeView: View {
             await viewModel.fetchCurrentTeamspaceProject()
           }
         })
-          .presentationDragIndicator(.visible)
-          .presentationDetents([.fraction(0.9)])
-          .presentationCornerRadius(16)
+        .presentationDragIndicator(.visible)
+        .presentationDetents([.fraction(0.9)])
+        .presentationCornerRadius(16)
       }
       // 프로젝트 생성 시트
       .sheet(isPresented: $presentingCreateProjectSheet) {
