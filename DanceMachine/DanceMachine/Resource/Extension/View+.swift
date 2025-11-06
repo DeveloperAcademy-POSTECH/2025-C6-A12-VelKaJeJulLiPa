@@ -8,28 +8,116 @@
 import SwiftUI
 
 extension View {
-    
-    /// 네비게이션 이동 시 자동으로 생성되는 뒤로가기 버튼을 제거합니다.
-    func hideBackButton() -> some View {
-        self.navigationBarBackButtonHidden(true)
+  
+  /// 네비게이션 이동 시 자동으로 생성되는 뒤로가기 버튼을 제거합니다.
+  func hideBackButton() -> some View {
+    self.navigationBarBackButtonHidden(true)
+  }
+  
+  /// 아무 곳 터치 시, 키보드 창 내립니다.
+  func dismissKeyboardOnTap() -> some View {
+    self
+      .contentShape(Rectangle())
+      .onTapGesture {
+#if canImport(UIKit)
+        UIApplication.shared.sendAction(
+          #selector(UIResponder.resignFirstResponder),
+          to: nil, from: nil, for: nil
+        )
+#endif
+      }
+  }
+  
+  /// 키보드 창이 내려가는 메서드 입니다.
+  func dismissKeyboard() {
+    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+  }
+  
+  /// 변경사항 저장하지 않고 뒤로가기 시 나타나는 알럿입니다.
+  func unsavedChangesAlert(
+    isPresented: Binding<Bool>,
+    onConfirm: @escaping () -> Void
+  ) -> some View {
+    self.alert(
+      "변경사항이 저장되지 않았습니다.",
+      isPresented: isPresented) {
+        Button("취소", role: .cancel) {}
+        Button("나가기", role: .destructive) {
+          onConfirm()
+        }
+      } message: {
+        Text("저장하지 않은 변경사항은 사라집니다.")
+      }
+  }
+  
+  
+  /// iOS 26 이상에서만 `.glass` 버튼 스타일과 `.glassEffect(.clear)`를 적용하는 뷰 빌더입니다.
+  ///
+  /// 이 메서드는 주로 `Button` 에 체이닝해서 사용하도록 설계되었습니다.
+  /// - iOS 26.0 이상: `buttonStyle(.glass)` 와 `glassEffect(.clear)` 가 적용된 뷰를 반환합니다.
+  /// - 그 외 버전: 아무 스타일도 추가하지 않은 원본 뷰(`self`)를 그대로 반환합니다.
+  ///
+  /// 사용 예:
+  /// ```swift
+  /// Button("편집") { ... }
+  ///   .clearGlassButtonIfAvailable()
+  /// ```
+  @ViewBuilder
+  func clearGlassButtonIfAvailable() -> some View {
+    if #available(iOS 26.0, *) {
+      self
+        .buttonStyle(.glass)
+        .glassEffect(.clear)
+    } else {
+      self
     }
-    
-    /// 아무 곳 터치 시, 키보드 창 내립니다.
-    func dismissKeyboardOnTap() -> some View {
-        self
-            .contentShape(Rectangle())
-            .onTapGesture {
-            #if canImport(UIKit)
-                UIApplication.shared.sendAction(
-                    #selector(UIResponder.resignFirstResponder),
-                    to: nil, from: nil, for: nil
-                )
-            #endif
-            }
+  }
+  
+  /// 커스텀 섹션 글래스 이펙트 버전 분기 뷰빌더 입니다.
+  @ViewBuilder
+  func sectionChip(isSelected: Bool) -> some View {
+    if #available(iOS 26.0, *) {
+      self
+//        .buttonStyle(.glass)
+        .glassEffect(
+          isSelected ? .clear.tint(Color(red: 0x7E/255, green: 0x7C/255, blue: 0xFF/255)).interactive() : .clear.tint(.clear).interactive(), in: Capsule()
+        )
+//        .environment(\.colorScheme, .light)
+    } else {
+      self
+        .background(
+          Capsule()
+            .fill(isSelected ? .secondaryNormal : Color.fillNormal)
+        )
+//        .background(isSelected ? .secondaryNormal : Color.fillNormal)
     }
-    
-    /// 키보드 창이 내려가는 메서드 입니다.
-    func dismissKeyboard() {
-        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+  }
+  
+  /// 섹션 아이콘 글래스 이펙트 버전 분기 뷰빌더 입니다.
+  @ViewBuilder
+  func sectionIcon() -> some View {
+    if #available(iOS 26.0, *) {
+      self
+//        .buttonStyle(.glass)
+        .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: 1000))
+    } else {
+      self
+        .background(
+          Capsule()
+            .fill(Color.fillNormal)
+        )
+//        .background(Color.fillNormal)
     }
+  }
+  
+  @ViewBuilder
+  func uploadGlassButton() -> some View {
+    if #available(iOS 26.0, *) {
+      self
+        .glassEffect(.clear.tint(Color(red: 0x7E/255, green: 0x7C/255, blue: 0xFF/255)).interactive(), in: RoundedRectangle(cornerRadius: 1000))
+    } else {
+      self
+      .background(Color.secondaryNormal)
+    }
+  }
 }
