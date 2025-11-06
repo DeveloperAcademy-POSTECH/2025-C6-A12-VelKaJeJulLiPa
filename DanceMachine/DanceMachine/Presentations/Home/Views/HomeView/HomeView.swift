@@ -129,7 +129,7 @@ struct HomeView: View {
           position: .bottom,
           bottomPadding: 16   // 하단에서 얼마나 띄울지(버튼 위치)
       ) {
-          ToastView(text: "프로젝트 이름은 20자 이내로 입력해주세요.")
+        ToastView(text: "프로젝트 이름은 20자 이내로 입력해주세요.", icon: .warning)
       }
       .sheet(item: $presentingRemovalSheetProject) { project in
         BottomConfirmSheetView(
@@ -155,52 +155,54 @@ struct HomeView: View {
           }
         }
       }
-      // 팀 스페이스 생성 시트
-      .sheet(isPresented: $presentingCreateTeamspaceSheet) {
-        CreateTeamspaceView(onCreated: {
-          Task {
-            self.isLoading = true
-            defer { isLoading = false }
-            await viewModel.ensureTeamspaceInitialized()
-            await viewModel.fetchCurrentTeamspaceProject()
+    }
+    // 팀 스페이스 생성 시트
+    .sheet(isPresented: $presentingCreateTeamspaceSheet) {
+      CreateTeamspaceView(onCreated: {
+        Task {
+          self.isLoading = true
+          defer { isLoading = false }
+          await viewModel.ensureTeamspaceInitialized()
+          await viewModel.fetchCurrentTeamspaceProject()
+        }
+      })
+      .presentationDragIndicator(.visible)
+      .presentationDetents([.fraction(0.9)])
+      .presentationCornerRadius(16)
+    }
+    // 프로젝트 생성 시트
+    .sheet(isPresented: $presentingCreateProjectSheet) {
+      CreateProjectView(onCreated: {
+        Task {
+          self.isLoading = true
+          defer { isLoading = false }
+          let newloaded = await viewModel.fetchCurrentTeamspaceProject()
+          self.viewModel.project.projects = newloaded
+        }
+      })
+      .environmentObject(router)
+      .presentationDragIndicator(.visible)
+      .presentationDetents([.fraction(0.9)])
+      .presentationCornerRadius(16)
+    }
+    // 곡 생성 시트
+    .sheet(isPresented: $showCreateTracksView) {
+      // 기존 CreateTracksView API 그대로 쓴다고 가정
+      CreateTracksView(
+        choiceSelectedProject: Binding(
+          get: { viewModel.selectedProject },
+          set: { _ in } // 외부에서 바꾸지 않음(읽기 전용 바인딩)
+        ),
+        onCreated: { // 곡 생성 됐을 때, 로직
+          if let pid = viewModel.project.expandedID {
+            viewModel.loadTracks(for: pid) // 생성 후 갱신
           }
-        })
-          .presentationDragIndicator(.visible)
-          .presentationDetents([.fraction(0.9)])
-          .presentationCornerRadius(16)
-      }
-      // 프로젝트 생성 시트
-      .sheet(isPresented: $presentingCreateProjectSheet) {
-        CreateProjectView(onCreated: {
-          Task {
-            self.isLoading = true
-            defer { isLoading = false }
-            let newloaded = await viewModel.fetchCurrentTeamspaceProject()
-            self.viewModel.project.projects = newloaded
-          }
-        })
-        .presentationDragIndicator(.visible)
-        .presentationDetents([.fraction(0.9)])
-        .presentationCornerRadius(16)
-      }
-      // 곡 생성 시트
-      .sheet(isPresented: $showCreateTracksView) {
-        // 기존 CreateTracksView API 그대로 쓴다고 가정
-        CreateTracksView(
-          choiceSelectedProject: Binding(
-            get: { viewModel.selectedProject },
-            set: { _ in } // 외부에서 바꾸지 않음(읽기 전용 바인딩)
-          ),
-          onCreated: { // 곡 생성 됐을 때, 로직
-            if let pid = viewModel.project.expandedID {
-              viewModel.loadTracks(for: pid) // 생성 후 갱신
-            }
-          }
-        )
-        .presentationDragIndicator(.visible)
-        .presentationDetents([.fraction(0.9)])
-        .presentationCornerRadius(16)
-      }
+        }
+      )
+      .environmentObject(router)
+      .presentationDragIndicator(.visible)
+      .presentationDetents([.fraction(0.9)])
+      .presentationCornerRadius(16)
     }
     .overlay { if isLoading { LoadingView() } }
     .overlay(alignment: .bottomTrailing) {
@@ -248,6 +250,16 @@ struct HomeView: View {
           await viewModel.reloadProjectsAfterTeamspaceChange()
         }
       }
+    }
+    // RootView 커스텀 탭에서 프로젝트 생성 버튼 눌렀을 때
+    .onReceive(NotificationCenter.default.publisher(for: .showCreateProject)) { _ in
+      print("📁 HomeView: showCreateProject 노티 받음 - 시트 오픈")
+      self.presentingCreateProjectSheet = true
+    }
+    // RootView 커스텀 탭에서 곡 생성 버튼 눌렀을 때
+    .onReceive(NotificationCenter.default.publisher(for: .showCreateTrack)) { _ in
+      print("🎵 HomeView: showCreateTrack 노티 받음 - 시트 오픈")
+      self.showCreateTracksView = true
     }
   }
 }

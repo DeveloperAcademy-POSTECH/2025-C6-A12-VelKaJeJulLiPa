@@ -11,9 +11,9 @@ struct VideoListView: View {
   @EnvironmentObject private var router: MainRouter
   
   @State private var showCustomPicker: Bool = false
-
+  
   @State var vm: VideoListViewModel
-
+  
   @State private var isScrollDown: Bool = false
   
   @State private var showDeleteToast: Bool = false
@@ -48,12 +48,8 @@ struct VideoListView: View {
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(.backgroundNormal)
-    .overlay { if vm.isLoading { LoadingView() }}
     .safeAreaInset(edge: .top, content: {
       sectionView
-    })
-    .safeAreaInset(edge: .bottom, content: {
-      uploadButtons
     })
     .safeAreaInset(edge: .bottom, content: {
       uploadButton
@@ -61,7 +57,7 @@ struct VideoListView: View {
           ZStack {
             // 2. 그 위에 그라데이션 (맨 앞)
             Color.black.opacity(0.1)
-                .blur(radius: 10)
+              .blur(radius: 10)
             
             LinearGradient(
               colors: [
@@ -74,9 +70,9 @@ struct VideoListView: View {
               endPoint: .bottom
             )
           }
-          .ignoresSafeArea(edges: .bottom)
+            .ignoresSafeArea(edges: .bottom)
         )
-
+      
     })
     .navigationBarTitleDisplayMode(.inline)
     .toolbar(.hidden, for: .tabBar)
@@ -105,13 +101,6 @@ struct VideoListView: View {
         vm.moveTrack(trackId: trackId, toSectionId: newSectionId)
       }
     }
-    // MARK: 영상 피커 시트
-      .sheet(isPresented: $showCustomPicker) {
-        VideoPickerView(
-          tracksId: tracksId,
-          sectionId: vm.selectedSection?.sectionId ?? sectionId
-        )
-      }
     // MARK: 영상 피커 시트
     .sheet(isPresented: $showCustomPicker) {
       VideoPickerView(
@@ -149,19 +138,6 @@ struct VideoListView: View {
         ToastView(text: "영상 이름이 수정되었습니다.", icon: .check)
       }
     )
-    // MARK: 글래스 모피즘 사용하여 플로팅 버튼을 rootView에서 관리할때 쓰는 리시버
-    .onReceive(
-      NotificationCenter.default.publisher(
-        for: .showVideoPicker)
-    ) { _ in
-          self.showCustomPicker = true
-        }
-      }
-    }
-    // MARK: 영상 이동 토스트 리시버
-    .onReceive(NotificationCenter.default.publisher(for: .showEditToast)) { _ in
-      self.showEditToast = true
-    }
     // MARK: 영상 삭제 토스트 리시버
     .onReceive(NotificationCenter.default.publisher(for: .showDeleteToast)) { _ in
       self.showDeleteToast = true
@@ -170,183 +146,148 @@ struct VideoListView: View {
     .onReceive(NotificationCenter.default.publisher(for: .showEditVideoTitleToast, object: nil)) { _ in
       self.showEditVideoTitleToast = true
     }
-}
-  
-  
-  private var uploadButtons: some View {
-    Button {
-      self.showCustomPicker = true
-    } label: {
-      Text("동영상 업로드")
-        .font(.headline1Medium)
-        .foregroundStyle(.labelStrong)
-        .padding(.vertical, 14)
-        .frame(maxWidth: .infinity)
-        .padding(.horizontal, 16)
-        .uploadGlassButton()
-    }
-    .padding(.horizontal, 16)
-    .environment(\.colorScheme, .light)
   }
-  
-  //  private var glassButton: some View {
-  //    GlassEffectContainer {
-  //      HStack(spacing: 20) {
-  //        homeButton
-  //        uploadButton
-  //      }
-  //    }
-  //    .padding(.horizontal, 16)
-  //  }
-  
-  //  private var homeButton: some View {
-  //    Button {
-  //      // TODO: 여긴 뭐지?
-  //    } label: {
-  //      Image(systemName: "house.fill")
-  //        .foregroundStyle(Color.purple.opacity(0.8))
-  //    }
-  //    .frame(width: 47, height: 47)
-  //    .glassEffect(.clear.interactive(), in: .circle)
-  //  }
-  
-  private var uploadButton: some View {
-    HStack {
-      if isScrollDown {
-        Spacer()
-      }
-
-      Button {
-        self.showCustomPicker = true
-      } label: {
-        ZStack {
-          // 작은 버튼 (원형)
-          if isScrollDown {
-            Image(systemName: "plus")
-              .font(.system(size: 22))
-              .foregroundStyle(.white)
-              .transition(.opacity)
-          }
-          // 큰 버튼 (직사각형)
-          if !isScrollDown {
-            Text("동영상 업로드")
-              .font(.system(size: 17))
-              .foregroundStyle(Color.white)
-              .frame(maxWidth: .infinity)
-              .transition(.opacity)
-          }
+    
+    private var uploadButton: some View {
+      HStack {
+        if isScrollDown {
+          Spacer()
         }
-        .padding(.horizontal, isScrollDown ? 12 : 20)
-        .padding(.vertical, isScrollDown ? 12 : 14)
-        .frame(maxWidth: isScrollDown ? nil : .infinity)
+        
+        Button {
+          self.showCustomPicker = true
+        } label: {
+          ZStack {
+            // 작은 버튼 (원형)
+            if isScrollDown {
+              Image(systemName: "plus")
+                .font(.system(size: 22))
+                .foregroundStyle(.white)
+                .transition(.opacity)
+            }
+            // 큰 버튼 (직사각형)
+            if !isScrollDown {
+              Text("동영상 업로드")
+                .font(.system(size: 17))
+                .foregroundStyle(Color.white)
+                .frame(maxWidth: .infinity)
+                .transition(.opacity)
+            }
+          }
+          .padding(.horizontal, isScrollDown ? 12 : 20)
+          .padding(.vertical, isScrollDown ? 12 : 14)
+          .frame(maxWidth: isScrollDown ? nil : .infinity)
+        }
+        .background(
+          RoundedRectangle(cornerRadius: isScrollDown ? 24 : 1000)
+            .uploadGlassButton()
+            .environment(\.colorScheme, .light)
+        )
+        .shadow(radius: 5)
       }
-      .background(
-        RoundedRectangle(cornerRadius: isScrollDown ? 24 : 1000)
-          .fill(Color.blue)
-      )
-      .shadow(radius: 5)
+      .padding(.horizontal, 16)
+      .animation(.spring(response: 0.4, dampingFraction: 0.9), value: isScrollDown)
     }
-    .padding(.horizontal, 16)
-    .animation(.spring(response: 0.4, dampingFraction: 0.9), value: isScrollDown)
-  }
-  
-  private var emptyView: some View {
-    VStack {
-      Spacer()
+    
+    private var emptyView: some View {
+      VStack {
+        Spacer()
         Image(systemName: "movieclapper.fill")
           .font(.system(size: 75))
           .foregroundStyle(.labelAssitive)
-      
-      Spacer().frame(height: 25)
+        
+        Spacer().frame(height: 25)
         
         Text("비디오가 없습니다.")
           .font(.caption1Medium)
           .foregroundStyle(.labelAssitive)
-      Spacer()
-    }
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .offset(y: -40)
-  }
-  // MARK: 영상 그리드 뷰
-  private var listView: some View {
-    GeometryReader { g in
-      let horizontalPadding: CGFloat = 16
-      let spacing: CGFloat = 16
-      let columns = 2
-
-      let totalSpacing = spacing * CGFloat(columns - 1)
-      let availableWidth = g.size.width - (horizontalPadding * 2) - totalSpacing
-      let itemSize = availableWidth / CGFloat(columns)
-
-      ScrollView {
-        VideoGrid(
-          size: itemSize,
-          columns: columns,
-          spacing: spacing,
-          tracksId: tracksId,
-          videos: vm.filteredVideos,
-          track: vm.track,
-          section: vm.section,
-          vm: $vm
-        )
-        .padding(.horizontal, horizontalPadding)
+        Spacer()
       }
-      .onScrollGeometryChange(for: CGFloat.self) { geometry in
-        geometry.contentOffset.y
-      } action: { oldValue, newValue in
-        withAnimation(.spring()) {
-          isScrollDown = newValue > 50
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
+      .offset(y: -40)
+    }
+    // MARK: 영상 그리드 뷰
+    private var listView: some View {
+      GeometryReader { g in
+        let horizontalPadding: CGFloat = 16
+        let spacing: CGFloat = 16
+        let columns = 2
+        
+        let totalSpacing = spacing * CGFloat(columns - 1)
+        let availableWidth = g.size.width - (horizontalPadding * 2) - totalSpacing
+        let itemSize = availableWidth / CGFloat(columns)
+        
+        ScrollView {
+          VideoGrid(
+            size: itemSize,
+            columns: columns,
+            spacing: spacing,
+            tracksId: tracksId,
+            videos: vm.filteredVideos,
+            track: vm.track,
+            section: vm.section,
+            vm: $vm
+          )
+          .padding(.horizontal, horizontalPadding)
         }
+        .onScrollGeometryChange(for: CGFloat.self) { geometry in
+          geometry.contentOffset.y
+        } action: { oldValue, newValue in
+          withAnimation(.spring()) {
+            isScrollDown = newValue > 50
+          }
+        }
+        .refreshable {
+          await vm.forceRefreshFromServer(tracksId: tracksId)
+        }
+        .background(.backgroundNormal)
       }
-      .refreshable {
-        await vm.forceRefreshFromServer(tracksId: tracksId)
-      }
-      .background(Color.white) // FIXME: 배경색 지정 (다크모드)
     }
-  }
-  
-  
-  // MARK: 섹션 칩 뷰
-  private var sectionView: some View {
-    ScrollView(.horizontal, showsIndicators: false) {
-      //      GlassEffectContainer {
-      HStack {
-        SectionChipIcon(
-          vm: $vm,
-          action: {
-            router.push(
-              to: .video(
-                .section(
-                  section: vm.section,
-                  tracksId: tracksId,
-                  trackName: trackName,
-                  sectionId: sectionId
+    
+    
+    // MARK: 섹션 칩 뷰
+    private var sectionView: some View {
+      ScrollView(.horizontal, showsIndicators: false) {
+        //      GlassEffectContainer {
+        HStack {
+          SectionChipIcon(
+            vm: $vm,
+            action: {
+              router.push(
+                to: .video(
+                  .section(
+                    section: vm.section,
+                    tracksId: tracksId,
+                    trackName: trackName,
+                    sectionId: sectionId
+                  )
                 )
               )
-            )
-          }
-        )
-        if vm.isLoading {
-          ForEach(0..<5, id: \.self) { _ in
-            SkeletonChipVIew()
-          }
-        } else {
-          ForEach(vm.section, id: \.sectionId) { section in
-            CustomSectionChip(
-              vm: $vm,
-              action: { vm.selectedSection = section },
-              title: section.sectionTitle,
-              id: section.sectionId
-            )
+            }
+          )
+          if vm.isLoading {
+            ForEach(0..<5, id: \.self) { _ in
+              SkeletonChipVIew()
+            }
+          } else {
+            ForEach(vm.section, id: \.sectionId) { section in
+              CustomSectionChip(
+                vm: $vm,
+                action: { vm.selectedSection = section },
+                title: section.sectionTitle,
+                id: section.sectionId
+              )
+            }
           }
         }
-//        .padding([.horizontal, .vertical], 16)
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+        }
+        .environment(\.colorScheme, .light)
+      }
     }
-    .environment(\.colorScheme, .light)
-  }
-}
+  
+
 
 
 #Preview {

@@ -22,6 +22,7 @@ struct VideoGrid: View {
   @State private var selectedVideo: Video?
   @State private var selectedTrack: Track? // 섹션 이동
   @State private var showDeleteAlert: Bool = false // 삭제
+  @State private var showEditVideoTitle: Video?
   @Binding var vm: VideoListViewModel
   
   var body: some View {
@@ -60,6 +61,7 @@ struct VideoGrid: View {
                 self.showDeleteAlert = true
                 print("\(video.videoId)모달 선택")
               },
+              showEditSheet: { self.showEditVideoTitle = video },
               videoAction: {
                 router.push(
                   to: .video(
@@ -70,13 +72,18 @@ struct VideoGrid: View {
                     )
                   )
                 )
-              }
+              },
+              sectionCount: section.count
             )
-
           }
         }
       }
     }
+    .sheet(item: $showEditVideoTitle, content: { video in
+      NavigationStack {
+        VideoTitleEditView(video: video, vm: $vm, videoTitle: video.videoTitle)
+      }
+    })
     // MARK: 삭제 알랏
     .alert(
       "\(selectedVideo?.videoTitle ?? "영상")을/를 삭제하시겠어요?",
@@ -95,6 +102,7 @@ struct VideoGrid: View {
       } message: {
         Text("삭제하면 복구할 수 없습니다.")
       }
+    
     // MARK: 영상 섹션 이동 뷰
     .fullScreenCover(item: $selectedTrack) { track in
       NavigationStack {

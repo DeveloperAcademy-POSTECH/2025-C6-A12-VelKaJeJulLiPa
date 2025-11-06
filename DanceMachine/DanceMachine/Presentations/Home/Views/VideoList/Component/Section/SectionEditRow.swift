@@ -29,6 +29,16 @@ struct SectionEditRow: View {
       .overlay {
         sectionRow
       }
+      .alert(
+        "\(section.sectionTitle)파트를 삭제하시겠어요?",
+        isPresented: $showDeleteModal) {
+          Button("취소", role: .cancel) {}
+          Button("삭제", role: .destructive) {
+            sheetAction()
+          }
+        } message: {
+          Text("삭제하면 복구할 수 없습니다.")
+        }
   }
   
   private var sectionRow: some View {
@@ -107,12 +117,6 @@ struct SectionEditRow: View {
       }
     }
     .padding(.horizontal, 16)
-    .sheet(
-      isPresented: $showDeleteModal) {
-        BottomConfirmSheetView(
-          titleText: "\(section.sectionTitle)\n섹션을 삭제하시겠어요?\n모든 영상이 삭제됩니다.",
-          primaryText: "삭제") { self.sheetAction() }
-      }
   }
 }
 
