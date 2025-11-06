@@ -54,4 +54,21 @@ extension View {
       self
     }
   }
+  
+  /// 변경사항 저장하지 않고 뒤로가기 시 나타나는 알럿입니다.
+  func unsavedChangesAlert(
+    isPresented: Binding<Bool>,
+    onConfirm: @escaping () -> Void
+  ) -> some View {
+    self.alert(
+      "변경사항이 저장되지 않았습니다.",
+      isPresented: isPresented) {
+        Button("취소", role: .cancel) {}
+        Button("나가기", role: .destructive) {
+          onConfirm()
+        }
+      } message: {
+        Text("저장하지 않은 변경사항은 사라집니다.")
+      }
+  }
 }
