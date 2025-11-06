@@ -78,6 +78,12 @@ struct RootView: View {
               MainNavigationRoutingView(destination: destination)
                 .environmentObject(router)
             }
+            .tag(tab)
+          },
+          label: {
+            tabLabel(tab)
+          })
+        .badge(tab == .inbox ? notificationManager.unreadNotificationCount : 0)
         }
       } label: {
         tabLabel(.myPage)
