@@ -11,16 +11,22 @@ import SwiftUI
 /// 뒤로가기 버튼입니다.
 struct ToolbarLeadingBackButton: ToolbarContent {
   @Environment(\.dismiss) private var dismiss
-  
+
   var icon: ToolbarLeadingIcon
-  
+  var action: (() -> Void)? = nil
+
   var body: some ToolbarContent {
     ToolbarItem(placement: .topBarLeading) {
       Button {
-        dismiss()
+        if let action = action {
+          action()
+        } else {
+          dismiss()
+        }
       } label: {
         Image(systemName: icon.toolIcon)
-          .foregroundStyle(.labelNormal)
+          .foregroundStyle(.labelStrong)
+          .frame(width: 22, height: 22)
       }
     }
   }
@@ -42,12 +48,9 @@ enum ToolbarLeadingIcon: String {
 
 #Preview {
   NavigationStack {
-    ZStack {
-      Color.backgroundNormal.ignoresSafeArea()
-      Text("Preview")
-        .toolbar {
-          ToolbarLeadingBackButton(icon: .chevron)
-        }
-    }
+    Text("Preview")
+      .toolbar {
+        ToolbarLeadingBackButton(icon: .chevron)
+      }
   }
 }
