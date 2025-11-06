@@ -38,7 +38,7 @@ struct VideoListView: View {
   
   var body: some View {
     VStack(spacing: 0) {
-      if vm.videos.isEmpty && vm.isLoading != true {
+      if vm.videos.isEmpty && vm.isLoading != true && !VideoProgressManager.shared.isUploading {
         emptyView
         //        uploadButtons
       } else {
