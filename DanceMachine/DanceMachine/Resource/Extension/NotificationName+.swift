@@ -13,6 +13,11 @@ extension Foundation.Notification.Name {
   static let videoUpload = Foundation.Notification.Name("videoUpload")
   static let didReceiveDeeplink = Foundation.Notification.Name("didReceiveDeeplink")
   static let needToMarkAsRead = Foundation.Notification.Name("needToMarkAsRead")
+  
+  static let showEditToast = Foundation.Notification.Name("showEditToast")
+  static let showDeleteToast = Foundation.Notification.Name("showDeleteToast")
+  static let showEditWarningToast = Foundation.Notification.Name("showEditWarningToast")
+  static let showEditVideoTitleToast = Foundation.Notification.Name("showEditVideoTitleToast")
 }
 
 enum NotificationEvent {
@@ -21,6 +26,10 @@ enum NotificationEvent {
   case videoUpload
   case didReceiveDeeplink
   case needToMarkAsRead
+  case showEditToast
+  case showDeleteToast
+  case showEditWarningToast
+  case showEditVideoTitleToast
   
   var name: Foundation.Notification.Name {
     switch self {
@@ -29,6 +38,10 @@ enum NotificationEvent {
     case .videoUpload: .videoUpload
     case .didReceiveDeeplink: .didReceiveDeeplink
     case .needToMarkAsRead: .needToMarkAsRead
+    case .showEditToast: .showEditToast
+    case .showDeleteToast: .showDeleteToast
+    case .showEditWarningToast: .showEditWarningToast
+    case .showEditVideoTitleToast: .showEditVideoTitleToast
     }
   }
 }
