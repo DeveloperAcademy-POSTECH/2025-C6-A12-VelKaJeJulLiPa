@@ -43,7 +43,7 @@ struct ActionButton: View {
         .overlay {
           Text(title)
             .font(.headline2Medium)
-            .foregroundStyle(Color.labelStrong)
+            .foregroundStyle(isEnabled ? .labelStrong : .labelAssitive)
         }
     }
     .frame(maxWidth: .infinity)
