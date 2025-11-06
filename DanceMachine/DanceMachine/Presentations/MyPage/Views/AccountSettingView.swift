@@ -72,6 +72,7 @@ struct AccountSettingView: View {
           try await viewModel.deleteUserAccount()
           tabRouter.switchTab(to: .home)
           router.destination.removeAll()
+        }
       }
     } message: {
       Text("회원 정보가 삭제되고 되돌릴 수 없습니다.")
