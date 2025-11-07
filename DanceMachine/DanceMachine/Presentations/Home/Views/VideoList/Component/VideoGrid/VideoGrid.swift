@@ -9,20 +9,21 @@ import SwiftUI
 
 struct VideoGrid: View {
   @EnvironmentObject private var router: MainRouter
-  
+
   let size: CGFloat
   let columns: Int
   let spacing: CGFloat
   let tracksId: String
-  
+
   let videos: [Video]
   let track: [Track]
   let section: [Section]
-  
+
   @State private var selectedVideo: Video?
   @State private var selectedTrack: Track? // 섹션 이동
   @State private var showDeleteAlert: Bool = false // 삭제
   @State private var showEditVideoTitle: Video?
+  @State private var progressManager = VideoProgressManager.shared
   @Binding var vm: VideoListViewModel
   
   var body: some View {
@@ -33,10 +34,10 @@ struct VideoGrid: View {
       ),
       spacing: spacing
     ) {
-      if VideoProgressManager.shared.isUploading {
+      if progressManager.isUploading {
         UploadProgressCard(
           cardSize: size,
-          progress: VideoProgressManager.shared.uploadProgress
+          progress: progressManager.uploadProgress
         )
       }
       if vm.isLoading {
