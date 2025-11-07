@@ -63,18 +63,7 @@ struct VideoTitleEditView: View {
             .foregroundStyle(.labelStrong)
             .multilineTextAlignment(.center)
             .onChange(of: videoTitle) { oldValue, newValue in
-              var updated = newValue
-              
-              // Prevent leading space as the first character
-              if updated.first == " " {
-                updated = String(updated.drop(while: { $0 == " " })) // ❗️공백 금지
-              }
-              
-              // Enforce 20-character limit
-              if updated.count > 20 {
-                updated = String(updated.prefix(20)) // ❗️20글자 초과 금지
-              }
-              
+              let updated = newValue.sanitized(limit: 20)
               if updated != videoTitle {
                 videoTitle = updated
               }
@@ -82,19 +71,23 @@ struct VideoTitleEditView: View {
         }
         .overlay(
           RoundedRectangle(cornerRadius: 10)
-            .stroke(videoTitle.count > 19 ? Color.red : Color.clear, lineWidth: 2)
+            .stroke(videoTitle.count > 19 ? Color.accentRedNormal : Color.clear, lineWidth: 2)
         )
         .overlay(alignment: .trailing) {
           if videoTitle.count >= 20 {
-            Image(systemName: "xmark.circle.fill")
-              .frame(width: 44, height: 44)
-              .foregroundStyle(.labelNormal)
+            Button {
+              videoTitle = ""
+            } label: {
+              Image(systemName: "xmark.circle.fill")
+                .frame(width: 44, height: 44)
+                .foregroundStyle(.labelNormal)
+            }
           }
         }
       
       Spacer().frame(height: 16)
       
-      Text("20자 이내로 입력해주세요.")
+      Text("20자 미만으로 입력해주세요.")
         .font(.footnoteMedium)
         .foregroundStyle(.accentRedNormal)
         .opacity(videoTitle.count < 20 ? 0 : 1)
