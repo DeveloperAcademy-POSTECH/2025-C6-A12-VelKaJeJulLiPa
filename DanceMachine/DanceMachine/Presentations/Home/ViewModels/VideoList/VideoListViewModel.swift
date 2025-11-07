@@ -352,7 +352,11 @@ extension VideoListViewModel {
   }
   
   // 영상 제목 수정 메서드 Firestore(Video)
-  func updateVideoTitle(video: Video, newTitle: String) async {
+  func updateVideoTitle(
+    video: Video,
+    newTitle: String,
+    tracksId: String
+  ) async {
     await MainActor.run {
       self.isLoading = true
       self.errorMsg = nil
@@ -370,6 +374,11 @@ extension VideoListViewModel {
       print("\(videoId)의 영상 제목 \(newTitle)로 변경 완료")
       
       // TODO: 캐시도 업데이트 해야함. #37 브랜치 머지 된 이후
+      await dataCacheManager.updateVideoTitle(
+        videoId: video.videoId.uuidString,
+        newTitle: newTitle,
+        in: tracksId
+      )
 
       // 로컬 UI 업데이트
       await MainActor.run {

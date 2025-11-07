@@ -10,6 +10,7 @@ import SwiftUI
 struct VideoTitleEditView: View {
   @Environment(\.dismiss) private var dismiss
   let video: Video
+  let tracksId: String
   @Binding var vm: VideoListViewModel
   
   @State var videoTitle: String
@@ -108,7 +109,11 @@ struct VideoTitleEditView: View {
       isEnabled: self.videoTitle.isEmpty ? false : true
     ) {
       Task {
-        await vm.updateVideoTitle(video: video, newTitle: videoTitle)
+        await vm.updateVideoTitle(
+          video: video,
+          newTitle: videoTitle,
+          tracksId: tracksId
+        )
         NotificationCenter.post(.showEditVideoTitleToast, object: nil)
         await MainActor.run { dismiss() }
       }
@@ -119,6 +124,6 @@ struct VideoTitleEditView: View {
 #Preview {
   @Previewable @State var vm: VideoListViewModel = .preview
   NavigationStack {
-    VideoTitleEditView(video: vm.videos[0], vm: $vm, videoTitle: vm.videos[0].videoTitle)
+    VideoTitleEditView(video: vm.videos[0], tracksId: "", vm: $vm, videoTitle: vm.videos[0].videoTitle)
   }
 }

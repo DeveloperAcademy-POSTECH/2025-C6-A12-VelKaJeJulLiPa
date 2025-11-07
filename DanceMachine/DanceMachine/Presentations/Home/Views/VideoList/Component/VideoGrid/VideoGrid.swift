@@ -80,11 +80,17 @@ struct VideoGrid: View {
         }
       }
     }
-    .sheet(item: $showEditVideoTitle, content: { video in
-      NavigationStack {
-        VideoTitleEditView(video: video, vm: $vm, videoTitle: video.videoTitle)
+    // MARK: 비디오 이름 수정 뷰
+    .sheet(item: $showEditVideoTitle) { video in
+        NavigationStack {
+          VideoTitleEditView(
+            video: video,
+            tracksId: tracksId,
+            vm: $vm,
+            videoTitle: video.videoTitle
+          )
       }
-    })
+    }
     // MARK: 삭제 알랏
     .alert(
       "\(selectedVideo?.videoTitle ?? "영상")을/를 삭제하시겠어요?",
