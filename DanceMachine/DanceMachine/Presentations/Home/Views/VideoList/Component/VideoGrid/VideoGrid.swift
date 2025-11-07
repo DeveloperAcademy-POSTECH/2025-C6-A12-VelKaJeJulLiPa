@@ -111,7 +111,12 @@ struct VideoGrid: View {
       }
     
     // MARK: 영상 섹션 이동 뷰
-    .fullScreenCover(item: $selectedTrack) { track in
+    .fullScreenCover(item: $selectedTrack, onDismiss: {
+      // 영상 이동 후 캐시에서 최신 데이터 로드
+      Task {
+        await vm.loadFromServer(tracksId: tracksId)
+      }
+    }) { track in
       NavigationStack {
         SectionSelectView(
           section: section,
