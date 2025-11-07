@@ -27,18 +27,27 @@ struct GridCell: View {
   @State private var showMenu: Bool = false
   
   var body: some View {
-    ZStack(alignment: .topTrailing) {
-      Rectangle()
-        .fill(Color.fillNormal)
-        .frame(width: size, height: size * 1.2)
-        .clipShape(RoundedRectangle(cornerRadius: 10))
-        .overlay {
-          content
-        }
-        .sensoryFeedback(.success, trigger: showMenu)
-        .onTapGesture {
-          videoAction()
-        }
+    VStack(alignment: .leading) {
+      thumbnail
+      content
+    }
+    .frame(width: size, height: size * 1.22)
+    .contentShape(Rectangle())
+    .background(
+      RoundedRectangle(cornerRadius: 12)
+        .fill(.fillNormal)
+    )
+    .sensoryFeedback(.success, trigger: showMenu)
+    .onTapGesture { videoAction() }
+    .overlay(alignment: .topTrailing) {
+      Menu {
+        contextRow
+      } label: {
+        Image(systemName: "elipsis")
+          .foregroundStyle(.red)
+          .rotationEffect(.degrees(90))
+          .frame(width: 44, height: 44)
+      }
     }
     .contextMenu {
       contextRow
@@ -49,20 +58,18 @@ struct GridCell: View {
   
   private var content: some View {
     VStack(alignment: .leading) {
-      thumbnail
-      Spacer().frame(width: 8)
       Text(title)
         .font(.headline2Medium)
         .foregroundStyle(.labelStrong)
-      Spacer().frame(width: 8)
+      Spacer().frame(height: 8)
       Text("\(duration.formattedTime())")
         .font(.caption1Medium)
         .foregroundStyle(.labelAssitive)
-      Spacer().frame(width: 4)
+      Spacer().frame(height: 4)
       Text("\(uploadDate.formattedDate())")
         .font(.caption1Medium)
         .foregroundStyle(.labelAssitive)
-      Spacer()
+      Spacer().frame(height: 16)
     }
     .frame(maxWidth: .infinity, alignment: .leading)
     .padding(.top, 8)
