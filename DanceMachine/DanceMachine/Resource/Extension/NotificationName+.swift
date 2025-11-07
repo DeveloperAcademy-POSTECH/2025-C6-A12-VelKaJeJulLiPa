@@ -13,10 +13,13 @@ extension Foundation.Notification.Name {
   static let didReceiveDeeplink = Foundation.Notification.Name("didReceiveDeeplink")
   static let needToMarkAsRead = Foundation.Notification.Name("needToMarkAsRead")
   static let projectDidCollapse = Foundation.Notification.Name("projectDidCollapse")
-  
+  // 영상 이동 토스트
   static let showEditToast = Foundation.Notification.Name("showEditToast")
+  // 영상 삭제 토스트
   static let showDeleteToast = Foundation.Notification.Name("showDeleteToast")
+  // 섹션 글자 제한 토스트
   static let showEditWarningToast = Foundation.Notification.Name("showEditWarningToast")
+  // 영상 이름 수정 제한 토스트
   static let showEditVideoTitleToast = Foundation.Notification.Name("showEditVideoTitleToast")
 }
 

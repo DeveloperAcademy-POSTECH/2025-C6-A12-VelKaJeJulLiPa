@@ -35,47 +35,31 @@ struct VideoPickerView: View {
           mainContent
         }
       }
+      .toast(
+        isPresented: $showToast,
+        duration: 2,
+        position: .bottom,
+        bottomPadding: 16,
+        content: {
+          ToastView(text: "20자 미만으로 입력해주세요.", icon: .warning)
+        }
+      )
+      .dismissKeyboardOnTap()
+      .background(Color.fillNormal)
       .toolbarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarLeadingBackButton(icon: .xmark)
-        ToolbarCenterTitle(text: "비디오 선택")
-        
+        ToolbarItem(placement: .title) {
+          centerToolbar
+        }
         if vm.photoLibraryStatus == .authorized || vm.photoLibraryStatus == .limited {
           ToolbarItemGroup(placement: .topBarTrailing) {
-            Button {
-              if vm.selectedAsset == nil {
-                self.showEmptyVideoAlert = true
-                return
-              } else if vm.videoTitle == "" {
-                self.showEmptyTitleAlert = true
-                return
-              }
-              vm.exportVideo(tracksId: tracksId, sectionId: sectionId)
-              dismiss()
-            } label: {
-              Image(systemName: "arrow.up")
-                .foregroundStyle(
-                  vm.selectedAsset == nil ? .black.opacity(0.7) : .white
-                )
-            }
-            .disabled(vm.isLoading)
-            .buttonStyle(.borderedProminent)
-            .tint(.blue)
+            trailingToolbar
           }
         }
       }
       .task {
         await vm.requestPermissionAndFetch()
-      }
-      .alert("비디오를 선택해주세요!", isPresented: $showEmptyVideoAlert) {
-        Button("확인") {
-          self.showEmptyVideoAlert = false
-        }
-      }
-      .alert("파일명을 입력하세요!", isPresented: $showEmptyTitleAlert) {
-        Button("확인") {
-          self.showEmptyTitleAlert = false
-        }
       }
       .alert("업로드 실패", isPresented: .constant(vm.errorMessage != nil)) {
         Button("확인") {

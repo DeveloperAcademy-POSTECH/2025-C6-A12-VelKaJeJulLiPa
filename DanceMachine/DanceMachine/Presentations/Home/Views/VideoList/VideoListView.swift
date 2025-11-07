@@ -87,25 +87,13 @@ struct VideoListView: View {
           await vm.addNewVideo(video: video, track: track, traksId: tracksId)
         }
       }
-      // 섹션 업데이트 콜백 설정
-      SectionUpdateManager.shared.onSectionAdded = { section in
-        vm.addSection(section)
-      }
-      SectionUpdateManager.shared.onSectionDeleted = { sectionId in
-        vm.removeSectionWithVideos(sectionId: sectionId)
-      }
-      SectionUpdateManager.shared.onSectionUpdated = { sectionId, newTitle in
-        vm.updateSectionTitle(sectionId: sectionId, newTitle: newTitle)
-      }
-      SectionUpdateManager.shared.onTrackMoved = { trackId, newSectionId in
-        vm.moveTrack(trackId: trackId, toSectionId: newSectionId)
-      }
     }
     // MARK: 영상 피커 시트
     .sheet(isPresented: $showCustomPicker) {
       VideoPickerView(
         tracksId: tracksId,
-        sectionId: vm.selectedSection?.sectionId ?? sectionId
+        sectionId: vm.selectedSection?.sectionId ?? sectionId,
+        trackName: trackName
       )
     }
     .toast(
@@ -145,6 +133,10 @@ struct VideoListView: View {
     // MARK: 영상 이름 수정 토스트 리시버
     .onReceive(NotificationCenter.default.publisher(for: .showEditVideoTitleToast, object: nil)) { _ in
       self.showEditVideoTitleToast = true
+    }
+    // MARK: 영상 섹션 이동 토스트 리시버
+    .onReceive(NotificationCenter.default.publisher(for: .showEditToast)) { _ in
+      self.showEditToast = true
     }
   }
     
