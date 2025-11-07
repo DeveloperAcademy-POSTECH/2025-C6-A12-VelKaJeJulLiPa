@@ -78,7 +78,7 @@ async function sendPushNotificationsWithBadge(
       // 1. 로그아웃 사용자 fcm_token: 빈 문자열("")
       // 2. 유효하지 않은 토큰 (토큰 타입 / 토큰 길이 / FCM 토큰 발행 및 갱신 문제)
       if (!token) {
-        logger.info(`Skipping push notification for signed out user: ${uid}`)
+        logger.info("Skipping push notification for signed out user", { uid })
       } else if (typeof token !== "string" || token.length === 0 || token == "Unknown") {
         logger.warn("FCM token is missing", { uid });
       }
