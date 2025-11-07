@@ -21,7 +21,6 @@ struct DanceMachineApp: App {
   
   @StateObject private var authManager = FirebaseAuthManager.shared
   @StateObject private var inviteRouter = InviteRouter()
-  @State private var tabRouter = TabRouter()
   
   
   var body: some Scene {
@@ -40,7 +39,6 @@ struct DanceMachineApp: App {
             } else {
               RootView()
                 .environmentObject(mainRouter)
-                .environment(tabRouter)
                 .environmentObject(inviteRouter)
                 .transition(.move(edge: .trailing))
               

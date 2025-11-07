@@ -17,10 +17,10 @@ enum MainRoute: Hashable {
   case home
   case inbox(InboxRoute)
   case mypage(MyPageRoute)
-  
+
   case teamspace(TeamspaceRoute)
   case project(ProjectRoute)
-  
+
   case video(VideoRoute)
   
   // MARK: 플로팅 버튼 글래스 모피즘 적용 테스트를 위한 분기 코드

@@ -251,16 +251,6 @@ struct HomeView: View {
         }
       }
     }
-    // RootView 커스텀 탭에서 프로젝트 생성 버튼 눌렀을 때
-    .onReceive(NotificationCenter.default.publisher(for: .showCreateProject)) { _ in
-      print("📁 HomeView: showCreateProject 노티 받음 - 시트 오픈")
-      self.presentingCreateProjectSheet = true
-    }
-    // RootView 커스텀 탭에서 곡 생성 버튼 눌렀을 때
-    .onReceive(NotificationCenter.default.publisher(for: .showCreateTrack)) { _ in
-      print("🎵 HomeView: showCreateTrack 노티 받음 - 시트 오픈")
-      self.showCreateTracksView = true
-    }
   }
 }
 
