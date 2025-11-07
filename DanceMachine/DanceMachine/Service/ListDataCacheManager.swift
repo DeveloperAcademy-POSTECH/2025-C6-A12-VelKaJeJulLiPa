@@ -214,14 +214,20 @@ extension VideoDataCacheManager {
       updatedTrack.sectionId = toSectionId
       data.track[index] = updatedTrack
       data.lastUpdated = Date()
-      
-      try? await cache(
-        video: data.videos,
-        track: data.track,
-        section: data.section,
-        for: tracksId
-      )
-      print("캐시에서 트랙 이동: \(trackId) → \(toSectionId)")
+
+      do {
+        try await cache(
+          video: data.videos,
+          track: data.track,
+          section: data.section,
+          for: tracksId
+        )
+        print("캐시에서 트랙 이동 성공: \(trackId) → \(toSectionId)")
+      } catch {
+        print("캐시 저장 실패: \(error)")
+      }
+    } else {
+      print("캐시에서 트랙을 찾을 수 없음: \(trackId)")
     }
   }
   // MARK: - Section 추가

@@ -80,7 +80,7 @@ struct SectionEditView: View {
       duration: 2,
       position: .bottom,
       bottomPadding: 63) {
-        ToastView(text: "10자 이내로 입력해주세요.", icon: .warning)
+        ToastView(text: "10자 미만으로 입력해주세요.", icon: .warning)
       }
       .unsavedChangesAlert(
         isPresented: $showExitAlert,
@@ -152,13 +152,6 @@ struct SectionEditView: View {
              let section = vm.sections.first(where: { $0.sectionId == sectionId }) {
             Task {
               await vm.updateSection(tracksId: tracksId, section: section)
-              if vm.isNewSection {
-                // 새 섹션 추가
-                SectionUpdateManager.shared.onSectionAdded?(section)
-              } else {
-                // 기존 섹션 수정
-                SectionUpdateManager.shared.onSectionUpdated?(section.sectionId, vm.editText)
-              }
             }
           }
         }
