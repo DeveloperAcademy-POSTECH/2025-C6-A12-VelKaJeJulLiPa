@@ -41,16 +41,15 @@ struct VideoPreview: View {
     VStack {
       if vm.isLoading {
         loadingView
+          .frame(maxWidth: .infinity)
           .frame(height: size)
       } else if let p = vm.player {
         VideoPlayer(player: p)
           .aspectRatio(16/9, contentMode: .fit)
       } else {
-        VStack {
-          Image(.videoEmpty)
-        }
-        .frame(maxWidth: .infinity)
-        .frame(height: size)
+        Image(.videoEmpty)
+          .frame(maxWidth: .infinity)
+          .frame(height: size)
       }
     }
     .onChange(of: vm.selectedAsset, { oldValue, newValue in

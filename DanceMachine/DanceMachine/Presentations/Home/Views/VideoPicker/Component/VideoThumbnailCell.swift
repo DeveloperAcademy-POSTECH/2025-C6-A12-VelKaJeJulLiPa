@@ -40,13 +40,13 @@ struct VideoThumbnailCell: View {
   private var duration: some View {
     VStack {
       Text(formatDuration(asset.duration))
-        .font(.caption2)
+        .font(.caption1Medium)
         .padding(4)
         .background(
-          isSelected ? Color.purple : Color.black.opacity(0.7)
+          isSelected ? .secondaryStrong : .fillStrong
         )
-        .foregroundStyle(.white)
-        .clipShape(RoundedRectangle(cornerRadius: 4))
+        .foregroundStyle(.labelStrong)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
         .padding(4)
     }
   }
@@ -71,29 +71,4 @@ struct VideoThumbnailCell: View {
     let secs = Int(seconds) % 60
     return String(format: "%d:%02d", mins, secs)
   }
-}
-
-#Preview {
-  VideoThumbnailCell_Preview()
-}
-
-struct VideoThumbnailCell_Preview: View {
-    var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            Rectangle()
-                .fill(Color.gray.opacity(0.3))
-          VStack {
-            Text("0:42")
-              .font(.caption2)
-              .padding(4)
-              .background(Color.black.opacity(0.7))
-              .foregroundColor(.white)
-              .clipShape(RoundedRectangle(cornerRadius: 4))
-              .padding(4)
-          }
-          .padding(.trailing, 20)
-          .padding(.bottom, 20)
-        }
-//        .frame(width: 100, height: 100)
-    }
 }
