@@ -45,13 +45,14 @@ final class LoginViewModel: ObservableObject {
       
       
       if let existingUser: User = try? await FirestoreManager.shared.get(user.userId, from: .users) {
+        try await FirestoreManager.shared.updateUserLastLogin(existingUser)
         try await FirestoreManager.shared.updateFields(
           collection: .users,
           documentId: user.userId,
-          asDictionary: [User.CodingKeys.fcmToken.rawValue :fcmToken]
+          asDictionary: [User.CodingKeys.fcmToken.rawValue: fcmToken]
         )
-        try await FirestoreManager.shared.updateUserLastLogin(existingUser)
-        FirebaseAuthManager.shared.userInfo = existingUser
+        let userInfo: User = try await FirestoreManager.shared.get(user.userId, from: .users)
+        FirebaseAuthManager.shared.userInfo = userInfo
         FirebaseAuthManager.shared.needsNameSetting = false
       } else {
         try await FirestoreManager.shared.createUser(user)
