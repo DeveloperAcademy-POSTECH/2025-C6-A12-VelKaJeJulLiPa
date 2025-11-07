@@ -99,7 +99,7 @@ extension View {
     if #available(iOS 26.0, *) {
       self
 //        .buttonStyle(.glass)
-        .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: 1000))
+        .glassEffect(.clear.interactive(), in: RoundedRectangle(cornerRadius: 1000))
     } else {
       self
         .background(
