@@ -50,19 +50,10 @@ struct SectionEditRow: View {
           .foregroundStyle(.labelStrong)
           .focused($isFocused)
           .onChange(of: editText) { oldValue, newValue in
-            var updated = newValue
-            
-            // Prevent leading space as the first character
-            if updated.first == " " {
-              updated = String(updated.drop(while: { $0 == " " })) // ❗️공백 금지
-            }
-            
-            // Enforce 10-character limit
-            if updated.count > 10 {
+            let updated = newValue.sanitized(limit: 10)
+            if editText.count > 9 {
               NotificationCenter.post(.showEditWarningToast, object: nil)
-              updated = String(updated.prefix(10)) // ❗️10글자 초과 금지
             }
-            
             if updated != editText {
               editText = updated
             }
