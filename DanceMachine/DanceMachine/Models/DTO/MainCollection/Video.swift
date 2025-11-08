@@ -9,7 +9,7 @@ import Foundation
 import FirebaseFirestore
 
 nonisolated
-struct Video: Codable {
+struct Video: Codable, Equatable {
     let videoId: UUID
     var videoTitle: String
     let videoDuration: Double

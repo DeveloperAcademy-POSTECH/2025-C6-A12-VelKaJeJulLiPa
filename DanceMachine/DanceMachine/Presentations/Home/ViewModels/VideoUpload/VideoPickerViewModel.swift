@@ -11,27 +11,37 @@ import AVKit
 
 @Observable
 final class VideoPickerViewModel {
-  
+
   private let store = FirestoreManager.shared
   private let storage = FireStorageManager.shared
   private let progressManager = VideoProgressManager.shared
   private let dataCacheManager = VideoCacheManager.shared
-  
-  var videos: [PHAsset] = [] // 이미지 및 비디오, 라이브포토를 나타내는 모델
-  var selectedAsset: PHAsset? = nil // 선택된 에셋
-  
+  private let cleanupService = UploadCleanupService()
+
+  var videos: [PHAsset] = []
+  var selectedAsset: PHAsset? = nil
+
   var player: AVPlayer?
   var videoTitle: String = ""
   var videoDuration: Double = 0
 
-  
   var isLoading: Bool = false
   var errorMessage: String? = nil
   var showSuccessAlert: Bool = false
-  var uploadProgress: Double = 0.0
-  
-  // 현재 갤러리 접근 권한 상태
+
   var photoLibraryStatus: PHAuthorizationStatus = .notDetermined
+
+  // 업로드 성공한 비디오/트랙 (VideoListView에서 감지)
+  var lastUploadedVideo: Video? = nil
+  var lastUploadedTrack: Track? = nil
+
+  // 실패 시 재시도용 정보
+  private var failedContext: (videoId: String, tracksId: String, sectionId: String, tempURL: URL)? = nil
+
+  var isUploading: Bool {
+    if case .uploading = progressManager.uploadState { return true }
+    return false
+  }
   
   // MARK: 동영상 미리보기 로드
   func loadVideo() {
@@ -84,39 +94,52 @@ extension VideoPickerViewModel {
         guard let urlAsset = av as? AVURLAsset else { return }
         
         Task {
+          let videoId = UUID().uuidString
+
           do {
             let duration = try await self.getDuration(from: urlAsset)
-            
+
+            // 임시 파일로 복사
+            let tempURL = try await self.copyToTemp(urlAsset, videoId: videoId)
+
             let (video, track) = try await self.generateVideo(
               from: urlAsset,
               duration: duration,
               tracksId: tracksId,
-              sectionId: sectionId
+              sectionId: sectionId,
+              videoId: videoId
             )
-            
+
             await MainActor.run {
-              self.videoDuration = duration
+              self.lastUploadedVideo = video
+              self.lastUploadedTrack = track
+              self.progressManager.finishUpload()
+              self.deleteTempFile(tempURL)
               self.isLoading = false
               self.showSuccessAlert = true
-              self.progressManager.finishUpload(video: video, track: track)
-              print("비디오 업로드 성공")
-              
-//              NotificationCenter.post(.videoUpload)
             }
-            
+
           } catch let error as VideoError {
+            // 실패 시 임시 파일 복사 (재시도용)
+            let tempURL = try? await self.copyToTemp(urlAsset, videoId: videoId)
+
             await MainActor.run {
               self.isLoading = false
-              self.errorMessage = error.userMsg
-              self.progressManager.failUpload(errorMessage: error.userMsg)
-              print("Firestore 에러 : \(error.debugMsg)")
+              if let url = tempURL {
+                self.failedContext = (videoId, tracksId, sectionId, url)
+              }
+              self.progressManager.failUpload(message: error.userMsg)
             }
           } catch {
+            // 실패 시 임시 파일 복사 (재시도용)
+            let tempURL = try? await self.copyToTemp(urlAsset, videoId: videoId)
+
             await MainActor.run {
               self.isLoading = false
-              self.errorMessage = "비디오 업로드 중 오류가 발생했습니다"
-              self.progressManager.failUpload(errorMessage: "비디오 업로드 중 오류가 발생했습니다")
-              print("예상치 못한 에러: \(error)")
+              if let url = tempURL {
+                self.failedContext = (videoId, tracksId, sectionId, url)
+              }
+              self.progressManager.failUpload(message: "업로드 실패")
             }
           }
         }
@@ -127,11 +150,11 @@ extension VideoPickerViewModel {
     from asset: AVURLAsset,
     duration: Double,
     tracksId: String,
-    sectionId: String
+    sectionId: String,
+    videoId: String
   ) async throws -> (Video, Track) {
     let videoData = try Data(contentsOf: asset.url)
 
-    let videoId = UUID().uuidString
     let trackId = UUID().uuidString
 
     // 썸네일 생성
@@ -261,7 +284,6 @@ extension VideoPickerViewModel {
     func updateTotalProgress() {
       Task { @MainActor in
         let totalProgress = (videoProgress * 0.8) + (thumbProgress * 0.2)
-        progressManager.uploadProgress = totalProgress
         progressManager.updateProgress(totalProgress)
       }
     }
@@ -325,9 +347,91 @@ extension VideoPickerViewModel {
   private func getDuration(
     from asset: AVURLAsset
   ) async throws -> Double {
-    
+
     let d = try await asset.load(.duration)
     return CMTimeGetSeconds(d)
+  }
+
+  // MARK: - 재시도/취소
+
+  /// 재시도
+  func retryUpload() async {
+    guard let context = failedContext else { return }
+
+    await MainActor.run {
+      self.isLoading = true
+      self.progressManager.startUpload()
+    }
+
+    // 기존 데이터 정리
+    await cleanupService.cleanupFailedUpload(
+      videoId: context.videoId,
+      tracksId: context.tracksId,
+      sectionId: context.sectionId
+    )
+
+    // 재업로드
+    do {
+      let asset = AVURLAsset(url: context.tempURL)
+      let duration = try await getDuration(from: asset)
+
+      let (video, track) = try await generateVideo(
+        from: asset,
+        duration: duration,
+        tracksId: context.tracksId,
+        sectionId: context.sectionId,
+        videoId: context.videoId
+      )
+
+      await MainActor.run {
+        self.lastUploadedVideo = video
+        self.lastUploadedTrack = track
+        self.progressManager.finishUpload()
+        self.deleteTempFile(context.tempURL)
+        self.failedContext = nil
+        self.isLoading = false
+        self.showSuccessAlert = true
+      }
+    } catch {
+      await MainActor.run {
+        self.isLoading = false
+        self.progressManager.failUpload(message: "재시도 실패")
+      }
+    }
+  }
+
+  /// 취소
+  func cancelUpload() async {
+    guard let context = failedContext else { return }
+
+    // 데이터 정리
+    await cleanupService.cleanupFailedUpload(
+      videoId: context.videoId,
+      tracksId: context.tracksId,
+      sectionId: context.sectionId
+    )
+
+    deleteTempFile(context.tempURL)
+
+    await MainActor.run {
+      self.failedContext = nil
+      self.progressManager.reset()
+    }
+  }
+
+  // MARK: - 임시 파일
+
+  private func copyToTemp(_ asset: AVURLAsset, videoId: String) async throws -> URL {
+    let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("\(videoId).mov")
+    if FileManager.default.fileExists(atPath: tempURL.path) {
+      try? FileManager.default.removeItem(at: tempURL)
+    }
+    try FileManager.default.copyItem(at: asset.url, to: tempURL)
+    return tempURL
+  }
+
+  private func deleteTempFile(_ url: URL) {
+    try? FileManager.default.removeItem(at: url)
   }
 }
 // MARK: - 권한 설정 관련

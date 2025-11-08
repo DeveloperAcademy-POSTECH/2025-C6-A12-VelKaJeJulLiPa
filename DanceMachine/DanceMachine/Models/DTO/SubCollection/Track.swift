@@ -7,6 +7,7 @@
 
 import Foundation
 
+nonisolated
 struct Track: Codable {
     
     let trackId: String
