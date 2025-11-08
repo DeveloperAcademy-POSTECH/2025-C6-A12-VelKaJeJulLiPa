@@ -15,8 +15,9 @@ final class VideoProgressManager {
   
   var isUploading: Bool = false
   var uploadProgress: Double = 0.0
-  
+
   var onUploadComplete: ((Video, Track) -> Void)? = nil
+  var onUploadError: ((String) -> Void)? = nil
   
   func startUpload() {
     self.isUploading = true
@@ -33,14 +34,21 @@ final class VideoProgressManager {
   
   func finishUpload(video: Video, track: Track) {
     uploadProgress = 1.0
-    
+
     onUploadComplete?(video, track)
-    
+
 //    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
 //      self.isUploading = false
 //      self.uploadProgress = 0.0
 //    }
-    
+
+    self.isUploading = false
+    self.uploadProgress = 0.0
+  }
+
+  func failUpload(errorMessage: String) {
+    onUploadError?(errorMessage)
+
     self.isUploading = false
     self.uploadProgress = 0.0
   }

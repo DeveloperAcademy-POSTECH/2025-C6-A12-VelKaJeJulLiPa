@@ -20,6 +20,9 @@ struct VideoListView: View {
   @State private var showEditToast: Bool = false
   @State private var showEditVideoTitleToast: Bool = false
   
+  @State private var showUploadErrorToast: Bool = false
+  @State private var uploadErrorMessage: String = ""
+  
   init(
     vm: VideoListViewModel = .init(),
     tracksId: String,
@@ -87,6 +90,10 @@ struct VideoListView: View {
           await vm.addNewVideo(video: video, track: track, traksId: tracksId)
         }
       }
+      VideoProgressManager.shared.onUploadError = { errorMessage in
+        uploadErrorMessage = errorMessage
+        showUploadErrorToast = true
+      }
     }
     // MARK: 영상 피커 시트
     .sheet(isPresented: $showCustomPicker) {
@@ -124,6 +131,15 @@ struct VideoListView: View {
       bottomPadding: 63,
       content: {
         ToastView(text: "영상 이름이 수정되었습니다.", icon: .check)
+      }
+    )
+    .toast(
+      isPresented: $showUploadErrorToast,
+      duration: 3,
+      position: .bottom,
+      bottomPadding: 63,
+      content: {
+        ToastView(text: uploadErrorMessage, icon: .warning)
       }
     )
     // MARK: 영상 삭제 토스트 리시버

@@ -108,12 +108,14 @@ extension VideoPickerViewModel {
             await MainActor.run {
               self.isLoading = false
               self.errorMessage = error.userMsg
+              self.progressManager.failUpload(errorMessage: error.userMsg)
               print("Firestore 에러 : \(error.debugMsg)")
             }
           } catch {
             await MainActor.run {
               self.isLoading = false
               self.errorMessage = "비디오 업로드 중 오류가 발생했습니다"
+              self.progressManager.failUpload(errorMessage: "비디오 업로드 중 오류가 발생했습니다")
               print("예상치 못한 에러: \(error)")
             }
           }
