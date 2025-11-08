@@ -143,6 +143,52 @@ struct HomeView: View {
         }
       }
     }
+    // 팀 스페이스 생성 시트
+    .sheet(isPresented: $presentingCreateTeamspaceSheet) {
+      CreateTeamspaceView(onCreated: {
+        Task {
+          self.isLoading = true
+          defer { isLoading = false }
+          await viewModel.ensureTeamspaceInitialized()
+          await viewModel.fetchCurrentTeamspaceProject()
+        }
+      })
+        .presentationDragIndicator(.visible)
+        .presentationDetents([.fraction(0.9)])
+        .presentationCornerRadius(16)
+    }
+    // 프로젝트 생성 시트
+    .sheet(isPresented: $presentingCreateProjectSheet) {
+      CreateProjectView(onCreated: {
+        Task {
+          self.isLoading = true
+          defer { isLoading = false }
+          let newloaded = await viewModel.fetchCurrentTeamspaceProject()
+          self.viewModel.project.projects = newloaded
+        }
+      })
+      .presentationDragIndicator(.visible)
+      .presentationDetents([.fraction(0.9)])
+      .presentationCornerRadius(16)
+    }
+    // 곡 생성 시트
+    .sheet(isPresented: $showCreateTracksView) {
+      // 기존 CreateTracksView API 그대로 쓴다고 가정
+      CreateTracksView(
+        choiceSelectedProject: Binding(
+          get: { viewModel.selectedProject },
+          set: { _ in } // 외부에서 바꾸지 않음(읽기 전용 바인딩)
+        ),
+        onCreated: { // 곡 생성 됐을 때, 로직
+          if let pid = viewModel.project.expandedID {
+            viewModel.loadTracks(for: pid) // 생성 후 갱신
+          }
+        }
+      )
+      .presentationDragIndicator(.visible)
+      .presentationDetents([.fraction(0.9)])
+      .presentationCornerRadius(16)
+    }
     .sheet(item: $presentingRemovalSheetTracks) { tracks in
       BottomConfirmSheetView(
         titleText: "\(tracks.trackName)\n곡과 영상을 모두 삭제하시겠어요?",
@@ -154,52 +200,6 @@ struct HomeView: View {
             viewModel.loadTracks(for: pid) // 삭제 후 갱신
           }
         }
-      }
-      // 팀 스페이스 생성 시트
-      .sheet(isPresented: $presentingCreateTeamspaceSheet) {
-        CreateTeamspaceView(onCreated: {
-          Task {
-            self.isLoading = true
-            defer { isLoading = false }
-            await viewModel.ensureTeamspaceInitialized()
-            await viewModel.fetchCurrentTeamspaceProject()
-          }
-        })
-          .presentationDragIndicator(.visible)
-          .presentationDetents([.fraction(0.9)])
-          .presentationCornerRadius(16)
-      }
-      // 프로젝트 생성 시트
-      .sheet(isPresented: $presentingCreateProjectSheet) {
-        CreateProjectView(onCreated: {
-          Task {
-            self.isLoading = true
-            defer { isLoading = false }
-            let newloaded = await viewModel.fetchCurrentTeamspaceProject()
-            self.viewModel.project.projects = newloaded
-          }
-        })
-        .presentationDragIndicator(.visible)
-        .presentationDetents([.fraction(0.9)])
-        .presentationCornerRadius(16)
-      }
-      // 곡 생성 시트
-      .sheet(isPresented: $showCreateTracksView) {
-        // 기존 CreateTracksView API 그대로 쓴다고 가정
-        CreateTracksView(
-          choiceSelectedProject: Binding(
-            get: { viewModel.selectedProject },
-            set: { _ in } // 외부에서 바꾸지 않음(읽기 전용 바인딩)
-          ),
-          onCreated: { // 곡 생성 됐을 때, 로직
-            if let pid = viewModel.project.expandedID {
-              viewModel.loadTracks(for: pid) // 생성 후 갱신
-            }
-          }
-        )
-        .presentationDragIndicator(.visible)
-        .presentationDetents([.fraction(0.9)])
-        .presentationCornerRadius(16)
       }
     }
     .overlay { if isLoading { LoadingView() } }
