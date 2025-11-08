@@ -106,7 +106,7 @@ struct VideoView: View {
       VStack(spacing: 0) {
         feedbackSection.padding(.vertical, 8)
         Divider()
-        feedbackListView.padding(.top, 16)
+        feedbackListView
       }
       .ignoresSafeArea(.keyboard)
       .contentShape(Rectangle())
@@ -414,22 +414,14 @@ struct VideoView: View {
         }
       }
     }
-    .overlay { // FIXME: 로딩뷰 디자인 받기전까지 임시
+    .overlay {
       if vm.videoVM.isLoading {
-        VStack {
-          ProgressView()
-            .progressViewStyle(CircularProgressViewStyle())
-            .tint(.black)
-            .scaleEffect(1)
-          
-          if vm.videoVM.loadingProgress > 0 {
-            Text("다운로드 중... \(Int(vm.videoVM.loadingProgress * 100))%")
-              .foregroundStyle(.white)
-              .font(.system(size: 14))
+        ZStack {
+          Color.backgroundElevated
+          if vm.videoVM.isDownloading {
+            downloadProgress(progress: vm.videoVM.loadingProgress)
           } else {
-            Text("로딩 중...")
-              .foregroundStyle(.white)
-              .font(.system(size: 14))
+            VideoLottieView()
           }
         }
       }
@@ -487,7 +479,6 @@ struct VideoView: View {
           }
           
         }
-        .padding(.horizontal, 16)
         .onAppear {
           self.scrollProxy = proxy
         }
