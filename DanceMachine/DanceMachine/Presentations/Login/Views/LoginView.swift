@@ -32,11 +32,16 @@ struct LoginView: View {
         
         Spacer()
         
-        CustomAppleSignInButton {
-          Task {
-            await viewModel.signInApple()
-          }
+        Button {
+          Task { await viewModel.signInApple() }
+        } label: {
+          SignInWithAppleButtonViewRepresentable(
+            type: .default,
+            style: .white
+          )
+          .allowsHitTesting(false)
         }
+        .frame(height: 54)
         .padding(.horizontal, 26)
         
         Spacer()
