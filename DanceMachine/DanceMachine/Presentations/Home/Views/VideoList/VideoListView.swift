@@ -19,10 +19,9 @@ struct VideoListView: View {
   @State private var showDeleteToast: Bool = false
   @State private var showEditToast: Bool = false
   @State private var showEditVideoTitleToast: Bool = false
-  
-  @State private var showUploadErrorToast: Bool = false
-  @State private var uploadErrorMessage: String = ""
-  
+
+  @State private var pickerViewModel = VideoPickerViewModel()
+
   init(
     vm: VideoListViewModel = .init(),
     tracksId: String,
@@ -41,7 +40,7 @@ struct VideoListView: View {
   
   var body: some View {
     VStack(spacing: 0) {
-      if vm.videos.isEmpty && vm.isLoading != true && !VideoProgressManager.shared.isUploading {
+      if vm.videos.isEmpty && vm.isLoading != true && !pickerViewModel.isUploading {
         emptyView
         //        uploadButtons
       } else {
@@ -85,19 +84,26 @@ struct VideoListView: View {
     }
     .task {
       await vm.loadFromServer(tracksId: tracksId)
-      VideoProgressManager.shared.onUploadComplete = { video, track in
-        Task {
-          await vm.addNewVideo(video: video, track: track, traksId: tracksId)
+    }
+    .onChange(of: pickerViewModel.lastUploadedVideo) { _, newValue in
+      guard let video = newValue, let track = pickerViewModel.lastUploadedTrack else { return }
+      Task {
+        await vm.addNewVideo(video: video, track: track, traksId: tracksId)
+        await MainActor.run {
+          pickerViewModel.lastUploadedVideo = nil
+          pickerViewModel.lastUploadedTrack = nil
         }
-      }
-      VideoProgressManager.shared.onUploadError = { errorMessage in
-        uploadErrorMessage = errorMessage
-        showUploadErrorToast = true
       }
     }
     // MARK: 영상 피커 시트
-    .sheet(isPresented: $showCustomPicker) {
+    .sheet(isPresented: $showCustomPicker, onDismiss: {
+      // sheet 닫힐 때 선택 초기화
+      pickerViewModel.selectedAsset = nil
+      pickerViewModel.videoTitle = ""
+      pickerViewModel.cleanupPlayer()
+    }) {
       VideoPickerView(
+        pickerViewModel: pickerViewModel,
         tracksId: tracksId,
         sectionId: vm.selectedSection?.sectionId ?? sectionId,
         trackName: trackName
@@ -131,15 +137,6 @@ struct VideoListView: View {
       bottomPadding: 63,
       content: {
         ToastView(text: "영상 이름이 수정되었습니다.", icon: .check)
-      }
-    )
-    .toast(
-      isPresented: $showUploadErrorToast,
-      duration: 3,
-      position: .bottom,
-      bottomPadding: 63,
-      content: {
-        ToastView(text: uploadErrorMessage, icon: .warning)
       }
     )
     // MARK: 영상 삭제 토스트 리시버
@@ -234,6 +231,7 @@ struct VideoListView: View {
             videos: vm.filteredVideos,
             track: vm.track,
             section: vm.section,
+            pickerViewModel: pickerViewModel,
             vm: $vm
           )
           .padding(.horizontal, horizontalPadding)

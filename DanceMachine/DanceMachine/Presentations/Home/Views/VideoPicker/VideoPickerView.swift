@@ -11,19 +11,20 @@ import AVKit
 
 struct VideoPickerView: View {
   @Environment(\.dismiss) private var dismiss
-  
-  @State private var vm: VideoPickerViewModel = .init()
-  
+
+  @Bindable var pickerViewModel: VideoPickerViewModel
+
   @State private var showEmptyTitleAlert: Bool = false
   @State private var showEmptyVideoAlert: Bool = false
-  
   @State private var showToast: Bool = false
-  
+
   @FocusState private var isFocused: Bool
-  
+
   let tracksId: String
   let sectionId: String
   let trackName: String
+
+  private var vm: VideoPickerViewModel { pickerViewModel }
   
   var body: some View {
     NavigationStack {
@@ -96,8 +97,8 @@ struct VideoPickerView: View {
             textField
             
             CustomPicker(
-              videos: $vm.videos,
-              selectedAsset: $vm.selectedAsset,
+              videos: $pickerViewModel.videos,
+              selectedAsset: $pickerViewModel.selectedAsset,
               spacing: spacing,
               itemWidth: itemWidth
             )
@@ -121,7 +122,7 @@ struct VideoPickerView: View {
       .overlay {
         TextField(
           vm.selectedAsset == nil ? "업로드할 동영상을 선택하세요." : "동영상 제목을 입력해주세요.",
-          text: $vm.videoTitle
+          text: $pickerViewModel.videoTitle
         )
         .padding()
         .textFieldStyle(.plain)
@@ -204,5 +205,10 @@ struct VideoPickerView: View {
 }
 
 #Preview {
-  VideoPickerView(tracksId: "", sectionId: "", trackName: "벨코의 리치맨")
+  VideoPickerView(
+    pickerViewModel: VideoPickerViewModel(),
+    tracksId: "",
+    sectionId: "",
+    trackName: "벨코의 리치맨"
+  )
 }
