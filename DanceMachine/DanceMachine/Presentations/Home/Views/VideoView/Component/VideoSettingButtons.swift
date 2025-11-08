@@ -19,37 +19,53 @@ struct VideoSettingButtons: View {
   var body: some View {
     HStack {
       Spacer()
-      VStack {
+      VStack(alignment: .trailing) {
         topButton
           .padding(.top, 10)
         Spacer()
         orientationButton
-          .padding(.bottom, 48)
+          .padding(.bottom, 54)
       }
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .padding(.horizontal, 16)
   }
-
-  // 위쪽 버튼: 세로모드는 배속조절, 가로모드는 피드백 패널 토글
+  
   private var topButton: some View {
-    Button {
-      if isLandscapeMode {
-        toggleFeedbackPanel?()
-      } else {
-        action()
+    HStack(spacing: 15) {
+      if isLandscapeMode { // 가로모드일때
+        feedbackToggleButton
+        timeButton
+      } else if showFeedbackPanel { // 피드백 패널 열렸을때
+        timeButton
+      } else { // 세로모드일때
+        timeButton
       }
-    } label: {
-      Image(systemName: isLandscapeMode
-        ? (showFeedbackPanel ? "message" : "message") // FIXME: 수정
-        : "deskclock"
-      )
-      .font(.system(size: 20))
-      .foregroundStyle(.white)
-      .frame(width: 44, height: 44)
-      .clipShape(RoundedRectangle(cornerRadius: 8))
     }
-    .contentShape(Rectangle())
+  }
+  
+  private var feedbackToggleButton: some View {
+    Button {
+      toggleFeedbackPanel?()
+    } label: {
+      Image(systemName: "message")
+        .font(.system(size: 20))
+        .foregroundStyle(.labelStrong)
+    }
+    .frame(width: 44, height: 44)
+    .overlayController()
+  }
+  
+  private var timeButton: some View {
+    Button {
+      action()
+    } label: {
+      Image(systemName: "clock.arrow.trianglehead.clockwise.rotate.90.path.dotted")
+        .font(.system(size: 20))
+        .foregroundStyle(.labelStrong)
+    }
+    .frame(width: 44, height: 44)
+    .overlayController()
   }
 
   // 아래쪽 버튼: 항상 전체화면 토글
@@ -59,11 +75,10 @@ struct VideoSettingButtons: View {
     } label: {
       Image(systemName: isLandscapeMode ? "arrow.up.right.and.arrow.down.left.rectangle" : "arrow.down.left.and.arrow.up.right.rectangle")
         .font(.system(size: 20))
-        .foregroundStyle(.white)
-        .frame(width: 44, height: 44)
-        .clipShape(Rectangle())
+        .foregroundStyle(.labelStrong)
     }
-    .contentShape(Rectangle())
+    .frame(width: 44, height: 44)
+    .overlayController()
   }
 }
 
