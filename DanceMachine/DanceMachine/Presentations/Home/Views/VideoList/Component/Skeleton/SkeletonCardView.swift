@@ -22,7 +22,7 @@ struct SkeletonCardView: View {
     )
     .background(
       RoundedRectangle(cornerRadius: 10)
-        .fill(Color.gray.opacity(0.7))
+        .fill(Color.fillAssitive)
     )
     .clipShape(RoundedRectangle(cornerRadius: 5))
   }
@@ -57,15 +57,16 @@ struct SkeletonCardView: View {
   
   private var topSkeletonView: some View {
     SkeletonView(
-      RoundedCorner(
-        radius: 10,
-        corners: [.topLeft, .topRight]
-      )
+      RoundedCorner(radius: 10, corners: [.topLeft, .topRight]),
+      Color.fillNormal
     )
   }
   
   private var bottomSkeletonView: some View {
-    SkeletonView(RoundedRectangle(cornerRadius: 5))
+    SkeletonView(
+      RoundedRectangle(cornerRadius: 5),
+      Color.fillNormal
+    )
   }
 }
 

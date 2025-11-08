@@ -18,10 +18,11 @@ struct VideoGrid: View {
   let videos: [Video]
   let track: [Track]
   let section: [Section]
+  let pickerViewModel: VideoPickerViewModel
 
   @State private var selectedVideo: Video?
-  @State private var selectedTrack: Track? // 섹션 이동
-  @State private var showDeleteAlert: Bool = false // 삭제
+  @State private var selectedTrack: Track?
+  @State private var showDeleteAlert: Bool = false
   @State private var showEditVideoTitle: Video?
   @State private var progressManager = VideoProgressManager.shared
   @Binding var vm: VideoListViewModel
@@ -34,10 +35,19 @@ struct VideoGrid: View {
       ),
       spacing: spacing
     ) {
-      if progressManager.isUploading {
+      if case .uploading = progressManager.uploadState {
         UploadProgressCard(
           cardSize: size,
-          progress: progressManager.uploadProgress
+          progressManager: progressManager,
+          onRetry: { await pickerViewModel.retryUpload() },
+          onCancel: { await pickerViewModel.cancelUpload() }
+        )
+      } else if case .failed = progressManager.uploadState {
+        UploadProgressCard(
+          cardSize: size,
+          progressManager: progressManager,
+          onRetry: { await pickerViewModel.retryUpload() },
+          onCancel: { await pickerViewModel.cancelUpload() }
         )
       }
       if vm.isLoading {
@@ -159,6 +169,7 @@ extension Video: Identifiable {
       sectionId: "",
       sectionTitle: "22"
     )],
+    pickerViewModel: VideoPickerViewModel(),
     vm: .constant(VideoListViewModel())
   )
 }

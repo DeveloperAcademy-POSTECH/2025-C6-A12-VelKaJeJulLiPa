@@ -30,6 +30,7 @@ struct GridCell: View {
     VStack(alignment: .leading) {
       thumbnail
       content
+      Spacer()
     }
     .frame(width: size, height: size * 1.22)
     .contentShape(Rectangle())
