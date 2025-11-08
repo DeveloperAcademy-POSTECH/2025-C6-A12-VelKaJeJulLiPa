@@ -11,9 +11,9 @@ struct AppMakerView: View {
   var body: some View {
     ZStack {
       Color.backgroundNormal.ignoresSafeArea()
-      VStack {
-        ScrollView {
-          Text("Coming Soon...")
+      ScrollView {
+        ForEach(TeamMember.allCases, id: \.self) { member in
+          TeamMemberRow(member: member)
         }
       }
     }
