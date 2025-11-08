@@ -165,22 +165,24 @@ struct VideoListView: View {
           ZStack {
             // 작은 버튼 (원형)
             if isScrollDown {
-              Image(systemName: "plus")
-                .font(.system(size: 22))
-                .foregroundStyle(.white)
+              Image(systemName: "video.fill.badge.plus")
+                .font(.system(size: 17))
+                .foregroundStyle(.labelStrong)
                 .transition(.opacity)
             }
             // 큰 버튼 (직사각형)
             if !isScrollDown {
               Text("동영상 업로드")
-                .font(.system(size: 17))
-                .foregroundStyle(Color.white)
+                .font(.headline1Medium)
+                .foregroundStyle(.labelStrong)
                 .frame(maxWidth: .infinity)
                 .transition(.opacity)
             }
           }
-          .padding(.horizontal, isScrollDown ? 12 : 20)
-          .padding(.vertical, isScrollDown ? 12 : 14)
+          .padding(.horizontal, 20)
+          .padding(.vertical, 14)
+//          .padding(.horizontal, isScrollDown ? 8 : 20)
+//          .padding(.vertical, isScrollDown ? 8 : 14)
           .frame(maxWidth: isScrollDown ? nil : .infinity)
         }
         .background(
