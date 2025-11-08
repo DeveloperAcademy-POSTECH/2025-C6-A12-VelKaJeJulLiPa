@@ -11,6 +11,7 @@ import SwiftUI
 struct MyPageNavigationRow: View {
   let title: String
   var value: String? = nil
+  var isDividerPresented: Bool = false
   let action: () -> Void
   
   var body: some View {
@@ -33,7 +34,14 @@ struct MyPageNavigationRow: View {
           .font(.headline2SemiBold)
           .foregroundStyle(.labelNormal)
       }
-      .padding()
+      .padding(.vertical, 16)
+      .overlay(alignment: .bottom) {
+        if isDividerPresented {
+          Rectangle()
+            .frame(height: 0.5)
+            .foregroundStyle(Color.strokeNormal)
+        }
+      }
     }
   }
 }

@@ -11,6 +11,7 @@ import SwiftUI
 struct MyPageInfoRow: View {
   let title: String
   let value: String
+  var isDividerPresented: Bool = false
   
   var body: some View {
     HStack {
@@ -24,7 +25,14 @@ struct MyPageInfoRow: View {
         .font(.headline2Medium)
         .foregroundStyle(.labelNormal)
     }
-    .padding()
+    .padding(.vertical, 16)
+    .overlay(alignment: .bottom) {
+      if isDividerPresented {
+        Rectangle()
+          .frame(height: 0.5)
+          .foregroundStyle(Color.strokeNormal)
+      }
+    }
   }
 }
 
