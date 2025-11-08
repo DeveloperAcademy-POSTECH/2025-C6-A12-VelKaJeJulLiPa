@@ -31,6 +31,7 @@ final class VideoViewModel {
   
   var loadingProgress: Double = 0.0
   var isLoading: Bool = false
+  var isDownloading: Bool = false
   
   // 배속 변수
   var playbackSpeed: Float = 1.0
@@ -56,6 +57,9 @@ extension VideoViewModel {
       }
       
       print("네트워크에서 다운로드 시작")
+      await MainActor.run {
+        self.isDownloading = true
+      }
       let cachedURL = try await cacheManager.downloadAndCacheVideo(
         from: videoURL,
         videoId: videoId) { [weak self] progress in
@@ -68,6 +72,7 @@ extension VideoViewModel {
       
       await MainActor.run {
         self.isLoading = false
+        self.isDownloading = false
       }
       
     } catch {
