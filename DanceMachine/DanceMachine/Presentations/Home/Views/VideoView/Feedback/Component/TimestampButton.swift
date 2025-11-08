@@ -15,20 +15,13 @@ struct TimestampButton: View {
     Button {
       timeSeek()
     } label: {
-      HStack {
+      HStack(spacing: 4) {
         Image(systemName: "clock")
-          .font(.system(size: 14))
-          .foregroundStyle(.purple)
+          .font(.system(size: 18))
+          .foregroundStyle(.secondaryNormal)
         Text(text)
-          .font(.system(size: 14))
-          .foregroundStyle(.purple)
-      }
-      .padding(.horizontal, 6)
-      .padding(.vertical, 4)
-      .background {
-        RoundedRectangle(cornerRadius: 1000)
-          .fill(Color.gray.opacity(0.6))
-          .stroke(Color.purple)
+          .font(.headline2Medium)
+          .foregroundStyle(.secondaryNormal)
       }
     }
   }
