@@ -105,7 +105,7 @@ struct UploadProgressCard: View {
         Circle()
           .stroke(
             Color.fillAssitive,
-            lineWidth: 4
+            lineWidth: 5
           )
           .frame(
             width: cardSize / 2.5,
@@ -113,13 +113,19 @@ struct UploadProgressCard: View {
           )
         Circle()
           .trim(from: 0, to: progress)
-          .stroke(Color.secondaryNormal, lineWidth: 4)
+          .stroke(
+            Color.secondaryNormal,
+            style: StrokeStyle(
+              lineWidth: 5,
+              lineCap: .round
+            )
+          )
           .frame(width: cardSize / 2.5, height: cardSize / 2.5)
           .rotationEffect(.degrees(90))
 
         VStack(spacing: 2) {
-          Image(systemName: "arrow.up")
-            .font(.system(size: 20, weight: .heavy))
+          Image(systemName: "arrowshape.up.fill")
+            .font(.system(size: 20))
             .foregroundStyle(Color.secondaryNormal)
           Text("\(Int(progress * 100))%")
             .font(.system(size: 14))
