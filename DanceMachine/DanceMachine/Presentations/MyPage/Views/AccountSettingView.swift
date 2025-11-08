@@ -22,8 +22,10 @@ struct AccountSettingView: View {
     ZStack {
       Color.backgroundNormal.ignoresSafeArea()
       
-      VStack {
-        MyPageInfoRow(title: "ID", value: viewModel.myId)
+      VStack(spacing: 0) {
+        MyPageInfoRow(title: "ID", value: viewModel.myId, isDividerPresented: true)
+          .padding(.vertical, 8)
+          .padding(.horizontal, 16)
         
         Spacer()
         
@@ -82,5 +84,9 @@ struct AccountSettingView: View {
 
 
 #Preview {
-  AccountSettingView()
+  NavigationStack {
+    AccountSettingView()
+      .environmentObject(MainRouter())
+      .environment(TabRouter())
+  }
 }
