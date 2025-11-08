@@ -20,7 +20,7 @@ struct LoginView: View {
       VStack(spacing: 24) {
         Spacer()
         
-        Image(.logo) // FIXME: - 이미지 수정 (임시)
+        Image("AppLogo") // FIXME: - 이미지 수정 (임시)
           .resizable()
           .scaledToFit()
           .clipShape(RoundedRectangle(cornerRadius: 15))
