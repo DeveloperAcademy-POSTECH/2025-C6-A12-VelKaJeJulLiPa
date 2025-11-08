@@ -37,7 +37,6 @@ struct LoginView: View {
             await viewModel.signInApple()
           }
         }
-        .frame(height: 54)
         .padding(.horizontal, 26)
         
         Spacer()

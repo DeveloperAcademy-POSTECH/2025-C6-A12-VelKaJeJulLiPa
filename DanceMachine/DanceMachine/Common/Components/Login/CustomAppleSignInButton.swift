@@ -7,7 +7,6 @@
 
 import SwiftUI
 
-// FIXME: - Hi-fi 적용하기
 struct CustomAppleSignInButton: View {
   var action: () -> Void
   
@@ -15,12 +14,12 @@ struct CustomAppleSignInButton: View {
     Button(action: action) {
       HStack {
         Image(systemName: "applelogo")
-          .font(.heading1SemiBold)
+          .font(.system(size: 19, weight: .semibold))
         Text("Apple로 시작하기")
-          .font(.headline)
+          .font(.system(size: 19, weight: .semibold))
       }
+      .frame(height: 54)
       .frame(maxWidth: .infinity)
-      .padding()
       .foregroundColor(.black)
       .background(.white)
       .clipShape(RoundedRectangle(cornerRadius: 15))
@@ -31,11 +30,10 @@ struct CustomAppleSignInButton: View {
 
 #Preview {
   ZStack {
-    Color.black.ignoresSafeArea()
+    Color.backgroundNormal.ignoresSafeArea()
     CustomAppleSignInButton {
       print("Apple 로그인 버튼 클릭됨")
     }
-    .frame(height: 54)
     .padding(.horizontal, 26)
   }
 }
