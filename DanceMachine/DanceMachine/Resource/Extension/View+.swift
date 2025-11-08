@@ -120,4 +120,78 @@ extension View {
       .background(Color.secondaryNormal)
     }
   }
+  
+  @ViewBuilder
+  func overlayController() -> some View {
+    if #available(iOS 26.0, *) {
+      self
+        .glassEffect(
+          .clear.interactive(),
+          in: .circle
+        )
+    } else {
+      self
+        .background(
+          Circle()
+            .fill(Color.black.opacity(0.25))
+            .shadow(color: .white.opacity(0.3), radius: 2, x: 0, y: 1)
+        )
+    }
+  }
+  // 피드백 타입 전환 버튼
+  @ViewBuilder
+  func feedbackCircleButton() -> some View {
+    if #available(iOS 26.0, *) {
+      self
+        .glassEffect(
+          .clear.tint(Color.black.opacity(0.8)).interactive(),
+          in: .circle
+        )
+    } else {
+      self
+        .background {
+          Circle()
+            .fill(Color.black)
+            .overlay(.ultraThinMaterial)
+        }
+        .clipShape(Circle())
+    }
+  }
+  
+  @ViewBuilder
+  func feedbackPointButton() -> some View {
+    if #available(iOS 26.0, *) {
+      self
+        .glassEffect(.clear.tint(.secondaryNormal).interactive(), in: RoundedRectangle(cornerRadius: 1000))
+    } else {
+      self
+        .background {
+          RoundedRectangle(cornerRadius: 1000)
+            .fill(Color.blue)
+            .overlay(.ultraThinMaterial)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 1000))
+    }
+  }
+  
+  @ViewBuilder
+  func feedbackIntervalButton(isRecording: Bool) -> some View {
+    if #available(iOS 26.0, *) {
+      self
+        .glassEffect(
+          .clear.tint(
+            (isRecording ? Color.secondaryStrong : Color.secondaryNormal).opacity(0.7)
+          ).interactive(),
+          in: RoundedRectangle(cornerRadius: 1000)
+        )
+    } else {
+      self
+        .background {
+          RoundedRectangle(cornerRadius: 1000)
+            .fill(isRecording ? Color.purple : Color.blue)
+            .overlay(.ultraThinMaterial)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 1000))
+      }
+  }
 }
