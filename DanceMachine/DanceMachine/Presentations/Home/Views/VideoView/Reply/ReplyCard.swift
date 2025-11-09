@@ -18,9 +18,12 @@ struct ReplyCard: View {
   
   var body: some View {
     HStack(alignment: .top, spacing: 8) {
-      Image(systemName: "arrow.turn.down.right") // FIXME: 아이콘 수정
-        .foregroundStyle(.black) // FIXME: 다크모드 배경색 명시
-      VStack(alignment: .leading, spacing: 8) {
+      Image(systemName: "arrowshape.turn.up.right")
+        .font(.system(size: 14))
+        .rotationEffect(.degrees(180))
+        .scaleEffect(x: -1, y: 1)
+        .foregroundStyle(.labelNormal)
+      VStack(alignment: .leading, spacing: 12) {
         topRow
         taggedUserRow
         replyButton
@@ -37,13 +40,15 @@ struct ReplyCard: View {
     ZStack(alignment: .topTrailing) {
       HStack {
         Text(authorUser?.name ?? "알 수 없는 유저")
-          .font(.system(size: 14)) // FIXME: 폰트수정
-          .foregroundStyle(.black) // FIXME: 다크모드 배경색 명시
+          .font(.footnoteSemiBold)
+          .foregroundStyle(.labelNormal)
         if reply.createdAt != nil {
           Text("·")
-            .font(.system(size: 14)) // FIXME: 폰트수정
+            .font(.footnoteMedium)
+            .foregroundStyle(.labelAssitive)
           Text(reply.createdAt?.listTimeLabel() ?? "방금 전")
-            .font(.system(size: 14)) // FIXME: 폰트수정
+            .font(.footnoteMedium)
+            .foregroundStyle(.labelAssitive)
         }
         Spacer()
       }
@@ -56,11 +61,10 @@ struct ReplyCard: View {
           }
         } label: {
           Image(systemName: "ellipsis")
-            .foregroundStyle(.gray)
+            .foregroundStyle(.labelStrong)
             .frame(width: 22, height: 22)
             .contentShape(Rectangle())
         }
-        .tint(.red)
       }
     }
   }
@@ -70,13 +74,13 @@ struct ReplyCard: View {
       if !taggedUsers.isEmpty {
         ForEach(taggedUsers, id: \.userId) { user in
           Text("@\(user.name)")
-            .font(.system(size: 16)) // FIXME: 폰트수정
-            .foregroundStyle(Color.blue)
+            .font(.body1Medium)
+            .foregroundStyle(.accentBlueStrong)
         }
       }
       Text(reply.content)
-        .font(.system(size: 16)) // FIXME: 폰트 수정
-        .foregroundStyle(Color.black) // FIXME: 색 수정
+        .font(.body1Medium)
+        .foregroundStyle(.labelStrong)
     }
   }
   
@@ -85,8 +89,8 @@ struct ReplyCard: View {
       replyAction()
     } label: {
       Text("답글달기")
-        .font(.caption)
-        .foregroundStyle(.gray)
+        .font(.footnoteMedium)
+        .foregroundStyle(.labelNormal)
     }
   }
 }
