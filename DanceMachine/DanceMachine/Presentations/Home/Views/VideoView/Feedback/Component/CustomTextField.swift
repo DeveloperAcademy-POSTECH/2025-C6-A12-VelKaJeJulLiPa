@@ -48,7 +48,7 @@ struct CustomTextField: View {
         } label: {
           Image(systemName: "paperplane.fill")
             .font(.system(size: 19))
-            .foregroundStyle(.fillAssitive)
+            .foregroundStyle(content.isEmpty ? .fillAssitive : .secondaryStrong)
         }
         .padding(.horizontal, 16)
         .zIndex(1)
