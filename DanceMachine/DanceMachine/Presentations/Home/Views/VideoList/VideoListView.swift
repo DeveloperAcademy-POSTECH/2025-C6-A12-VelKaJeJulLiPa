@@ -40,7 +40,7 @@ struct VideoListView: View {
   
   var body: some View {
     VStack(spacing: 0) {
-      if vm.videos.isEmpty && vm.isLoading != true && !pickerViewModel.isUploading {
+      if vm.filteredVideos.isEmpty && vm.isLoading != true && !pickerViewModel.isUploading {
         emptyView
         //        uploadButtons
       } else {
@@ -197,21 +197,24 @@ struct VideoListView: View {
     }
     
     private var emptyView: some View {
-      VStack {
-        Spacer()
-        Image(systemName: "movieclapper.fill")
-          .font(.system(size: 75))
-          .foregroundStyle(.labelAssitive)
-        
-        Spacer().frame(height: 25)
-        
-        Text("비디오가 없습니다.")
-          .font(.caption1Medium)
-          .foregroundStyle(.labelAssitive)
-        Spacer()
+      GeometryReader { geometry in
+        VStack {
+          Image(systemName: "movieclapper.fill")
+            .font(.system(size: 75))
+            .foregroundStyle(.labelAssitive)
+
+          Spacer().frame(height: 25)
+
+          Text("비디오가 없습니다.")
+            .font(.caption1Medium)
+            .foregroundStyle(.labelAssitive)
+        }
+        .frame(maxWidth: .infinity)
+        .position(
+          x: geometry.size.width / 2,
+          y: geometry.size.height / 2
+        )
       }
-      .frame(maxWidth: .infinity, maxHeight: .infinity)
-      .offset(y: -40)
     }
     // MARK: 영상 그리드 뷰
     private var listView: some View {
