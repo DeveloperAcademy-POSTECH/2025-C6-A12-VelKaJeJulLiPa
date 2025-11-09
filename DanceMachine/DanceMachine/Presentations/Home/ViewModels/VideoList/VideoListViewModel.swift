@@ -459,7 +459,8 @@ extension VideoListViewModel {
         videoDuration: 120.5,
         videoURL: "https://example.com/video1.mp4",
         thumbnailURL: "https://example.com/thumb1.jpg",
-        createdAt: Date()
+        createdAt: Date(),
+        uploaderId: ""
       ),
       Video(
         videoId: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!,
@@ -467,7 +468,8 @@ extension VideoListViewModel {
         videoDuration: 95.3,
         videoURL: "https://example.com/video2.mp4",
         thumbnailURL: "https://example.com/thumb2.jpg",
-        createdAt: Date()
+        createdAt: Date(),
+        uploaderId: ""
       ),
       Video(
         videoId: UUID(uuidString: "00000000-0000-0000-0000-000000000003")!,
@@ -475,7 +477,8 @@ extension VideoListViewModel {
         videoDuration: 180.0,
         videoURL: "https://example.com/video3.mp4",
         thumbnailURL: "https://example.com/thumb3.jpg",
-        createdAt: Date()
+        createdAt: Date(),
+        uploaderId: ""
       )
     ]
     
