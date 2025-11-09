@@ -20,7 +20,8 @@ struct FeedbackInPutView: View {
   
   @State private var content: String = ""
   @FocusState private var isFocused: Bool
-  
+  @State private var taggedViewHeight: CGFloat = 0
+
   private var filteredMembers: [User] {
     if mM.mentionQuery.isEmpty {
       return teamMembers
@@ -31,9 +32,11 @@ struct FeedbackInPutView: View {
   }
   
   var body: some View {
-    VStack(spacing: 8) {
+    VStack(spacing: 16) {
       topRow
-      taggedView
+      if !mM.taggedUsers.isEmpty {
+        taggedView
+      }
       CustomTextField(
         content: $content,
         placeHolder: (
@@ -49,12 +52,13 @@ struct FeedbackInPutView: View {
         mM.handleMention(oldValue: oldValue, newValue: newValue)
       }
     }
-    .padding(.vertical, 8)
+    .padding(.vertical, 16)
     .padding(.horizontal, 16)
     .background(
       RoundedRectangle(cornerRadius: 20)
-        .fill(Color.gray)
+        .fill(Color.backgroundElevated)
     )
+    .animation(.easeInOut(duration: 0.2), value: content.count)
     .overlay(alignment: .bottom) {
       if mM.showPicker {
         MentionPicker(
@@ -69,7 +73,7 @@ struct FeedbackInPutView: View {
           },
           taggedUsers: mM.taggedUsers
         )
-        .padding(.bottom, 60)
+        .padding(.bottom, 65)
       }
     }
     .animation(.easeInOut(duration: 0.2), value: mM.showPicker)
@@ -80,17 +84,17 @@ struct FeedbackInPutView: View {
   
   private var topRow: some View {
     HStack(spacing: 4) {
-      Text("타임 스탬프:")
-        .font(.system(size: 14))
-        .foregroundStyle(.white)
+      Text("타임 스탬프")
+        .font(.headline2Medium)
+        .foregroundStyle(.labelNormal)
       switch feedbackType {
       case .point:
-        TimestampButton(
+        TimestampInput(
           text: "\(currentTime.formattedTime())",
           timeSeek: { timeSeek() }
         )
       case .interval:
-        TimestampButton(
+        TimestampInput(
           text: "\(currentTime.formattedTime()) ~ \(startTime?.formattedTime() ?? "00:00")",
           timeSeek: { timeSeek() }
         )
@@ -104,11 +108,9 @@ struct FeedbackInPutView: View {
     Button {
       refresh()
     } label: {
-      HStack { // FIXME: 아이콘 수정, 폰트 수정
-        Image(systemName: "arrow.trianglehead.clockwise.rotate.90")
-        Text("초기화")
-      }
-      .foregroundStyle(.white) // FIXME: 컬러 수정
+        Image(systemName: "xmark")
+          .font(.system(size: 20))
+          .foregroundStyle(.labelNormal)
     }
   }
   // MARK: 태그된 사용자 표시
