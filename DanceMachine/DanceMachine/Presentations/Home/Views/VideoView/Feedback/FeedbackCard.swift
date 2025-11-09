@@ -21,6 +21,7 @@ struct FeedbackCard: View {
   
   let currentUserId: String
   let onDelete: () -> Void
+  let onReport: () -> Void
   
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {
@@ -31,27 +32,33 @@ struct FeedbackCard: View {
       content
       replyButton
     }
-
     .padding(.horizontal, 16)
     .padding(.vertical, 16)
     .overlay(alignment: .topTrailing) {
-      if feedback.authorId == currentUserId {
-        Menu {
+      Menu {
+        if feedback.authorId == currentUserId {
           Button(role: .destructive) {
             onDelete()
           } label: {
             Label("삭제", systemImage: "trash")
           }
-        } label: {
-          Image(systemName: "ellipsis")
-            .font(.system(size: 14))
-            .foregroundStyle(.labelNormal)
+        } else {
+          Button(role: .destructive) {
+            onReport()
+          } label: {
+            Label("신고하기", systemImage: "light.beacon.max")
+          }
         }
-        .frame(width: 22, height: 22)
-        .contentShape(Rectangle())
-        .padding(.horizontal, 16)
-        .padding(.top, 8)
+      } label: {
+        Image(systemName: "ellipsis")
+          .font(.system(size: 14))
+          .foregroundStyle(.labelNormal)
       }
+      .frame(width: 22, height: 22)
+      .contentShape(Rectangle())
+      .padding(.horizontal, 16)
+      .padding(.top, 8)
+      .tint(Color.accentRedStrong) // FIXME: 메뉴 버튼 스타일 수정
     }
     .background {
       VStack {
@@ -242,6 +249,7 @@ struct FeedbackCard: View {
     startTime: 50.0,
     timeSeek: {},
     currentUserId: "",
-    onDelete: {}
+    onDelete: {},
+    onReport: {}
   )
 }
