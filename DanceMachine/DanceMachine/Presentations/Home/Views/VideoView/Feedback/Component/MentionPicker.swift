@@ -43,17 +43,18 @@ struct MentionPicker: View { // FIXME: 디자인 필요
       Text("@All")
         .font(.headline2Medium)
         .foregroundStyle(.labelStrong)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 12)
+        .background(
+          taggedUsers.count == filteredMembers.count && !filteredMembers.isEmpty
+          ? Color.fillAssitive
+          : Color.clear
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .contentShape(Rectangle())
     }
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .padding(.horizontal, 8)
-    .padding(.vertical, 12)
-    .background(
-      taggedUsers.count == filteredMembers.count && !filteredMembers.isEmpty
-      ? Color.fillAssitive
-      : Color.clear
-    )
-    .clipShape(RoundedRectangle(cornerRadius: 10))
-    .contentShape(Rectangle())
+    .buttonStyle(.plain)
   }
   
   private var memberButton: some View {
@@ -64,17 +65,18 @@ struct MentionPicker: View { // FIXME: 디자인 필요
         Text(user.name)
           .font(.headline2Medium)
           .foregroundStyle(.labelStrong)
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .padding(.horizontal, 8)
+          .padding(.vertical, 12)
+          .background(
+            taggedUsers.contains(where: { $0.userId == user.userId })
+            ? Color.fillAssitive
+            : Color.clear
+          )
+          .clipShape(RoundedRectangle(cornerRadius: 10))
+          .contentShape(Rectangle())
       }
-      .frame(maxWidth: .infinity, alignment: .leading)
-      .padding(.horizontal, 8)
-      .padding(.vertical, 12)
-      .background(
-        taggedUsers.contains(where: { $0.userId == user.userId })
-        ? Color.fillAssitive
-        : Color.clear
-      )
-      .clipShape(RoundedRectangle(cornerRadius: 10))
-      .contentShape(Rectangle())
+      .buttonStyle(.plain)
     }
   }
 }
