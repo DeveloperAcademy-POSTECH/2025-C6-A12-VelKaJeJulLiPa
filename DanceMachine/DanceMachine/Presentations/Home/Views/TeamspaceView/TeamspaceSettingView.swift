@@ -63,6 +63,7 @@ struct TeamspaceSettingView: View {
     } message: {
       Text("저장하지 않은 변경사항은 사라집니다.")
     }
+    // 팀 스페이스 나가기
     .alert(
       "\(viewModel.currentTeamspace?.teamspaceName ?? "") 팀 스페이스를 나가시겠어요?",
       isPresented: $isPresentingLeaveTeamspaceAlert
@@ -86,6 +87,7 @@ struct TeamspaceSettingView: View {
     } message: {
       Text("다시 초대받아 참여할 수 있습니다.")
     }
+    // 팀 스페이스 삭제하기
     .alert(
       "\(viewModel.currentTeamspace?.teamspaceName ?? "") 팀 스페이스를 삭제하시겠어요?",
       isPresented: $isPresentingDeleteTeamspaceAlert) {
@@ -99,6 +101,7 @@ struct TeamspaceSettingView: View {
       } message: {
         Text("팀 스페이스와 멤버 목록이 모두 초기화됩니다.")
       }
+    // 팀원 강퇴하기
     .alert(
       "\(self.selectedUser?.name ?? "") 팀원을 내보내시겠어요?",
       isPresented: $presentingMemberRemovalAlertUser
