@@ -52,8 +52,7 @@ struct FeedbackInPutView: View {
         mM.handleMention(oldValue: oldValue, newValue: newValue)
       }
     }
-    .padding(.vertical, 16)
-    .padding(.horizontal, 16)
+    .padding([.vertical, .horizontal], 16)
     .background(
       RoundedRectangle(cornerRadius: 20)
         .fill(Color.backgroundElevated)
@@ -84,7 +83,7 @@ struct FeedbackInPutView: View {
   
   private var topRow: some View {
     HStack(spacing: 4) {
-      Text("타임 스탬프")
+      Text("타임 스탬프:")
         .font(.headline2Medium)
         .foregroundStyle(.labelNormal)
       switch feedbackType {
@@ -109,7 +108,7 @@ struct FeedbackInPutView: View {
       refresh()
     } label: {
         Image(systemName: "xmark")
-          .font(.system(size: 20))
+          .font(.system(size: 17))
           .foregroundStyle(.labelNormal)
     }
   }
@@ -123,16 +122,17 @@ struct FeedbackInPutView: View {
           // @All 태그 표시
           HStack(spacing: 0) {
             Text("@")
-              .font(.system(size: 16)) // FIXME: 폰트 수정
-              .foregroundStyle(.purple) // FIXME: 컬러 수정
+              .font(.headline2Medium)
+              .foregroundStyle(.accentBlueStrong)
             Text("All")
-              .font(.system(size: 16, weight: .semibold)) // FIXME: 폰트 수정
-              .foregroundStyle(.purple) // FIXME: 컬러 수정
+              .font(.headline2Medium)
+              .foregroundStyle(.accentBlueStrong)
             Button {
               mM.taggedUsers.removeAll()
             } label: {
               Image(systemName: "xmark.circle.fill")
-                .foregroundStyle(Color.red)
+                .font(.system(size: 16))
+                .foregroundStyle(Color.labelAssitive)
             }
           }
         } else {
@@ -140,16 +140,17 @@ struct FeedbackInPutView: View {
           ForEach(mM.taggedUsers, id: \.userId) { user in
             HStack(spacing: 0) {
               Text("@")
-                .font(.system(size: 16)) // FIXME: 폰트 수정
-                .foregroundStyle(.purple) // FIXME: 컬러 수정
+                .font(.headline2Medium)
+                .foregroundStyle(.accentBlueStrong)
               Text(user.name)
-                .font(.system(size: 16)) // FIXME: 폰트 수정
-                .foregroundStyle(.purple) // FIXME: 컬러 수정
+                .font(.headline2Medium)
+                .foregroundStyle(.accentBlueStrong)
               Button {
                 mM.taggedUsers.removeAll { $0.userId == user.userId }
               } label: {
                 Image(systemName: "xmark.circle.fill")
-                  .foregroundStyle(Color.red)
+                  .font(.system(size: 16))
+                  .foregroundStyle(Color.labelAssitive)
               }
             }
           }
