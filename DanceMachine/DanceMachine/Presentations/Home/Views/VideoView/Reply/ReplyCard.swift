@@ -33,7 +33,7 @@ struct ReplyCard: View {
     .frame(maxWidth: .infinity)
     .padding(.vertical, 10)
 //    .background(Color.red.opacity(0.3))
-    .padding(.horizontal, 16)
+    .padding(.horizontal, 25)
   }
   
   private var topRow: some View {
@@ -61,10 +61,11 @@ struct ReplyCard: View {
           }
         } label: {
           Image(systemName: "ellipsis")
+            .font(.system(size: 14))
             .foregroundStyle(.labelStrong)
-            .frame(width: 22, height: 22)
-            .contentShape(Rectangle())
         }
+        .frame(width: 22, height: 22)
+        .contentShape(Rectangle())
       }
     }
   }
