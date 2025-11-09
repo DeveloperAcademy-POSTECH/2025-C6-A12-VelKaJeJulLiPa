@@ -49,6 +49,7 @@ struct TimestampInput: View {
     .background {
       RoundedRectangle(cornerRadius: 1000)
         .fill(Color.secondaryStrong)
+        .stroke(Color.labelStrong, lineWidth: 1)
     }
   }
 }
