@@ -393,25 +393,28 @@ struct TeamspaceSettingView: View {
         Spacer().frame(height: 36)
         
       case .owner:
-        Button {
-          self.presentingChoiceTeamspaceOwnerSheet = true
-        } label: {
-          Text("팀 스페이스 나가기")
-            .font(.headline2Medium)
-            .foregroundStyle(Color.accentRedNormal)
+        
+        if users.count > 1 {
+          Button {
+            self.presentingChoiceTeamspaceOwnerSheet = true
+          } label: {
+            Text("팀 스페이스 나가기")
+              .font(.headline2Medium)
+              .foregroundStyle(Color.accentRedNormal)
+          }
+          
+          Spacer().frame(height: 32)
+        } else {
+          Button {
+            self.isPresentingDeleteTeamspaceAlert = true
+          } label: {
+            Text("팀 스페이스 삭제하기")
+              .font(.headline2Medium)
+              .foregroundStyle(Color.accentRedStrong)
+          }
+          
+          Spacer().frame(height: 36)
         }
-        
-        Spacer().frame(height: 32)
-        
-        Button {
-          self.isPresentingDeleteTeamspaceAlert = true
-        } label: {
-          Text("팀 스페이스 삭제하기")
-            .font(.headline2Medium)
-            .foregroundStyle(Color.accentRedStrong)
-        }
-        
-        Spacer().frame(height: 36)
       }
     }
   }
