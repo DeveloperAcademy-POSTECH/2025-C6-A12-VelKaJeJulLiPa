@@ -24,6 +24,8 @@ struct TeamspaceSettingView: View {
   @State private var isPresentingDiscardChangesAlert = false // 팀 스페이스 이름 수정 취소 Alert 제어
   
   @State private var presentingMemberRemovalAlertUser: Bool = false // 팀원 방출 alert
+  @State private var presentingChoiceTeamspaceOwnerSheet: Bool = false // 팀장 선택 sheet
+  
   @State private var selectedUser: User? // 팀원 방출 해당 유저
   
   // 수정하기 변수
@@ -120,6 +122,16 @@ struct TeamspaceSettingView: View {
       }
     } message: {
       Text("이후 다시 초대할 수 있습니다.")
+    }
+    // 팀장 선택하기 시트
+    .sheet(isPresented: $presentingChoiceTeamspaceOwnerSheet) {
+      ChoiceTeamspaceOwnerView(
+        viewModel: viewModel,
+        users: $users
+      )
+        .presentationDragIndicator(.visible)
+        .presentationDetents([.fraction(0.9)])
+        .presentationCornerRadius(16)
     }
     .toolbar {
       ToolbarLeadingBackButton(icon: .chevron)
@@ -382,7 +394,7 @@ struct TeamspaceSettingView: View {
         
       case .owner:
         Button {
-          self.isPresentingLeaveTeamspaceAlert = true
+          self.presentingChoiceTeamspaceOwnerSheet = true
         } label: {
           Text("팀 스페이스 나가기")
             .font(.headline2Medium)

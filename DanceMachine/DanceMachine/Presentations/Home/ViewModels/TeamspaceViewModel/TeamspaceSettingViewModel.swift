@@ -20,6 +20,29 @@ final class TeamspaceSettingViewModel {
     self.currentTeamspace?.ownerId == FirebaseAuthManager.shared.userInfo?.userId ?? ""
   }
   
+  
+  /// 팀스페이스 owner를 교체하는 메서드입니다.
+  /// - Parameters:
+  ///     - userId: owner가 될 userId
+  func updateTeamspaceOwner(userId: String) async throws {
+    
+    // 부분 업데이트할 필드만 딕셔너리로 구성
+    let data: [String: Any] = [
+      Teamspace.CodingKeys.ownerId.stringValue: userId
+    ]
+    
+    do {
+      try await FirestoreManager.shared.updateFields(
+        collection: .teamspace,
+        documentId: currentTeamspace?.teamspaceId.uuidString ?? "",
+        asDictionary: data
+      )
+    } catch {
+      print("error: \(error.localizedDescription)") // FIXME: - 에러 분기 처리 구현
+    }
+  }
+  
+  
   /// 현재 팀스페이스의 전체 멤버의 Id를 조회한 후, Id를 이용하여 Users 컬렉션에서 멤버 정보를 가져오는 메서드입니다.
   func fetchCurrentTeamspaceAllMember() async -> [User] {
     do {
