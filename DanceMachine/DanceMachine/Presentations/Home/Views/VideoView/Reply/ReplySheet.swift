@@ -72,20 +72,16 @@ struct ReplySheet: View {
             dismiss()
           }
         )
-        .padding(.horizontal, 8)
         .overlay(alignment: .bottomLeading) {
           Button {
             self.inputMode = .reply
           } label: {
             Text("답글달기")
-              .font(.caption)
-              .foregroundStyle(.gray)
+              .font(.caption1Medium)
+              .foregroundStyle(.labelNormal)
           }
           .padding()
         }
-        
-        Divider()
-        
         replyList
       }
       .contentShape(Rectangle())
@@ -137,7 +133,7 @@ struct ReplySheet: View {
         ToolbarCenterTitle(text: "댓글")
       }
     }
-    .background(Color.white) // FIXME: 다크모드 배경색 명시
+    .background(Color.fillNormal)
   }
   
   private var replyList: some View {
@@ -188,18 +184,17 @@ struct ReplySheet: View {
         mM.handleMention(oldValue: oldValue, newValue: newValue)
       }
     }
-    .padding(.vertical, 8)
-    .padding(.horizontal, 16)
+    .padding([.vertical, .horizontal], 16)
     .background { // FIXME: 컬러 수정
       if isKeyboardVisible {
         RoundedRectangle(cornerRadius: 20)
-          .fill(Color.gray)
+          .fill(Color.backgroundElevated)
       } else {
-        Color.gray
+        Color.fillNormal
           .ignoresSafeArea()
           .overlay(alignment: .top) {
-            Rectangle().frame(height: 1.5)
-              .foregroundStyle(.white) // FIXME: 다크모드 색 명시
+            Rectangle().frame(height: 1)
+              .foregroundStyle(.fillAssitive)
           }
       }
     }
@@ -217,7 +212,7 @@ struct ReplySheet: View {
           },
           taggedUsers: mM.taggedUsers
         )
-        .padding(.bottom, 60)
+        .padding(.bottom, 65)
       }
     }
   }
@@ -229,18 +224,19 @@ struct ReplySheet: View {
       HStack(spacing: 4) {
         if isAllTagged {
           // @All 태그 표시
-          HStack(spacing: 3) {
+          HStack(spacing: 4) {
             Text("@")
-              .font(.system(size: 16)) // FIXME: 폰트 수정
-              .foregroundStyle(.blue) // FIXME: 컬러 수정
+              .font(.headline2Medium)
+              .foregroundStyle(.accentBlueStrong)
             Text("All")
-              .font(.system(size: 16, weight: .semibold)) // FIXME: 폰트 수정
-              .foregroundStyle(.blue) // FIXME: 컬러 수정
+              .font(.headline2Medium)
+              .foregroundStyle(.accentBlueStrong)
             Button {
               mM.taggedUsers.removeAll()
             } label: {
               Image(systemName: "xmark.circle.fill")
-                .foregroundStyle(Color.red) // FIXME: 컬러 수정
+                .font(.system(size: 16))
+                .foregroundStyle(Color.labelAssitive)
             }
           }
           .animation(nil, value: mM.taggedUsers)
@@ -249,16 +245,17 @@ struct ReplySheet: View {
           ForEach(mM.taggedUsers, id: \.userId) { user in
             HStack(spacing: 3) {
               Text("@")
-                .font(.system(size: 16)) // FIXME: 폰트 수정
-                .foregroundStyle(.blue) // FIXME: 컬러 수정
+                .font(.headline2Medium)
+                .foregroundStyle(.accentBlueStrong)
               Text(user.name)
-                .font(.system(size: 16)) // FIXME: 폰트 수정
-                .foregroundStyle(.blue) // FIXME: 컬러 수정
+                .font(.headline2Medium)
+                .foregroundStyle(.accentBlueStrong)
               Button {
                 mM.taggedUsers.removeAll { $0.userId == user.userId }
               } label: {
                 Image(systemName: "xmark.circle.fill")
-                  .foregroundStyle(Color.red) // FIXME: 컬러 수정
+                  .font(.system(size: 16))
+                  .foregroundStyle(Color.labelAssitive)
               }
             }
             .animation(nil, value: mM.taggedUsers)
