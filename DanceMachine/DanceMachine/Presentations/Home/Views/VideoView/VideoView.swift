@@ -49,6 +49,10 @@ struct VideoView: View {
   // MARK: 스크롤 관련
   @State private var scrollProxy: ScrollViewProxy? = nil
   
+  // MARK: 신고하기 관련
+  @State private var reportTargetFeedback: Feedback? = nil
+  @State private var showCreateReportSuccessToast: Bool = false
+  
   // MARK: 전역으로 관리되는 ID
   let teamspaceId = FirebaseAuthManager.shared.currentTeamspace?.teamspaceId
   let userId = FirebaseAuthManager.shared.userInfo?.userId ?? ""
@@ -95,6 +99,22 @@ struct VideoView: View {
     }
     .onAppear { // 화면이 나타날때 세로모드 가로모드를 정함
       updateOrientation()
+    }
+    .toast(
+      isPresented: $showCreateReportSuccessToast,
+      duration: 3,
+      position: .bottom,
+      bottomPadding: 63, // FIXME: 신고하기 - 하단 공백 조정 필요
+      content: {
+        ToastView(text: "신고가 접수되었습니다.\n조치사항은 이메일로 안내해드리겠습니다.", icon: .check)
+      }
+    )
+    // MARK: 신고 완료 토스트 리시버
+    .onReceive(NotificationCenter.default.publisher(for: .showCreateReportSuccessToast)) { notification in
+      if let toastViewName = notification.userInfo?["toastViewName"] as? ReportToastReceiveViewType,
+         toastViewName == .videoView {
+        showCreateReportSuccessToast = true
+      }
     }
   }
   // MARK: 세로모드 레이아웃
@@ -473,6 +493,11 @@ struct VideoView: View {
                   Task {
                     await vm.feedbackVM.deleteFeedback(f)
                   }
+                },
+                onReport: {
+                  if !shouldShowLayout { // 가로모드 시트 x
+                    self.reportTargetFeedback = f
+                  }
                 }
               )
             }            
@@ -514,6 +539,16 @@ struct VideoView: View {
                 await vm.feedbackVM.deleteFeedback(feedback)
               } }
           )
+        }
+        .sheet(item: $reportTargetFeedback) { feedback in
+          NavigationStack {
+            CreateReportView(
+              reportedId: feedback.authorId,
+              reportContentType: .feedback,
+              feedback: feedback,
+              toastReceiveView: ReportToastReceiveViewType.videoView
+            )
+          }
         }
       }
     }
