@@ -24,7 +24,8 @@ struct TermsOfUseView: View {
         }
       
       if isLoading {
-        ProgressView()
+        LoadingSpinner()
+          .frame(maxWidth: 28, maxHeight: 28, alignment: .center)
       }
     }
   }

@@ -15,10 +15,10 @@ struct InboxView: View {
     ZStack {
       Color.backgroundNormal.ignoresSafeArea()
       
-      VStack {
+      VStack(spacing: 0) {
         if viewModel.isLoading && viewModel.inboxNotifications.isEmpty {
-          ProgressView()
-            .frame(maxWidth: .infinity, alignment: .center)
+          LoadingSpinner()
+            .frame(maxWidth: 28, maxHeight: 28, alignment: .center)
         } else if viewModel.inboxNotifications.isEmpty {
           VStack {
             Spacer()
@@ -72,11 +72,11 @@ struct InboxView: View {
             await viewModel.refresh()
           }
           
-          if viewModel.isLoading {  // FIXME: - 로딩 스타일 수정
-            ProgressView()
-              .tint(.labelStrong)
-              .frame(maxWidth: .infinity, alignment: .center)
-              .padding(.bottom, 16)
+          if viewModel.isLoading {
+            LoadingSpinner()
+              .frame(maxWidth: 28, maxHeight: 28, alignment: .center)
+              .padding(.top, 7)
+              .padding(.bottom, 19)
           }
         }
       }
