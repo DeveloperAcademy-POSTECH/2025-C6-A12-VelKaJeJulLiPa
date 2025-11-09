@@ -45,9 +45,9 @@ struct GridCell: View {
         contextRow
       } label: {
         Image(systemName: "ellipsis")
-          .foregroundStyle(.red)
+          .foregroundStyle(.labelStrong)
           .rotationEffect(.degrees(90))
-          .frame(width: 44, height: 44)
+          .frame(width: 33, height: 33)
       }
     }
     .contextMenu {
