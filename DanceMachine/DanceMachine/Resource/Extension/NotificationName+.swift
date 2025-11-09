@@ -21,6 +21,8 @@ extension Foundation.Notification.Name {
   static let showEditWarningToast = Foundation.Notification.Name("showEditWarningToast")
   // 영상 이름 수정 제한 토스트
   static let showEditVideoTitleToast = Foundation.Notification.Name("showEditVideoTitleToast")
+  // 신고 완료 토스트
+  static let showCreateReportSuccessToast = Foundation.Notification.Name("showCreateReportSuccessToast")
 }
 
 enum NotificationEvent {
@@ -32,6 +34,7 @@ enum NotificationEvent {
   case showDeleteToast
   case showEditWarningToast
   case showEditVideoTitleToast
+  case showCreateReportSuccessToast
   
   var name: Foundation.Notification.Name {
     switch self {
@@ -43,6 +46,7 @@ enum NotificationEvent {
     case .showDeleteToast: .showDeleteToast
     case .showEditWarningToast: .showEditWarningToast
     case .showEditVideoTitleToast: .showEditVideoTitleToast
+    case .showCreateReportSuccessToast: .showCreateReportSuccessToast
     }
   }
 }
