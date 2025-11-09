@@ -21,7 +21,7 @@ struct ToastView: View {
       Text(text)
         .font(.headline2Medium)
         .foregroundStyle(.labelStrong)
-        .multilineTextAlignment(.center)
+        .multilineTextAlignment(.leading)
         .fixedSize(horizontal: false, vertical: true)
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity, minHeight: 43, alignment: .leading)
