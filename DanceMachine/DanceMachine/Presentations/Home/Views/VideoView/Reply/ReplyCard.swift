@@ -15,6 +15,7 @@ struct ReplyCard: View {
   
   let currentUserId: String
   let onDelete: () -> Void
+  let showCreateReportSheet: () -> Void
   
   var body: some View {
     HStack(alignment: .top, spacing: 8) {
@@ -52,21 +53,30 @@ struct ReplyCard: View {
         }
         Spacer()
       }
-      if reply.authorId == currentUserId {
-        Menu { // FIXME: 아이콘 컬러 수정
+      Menu {
+        if reply.authorId == currentUserId {
           Button(role: .destructive) {
             onDelete()
           } label: {
             Label("삭제", systemImage: "trash")
           }
-        } label: {
-          Image(systemName: "ellipsis")
-            .font(.system(size: 14))
-            .foregroundStyle(.labelStrong)
+        } else {
+          Button(role: .destructive) {
+            showCreateReportSheet()
+          } label: {
+            Label("신고하기", systemImage: "light.beacon.max")
+          }
         }
-        .frame(width: 22, height: 22)
-        .contentShape(Rectangle())
+      } label: {
+        Image(systemName: "ellipsis")
+          .font(.system(size: 14))
+          .foregroundStyle(.labelNormal)
       }
+      .frame(width: 22, height: 22)
+      .contentShape(Rectangle())
+      .padding(.horizontal, 16)
+      .padding(.top, 8)
+      .tint(Color.accentRedStrong)
     }
   }
   
@@ -137,6 +147,7 @@ struct ReplyCard: View {
     replyAction: {
     },
     currentUserId: "222",
-    onDelete: {}
+    onDelete: {},
+    showCreateReportSheet: {}
   )
 }
