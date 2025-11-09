@@ -32,6 +32,7 @@ struct MentionPicker: View { // FIXME: 디자인 필요
         .fill(.backgroundElevated)
     )
     .padding(.horizontal, 8)
+    .contentShape(Rectangle())
 //    .transition(.move(edge: .bottom).combined(with: .opacity))
   }
   
