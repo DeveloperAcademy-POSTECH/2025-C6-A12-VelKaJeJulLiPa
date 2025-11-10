@@ -20,22 +20,37 @@ struct ReplyCard: View {
   @State private var showMenu: Bool = false
   
   var body: some View {
-    HStack(alignment: .top, spacing: 8) {
-      Image(systemName: "arrowshape.turn.up.right")
-        .font(.system(size: 14))
-        .rotationEffect(.degrees(180))
-        .scaleEffect(x: -1, y: 1)
-        .foregroundStyle(.labelNormal)
-      VStack(alignment: .leading, spacing: 12) {
-        topRow
-        taggedUserRow
-        replyButton
+    ZStack(alignment: .topTrailing) {
+      HStack(alignment: .top, spacing: 8) {
+        Image(systemName: "arrowshape.turn.up.right")
+          .font(.system(size: 14))
+          .rotationEffect(.degrees(180))
+          .scaleEffect(x: -1, y: 1)
+          .foregroundStyle(.labelNormal)
+        VStack(alignment: .leading, spacing: 12) {
+          topRow
+          taggedUserRow
+          replyButton
+        }
+        Spacer()
       }
-      Spacer()
+      .frame(maxWidth: .infinity)
+      .padding(.vertical, 10)
+      .padding(.horizontal, 25)
+
+      Menu {
+        contextRow
+      } label: {
+        Image(systemName: "ellipsis")
+          .font(.system(size: 14))
+          .foregroundStyle(.labelStrong)
+      }
+      .frame(width: 22, height: 22)
+      .contentShape(Rectangle())
+      .tint(Color.accentRedStrong)
+      .padding(.horizontal, 25)
+      .padding(.top, 10)
     }
-    .frame(maxWidth: .infinity)
-    .padding(.vertical, 10)
-    .padding(.horizontal, 25)
     .contentShape(Rectangle())
     .onTapGesture {
       replyAction()
@@ -48,33 +63,21 @@ struct ReplyCard: View {
     }
     .sensoryFeedback(.success, trigger: showMenu)
   }
-  
+
   private var topRow: some View {
-    ZStack(alignment: .topTrailing) {
-      HStack {
-        Text(authorUser?.name ?? "알 수 없는 유저")
-          .font(.footnoteSemiBold)
-          .foregroundStyle(.labelNormal)
-        if reply.createdAt != nil {
-          Text("·")
-            .font(.footnoteMedium)
-            .foregroundStyle(.labelAssitive)
-          Text(reply.createdAt?.listTimeLabel() ?? "방금 전")
-            .font(.footnoteMedium)
-            .foregroundStyle(.labelAssitive)
-        }
-        Spacer()
+    HStack {
+      Text(authorUser?.name ?? "알 수 없는 유저")
+        .font(.footnoteSemiBold)
+        .foregroundStyle(.labelNormal)
+      if reply.createdAt != nil {
+        Text("·")
+          .font(.footnoteMedium)
+          .foregroundStyle(.labelAssitive)
+        Text(reply.createdAt?.listTimeLabel() ?? "방금 전")
+          .font(.footnoteMedium)
+          .foregroundStyle(.labelAssitive)
       }
-      Menu {
-        contextRow
-      } label: {
-        Image(systemName: "ellipsis")
-          .font(.system(size: 14))
-          .foregroundStyle(.labelStrong)
-      }
-      .frame(width: 22, height: 22)
-      .contentShape(Rectangle())
-      .tint(Color.accentRedStrong)
+      Spacer()
     }
   }
   
@@ -101,6 +104,7 @@ struct ReplyCard: View {
         .font(.footnoteMedium)
         .foregroundStyle(.labelNormal)
     }
+    .buttonStyle(.plain)
   }
   
   private var contextRow: some View {

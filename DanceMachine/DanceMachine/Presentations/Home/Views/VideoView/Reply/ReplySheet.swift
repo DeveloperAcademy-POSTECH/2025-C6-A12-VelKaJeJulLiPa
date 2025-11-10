@@ -75,18 +75,12 @@ struct ReplySheet: View {
             onFeedbackDelete()
             dismiss()
           },
-          onReport: { isReportSheetPresented = true }
-        )
-        .overlay(alignment: .bottomLeading) {
-          Button {
+          onReport: { isReportSheetPresented = true },
+          showBottomReplyButton: true,
+          onBottomReplyTap: {
             self.inputMode = .reply
-          } label: {
-            Text("답글달기")
-              .font(.caption1Medium)
-              .foregroundStyle(.labelNormal)
           }
-          .padding()
-        }
+        )
         replyList
       }
       .contentShape(Rectangle())

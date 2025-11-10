@@ -14,28 +14,59 @@ struct FeedbackCard: View {
   let replyCount: Int
   let action: () -> Void
   let showReplySheet: () -> Void
-  
+
   let currentTime: Double
   let startTime: Double?
   let timeSeek: () -> Void
-  
+
   let currentUserId: String
   let onDelete: () -> Void
   let onReport: () -> Void
-  
+
+  var showBottomReplyButton: Bool = false
+  var onBottomReplyTap: (() -> Void)? = nil
+
   @State private var showMenu: Bool = false
   
   var body: some View {
-    VStack(alignment: .leading, spacing: 8) {
-      authorName
-      Spacer().frame(height: 2)
-      timeStamp
-      Spacer().frame(height: 2)
-      content
-      replyButton
+    ZStack(alignment: .topTrailing) {
+      VStack(alignment: .leading, spacing: 8) {
+        authorName
+        Spacer().frame(height: 2)
+        timeStamp
+        Spacer().frame(height: 2)
+        content
+
+        HStack {
+          if showBottomReplyButton {
+            Button {
+              onBottomReplyTap?()
+            } label: {
+              Text("답글달기")
+                .font(.caption1Medium)
+                .foregroundStyle(.labelNormal)
+            }
+          }
+          Spacer()
+          replyButton
+        }
+      }
+      .padding(.horizontal, 16)
+      .padding(.vertical, 16)
+
+      Menu {
+        contextRow
+      } label: {
+        Image(systemName: "ellipsis")
+          .font(.system(size: 14))
+          .foregroundStyle(.labelNormal)
+      }
+      .frame(width: 22, height: 22)
+      .contentShape(Rectangle())
+      .padding(.horizontal, 16)
+      .padding(.top, 8)
+      .tint(Color.accentRedStrong) // FIXME: 메뉴 버튼 스타일 수정
     }
-    .padding(.horizontal, 16)
-    .padding(.vertical, 16)
     .background {
       VStack {
         Spacer()
@@ -55,20 +86,6 @@ struct FeedbackCard: View {
       contextRow
     }
     .sensoryFeedback(.success, trigger: showMenu)
-    .overlay(alignment: .topTrailing) {
-      Menu {
-        contextRow
-      } label: {
-        Image(systemName: "ellipsis")
-          .font(.system(size: 14))
-          .foregroundStyle(.labelNormal)
-      }
-      .frame(width: 22, height: 22)
-      .contentShape(Rectangle())
-      .padding(.horizontal, 16)
-      .padding(.top, 8)
-      .tint(Color.accentRedStrong) // FIXME: 메뉴 버튼 스타일 수정
-    }
   }
   
   private var authorName: some View {
@@ -163,6 +180,7 @@ struct FeedbackCard: View {
           .foregroundStyle(.primitiveAssitive)
       }
     }
+    .buttonStyle(.plain)
     .frame(maxWidth: .infinity, alignment: .trailing)
   }
   
