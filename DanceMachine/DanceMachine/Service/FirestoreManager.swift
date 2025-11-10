@@ -378,7 +378,7 @@ final class FirestoreManager {
     limit: Int = 20,
     lastDocument: DocumentSnapshot? = nil
   ) async throws -> ([T], DocumentSnapshot?) {
-    let oneMonthAgo = Calendar.current.date(byAdding: .month, value: -1, to: Date.now)! // FIXME: Force unwrapping이 최선인가...?!
+    let oneMonthAgo = Calendar.current.date(byAdding: .month, value: -1, to: Date.now)!
     let oneMonthAgoTimestamp = Timestamp(date: oneMonthAgo)
     
     var q: Query = db.collection(type.rawValue)
@@ -417,7 +417,7 @@ final class FirestoreManager {
       .document(userId)
       .collection(subCollection.rawValue)
     
-    var query: Query = parentRef.whereField("is_read", isEqualTo: false)
+    var query: Query = parentRef.whereField(UserNotification.CodingKeys.isRead.rawValue , isEqualTo: false)
     
     if limitToRecentMonth {
       let oneMonthAgo = Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date()

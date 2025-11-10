@@ -6,14 +6,19 @@
 //
 
 import UIKit
+import Combine
 import UserNotifications
+
+import FirebaseFirestore
 
 
 /// 알림 개수를 관리 매니저
-final class NotificationManager {
+final class NotificationManager: ObservableObject {
   
   static let shared = NotificationManager()
   private init() {}
+  
+  @Published var unreadNotificationCount: Int = 0
   
   
   /// 앱 아이콘 뱃지 카운트를 업데이트 (권한 확인 포함)
@@ -55,7 +60,7 @@ final class NotificationManager {
         parentId: userId,
         subCollection: .userNotification,
         documentId: notificationId,
-        asDictionary: ["is_read": true]
+        asDictionary: [UserNotification.CodingKeys.isRead.rawValue:  true]
       )
       
       print("📬 알림 \(notificationId) 읽음 처리 완료")
@@ -65,4 +70,31 @@ final class NotificationManager {
       throw NotificationError.markAsReadFailed(underlying: error)
     }
   }
+  
+  
+  /// 특정 유저의 특정 팀스페이스 내 읽지 않은 알림 개수를 가져오는 메서드
+  func fetchUnreadNotificationCount(
+    userId: String,
+    teamspaceId: String
+  ) async throws  {
+    let oneMonthAgo = Calendar.current.date(byAdding: .month, value: -1, to: Date.now)!
+    let oneMonthAgoTimestamp = Timestamp(date: oneMonthAgo)
+    
+    do {
+      let snapshot = try await Firestore.firestore()
+        .collection(CollectionType.users.rawValue)
+        .document(userId)
+        .collection(CollectionType.userNotification.rawValue)
+        .whereField(UserNotification.CodingKeys.createdAt.rawValue, isGreaterThanOrEqualTo: oneMonthAgoTimestamp)
+        .whereField(UserNotification.CodingKeys.teamspaceId.rawValue, isEqualTo: teamspaceId)
+        .whereField(UserNotification.CodingKeys.isRead.rawValue, isEqualTo: false)
+        .getDocuments()
+      
+      unreadNotificationCount = snapshot.documents.count
+    } catch {
+      throw NotificationError.fetchUnreadCountFailed(underlying: error)
+    }
+  }
+  
+  
 }
