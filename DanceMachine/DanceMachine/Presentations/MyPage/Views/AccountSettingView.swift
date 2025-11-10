@@ -10,7 +10,6 @@ import SwiftUI
 struct AccountSettingView: View {
   
   @EnvironmentObject private var router: MainRouter
-  @Environment(TabRouter.self) private var tabRouter
   
   @State private var viewModel = AccountSettingViewModel()
   
@@ -57,7 +56,6 @@ struct AccountSettingView: View {
       Button("로그아웃", role: .destructive) {
         Task {
           try await viewModel.signOut()
-          tabRouter.switchTab(to: .home)
           router.destination.removeAll()
         }
       }
@@ -72,7 +70,6 @@ struct AccountSettingView: View {
       Button("탈퇴", role: .destructive) {
         Task {
           try await viewModel.deleteUserAccount()
-          tabRouter.switchTab(to: .home)
           router.destination.removeAll()
         }
       }

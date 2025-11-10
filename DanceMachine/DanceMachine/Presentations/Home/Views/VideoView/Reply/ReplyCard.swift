@@ -70,12 +70,10 @@ struct ReplyCard: View {
       } label: {
         Image(systemName: "ellipsis")
           .font(.system(size: 14))
-          .foregroundStyle(.labelNormal)
+          .foregroundStyle(.labelStrong)
       }
       .frame(width: 22, height: 22)
       .contentShape(Rectangle())
-      .padding(.horizontal, 16)
-      .padding(.top, 8)
       .tint(Color.accentRedStrong)
     }
   }

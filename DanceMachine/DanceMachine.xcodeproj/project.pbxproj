@@ -14,7 +14,6 @@
 		C9990D662E8BEB4E00A6C7CC /* FirebaseFunctions in Frameworks */ = {isa = PBXBuildFile; productRef = C9990D652E8BEB4E00A6C7CC /* FirebaseFunctions */; };
 		C9990D682E8BEB4E00A6C7CC /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = C9990D672E8BEB4E00A6C7CC /* FirebaseMessaging */; };
 		C9990D6A2E8BEB4E00A6C7CC /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = C9990D692E8BEB4E00A6C7CC /* FirebaseStorage */; };
-		E95B22CF2EBFB5AF002A0D07 /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = E95B22CE2EBFB5AF002A0D07 /* Lottie */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -328,7 +327,7 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -374,7 +373,7 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -418,14 +417,6 @@
 				minimumVersion = 12.3.0;
 			};
 		};
-		E95B22CD2EBFB5AF002A0D07 /* XCRemoteSwiftPackageReference "lottie-ios" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/airbnb/lottie-ios";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 4.5.2;
-			};
-		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -463,11 +454,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = C9990D5E2E8BEB4E00A6C7CC /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseStorage;
-		};
-		E95B22CE2EBFB5AF002A0D07 /* Lottie */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E95B22CD2EBFB5AF002A0D07 /* XCRemoteSwiftPackageReference "lottie-ios" */;
-			productName = Lottie;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
