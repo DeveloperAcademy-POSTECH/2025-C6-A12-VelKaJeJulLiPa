@@ -37,6 +37,7 @@ struct ProjectListView<ExpandedContent: View>: View {
   let onTracksCancelSideEffects: () -> Void
   
   @Binding var showToastMessage: Bool
+  @Binding var presentingRemovalProjectAlert: Bool
   
   var body: some View {
     VStack(alignment: .leading, spacing: 12) {
@@ -76,7 +77,9 @@ struct ProjectListView<ExpandedContent: View>: View {
             ListCell(
               title: project.projectName,
               projectRowState: perRowState(for: project.projectId),
-              deleteAction: { onDelete(project)
+              deleteAction: {
+                onDelete(project)
+                self.presentingRemovalProjectAlert = true
               },
               editAction: {
                 editText         = project.projectName
@@ -261,7 +264,8 @@ private struct PreviewWrapper: View {
       onTracksPrimaryUpdate: {},
       onTracksCancelSideEffects: {
       },
-      showToastMessage: .constant(false)
+      showToastMessage: .constant(false),
+      presentingRemovalProjectAlert: .constant(false)
     )
     .padding()
   }

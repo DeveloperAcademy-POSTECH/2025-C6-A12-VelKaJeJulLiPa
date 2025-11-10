@@ -21,12 +21,14 @@ struct HomeView: View {
   }
   
   // 시트/로딩 등 화면 로컬 상태만 유지
-  @State private var presentingRemovalSheetProject: Project?
-  @State private var presentingRemovalSheetTracks: Tracks?
+  @State private var presentingRemovalProject: Project?
+  @State private var presentingRemovalTracks: Tracks?
   @State private var showCreateTracksView = false
   @State private var isLoading = false
   
   @State private var presentingCreateTeamspaceSheet: Bool = false
+  @State private var presentingRemovalProjectAlert: Bool = false
+  @State private var presentingRemovalTracksAlert: Bool = false
   @State private var presentingCreateProjectSheet: Bool = false
   
   @State private var showToastMessage: Bool = false
@@ -35,12 +37,14 @@ struct HomeView: View {
     ZStack {
       Color.backgroundNormal.ignoresSafeArea() // FIXME: - 컬러 수정
       VStack {
-        TeamspaceTitleView(
-          viewModel: viewModel,
-          teamspaceState: viewModel.tsBinding(\.state),
-          presentingCreateTeamspaceSheet: $presentingCreateTeamspaceSheet // 팀 스페이스 생성 시트 제어
-        )
-        .padding(.horizontal, 16)
+        if viewModel.project.rowState == .viewing && viewModel.tracks.rowState == .viewing {
+          TeamspaceTitleView(
+            viewModel: viewModel,
+            teamspaceState: viewModel.tsBinding(\.state),
+            presentingCreateTeamspaceSheet: $presentingCreateTeamspaceSheet // 팀 스페이스 생성 시트 제어
+          )
+          .padding(.horizontal, 16)
+        }
         
         // 팀 스페이스 비어져있을 시,
         if viewModel.userTeamspaces == [] {
@@ -64,8 +68,9 @@ struct HomeView: View {
             rowState: viewModel.plBinding(\.rowState),
             editingProjectID: viewModel.plBinding(\.editingID),
             editText: viewModel.plBinding(\.editText),
-            onCommitEdit: { _, _ in await viewModel.commitProjectEdit() },
-            onDelete: { project in presentingRemovalSheetProject = project },
+            onCommitEdit: { _, _ in await viewModel.commitProjectEdit()
+            },
+            onDelete: { project in presentingRemovalProject = project },
             onTap: { project in viewModel.toggleExpand(project) },
             isExpanded: { project in viewModel.isExpanded(project) },
             expandedContent: { project in
@@ -82,7 +87,10 @@ struct HomeView: View {
                 isLoading: viewModel.tracks.loading.contains(project.projectId),
                 errorText: viewModel.tracks.error[project.projectId],
                 onCommitEdit: { _, _ in await viewModel.commitTrackEdit() },
-                onDelete: { track in presentingRemovalSheetTracks = track },
+                onDelete: { track in
+                  self.presentingRemovalTracks = track
+                  self.presentingRemovalTracksAlert = true
+                },
                 onTap: { track in
                   Task {
                     let section = try await viewModel.fetchSection(tracks: track)
@@ -118,11 +126,21 @@ struct HomeView: View {
                 viewModel.tracks.editText = ""
               }
               viewModel.tracks.editingID = nil
-            }, showToastMessage: $showToastMessage
+            },
+            showToastMessage: $showToastMessage,
+            presentingRemovalProjectAlert: $presentingRemovalProjectAlert
           )
           .padding(.horizontal, 16)
         }
       }
+      .animation(
+        .spring(response: 0.3, dampingFraction: 0.85), // FIXME: - 애니메이션 효과 적절한지
+        value: viewModel.project.rowState
+      )
+      .animation(
+        .spring(response: 0.3, dampingFraction: 0.85), // FIXME: - 애니메이션 효과 적절한지
+        value: viewModel.tracks.rowState
+      )
       .toast(
         isPresented: $showToastMessage,
         duration: 2,
@@ -131,17 +149,42 @@ struct HomeView: View {
       ) {
         ToastView(text: "프로젝트 이름은 20자 이내로 입력해주세요.", icon: .warning)
       }
-      .sheet(item: $presentingRemovalSheetProject) { project in
-        BottomConfirmSheetView(
-          titleText: "\(project.projectName)\n프로젝트의 내용이 모두 삭제됩니다.\n 계속하시겠어요?",
-          primaryText: "모두 삭제"
-        ) {
-          Task {
-            try await viewModel.removeProject(projectId: project.projectId.uuidString)
-            _ = await viewModel.fetchCurrentTeamspaceProject()
+    }
+    // 프로젝트 삭제 경고
+    .alert(
+      "\(presentingRemovalProject?.projectName ?? "")를\n식제하시겠어요?",
+      isPresented: $presentingRemovalProjectAlert
+    ) {
+      Button("취소", role: .cancel) {}
+      Button("삭제", role: .destructive) {
+        Task {
+          try await viewModel.removeProject(
+            projectId: presentingRemovalProject?.projectId.uuidString ?? ""
+          )
+          _ = await viewModel.fetchCurrentTeamspaceProject()
+        }
+      }
+    } message: {
+      Text("프로젝트 모든 내용이 삭제됩니다.")
+    }
+    // 곡 삭제 시트
+    .alert(
+      "\(presentingRemovalTracks?.trackName ?? "")를\n식제하시겠어요?",
+      isPresented: $presentingRemovalTracksAlert
+    ) {
+      Button("취소", role: .cancel) {}
+      Button("삭제", role: .destructive) {
+        Task {
+          try await viewModel.removeTracksAndSection(
+            tracksId: self.presentingRemovalTracks?.tracksId.uuidString ?? ""
+          )
+          if let pid = viewModel.project.expandedID {
+            viewModel.loadTracks(for: pid) // 삭제 후 갱신
           }
         }
       }
+    } message: {
+      Text("곡과 영상 모두 삭제됩니다.")
     }
     // 팀 스페이스 생성 시트
     .sheet(isPresented: $presentingCreateTeamspaceSheet) {
@@ -153,9 +196,9 @@ struct HomeView: View {
           await viewModel.fetchCurrentTeamspaceProject()
         }
       })
-        .presentationDragIndicator(.visible)
-        .presentationDetents([.fraction(0.9)])
-        .presentationCornerRadius(16)
+      .presentationDragIndicator(.visible)
+      .presentationDetents([.fraction(0.9)])
+      .presentationCornerRadius(16)
     }
     // 프로젝트 생성 시트
     .sheet(isPresented: $presentingCreateProjectSheet) {
@@ -188,19 +231,6 @@ struct HomeView: View {
       .presentationDragIndicator(.visible)
       .presentationDetents([.fraction(0.9)])
       .presentationCornerRadius(16)
-    }
-    .sheet(item: $presentingRemovalSheetTracks) { tracks in
-      BottomConfirmSheetView(
-        titleText: "\(tracks.trackName)\n곡과 영상을 모두 삭제하시겠어요?",
-        primaryText: "모두 삭제"
-      ) {
-        Task {
-          try await viewModel.removeTracksAndSection(tracksId: tracks.tracksId.uuidString)
-          if let pid = viewModel.project.expandedID {
-            viewModel.loadTracks(for: pid) // 삭제 후 갱신
-          }
-        }
-      }
     }
     .overlay { if isLoading { LoadingView() } }
     .overlay(alignment: .bottomTrailing) {
@@ -246,12 +276,6 @@ struct HomeView: View {
         } else {
           // 팀스페이스가 다른 것으로 교체된 경우
           await viewModel.reloadProjectsAfterTeamspaceChange()
-          
-          // 팀스페이스가 교체되면 탭바 수신함의 뱃지 카운트를 교체된 팀스페이스에 맞췃 갱신
-          try await NotificationManager.shared.fetchUnreadNotificationCount(
-            userId: FirebaseAuthManager.shared.user?.uid ?? "",
-            teamspaceId: FirebaseAuthManager.shared.currentTeamspace?.teamspaceId.uuidString ?? ""
-          )
         }
       }
     }
