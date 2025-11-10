@@ -17,6 +17,8 @@ struct CreateProjectView: View {
   
   @FocusState private var isFocusTextField: Bool
   
+  @State private var closeAlert: Bool = false
+  
   var onCreated: () -> Void = {}
   
   var body: some View {
@@ -26,6 +28,8 @@ struct CreateProjectView: View {
       VStack {
         Spacer().frame(height: 29)
         topTitleView
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .padding(.horizontal, 16)
         Spacer()
         inputProjectNameView
           .padding(.horizontal, 16)
@@ -33,19 +37,39 @@ struct CreateProjectView: View {
         bottomButtonView
           .padding(.horizontal, 16)
       }
+      .dismissKeyboardOnTap()
+    }
+    .alert(
+      "변경사항이 저장되지 않았습니다.\n종료하시겠어요?",
+      isPresented: $closeAlert
+    ) {
+      Button("취소", role: .cancel) {}
+      Button("나가기", role: .destructive) { dismiss() }
+    } message: {
+      Text("저장하지 않은 변경사항은 사라집니다.")
     }
   }
   
   
   // MARK: - 탑 타이틀
   private var topTitleView: some View {
-    HStack {
-      // TODO: Xmark 버튼 추가, alert 처리.
-      //Image(systemName: "xmark.circle.fill")
-      // TODO: 홈 시트 작업 중이였음. (컬러가 아직 피그마 반영이 안돼서, 잠시 빼둠.)
+    ZStack { // TODO: 서치
+      // 가운데 정렬 타이틀
       Text("새 프로젝트 만들기")
         .font(.headline2SemiBold)
         .foregroundStyle(Color.labelStrong)
+        .frame(maxWidth: .infinity, alignment: .center)
+      
+      // 왼쪽 X 버튼
+      HStack {
+        Image(systemName: "xmark.circle.fill")
+          .resizable()
+          .scaledToFit()
+          .frame(width: 44, height: 44)
+          .foregroundStyle(Color.labelNormal)
+          .onTapGesture { self.closeAlert = true }
+        Spacer()
+      }
     }
   }
   
@@ -71,12 +95,12 @@ struct CreateProjectView: View {
         .frame(height: 51)
         .overlay {
           HStack {
-            // TODO: 컴포넌트 추가하기
-            TextField("프로젝트 이름", text: $projectNameText)
+            TextField("예시: 학교 축제", text: $projectNameText)
               .font(.headline2Medium)
               .foregroundStyle(Color.labelStrong)
               .multilineTextAlignment(.center)
               .padding(.vertical, 15)
+              .overlay(alignment: .trailing) { textFieldItem() }
               .overlay(alignment: .trailing) {
                 XmarkButton { self.projectNameText = "" }
                   .padding(.trailing, 8)
@@ -119,7 +143,7 @@ struct CreateProjectView: View {
   // MARK: - 바텀 팀 스페이스 만들기 뷰
   private var bottomButtonView: some View {
     ActionButton(
-      title: "프로젝트 생성하기",
+      title: "새 프로젝트 만들기",
       color: self.projectNameText.isEmpty ? Color.fillAssitive : Color.secondaryStrong,
       height: 47,
       isEnabled: self.projectNameText.isEmpty ? false : true
@@ -132,6 +156,20 @@ struct CreateProjectView: View {
     }
     .padding(.bottom, 16)
   }
+  
+  // MARK: - 텍스트 필드 아이템 (글자수 라벨, x 버튼)
+  @ViewBuilder
+  func textFieldItem() -> some View {
+    HStack(spacing: 9) {
+      Text("\(projectNameText.count)/20")
+        .font(.headline2Medium)
+        .foregroundStyle(Color.secondaryNormal)
+      
+      XmarkButton { self.projectNameText = "" }
+        .padding(.trailing, 8)
+    }
+  }
+  
 }
 
 #Preview {

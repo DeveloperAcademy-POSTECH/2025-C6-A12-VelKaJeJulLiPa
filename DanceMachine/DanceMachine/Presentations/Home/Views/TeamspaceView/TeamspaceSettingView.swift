@@ -21,20 +21,26 @@ struct TeamspaceSettingView: View {
   
   @State private var isPresentingLeaveTeamspaceAlert: Bool = false // 팀 스페이스 나가기 Alert 제어
   @State private var isPresentingDeleteTeamspaceAlert: Bool = false // 팀 스페이스 삭제 Alert 제어
+  @State private var isPresentingDiscardChangesAlert = false // 팀 스페이스 이름 수정 취소 Alert 제어
   
   @State private var presentingMemberRemovalAlertUser: Bool = false // 팀원 방출 alert
+  @State private var presentingChoiceTeamspaceOwnerSheet: Bool = false // 팀장 선택 sheet
+  
   @State private var selectedUser: User? // 팀원 방출 해당 유저
   
   // 수정하기 변수
   @State private var editedName: String = ""
+  @State private var showToastMessage: Bool = false
   @FocusState private var nameFieldFocused: Bool
   
+  @State private var textWidth: CGFloat = 0   // 텍스트 길이 저장
   
   var body: some View {
     ZStack {
       Color.backgroundNormal.ignoresSafeArea() // FIXME: - 컬러 수정
       
       VStack {
+        Spacer().frame(height: 22)
         topTeamspaceSettingView.padding(.horizontal, 16)
         Spacer().frame(height: 32)
         Divider()
@@ -46,6 +52,20 @@ struct TeamspaceSettingView: View {
         bottomDeleteTeamspaceView.padding(.horizontal, 16)
       }
     }
+    // 변경사항이 저장되지 않았습니다.
+    .alert(
+      "변경사항이 저장되지 않았습니다.\n종료하시겠어요?",
+      isPresented: $isPresentingDiscardChangesAlert
+    ) {
+      Button("취소", role: .cancel) {}
+      Button("삭제", role: .destructive) {
+        self.editingState = .viewing
+        self.nameFieldFocused = false
+      }
+    } message: {
+      Text("저장하지 않은 변경사항은 사라집니다.")
+    }
+    // 팀 스페이스 나가기
     .alert(
       "\(viewModel.currentTeamspace?.teamspaceName ?? "") 팀 스페이스를 나가시겠어요?",
       isPresented: $isPresentingLeaveTeamspaceAlert
@@ -69,6 +89,7 @@ struct TeamspaceSettingView: View {
     } message: {
       Text("다시 초대받아 참여할 수 있습니다.")
     }
+    // 팀 스페이스 삭제하기
     .alert(
       "\(viewModel.currentTeamspace?.teamspaceName ?? "") 팀 스페이스를 삭제하시겠어요?",
       isPresented: $isPresentingDeleteTeamspaceAlert) {
@@ -82,6 +103,7 @@ struct TeamspaceSettingView: View {
       } message: {
         Text("팀 스페이스와 멤버 목록이 모두 초기화됩니다.")
       }
+    // 팀원 강퇴하기
     .alert(
       "\(self.selectedUser?.name ?? "") 팀원을 내보내시겠어요?",
       isPresented: $presentingMemberRemovalAlertUser
@@ -101,6 +123,16 @@ struct TeamspaceSettingView: View {
     } message: {
       Text("이후 다시 초대할 수 있습니다.")
     }
+    // 팀장 선택하기 시트
+    .sheet(isPresented: $presentingChoiceTeamspaceOwnerSheet) {
+      ChoiceTeamspaceOwnerView(
+        viewModel: viewModel,
+        users: $users
+      )
+        .presentationDragIndicator(.visible)
+        .presentationDetents([.fraction(0.9)])
+        .presentationCornerRadius(16)
+    }
     .toolbar {
       ToolbarLeadingBackButton(icon: .chevron)
       ToolbarCenterTitle(text: "팀 스페이스 설정")
@@ -117,6 +149,14 @@ struct TeamspaceSettingView: View {
       
       let users: [User] = await viewModel.fetchCurrentTeamspaceAllMember()
       self.users = users
+    }
+    .toast(
+      isPresented: $showToastMessage,
+      duration: 2,
+      position: .bottom,
+      bottomPadding: 8   // 하단에서 얼마나 띄울지(버튼 위치)
+    ) {
+      ToastView(text: "팀 이름은 20자 미만으로 입력해주세요.")
     }
   }
   
@@ -140,23 +180,31 @@ struct TeamspaceSettingView: View {
                 }
             }
           case .editing:
-            let isDisabled = editedName
-              .trimmingCharacters(in: .whitespacesAndNewlines)
-              .isEmpty // 활성화/비활성화 여부
-            
-            UpdateButton(
-              title: "완료",
-              titleColor: Color.accentBlueStrong) {
-                Task {
-                  try await viewModel.renameCurrentTeamspaceAndReload(editedName: self.editedName)
-                  await MainActor.run {
-                    self.editingState = .viewing
-                    self.nameFieldFocused = false
+            HStack(spacing: 16) {
+              UpdateButton(
+                title: "취소",
+                titleColor: Color.labelStrong) {
+                  self.isPresentingDiscardChangesAlert = true
+                }
+              
+              let isDisabled = editedName
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .isEmpty // 활성화/비활성화 여부
+              
+              UpdateButton(
+                title: "완료",
+                titleColor: Color.secondaryStrong) {
+                  Task {
+                    try await viewModel.renameCurrentTeamspaceAndReload(editedName: self.editedName)
+                    await MainActor.run {
+                      self.editingState = .viewing
+                      self.nameFieldFocused = false
+                    }
                   }
                 }
-              }
-              .opacity(isDisabled ? 0.3 : 1.0)
-              .disabled(editedName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .opacity(isDisabled ? 0.3 : 1.0)
+                .disabled(editedName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
           }
         }
       } label: {
@@ -174,34 +222,46 @@ struct TeamspaceSettingView: View {
         TextField("팀 이름을 입력하세요", text: $editedName)
           .font(.title2SemiBold)
           .foregroundStyle(Color.labelStrong)
-          .tint(Color.secondaryNormal)
+          .tint(
+            editedName.count > 19 ? Color.accentRedNormal : Color.secondaryNormal
+          )
           .focused($nameFieldFocused)
           .submitLabel(.return)
-          .onSubmit {
-            // 키보드만 내려가게
-            //                        Task {
-            //                            try await viewModel.renameCurrentTeamspaceAndReload(editedName: self.editedName)
-            //                            await MainActor.run {
-            //                                self.editingState = .viewing
-            //                                self.nameFieldFocused = false
-            //                            }
-            //                        }
-          }
           .onChange(of: editedName) { oldValue, newValue in
             var updated = newValue
-
+            
             if updated.first == " " {
               updated = String(updated.drop(while: { $0 == " " }))
             }
-
+            
             if updated.count > 20 {
               updated = String(updated.prefix(20))
             }
-
+            
+            if updated.count == 20 {
+              self.showToastMessage = true
+            } else {
+              self.showToastMessage = false
+            }
+            
             if updated != editedName {
               editedName = updated
             }
+            
+            // 여기서 텍스트 width 계산
+            let font = UIFont.systemFont(ofSize: 22, weight: .semibold) // .title2SemiBold에 맞게 조정
+            let nsString = editedName as NSString
+            let size = nsString.size(withAttributes: [.font: font])
+            textWidth = max(size.width, 1)  // 완전 빈 문자열일 때 0 방지
           }
+        
+        Rectangle()
+          .fill(
+            self.editedName.count > 19 ? Color.accentRedNormal : Color.secondaryNormal
+          )
+          .frame(width: textWidth, height: 1)
+          .frame(maxWidth: .infinity, alignment: .leading)
+        
       }
       Spacer().frame(height: 32)
       ActionButton(
@@ -333,25 +393,28 @@ struct TeamspaceSettingView: View {
         Spacer().frame(height: 36)
         
       case .owner:
-        Button {
-          self.isPresentingLeaveTeamspaceAlert = true
-        } label: {
-          Text("팀 스페이스 나가기")
-            .font(.headline2Medium)
-            .foregroundStyle(Color.accentRedNormal)
+        
+        if users.count > 1 {
+          Button {
+            self.presentingChoiceTeamspaceOwnerSheet = true
+          } label: {
+            Text("팀 스페이스 나가기")
+              .font(.headline2Medium)
+              .foregroundStyle(Color.accentRedNormal)
+          }
+          
+          Spacer().frame(height: 32)
+        } else {
+          Button {
+            self.isPresentingDeleteTeamspaceAlert = true
+          } label: {
+            Text("팀 스페이스 삭제하기")
+              .font(.headline2Medium)
+              .foregroundStyle(Color.accentRedStrong)
+          }
+          
+          Spacer().frame(height: 36)
         }
-        
-        Spacer().frame(height: 32)
-        
-        Button {
-          self.isPresentingDeleteTeamspaceAlert = true
-        } label: {
-          Text("팀 스페이스 삭제하기")
-            .font(.headline2Medium)
-            .foregroundStyle(Color.accentRedStrong)
-        }
-        
-        Spacer().frame(height: 36)
       }
     }
   }

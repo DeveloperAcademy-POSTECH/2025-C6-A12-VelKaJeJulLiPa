@@ -124,10 +124,10 @@ struct HomeView: View {
         }
       }
       .toast(
-          isPresented: $showToastMessage,
-          duration: 2,
-          position: .bottom,
-          bottomPadding: 16   // 하단에서 얼마나 띄울지(버튼 위치)
+        isPresented: $showToastMessage,
+        duration: 2,
+        position: .bottom,
+        bottomPadding: 16   // 하단에서 얼마나 띄울지(버튼 위치)
       ) {
         ToastView(text: "프로젝트 이름은 20자 이내로 입력해주세요.", icon: .warning)
       }
@@ -143,19 +143,6 @@ struct HomeView: View {
         }
       }
     }
-    .sheet(item: $presentingRemovalSheetTracks) { tracks in
-      BottomConfirmSheetView(
-        titleText: "\(tracks.trackName)\n곡과 영상을 모두 삭제하시겠어요?",
-        primaryText: "모두 삭제"
-      ) {
-        Task {
-          try await viewModel.removeTracksAndSection(tracksId: tracks.tracksId.uuidString)
-          if let pid = viewModel.project.expandedID {
-            viewModel.loadTracks(for: pid) // 삭제 후 갱신
-          }
-        }
-      }
-    }
     // 팀 스페이스 생성 시트
     .sheet(isPresented: $presentingCreateTeamspaceSheet) {
       CreateTeamspaceView(onCreated: {
@@ -166,9 +153,9 @@ struct HomeView: View {
           await viewModel.fetchCurrentTeamspaceProject()
         }
       })
-      .presentationDragIndicator(.visible)
-      .presentationDetents([.fraction(0.9)])
-      .presentationCornerRadius(16)
+        .presentationDragIndicator(.visible)
+        .presentationDetents([.fraction(0.9)])
+        .presentationCornerRadius(16)
     }
     // 프로젝트 생성 시트
     .sheet(isPresented: $presentingCreateProjectSheet) {
@@ -180,7 +167,6 @@ struct HomeView: View {
           self.viewModel.project.projects = newloaded
         }
       })
-      .environmentObject(router)
       .presentationDragIndicator(.visible)
       .presentationDetents([.fraction(0.9)])
       .presentationCornerRadius(16)
@@ -199,10 +185,22 @@ struct HomeView: View {
           }
         }
       )
-      .environmentObject(router)
       .presentationDragIndicator(.visible)
       .presentationDetents([.fraction(0.9)])
       .presentationCornerRadius(16)
+    }
+    .sheet(item: $presentingRemovalSheetTracks) { tracks in
+      BottomConfirmSheetView(
+        titleText: "\(tracks.trackName)\n곡과 영상을 모두 삭제하시겠어요?",
+        primaryText: "모두 삭제"
+      ) {
+        Task {
+          try await viewModel.removeTracksAndSection(tracksId: tracks.tracksId.uuidString)
+          if let pid = viewModel.project.expandedID {
+            viewModel.loadTracks(for: pid) // 삭제 후 갱신
+          }
+        }
+      }
     }
     .overlay { if isLoading { LoadingView() } }
     .overlay(alignment: .bottomTrailing) {
@@ -248,6 +246,12 @@ struct HomeView: View {
         } else {
           // 팀스페이스가 다른 것으로 교체된 경우
           await viewModel.reloadProjectsAfterTeamspaceChange()
+          
+          // 팀스페이스가 교체되면 탭바 수신함의 뱃지 카운트를 교체된 팀스페이스에 맞췃 갱신
+          try await NotificationManager.shared.fetchUnreadNotificationCount(
+            userId: FirebaseAuthManager.shared.user?.uid ?? "",
+            teamspaceId: FirebaseAuthManager.shared.currentTeamspace?.teamspaceId.uuidString ?? ""
+          )
         }
       }
     }

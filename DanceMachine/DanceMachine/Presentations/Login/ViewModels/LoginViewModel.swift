@@ -32,19 +32,27 @@ final class LoginViewModel: ObservableObject {
       let tokens = try await helper.startSignInWithAppleFlow()
       let authDataResult = try await FirebaseAuthManager.shared.signInWithApple(tokens: tokens)
       
+      let fcmToken = UserDefaults.standard.string(forKey: UserDefaultsKey.fcmToken.rawValue) ?? "Unknown"
+      
       let user = User(userId: authDataResult.user.uid,
                       email: authDataResult.user.email ?? "Unknown",
                       name: FirebaseAuthManager.shared.displayName(from: authDataResult.user.displayName),
                       loginType: LoginType.apple,
                       status: UserStatus.active,
-                      fcmToken: "Unknown",
+                      fcmToken: fcmToken,
                       termsAgreed: true,
                       privacyAgreed: true)
       
       
       if let existingUser: User = try? await FirestoreManager.shared.get(user.userId, from: .users) {
-        try await FirestoreManager.shared.updateUserLastLogin(existingUser)
-        FirebaseAuthManager.shared.userInfo = existingUser
+        try await FirestoreManager.shared.updateFields(
+          collection: .users,
+          documentId: user.userId,
+          asDictionary: [User.CodingKeys.fcmToken.rawValue: fcmToken]
+        )
+        let userInfo: User = try await FirestoreManager.shared.get(user.userId, from: .users)
+        try await FirestoreManager.shared.updateUserLastLogin(userInfo)
+        FirebaseAuthManager.shared.userInfo = userInfo
         FirebaseAuthManager.shared.needsNameSetting = false
       } else {
         try await FirestoreManager.shared.createUser(user)

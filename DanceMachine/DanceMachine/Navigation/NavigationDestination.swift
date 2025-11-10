@@ -61,6 +61,7 @@ enum MyPageRoute: Hashable {
   case privacyPolicy
   case termsOfUse
   case accountSetting
+  case appMaker
 }
 
 enum VideoRoute: Hashable {

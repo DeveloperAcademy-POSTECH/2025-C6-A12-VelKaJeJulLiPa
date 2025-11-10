@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+
 struct ToastView: View {
   var text: String
   var icon: ToastIcon
@@ -24,7 +25,7 @@ struct ToastView: View {
         .fixedSize(horizontal: false, vertical: true)
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity, minHeight: 43, alignment: .leading)
-      
+
     }
     .padding(.leading, 16)
     .background(
