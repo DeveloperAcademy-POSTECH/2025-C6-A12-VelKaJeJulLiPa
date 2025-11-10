@@ -26,6 +26,7 @@ struct CreateTracksView: View {
       VStack {
         Spacer().frame(height: 29)
         topTitleCloseView
+          .padding(.horizontal, 16)
         Spacer()
         middleInputTrackNameView
           .padding(.horizontal, 16)
@@ -38,10 +39,23 @@ struct CreateTracksView: View {
   
   // MARK: - 탑 타이틀, 닫기 버튼 뷰
   private var topTitleCloseView: some View {
-    HStack {
+    ZStack { // TODO: 서치
+      // 가운데 정렬 타이틀
       Text("곡 추가하기")
         .font(.headline2SemiBold)
         .foregroundStyle(Color.labelStrong)
+        .frame(maxWidth: .infinity, alignment: .center)
+      
+      // 왼쪽 X 버튼
+      HStack {
+        Image(systemName: "xmark.circle.fill")
+          .resizable()
+          .scaledToFit()
+          .frame(width: 44, height: 44)
+          .foregroundStyle(Color.labelNormal)
+          .onTapGesture { dismiss() }
+        Spacer()
+      }
     }
   }
   

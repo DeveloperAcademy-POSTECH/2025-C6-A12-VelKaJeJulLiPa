@@ -14,4 +14,8 @@ class NavigationRouter<Route: Hashable>: NavigationRoutable {
   func push(to view: Route) { destination.append(view) }
   func pop() { _ = destination.popLast() }
   func popToRootView() {  destination.removeAll() }
+  
+  deinit {
+    // 아카이브 버그 해결 코드
+  }
 }
