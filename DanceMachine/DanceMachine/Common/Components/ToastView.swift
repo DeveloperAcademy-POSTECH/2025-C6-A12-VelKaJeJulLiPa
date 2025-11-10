@@ -21,7 +21,7 @@ struct ToastView: View {
       Text(text)
         .font(.headline2Medium)
         .foregroundStyle(.labelStrong)
-        .multilineTextAlignment(.center)
+        .multilineTextAlignment(.leading)
         .fixedSize(horizontal: false, vertical: true)
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity, minHeight: 43, alignment: .leading)
@@ -32,25 +32,6 @@ struct ToastView: View {
       RoundedRectangle(cornerRadius: 10)
         .fill(Color.fillAssitive)
     )
-  }
-}
-
-enum ToastIcon: String {
-  case warning
-  case check
-  
-  var icon: String {
-    switch self {
-    case .warning: return "exclamationmark.circle.fill"
-    case .check: return "checkmark.circle.fill"
-    }
-  }
-  
-  var iconColor: Color {
-    switch self {
-    case .warning: return .accentRedNormal
-    case .check: return .secondaryNormal
-    }
   }
 }
 

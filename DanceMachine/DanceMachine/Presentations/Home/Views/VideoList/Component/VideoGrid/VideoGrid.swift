@@ -24,6 +24,7 @@ struct VideoGrid: View {
   @State private var selectedTrack: Track?
   @State private var showDeleteAlert: Bool = false
   @State private var showEditVideoTitle: Video?
+  @State private var reportTargetVideo: Video?
   @State private var progressManager = VideoProgressManager.shared
   @Binding var vm: VideoListViewModel
   
@@ -57,6 +58,8 @@ struct VideoGrid: View {
       } else {
         ForEach(videos, id: \.videoId) { video in
           if let track = track.first(where: { $0.videoId == video.videoId.uuidString }) {
+            let currentUserId = FirebaseAuthManager.shared.userInfo?.userId ?? ""
+            
             GridCell(
               size: size,
               videoId: video.videoId.uuidString,
@@ -64,6 +67,8 @@ struct VideoGrid: View {
               title: video.videoTitle,
               duration: video.videoDuration,
               uploadDate: video.createdAt ?? Date(),
+              currentUserId: currentUserId,
+              videoUploaderId: video.uploaderId,
               editAction: {
                 self.selectedTrack = track
               },
@@ -73,6 +78,7 @@ struct VideoGrid: View {
                 print("\(video.videoId)모달 선택")
               },
               showEditSheet: { self.showEditVideoTitle = video },
+              showCreateReportSheet: { self.reportTargetVideo = video },
               videoAction: {
                 router.push(
                   to: .video(
@@ -136,6 +142,18 @@ struct VideoGrid: View {
         )
       }
     }
+    
+    // MARK: 신고하기 뷰
+    .sheet(item: $reportTargetVideo) { video in
+      NavigationStack {
+        CreateReportView(
+          reportedId: video.uploaderId,
+          reportContentType: .video,
+          video: video,
+          toastReceiveView: ReportToastReceiveViewType.videoListView
+        )
+      }
+    }
   }
 }
 
@@ -158,7 +176,8 @@ extension Video: Identifiable {
       videoTitle: "벨코의 리치맨",
       videoDuration: 20.0,
       videoURL: "",
-      thumbnailURL: ""
+      thumbnailURL: "",
+      uploaderId: ""
     )],
     track: [Track(
       trackId: "",

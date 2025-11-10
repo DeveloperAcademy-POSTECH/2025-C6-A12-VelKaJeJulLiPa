@@ -365,8 +365,18 @@ final class FirestoreManager {
     return snap.documents.compactMap { try? $0.data(as: T.self) }
   }
   
-  //TODO: 범용적으로 사용할 수 있도록 리팩토링
-  @discardableResult
+  /// 특정 유저의 알림 목록을 가져옵니다.
+  /// - Parameters:
+  ///   - userId: 유저의 document ID
+  ///   - currentTeamspaceId: 현재 팀스페이스 ID
+  ///   - type: 콜렉션 타입 (현재 Notification)
+  ///   - receiverIds: 푸시 알림 수신자 배열의 필드명
+  ///   - teamspaceField: 알림 문서의 팀스페이스 필드명
+  ///   - orderKey: 정렬 기준 (현재, createdAt)
+  ///   - descending: 내림 차순 정렬 여부 (현재는 true)
+  ///   - limit: 가져오는 최대 목록 개수 (현재 최대 20개)
+  ///   - lastDocument: 페이지내이션 처리를 위한 가져온 목록 중 마지막 목록 문서
+  /// - Returns: 튜플 형태로 알림 목록과 해당 목록의 마지막 문서를 반환
   func fetchNotificationList<T: Decodable>(
     userId: String,
     currentTeamspaceId: String,

@@ -107,7 +107,8 @@ extension VideoPickerViewModel {
               duration: duration,
               tracksId: tracksId,
               sectionId: sectionId,
-              videoId: videoId
+              videoId: videoId,
+              uploaderId: FirebaseAuthManager.shared.userInfo?.userId ?? ""
             )
 
             await MainActor.run {
@@ -151,7 +152,8 @@ extension VideoPickerViewModel {
     duration: Double,
     tracksId: String,
     sectionId: String,
-    videoId: String
+    videoId: String,
+    uploaderId: String,
   ) async throws -> (Video, Track) {
     let videoData = try Data(contentsOf: asset.url)
 
@@ -177,7 +179,8 @@ extension VideoPickerViewModel {
       videoTitle: videoTitle,
       videoDuration: duration,
       videoURL: videoURL,
-      thumbnailURL: thumbnailURL
+      thumbnailURL: thumbnailURL,
+      uploaderId: uploaderId
     )
 
     // Track 객체 생성
@@ -257,7 +260,8 @@ extension VideoPickerViewModel {
     videoId: String,
     duration: Double,
     downloadURL: String,
-    thumbnailURL: String
+    thumbnailURL: String,
+    uploaderId: String
   ) async throws {
     
     let video = Video(
@@ -265,7 +269,8 @@ extension VideoPickerViewModel {
       videoTitle: videoTitle,
       videoDuration: duration,
       videoURL: downloadURL,
-      thumbnailURL: thumbnailURL
+      thumbnailURL: thumbnailURL,
+      uploaderId: uploaderId
     )
     
     try await store.create(video)
@@ -380,7 +385,8 @@ extension VideoPickerViewModel {
         duration: duration,
         tracksId: context.tracksId,
         sectionId: context.sectionId,
-        videoId: context.videoId
+        videoId: context.videoId,
+        uploaderId: FirebaseAuthManager.shared.userInfo?.userId ?? ""
       )
 
       await MainActor.run {

@@ -16,6 +16,7 @@ struct Video: Codable, Equatable {
     let videoURL: String
     let thumbnailURL: String
     var createdAt: Date? = nil
+    let uploaderId: String
 
     init(
         videoId: UUID,
@@ -23,7 +24,8 @@ struct Video: Codable, Equatable {
         videoDuration: Double,
         videoURL: String,
         thumbnailURL: String,
-        createdAt: Date? = nil
+        createdAt: Date? = nil,
+        uploaderId: String
     ) {
         self.videoId = videoId
         self.videoTitle = videoTitle
@@ -31,6 +33,7 @@ struct Video: Codable, Equatable {
         self.videoURL = videoURL
         self.thumbnailURL = thumbnailURL
         self.createdAt = createdAt
+        self.uploaderId = uploaderId
     }
 
     enum CodingKeys: String, CodingKey {
@@ -40,6 +43,7 @@ struct Video: Codable, Equatable {
         case videoURL      = "video_url"
         case thumbnailURL  = "thumbnail_url"
         case createdAt     = "created_at"
+        case uploaderId    = "uploader_id"
     }
 }
 

@@ -16,9 +16,12 @@ struct GridCell: View {
   let duration: Double
   let uploadDate: Date
 
+  let currentUserId: String
+  let videoUploaderId: String
   let editAction: () -> Void
   let deleteAction: () -> Void
   let showEditSheet: () -> Void
+  let showCreateReportSheet: () -> Void
   
   let videoAction: () -> Void
   
@@ -115,13 +118,26 @@ struct GridCell: View {
       }
       .disabled(sectionCount <= 1)
 
-      Button(role: .destructive) {
-        deleteAction()
-      } label: {
-        HStack {
-          Image(systemName: "trash")
-            .tint(.accentRedStrong)
-          Text("영상 삭제")
+      // FIXME: 메뉴 버튼 스타일 수정
+      if currentUserId == videoUploaderId {
+        Button(role: .destructive) {
+          deleteAction()
+        } label: {
+          HStack {
+            Image(systemName: "trash")
+              .tint(.accentRedStrong)
+            Text("영상 삭제")
+          }
+        }
+      } else {
+        Button(role: .destructive) {
+          showCreateReportSheet()
+        } label: {
+          HStack {
+            Image(systemName: "light.beacon.max")
+              .tint(.accentRedStrong)
+            Text("신고하기")
+          }
         }
       }
     }
@@ -137,9 +153,12 @@ struct GridCell: View {
     title: "제목",
     duration: 14.1414141414,
     uploadDate: Date(),
+    currentUserId: "",
+    videoUploaderId: "",
     editAction: {},
     deleteAction: {},
     showEditSheet: {},
+    showCreateReportSheet: {},
     videoAction: {},
     sectionCount: 0
   )

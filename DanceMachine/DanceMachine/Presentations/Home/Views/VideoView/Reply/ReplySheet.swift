@@ -14,6 +14,9 @@ struct ReplySheet: View {
   
   @State private var isKeyboardVisible: Bool = false
   
+  @State private var isReportSheetPresented: Bool = false
+  @State private var showCreateReportSuccessToast: Bool = false
+  
   let reply: [Reply]
   let feedback: Feedback
   let taggedUsers: [User] // 이전화면에서 받아오는 태그 된 유저 (피드백 카드)
@@ -34,6 +37,7 @@ struct ReplySheet: View {
   let onFeedbackDelete: () -> Void
   
   @State private var selectedReply: Reply?
+  @State private var reportTargetReply: Reply?
   @State private var content: String = ""
   
   private var filteredMembers: [User] {
@@ -70,7 +74,8 @@ struct ReplySheet: View {
           onDelete: {
             onFeedbackDelete()
             dismiss()
-          }
+          },
+          onReport: { isReportSheetPresented = true }
         )
         .overlay(alignment: .bottomLeading) {
           Button {
@@ -126,6 +131,47 @@ struct ReplySheet: View {
           )
         }
       }
+      .toast(
+        isPresented: $showCreateReportSuccessToast,
+        duration: 3,
+        position: .bottom,
+        bottomPadding: 63, // FIXME: 신고하기 - 하단 공백 조정 필요
+        content: {
+          ToastView(text: "신고가 접수되었습니다.\n조치사항은 이메일로 안내해드리겠습니다.", icon: .check)
+        }
+      )
+      // MARK: 신고 완료 토스트 리시버
+      .onReceive(NotificationCenter.default.publisher(for: .showCreateReportSuccessToast)) { notification in
+        if let toastViewName = notification.userInfo?["toastViewName"] as? ReportToastReceiveViewType,
+           toastViewName == ReportToastReceiveViewType.replySheet {
+          showCreateReportSuccessToast = true
+        }
+      }
+      
+      // 신고하기 시트 - 피드백
+      .sheet(isPresented: $isReportSheetPresented) {
+        NavigationStack {
+          CreateReportView(
+            reportedId: feedback.authorId,
+            reportContentType: .feedback,
+            feedback: feedback,
+            toastReceiveView: ReportToastReceiveViewType.replySheet
+          )
+        }
+      }
+      
+      // 신고하기 - 답글
+      .sheet(item: $reportTargetReply) { reply in
+        NavigationStack {
+          CreateReportView(
+            reportedId: reply.authorId,
+            reportContentType: .reply,
+            reply: reply,
+            toastReceiveView: ReportToastReceiveViewType.replySheet
+          )
+        }
+      }
+      
       //      .ignoresSafeArea(edges: .bottom)
       .toolbarTitleDisplayMode(.inline)
       .toolbar {
@@ -154,6 +200,7 @@ struct ReplySheet: View {
                 await onDelete(reply.replyId, feedback.feedbackId.uuidString)
               }
             }, // TODO: 삭제
+            showCreateReportSheet: { self.reportTargetReply = reply }
           )
         }
       }

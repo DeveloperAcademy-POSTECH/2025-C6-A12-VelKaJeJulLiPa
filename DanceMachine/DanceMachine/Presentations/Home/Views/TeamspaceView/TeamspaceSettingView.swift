@@ -156,7 +156,7 @@ struct TeamspaceSettingView: View {
       position: .bottom,
       bottomPadding: 8   // 하단에서 얼마나 띄울지(버튼 위치)
     ) {
-      ToastView(text: "팀 이름은 20자 미만으로 입력해주세요.")
+      ToastView(text: "팀 이름은 20자 미만으로 입력해주세요.", icon: .warning)
     }
   }
   
