@@ -17,6 +17,8 @@ struct ReplyCard: View {
   let onDelete: () -> Void
   let showCreateReportSheet: () -> Void
   
+  @State private var showMenu: Bool = false
+  
   var body: some View {
     HStack(alignment: .top, spacing: 8) {
       Image(systemName: "arrowshape.turn.up.right")
@@ -33,8 +35,18 @@ struct ReplyCard: View {
     }
     .frame(maxWidth: .infinity)
     .padding(.vertical, 10)
-//    .background(Color.red.opacity(0.3))
     .padding(.horizontal, 25)
+    .contentShape(Rectangle())
+    .onTapGesture {
+      replyAction()
+    }
+    .onLongPressGesture(perform: {
+      showMenu.toggle()
+    })
+    .contextMenu {
+      contextRow
+    }
+    .sensoryFeedback(.success, trigger: showMenu)
   }
   
   private var topRow: some View {
@@ -54,19 +66,7 @@ struct ReplyCard: View {
         Spacer()
       }
       Menu {
-        if reply.authorId == currentUserId {
-          Button(role: .destructive) {
-            onDelete()
-          } label: {
-            Label("삭제", systemImage: "trash")
-          }
-        } else {
-          Button(role: .destructive) {
-            showCreateReportSheet()
-          } label: {
-            Label("신고하기", systemImage: "light.beacon.max")
-          }
-        }
+        contextRow
       } label: {
         Image(systemName: "ellipsis")
           .font(.system(size: 14))
@@ -100,6 +100,24 @@ struct ReplyCard: View {
       Text("답글달기")
         .font(.footnoteMedium)
         .foregroundStyle(.labelNormal)
+    }
+  }
+  
+  private var contextRow: some View {
+    VStack(alignment: .leading, spacing: 16) {
+      if reply.authorId == currentUserId {
+        Button(role: .destructive) {
+          onDelete()
+        } label: {
+          Label("삭제", systemImage: "trash")
+        }
+      } else {
+        Button(role: .destructive) {
+          showCreateReportSheet()
+        } label: {
+          Label("신고하기", systemImage: "light.beacon.max")
+        }
+      }
     }
   }
 }

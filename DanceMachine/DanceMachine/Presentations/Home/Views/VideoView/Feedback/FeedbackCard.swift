@@ -23,6 +23,8 @@ struct FeedbackCard: View {
   let onDelete: () -> Void
   let onReport: () -> Void
   
+  @State private var showMenu: Bool = false
+  
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {
       authorName
@@ -34,32 +36,6 @@ struct FeedbackCard: View {
     }
     .padding(.horizontal, 16)
     .padding(.vertical, 16)
-    .overlay(alignment: .topTrailing) {
-      Menu {
-        if feedback.authorId == currentUserId {
-          Button(role: .destructive) {
-            onDelete()
-          } label: {
-            Label("삭제", systemImage: "trash")
-          }
-        } else {
-          Button(role: .destructive) {
-            onReport()
-          } label: {
-            Label("신고하기", systemImage: "light.beacon.max")
-          }
-        }
-      } label: {
-        Image(systemName: "ellipsis")
-          .font(.system(size: 14))
-          .foregroundStyle(.labelNormal)
-      }
-      .frame(width: 22, height: 22)
-      .contentShape(Rectangle())
-      .padding(.horizontal, 16)
-      .padding(.top, 8)
-      .tint(Color.accentRedStrong) // FIXME: 메뉴 버튼 스타일 수정
-    }
     .background {
       VStack {
         Spacer()
@@ -75,6 +51,24 @@ struct FeedbackCard: View {
     .onLongPressGesture(perform: {
       action()
     })
+    .contextMenu {
+      contextRow
+    }
+    .sensoryFeedback(.success, trigger: showMenu)
+    .overlay(alignment: .topTrailing) {
+      Menu {
+        contextRow
+      } label: {
+        Image(systemName: "ellipsis")
+          .font(.system(size: 14))
+          .foregroundStyle(.labelNormal)
+      }
+      .frame(width: 22, height: 22)
+      .contentShape(Rectangle())
+      .padding(.horizontal, 16)
+      .padding(.top, 8)
+      .tint(Color.accentRedStrong) // FIXME: 메뉴 버튼 스타일 수정
+    }
   }
   
   private var authorName: some View {
@@ -170,6 +164,24 @@ struct FeedbackCard: View {
       }
     }
     .frame(maxWidth: .infinity, alignment: .trailing)
+  }
+  
+  private var contextRow: some View {
+    VStack(alignment: .leading, spacing: 16) {
+      if feedback.authorId == currentUserId {
+        Button(role: .destructive) {
+          onDelete()
+        } label: {
+          Label("삭제", systemImage: "trash")
+        }
+      } else {
+        Button(role: .destructive) {
+          onReport()
+        } label: {
+          Label("신고하기", systemImage: "light.beacon.max")
+        }
+      }
+    }
   }
 }
 

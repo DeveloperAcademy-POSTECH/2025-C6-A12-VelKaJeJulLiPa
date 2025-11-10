@@ -9,13 +9,13 @@ import SwiftUI
 
 struct GridCell: View {
   var size: CGFloat
-
+  
   let videoId: String // 썸네일 캐싱용
   let thumbnailURL: String?
   let title: String
   let duration: Double
   let uploadDate: Date
-
+  
   let currentUserId: String
   let videoUploaderId: String
   let editAction: () -> Void
@@ -93,52 +93,73 @@ struct GridCell: View {
     }
   }
   
+  private var contextRows: some View {
+    VStack(alignment: .leading, spacing: 16) {
+      if currentUserId == videoUploaderId {
+        videoTitleEditButton
+        videoEditButton
+        deleteButton
+      } else {
+        reportButton
+      }
+    }
+  }
+  
   private var contextRow: some View {
     VStack(alignment: .leading, spacing: 16) {
-      Button {
-        showEditSheet()
-      } label: {
-        HStack {
-          Image(systemName: "pencil")
-            .tint(.labelStrong)
-          Text("이름 수정")
-            .font(.headline1Medium)
-        }
+      videoTitleEditButton
+      videoEditButton
+        .disabled(sectionCount <= 1)
+      if currentUserId == videoUploaderId { deleteButton } else { reportButton }
+    }
+  }
+  // MARK: 영상이름 수정 버튼
+  private var videoTitleEditButton: some View {
+    Button {
+      showEditSheet()
+    } label: {
+      HStack {
+        Image(systemName: "pencil")
+          .tint(.labelStrong)
+        Text("이름 수정")
+          .font(.headline1Medium)
       }
-
-      Button {
-        editAction()
-      } label: {
-        HStack {
-          Image(systemName: "arrow.up.and.down.and.arrow.left.and.right")
-            .tint(sectionCount <= 1 ? Color.fillAssitive : Color.labelStrong)
-          Text("다른 파트로 이동")
-            .font(.headline1Medium)
-        }
+    }
+  }
+  // MARK: 영상이동 버튼
+  private var videoEditButton: some View {
+    Button {
+      editAction()
+    } label: {
+      HStack {
+        Image(systemName: "arrow.up.and.down.and.arrow.left.and.right")
+          .tint(sectionCount <= 1 ? Color.fillAssitive : Color.labelStrong)
+        Text("다른 파트로 이동")
+          .font(.headline1Medium)
       }
-      .disabled(sectionCount <= 1)
-
-      // FIXME: 메뉴 버튼 스타일 수정
-      if currentUserId == videoUploaderId {
-        Button(role: .destructive) {
-          deleteAction()
-        } label: {
-          HStack {
-            Image(systemName: "trash")
-              .tint(.accentRedStrong)
-            Text("영상 삭제")
-          }
-        }
-      } else {
-        Button(role: .destructive) {
-          showCreateReportSheet()
-        } label: {
-          HStack {
-            Image(systemName: "light.beacon.max")
-              .tint(.accentRedStrong)
-            Text("신고하기")
-          }
-        }
+    }
+  }
+  // MARK: 영삭삭제 버튼
+  private var deleteButton: some View {
+    Button(role: .destructive) {
+      deleteAction()
+    } label: {
+      HStack {
+        Image(systemName: "trash")
+          .tint(.accentRedStrong)
+        Text("영상 삭제")
+      }
+    }
+  }
+  // MARK: 신고하기 버튼
+  private var reportButton: some View {
+    Button(role: .destructive) {
+      showCreateReportSheet()
+    } label: {
+      HStack {
+        Image(systemName: "light.beacon.max")
+          .tint(.accentRedStrong)
+        Text("신고하기")
       }
     }
   }
