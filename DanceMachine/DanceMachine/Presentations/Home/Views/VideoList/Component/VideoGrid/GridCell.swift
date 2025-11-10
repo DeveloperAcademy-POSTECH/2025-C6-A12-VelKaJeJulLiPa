@@ -45,7 +45,7 @@ struct GridCell: View {
     .onTapGesture { videoAction() }
     .overlay(alignment: .topTrailing) {
       Menu {
-        contextRow
+        contextRows
       } label: {
         Image(systemName: "ellipsis")
           .foregroundStyle(.labelStrong)
@@ -54,7 +54,7 @@ struct GridCell: View {
       }
     }
     .contextMenu {
-      contextRow
+      contextRows
         .preferredColorScheme(.dark)  // 강제 다크모드
     }
     .preferredColorScheme(.dark)  // 강제 다크모드
@@ -105,14 +105,6 @@ struct GridCell: View {
     }
   }
   
-  private var contextRow: some View {
-    VStack(alignment: .leading, spacing: 16) {
-      videoTitleEditButton
-      videoEditButton
-        .disabled(sectionCount <= 1)
-      if currentUserId == videoUploaderId { deleteButton } else { reportButton }
-    }
-  }
   // MARK: 영상이름 수정 버튼
   private var videoTitleEditButton: some View {
     Button {
