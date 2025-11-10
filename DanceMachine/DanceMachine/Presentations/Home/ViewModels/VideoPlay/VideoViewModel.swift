@@ -26,8 +26,9 @@ final class VideoViewModel {
   // 탭 제스처 관련
   var lastTapTime: Date = Date()
   var tapCount: Int = .zero
-  var autoShowControls: Task<Void, Never>?
-  private let doubleTap: TimeInterval = 0.5
+  var autoHideControlsTask: Task<Void, Never>?
+  var singleTapTask: Task<Void, Never>?
+  private let doubleTap: TimeInterval = 0.2
   
   var loadingProgress: Double = 0.0
   var isLoading: Bool = false
@@ -144,21 +145,36 @@ extension VideoViewModel {
   func togglePlayPause() {
     if isPlaying {
       player?.pause()
-      DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-        withAnimation(.easeInOut(duration: 0.6)) {
-          self.showControls = true
-        }
-      }
+      // 일시정지 시 자동 숨김 타이머 취소
+      autoHideControlsTask?.cancel()
+      isPlaying = false
     } else {
       player?.play()
-      DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-        withAnimation(.easeInOut(duration: 0.6)) {
-          self.showControls = false
+      player?.rate = playbackSpeed
+      isPlaying = true
+      // 재생 시작하면 컨트롤 자동 숨김 타이머 시작
+      startAutoHideControls()
+    }
+  }
+
+  // MARK: 컨트롤 자동 숨김 타이머
+  func startAutoHideControls() {
+    // 기존 타이머 취소
+    autoHideControlsTask?.cancel()
+
+    // 재생 중이고 컨트롤이 보이는 경우에만 타이머 시작
+    guard isPlaying, showControls else { return }
+
+    autoHideControlsTask = Task {
+      try? await Task.sleep(for: .seconds(2))
+      if !Task.isCancelled && isPlaying {
+        await MainActor.run {
+          withAnimation(.easeOut(duration: 0.3)) {
+            self.showControls = false
+          }
         }
       }
-      player?.rate = playbackSpeed
     }
-    isPlaying.toggle()
   }
 }
 
@@ -167,30 +183,36 @@ extension VideoViewModel {
   func leftTab() {
     let now = Date()
     let timeTap = now.timeIntervalSince(lastTapTime)
-    
+
     if timeTap < doubleTap {
+      // 더블탭: 싱글탭 Task 취소하고 5초 뒤로 이동
+      singleTapTask?.cancel()
       seekToTime(to: currentTime - 5)
       tapCount += 1
-      
-      self.showControls = false
-      
-      self.autoShowControls?.cancel()
-      
-      self.autoShowControls = Task {
-        try? await Task.sleep(for: .seconds(0.5))
+
+      // 컨트롤이 켜져있고 재생 중이면 자동 숨김 타이머 시작
+      if showControls && isPlaying {
+        startAutoHideControls()
+      }
+    } else {
+      // 싱글탭 대기: 0.5초 후 더블탭이 없으면 컨트롤 토글
+      tapCount = 1
+
+      singleTapTask?.cancel()
+      singleTapTask = Task {
+        try? await Task.sleep(for: .seconds(doubleTap))
         if !Task.isCancelled {
           await MainActor.run {
             withAnimation(.easeInOut(duration: 0.3)) {
-              self.showControls = true
+              self.showControls.toggle()
+            }
+
+            // 컨트롤을 켰고 재생 중이면 자동 숨김 타이머 시작
+            if self.showControls && self.isPlaying {
+              self.startAutoHideControls()
             }
           }
         }
-      }
-    } else {
-      tapCount = 1
-      
-      withAnimation(.easeInOut(duration: 0.3)) {
-        self.showControls.toggle()
       }
     }
     lastTapTime = now
@@ -199,32 +221,49 @@ extension VideoViewModel {
   func rightTap() {
     let now = Date()
     let timeTap = now.timeIntervalSince(lastTapTime)
-    
+
     if timeTap < doubleTap {
+      // 더블탭: 싱글탭 Task 취소하고 5초 앞으로 이동
+      singleTapTask?.cancel()
       seekToTime(to: currentTime + 5)
       tapCount += 1
-      
-      self.showControls = false
-      
-      self.autoShowControls?.cancel()
-      
-      self.autoShowControls = Task {
-        try? await Task.sleep(for: .seconds(0.5))
+
+      // 컨트롤이 켜져있고 재생 중이면 자동 숨김 타이머 시작
+      if showControls && isPlaying {
+        startAutoHideControls()
+      }
+    } else {
+      // 싱글탭 대기: 0.5초 후 더블탭이 없으면 컨트롤 토글
+      tapCount = 1
+
+      singleTapTask?.cancel()
+      singleTapTask = Task {
+        try? await Task.sleep(for: .seconds(doubleTap))
         if !Task.isCancelled {
           await MainActor.run {
             withAnimation(.easeInOut(duration: 0.3)) {
-              self.showControls = true
+              self.showControls.toggle()
+            }
+
+            // 컨트롤을 켰고 재생 중이면 자동 숨김 타이머 시작
+            if self.showControls && self.isPlaying {
+              self.startAutoHideControls()
             }
           }
         }
       }
-    } else {
-      tapCount = 1
-      
-      withAnimation(.easeInOut(duration: 0.3)) {
-        self.showControls.toggle()
-      }
     }
     lastTapTime = now
+  }
+
+  func centerTap() {
+    withAnimation(.easeInOut(duration: 0.3)) {
+      self.showControls.toggle()
+    }
+
+    // 컨트롤을 켰고 재생 중이면 자동 숨김 타이머 시작
+    if showControls && isPlaying {
+      startAutoHideControls()
+    }
   }
 }

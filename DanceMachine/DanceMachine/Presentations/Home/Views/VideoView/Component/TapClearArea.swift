@@ -10,9 +10,10 @@ import SwiftUI
 struct TapClearArea: View {
   let leftTap: () -> Void
   let rightTap: () -> Void
-  
+  let centerTap: () -> Void
+
   @Binding var showControls: Bool
-  
+
   var body: some View {
     HStack {
       Color.clear
@@ -23,7 +24,7 @@ struct TapClearArea: View {
       Color.clear
         .contentShape(Rectangle())
         .onTapGesture {
-          showControls.toggle()
+          centerTap()
         }
       Color.clear
         .contentShape(Rectangle())
@@ -38,5 +39,6 @@ struct TapClearArea: View {
   TapClearArea(
     leftTap: {},
     rightTap: {},
+    centerTap: {},
     showControls: .constant(true))
 }

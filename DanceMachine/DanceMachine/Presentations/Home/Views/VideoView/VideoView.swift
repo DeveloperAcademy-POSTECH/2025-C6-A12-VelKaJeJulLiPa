@@ -241,6 +241,7 @@ struct VideoView: View {
             TapClearArea(
               leftTap: { vm.videoVM.leftTab() },
               rightTap: { vm.videoVM.rightTap() },
+              centerTap: { vm.videoVM.centerTap() },
               showControls: $vm.videoVM.showControls
             )
             
@@ -248,9 +249,15 @@ struct VideoView: View {
               OverlayController(
                 leftAction: {
                   vm.videoVM.seekToTime(to: vm.videoVM.currentTime - 5)
+                  if vm.videoVM.isPlaying {
+                    vm.videoVM.startAutoHideControls()
+                  }
                 },
                 rightAction: {
                   vm.videoVM.seekToTime(to: vm.videoVM.currentTime + 5)
+                  if vm.videoVM.isPlaying {
+                    vm.videoVM.startAutoHideControls()
+                  }
                 },
                 centerAction: {
                   vm.videoVM.togglePlayPause()
@@ -258,6 +265,7 @@ struct VideoView: View {
                 isPlaying: $vm.videoVM.isPlaying
               )
               .padding(.bottom, 20)
+              .transition(.opacity)
             }
           }
           .frame(width: showFeedbackPanel ? proxy.size.height * 0.55 : proxy.size.height * 0.83)
@@ -266,7 +274,7 @@ struct VideoView: View {
           if vm.videoVM.showControls {
             VStack {
               Spacer()
-              
+
               CustomSlider(
                 isDragging: $isDragging,
                 currentTime: isDragging ? sliderValue : vm.videoVM.currentTime,
@@ -290,7 +298,8 @@ struct VideoView: View {
               }
             }
             .frame(width: showFeedbackPanel ? proxy.size.height * 0.55 : proxy.size.height)
-            
+            .transition(.opacity)
+
             // 버튼 (전체 width로 확장)
             VideoSettingButtons(
               action: { self.showSpeedSheet = true },
@@ -309,6 +318,7 @@ struct VideoView: View {
             )
             .frame(width: showFeedbackPanel ? proxy.size.height * 0.55 : proxy.size.height)
             .padding(.bottom, 10)
+            .transition(.opacity)
           }
         }
         .frame(width: showFeedbackPanel ? proxy.size.height * 0.55 : proxy.size.height)
@@ -372,6 +382,7 @@ struct VideoView: View {
       TapClearArea(
         leftTap: { vm.videoVM.leftTab() },
         rightTap: { vm.videoVM.rightTap() },
+        centerTap: { vm.videoVM.centerTap() },
         showControls: $vm.videoVM.showControls
       )
       
@@ -381,11 +392,17 @@ struct VideoView: View {
             vm.videoVM.seekToTime(
               to: vm.videoVM.currentTime - 5
             )
+            if vm.videoVM.isPlaying {
+              vm.videoVM.startAutoHideControls()
+            }
           },
           rightAction: {
             vm.videoVM.seekToTime(
               to: vm.videoVM.currentTime + 5
             )
+            if vm.videoVM.isPlaying {
+              vm.videoVM.startAutoHideControls()
+            }
           },
           centerAction: {
             vm.videoVM.togglePlayPause()
@@ -393,7 +410,8 @@ struct VideoView: View {
           isPlaying: $vm.videoVM.isPlaying
         )
         .padding(.bottom, 20)
-        
+        .transition(.opacity)
+
         CustomSlider(
           isDragging: $isDragging,
           currentTime: isDragging ? sliderValue : vm.videoVM.currentTime,
@@ -414,7 +432,8 @@ struct VideoView: View {
             sliderValue = newValue
           }
         }
-        
+        .transition(.opacity)
+
         if !shouldShowLayout {
           VideoSettingButtons(
             action: { self.showSpeedSheet = true },
@@ -431,6 +450,7 @@ struct VideoView: View {
             },
             showFeedbackPanel: showFeedbackPanel
           )
+          .transition(.opacity)
         }
       }
     }
