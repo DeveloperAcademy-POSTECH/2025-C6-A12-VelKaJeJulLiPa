@@ -9,19 +9,22 @@ import SwiftUI
 
 struct VideoGrid: View {
   @EnvironmentObject private var router: MainRouter
-  
+
   let size: CGFloat
   let columns: Int
   let spacing: CGFloat
   let tracksId: String
-  
+
   let videos: [Video]
   let track: [Track]
   let section: [Section]
-  
+  let pickerViewModel: VideoPickerViewModel
+
   @State private var selectedVideo: Video?
-  @State private var selectedTrack: Track? // 섹션 이동
-  @State private var showDeleteAlert: Bool = false // 삭제
+  @State private var selectedTrack: Track?
+  @State private var showDeleteAlert: Bool = false
+  @State private var showEditVideoTitle: Video?
+  @State private var progressManager = VideoProgressManager.shared
   @Binding var vm: VideoListViewModel
   
   var body: some View {
@@ -32,10 +35,19 @@ struct VideoGrid: View {
       ),
       spacing: spacing
     ) {
-      if VideoProgressManager.shared.isUploading {
+      if case .uploading = progressManager.uploadState {
         UploadProgressCard(
           cardSize: size,
-          progress: VideoProgressManager.shared.uploadProgress
+          progressManager: progressManager,
+          onRetry: { await pickerViewModel.retryUpload() },
+          onCancel: { await pickerViewModel.cancelUpload() }
+        )
+      } else if case .failed = progressManager.uploadState {
+        UploadProgressCard(
+          cardSize: size,
+          progressManager: progressManager,
+          onRetry: { await pickerViewModel.retryUpload() },
+          onCancel: { await pickerViewModel.cancelUpload() }
         )
       }
       if vm.isLoading {
@@ -60,6 +72,7 @@ struct VideoGrid: View {
                 self.showDeleteAlert = true
                 print("\(video.videoId)모달 선택")
               },
+              showEditSheet: { self.showEditVideoTitle = video },
               videoAction: {
                 router.push(
                   to: .video(
@@ -70,11 +83,22 @@ struct VideoGrid: View {
                     )
                   )
                 )
-              }
+              },
+              sectionCount: section.count
             )
-
           }
         }
+      }
+    }
+    // MARK: 비디오 이름 수정 뷰
+    .sheet(item: $showEditVideoTitle) { video in
+        NavigationStack {
+          VideoTitleEditView(
+            video: video,
+            tracksId: tracksId,
+            vm: $vm,
+            videoTitle: video.videoTitle
+          )
       }
     }
     // MARK: 삭제 알랏
@@ -95,8 +119,14 @@ struct VideoGrid: View {
       } message: {
         Text("삭제하면 복구할 수 없습니다.")
       }
+    
     // MARK: 영상 섹션 이동 뷰
-    .fullScreenCover(item: $selectedTrack) { track in
+    .fullScreenCover(item: $selectedTrack, onDismiss: {
+      // 영상 이동 후 캐시에서 최신 데이터 로드
+      Task {
+        await vm.loadFromServer(tracksId: tracksId)
+      }
+    }) { track in
       NavigationStack {
         SectionSelectView(
           section: section,
@@ -139,6 +169,7 @@ extension Video: Identifiable {
       sectionId: "",
       sectionTitle: "22"
     )],
+    pickerViewModel: VideoPickerViewModel(),
     vm: .constant(VideoListViewModel())
   )
 }

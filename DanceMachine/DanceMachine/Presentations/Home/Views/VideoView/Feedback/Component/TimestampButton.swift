@@ -15,25 +15,49 @@ struct TimestampButton: View {
     Button {
       timeSeek()
     } label: {
-      HStack {
+      HStack(spacing: 4) {
         Image(systemName: "clock")
-          .font(.system(size: 14))
-          .foregroundStyle(.purple)
+          .font(.system(size: 18))
+          .foregroundStyle(.secondaryNormal)
         Text(text)
-          .font(.system(size: 14))
-          .foregroundStyle(.purple)
-      }
-      .padding(.horizontal, 6)
-      .padding(.vertical, 4)
-      .background {
-        RoundedRectangle(cornerRadius: 1000)
-          .fill(Color.gray.opacity(0.6))
-          .stroke(Color.purple)
+          .font(.headline2Medium)
+          .foregroundStyle(.secondaryNormal)
       }
     }
   }
 }
 
-#Preview {
+struct TimestampInput: View {
+  let text: String
+  let timeSeek: () -> Void
+  
+  var body: some View {
+    Button {
+      timeSeek()
+    } label: {
+      HStack(spacing: 4) {
+        Image(systemName: "clock")
+          .font(.footnoteMedium)
+          .foregroundStyle(.labelStrong)
+        Text(text)
+          .font(.footnoteMedium)
+          .foregroundStyle(.labelStrong)
+      }
+      .padding(.vertical, 4)
+      .padding(.horizontal, 8)
+    }
+    .background {
+      RoundedRectangle(cornerRadius: 1000)
+        .fill(Color.secondaryStrong)
+        .stroke(Color.labelStrong, lineWidth: 1)
+    }
+  }
+}
+
+#Preview("피드백, 댓글 창") {
   TimestampButton(text: "00:05", timeSeek: {})
+}
+
+#Preview("피드백 입력 키보드 오버레이") {
+  TimestampInput(text: "00:05", timeSeek: {})
 }

@@ -7,41 +7,38 @@
 
 import Foundation
 
-/// 비디오 업로드 and 다운로드 진행률 추적을 담당하는 매니저 입니다.
+/// 비디오 업로드 상태 관리
 @Observable
 final class VideoProgressManager {
   static let shared = VideoProgressManager()
   private init() {}
-  
-  var isUploading: Bool = false
-  var uploadProgress: Double = 0.0
-  
-  var onUploadComplete: ((Video, Track) -> Void)? = nil
-  
+
+  enum UploadState {
+    case idle
+    case uploading(progress: Double)
+    case failed(message: String)
+  }
+
+  var uploadState: UploadState = .idle
+
   func startUpload() {
-    self.isUploading = true
-    self.uploadProgress = 0.0
+    uploadState = .uploading(progress: 0.0)
   }
-  
+
   func updateProgress(_ progress: Double) {
-    guard progress.isFinite, progress >= 0, progress <= 1 else {
-      print("progress value 오류 : \(progress)")
-      return
-    }
-    self.uploadProgress = progress
+    guard progress.isFinite, progress >= 0, progress <= 1 else { return }
+    uploadState = .uploading(progress: progress)
   }
-  
-  func finishUpload(video: Video, track: Track) {
-    uploadProgress = 1.0
-    
-    onUploadComplete?(video, track)
-    
-//    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-//      self.isUploading = false
-//      self.uploadProgress = 0.0
-//    }
-    
-    self.isUploading = false
-    self.uploadProgress = 0.0
+
+  func finishUpload() {
+    uploadState = .idle
+  }
+
+  func failUpload(message: String) {
+    uploadState = .failed(message: message)
+  }
+
+  func reset() {
+    uploadState = .idle
   }
 }

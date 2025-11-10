@@ -50,7 +50,7 @@ struct ThumbnailAsyncImage: View {
     }
     .frame(width: size, height: height)
     .clipped()
-    .clipShape(RoundedRectangle(cornerRadius: 10))
+    .clipShape(RoundedCorner(radius: 10, corners: [.topLeft, .topRight]))
     .task {
       cachedImage = await VideoCacheManager.shared.getCachedThumbnailURL(
         for: videoId

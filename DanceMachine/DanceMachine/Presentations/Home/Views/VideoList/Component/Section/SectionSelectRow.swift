@@ -12,24 +12,25 @@ struct SectionSelectRow: View {
   let isSelected: Bool
   
   var body: some View {
-    RoundedRectangle(cornerRadius: 5)
-      .fill(isSelected ? Color.gray.opacity(0.6) : Color.gray.opacity(0.2))
+    RoundedRectangle(cornerRadius: 10)
+      .fill(isSelected ? .fillAssitive : Color.clear)
       .frame(maxWidth: .infinity)
       .frame(height: 43)
       .overlay {
         sectionRow
       }
+      .contentShape(Rectangle())
   }
   
   private var sectionRow: some View {
     HStack {
       Text(section.sectionTitle)
-        .font(.system(size: 16)) // FIXME: 폰트 수정
-        .foregroundStyle(.black) // FIXME: 컬러 수정
+        .font(.headline2Medium)
+        .foregroundStyle(.labelStrong)
       Spacer()
       if isSelected {
         Image(systemName: "checkmark.circle.fill")
-          .foregroundStyle(Color.blue) // FIXME: 컬러 수정
+          .foregroundStyle(.secondaryAssitive)
       }
     }
     .padding(.horizontal, 16)

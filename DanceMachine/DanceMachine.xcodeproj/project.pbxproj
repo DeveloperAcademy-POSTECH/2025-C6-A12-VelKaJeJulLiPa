@@ -14,6 +14,7 @@
 		C9990D662E8BEB4E00A6C7CC /* FirebaseFunctions in Frameworks */ = {isa = PBXBuildFile; productRef = C9990D652E8BEB4E00A6C7CC /* FirebaseFunctions */; };
 		C9990D682E8BEB4E00A6C7CC /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = C9990D672E8BEB4E00A6C7CC /* FirebaseMessaging */; };
 		C9990D6A2E8BEB4E00A6C7CC /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = C9990D692E8BEB4E00A6C7CC /* FirebaseStorage */; };
+		E95B22CF2EBFB5AF002A0D07 /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = E95B22CE2EBFB5AF002A0D07 /* Lottie */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -306,6 +307,7 @@
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_UIUserInterfaceStyle = dark;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -351,6 +353,7 @@
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_UIUserInterfaceStyle = dark;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -415,6 +418,14 @@
 				minimumVersion = 12.3.0;
 			};
 		};
+		E95B22CD2EBFB5AF002A0D07 /* XCRemoteSwiftPackageReference "lottie-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/airbnb/lottie-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.5.2;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -452,6 +463,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = C9990D5E2E8BEB4E00A6C7CC /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseStorage;
+		};
+		E95B22CE2EBFB5AF002A0D07 /* Lottie */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E95B22CD2EBFB5AF002A0D07 /* XCRemoteSwiftPackageReference "lottie-ios" */;
+			productName = Lottie;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

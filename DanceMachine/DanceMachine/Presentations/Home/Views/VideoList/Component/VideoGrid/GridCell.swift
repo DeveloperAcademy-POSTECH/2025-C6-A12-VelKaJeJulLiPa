@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct GridCell: View { // FIXME: 디자인 수정!
+struct GridCell: View {
   var size: CGFloat
 
   let videoId: String // 썸네일 캐싱용
@@ -18,8 +18,11 @@ struct GridCell: View { // FIXME: 디자인 수정!
 
   let editAction: () -> Void
   let deleteAction: () -> Void
-
+  let showEditSheet: () -> Void
+  
   let videoAction: () -> Void
+  
+  let sectionCount: Int
   
   @State private var showMenu: Bool = false
   
@@ -27,39 +30,47 @@ struct GridCell: View { // FIXME: 디자인 수정!
     VStack(alignment: .leading) {
       thumbnail
       content
+      Spacer()
     }
     .frame(width: size, height: size * 1.22)
     .contentShape(Rectangle())
     .background(
       RoundedRectangle(cornerRadius: 12)
-        .fill(Color.gray.opacity(0.7))
+        .fill(.fillNormal)
     )
     .sensoryFeedback(.success, trigger: showMenu)
     .onTapGesture { videoAction() }
-    .contextMenu { contextRow }
     .overlay(alignment: .topTrailing) {
       Menu {
         contextRow
       } label: {
         Image(systemName: "ellipsis")
-          .foregroundStyle(.white)
+          .foregroundStyle(.labelStrong)
           .rotationEffect(.degrees(90))
-          .frame(width: 44, height: 44)
+          .frame(width: 33, height: 33)
       }
     }
+    .contextMenu {
+      contextRow
+        .preferredColorScheme(.dark)  // 강제 다크모드
+    }
+    .preferredColorScheme(.dark)  // 강제 다크모드
   }
   
   private var content: some View {
     VStack(alignment: .leading) {
-//      Spacer().frame(width: 8)
-      Text(title).foregroundStyle(.black)
-//      Spacer().frame(width: 8)
-      Text("\(duration.formattedTime())").foregroundStyle(.black)
-        .font(.caption)
-//      Spacer().frame(width: 4)
-      Text("\(uploadDate.formattedDate())").foregroundStyle(.black)
-        .font(.caption)
-      Spacer()
+      Text(title)
+        .font(.headline2Medium)
+        .foregroundStyle(.labelStrong)
+      Spacer().frame(height: 8)
+      Text("\(duration.formattedTime())")
+        .font(.caption1Medium)
+        .foregroundStyle(.labelAssitive)
+      Spacer().frame(height: 4)
+      Text("\(uploadDate.formattedDate())")
+        .font(.caption1Medium)
+        .foregroundStyle(.labelAssitive)
+      Spacer().frame(height: 16)
     }
     .frame(maxWidth: .infinity, alignment: .leading)
     .padding(.top, 8)
@@ -78,25 +89,39 @@ struct GridCell: View { // FIXME: 디자인 수정!
       }
     }
   }
-  // MARK: Menu 실행시 뜨는 Row
+  
   private var contextRow: some View {
     VStack(alignment: .leading, spacing: 16) {
+      Button {
+        showEditSheet()
+      } label: {
+        HStack {
+          Image(systemName: "pencil")
+            .tint(.labelStrong)
+          Text("이름 수정")
+            .font(.headline1Medium)
+        }
+      }
+
       Button {
         editAction()
       } label: {
         HStack {
-          Image(systemName: "pencil")
-          Text("영상 이동")
+          Image(systemName: "arrow.up.and.down.and.arrow.left.and.right")
+            .tint(sectionCount <= 1 ? Color.fillAssitive : Color.labelStrong)
+          Text("다른 파트로 이동")
+            .font(.headline1Medium)
         }
       }
+      .disabled(sectionCount <= 1)
+
       Button(role: .destructive) {
         deleteAction()
       } label: {
         HStack {
           Image(systemName: "trash")
-            .foregroundStyle(.red) // FIXME: 컬러 수정
+            .tint(.accentRedStrong)
           Text("영상 삭제")
-            .foregroundStyle(.red) // FIXME: 컬러 수정
         }
       }
     }
@@ -114,6 +139,8 @@ struct GridCell: View { // FIXME: 디자인 수정!
     uploadDate: Date(),
     editAction: {},
     deleteAction: {},
-    videoAction: {}
+    showEditSheet: {},
+    videoAction: {},
+    sectionCount: 0
   )
 }

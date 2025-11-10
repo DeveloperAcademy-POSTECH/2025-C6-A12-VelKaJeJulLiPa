@@ -12,29 +12,55 @@ struct SkeletonFeedbackCard: View {
     VStack {
       card
     }
-    .frame(height: 132)
+    .frame(height: 175)
     .frame(maxWidth: .infinity)
     .background(
-      RoundedRectangle(cornerRadius: 15)
-        .fill(Color.gray.opacity(0.3))
+      Color.clear
     )
   }
   
   private var card: some View {
     VStack(alignment: .leading) {
-      SkeletonView(RoundedRectangle(cornerRadius: 5))
-        .frame(width: 82, height: 17)
+      SkeletonView(
+        RoundedRectangle(cornerRadius: 5),
+        .fillNormal
+      )
+        .frame(maxWidth: .infinity)
+        .frame(height: 17)
+        .padding(.trailing, 320)
       HStack {
-        SkeletonView(RoundedRectangle(cornerRadius: 5))
-          .frame(width: 118, height: 19)
-        SkeletonView(RoundedRectangle(cornerRadius: 5))
-          .frame(width: 51, height: 19)
+        SkeletonView(
+          RoundedRectangle(cornerRadius: 5),
+          .fillNormal
+        )
+          .frame(maxWidth: .infinity)
+          .frame(height: 17)
+        SkeletonView(
+          RoundedRectangle(cornerRadius: 5),
+          .fillNormal
+        )
+          .frame(maxWidth: .infinity)
+          .frame(height: 17)
+        Spacer()
       }
-      SkeletonView(RoundedRectangle(cornerRadius: 5))
-        .frame(width: 345, height: 52)
+      .padding(.trailing, 200)
+      SkeletonView(
+        RoundedRectangle(cornerRadius: 5),
+        .fillNormal
+      )
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+      HStack {
+        Spacer()
+        SkeletonView(
+          RoundedRectangle(cornerRadius: 5),
+          .fillNormal
+        )
+          .frame(width: 30)
+          .frame(height: 19)
+      }
     }
+    .padding(.vertical, 16)
     .padding(.horizontal, 8)
-    .padding(.vertical, 10)
   }
 }
 

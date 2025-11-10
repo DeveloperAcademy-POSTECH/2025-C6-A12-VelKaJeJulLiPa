@@ -12,82 +12,118 @@ struct MentionPicker: View { // FIXME: 디자인 필요
   let filteredMembers: [User]
   let action: (User) -> Void
   let selectAll: () -> Void // 팀원 전체 태그
-
+  
   var taggedUsers: [User]
   
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
-      Text("팀원 선택")
-        .font(.system(size: 14, weight: .medium))
-        .foregroundStyle(.white.opacity(0.7))
-        .padding(.horizontal, 16)
-        .padding(.top, 12)
-        .padding(.bottom, 8)
-
       ScrollView {
         LazyVStack(alignment: .leading, spacing: 4) {
-          // @All 버튼
-          Button {
-            selectAll()
-          } label: {
-            HStack(spacing: 8) {
-              Text("@All")
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(.white)
-
-              Spacer()
-
-              
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .background(
-              taggedUsers.count == filteredMembers.count && !filteredMembers.isEmpty
-              ? Color.purple.opacity(0.1)
-              : Color.clear
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 10))
-            .contentShape(Rectangle())
-          }
-
-          ForEach(filteredMembers, id: \.userId) { user in
-            Button {
-              action(user)
-            } label: {
-              HStack(spacing: 8) {
-
-                Text(user.name)
-                  .font(.system(size: 16))
-                  .foregroundStyle(.white)
-
-                Spacer()
-
-              }
-              .padding(.horizontal, 16)
-              .padding(.vertical, 12)
-              .background(
-                taggedUsers.contains(where: { $0.userId == user.userId })
-                ? Color.purple.opacity(0.1)
-                : Color.clear
-              )
-              .clipShape(RoundedRectangle(cornerRadius: 10))
-              .contentShape(Rectangle())
-            }
-          }
+          allButton
+          memberButton
         }
         .padding(.horizontal, 8)
+        .padding(.vertical, 8)
       }
-//      .frame(maxHeight: 160)
-      .frame(height: 160)
+      .frame(height: 170)
     }
     .background(
       RoundedRectangle(cornerRadius: 16)
-        .fill(Color.gray)
+        .fill(.backgroundElevated)
     )
-    .transition(.move(edge: .bottom).combined(with: .opacity))
+    .padding(.horizontal, 8)
+    .contentShape(Rectangle())
+//    .transition(.move(edge: .bottom).combined(with: .opacity))
+  }
+  
+  private var allButton: some View {
+    Button {
+      selectAll()
+    } label: {
+      Text("@All")
+        .font(.headline2Medium)
+        .foregroundStyle(.labelStrong)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 12)
+        .background(
+          taggedUsers.count == filteredMembers.count && !filteredMembers.isEmpty
+          ? Color.fillAssitive
+          : Color.clear
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .contentShape(Rectangle())
+    }
+    .buttonStyle(.plain)
+  }
+  
+  private var memberButton: some View {
+    ForEach(filteredMembers, id: \.userId) { user in
+      Button {
+        action(user)
+      } label: {
+        Text(user.name)
+          .font(.headline2Medium)
+          .foregroundStyle(.labelStrong)
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .padding(.horizontal, 8)
+          .padding(.vertical, 12)
+          .background(
+            taggedUsers.contains(where: { $0.userId == user.userId })
+            ? Color.fillAssitive
+            : Color.clear
+          )
+          .clipShape(RoundedRectangle(cornerRadius: 10))
+          .contentShape(Rectangle())
+      }
+      .buttonStyle(.plain)
+    }
   }
 }
 
-//#Preview {
-//  MentionPicker()
-//}
+#Preview {
+  let mock = [
+    User(
+      userId: "1",
+      email: "",
+      name: "2",
+      loginType: LoginType.apple,
+      fcmToken: "",
+      termsAgreed: true,
+      privacyAgreed: true
+    ),
+    User(
+      userId: "2",
+      email: "",
+      name: "2",
+      loginType: LoginType.apple,
+      fcmToken: "",
+      termsAgreed: true,
+      privacyAgreed: true
+    ),
+    User(
+      userId: "3",
+      email: "",
+      name: "2",
+      loginType: LoginType.apple,
+      fcmToken: "",
+      termsAgreed: true,
+      privacyAgreed: true
+    ),
+    User(
+      userId: "4",
+      email: "",
+      name: "2",
+      loginType: LoginType.apple,
+      fcmToken: "",
+      termsAgreed: true,
+      privacyAgreed: true
+    )]
+  
+  MentionPicker(
+    filteredMembers: mock,
+    action: {_ in },
+    selectAll: {},
+    taggedUsers: mock
+  )
+}

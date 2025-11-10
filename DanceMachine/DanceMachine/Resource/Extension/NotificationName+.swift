@@ -12,34 +12,37 @@ extension Foundation.Notification.Name {
   static let videoUpload = Foundation.Notification.Name("videoUpload")
   static let didReceiveDeeplink = Foundation.Notification.Name("didReceiveDeeplink")
   static let needToMarkAsRead = Foundation.Notification.Name("needToMarkAsRead")
-  // rootView에 탭바에서 관리하는 액션 버튼(프로젝트 생성 노티)
-  static let showCreateProject = Foundation.Notification.Name("showCreateProject")
-  // rootView에 탭바에서 관리하는 액션 버튼(곡 생성 노티)
-  static let showCreateTrack = Foundation.Notification.Name("showCreateTrack")
-  // rootView에 탭바에서 관리하는 액션 버튼(리스트가 열렸는지)
-  static let projectDidExpand = Foundation.Notification.Name("projectDidExpand")
-  // rootView에 탭바에서 관리하는 액션 버튼(리스트가 닫혔는지)
   static let projectDidCollapse = Foundation.Notification.Name("projectDidCollapse")
+  // 영상 이동 토스트
+  static let showEditToast = Foundation.Notification.Name("showEditToast")
+  // 영상 삭제 토스트
+  static let showDeleteToast = Foundation.Notification.Name("showDeleteToast")
+  // 섹션 글자 제한 토스트
+  static let showEditWarningToast = Foundation.Notification.Name("showEditWarningToast")
+  // 영상 이름 수정 제한 토스트
+  static let showEditVideoTitleToast = Foundation.Notification.Name("showEditVideoTitleToast")
 }
 
 enum NotificationEvent {
   case videoUpload
   case didReceiveDeeplink
   case needToMarkAsRead
-  case showCreateProject
-  case showCreateTrack
-  case projectDidExpand
   case projectDidCollapse
+  case showEditToast
+  case showDeleteToast
+  case showEditWarningToast
+  case showEditVideoTitleToast
   
   var name: Foundation.Notification.Name {
     switch self {
     case .videoUpload: .videoUpload
     case .didReceiveDeeplink: .didReceiveDeeplink
     case .needToMarkAsRead: .needToMarkAsRead
-    case .showCreateProject: .showCreateProject
-    case .showCreateTrack: .showCreateTrack
-    case .projectDidExpand: .projectDidExpand
     case .projectDidCollapse: .projectDidCollapse
+    case .showEditToast: .showEditToast
+    case .showDeleteToast: .showDeleteToast
+    case .showEditWarningToast: .showEditWarningToast
+    case .showEditVideoTitleToast: .showEditVideoTitleToast
     }
   }
 }

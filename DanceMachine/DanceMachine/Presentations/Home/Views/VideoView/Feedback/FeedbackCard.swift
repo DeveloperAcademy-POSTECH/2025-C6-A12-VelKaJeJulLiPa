@@ -25,25 +25,18 @@ struct FeedbackCard: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {
       authorName
-      Spacer().frame(height: 4)
+      Spacer().frame(height: 2)
       timeStamp
+      Spacer().frame(height: 2)
       content
       replyButton
     }
-    .padding(.horizontal, 8)
+
+    .padding(.horizontal, 16)
     .padding(.vertical, 16)
-    .background(
-      Color.gray.opacity(0.3)
-        .clipShape(RoundedRectangle(cornerRadius: 15))
-    )
-//    .glassEffect(.clear.tint(Color.gray), in: RoundedRectangle(cornerRadius: 10))
-    .contentShape(Rectangle())
-    .onTapGesture {
-      action()
-    }
     .overlay(alignment: .topTrailing) {
       if feedback.authorId == currentUserId {
-        Menu { // FIXME: 아이콘 컬러 수정
+        Menu {
           Button(role: .destructive) {
             onDelete()
           } label: {
@@ -51,29 +44,46 @@ struct FeedbackCard: View {
           }
         } label: {
           Image(systemName: "ellipsis")
-            .foregroundStyle(.gray)
-            .frame(width: 44, height: 44)
-            .contentShape(Rectangle())
+            .font(.system(size: 14))
+            .foregroundStyle(.labelNormal)
         }
-        .tint(.gray.opacity(0.8))
+        .frame(width: 22, height: 22)
+        .contentShape(Rectangle())
+        .padding(.horizontal, 16)
+        .padding(.top, 8)
       }
     }
+    .background {
+      VStack {
+        Spacer()
+        Rectangle()
+          .frame(height: 0.5)
+          .foregroundStyle(.labelAssitive)
+      }
+    }
+    .contentShape(Rectangle())
+    .onTapGesture {
+      action()
+    }
+    .onLongPressGesture(perform: {
+      action()
+    })
   }
   
   private var authorName: some View {
     HStack {
       Text(authorUser?.name ?? "알 수 없는 사용자")
-        .font(.system(size: 14)) // FIXME: 폰트 수정
-        .foregroundStyle(Color.black)
+        .font(.footnoteSemiBold)
+        .foregroundStyle(.labelNormal)
       Text("·")
-        .font(.system(size: 14)) // FIXME: 폰트 수정
-        .foregroundStyle(Color.black)
+        .font(.footnoteSemiBold)
+        .foregroundStyle(.labelAssitive)
       if feedback.createdAt != nil {
         Text(
           feedback.createdAt?.listTimeLabel() ?? ""
         )
-        .font(.system(size: 14)) // FIXME: 폰트 수정
-        .foregroundStyle(Color.black)
+        .font(.footnoteSemiBold)
+        .foregroundStyle(.labelAssitive)
       }
       Spacer()
     }
@@ -100,29 +110,41 @@ struct FeedbackCard: View {
           }
         } label: {
           HStack {
-            ForEach(taggedUsers.prefix(4), id: \.userId) { user in
+            ForEach(taggedUsers.prefix(3), id: \.userId) { user in
               Text("@\(user.name)")
-                .font(.system(size: 16)) // FIXME: 폰트 수정
-                .foregroundStyle(.blue) // FIXME: 폰트 수정
+                .font(.headline2Medium)
+                .foregroundStyle(.accentBlueStrong)
             }
             if taggedUsers.count > 4 {
-              Text("...")
-                .font(.system(size: 16)) // FIXME: 폰트 수정
-                .foregroundStyle(.blue) // FIXME: 폰트 수정
+              moreButton
             }
           }
+          .lineLimit(1)
+          .truncationMode(.tail)
         }
-        .tint(.gray.opacity(0.8))
       }
-      Spacer()
+//      Spacer()
+    }
+  }
+  
+  private var moreButton: some View {
+    VStack {
+      Text("+\(taggedUsers.count - 3)")
+        .font(.caption1Medium)
+        .foregroundStyle(.labelStrong)
+        .padding(.horizontal, 4)
+        .padding(.vertical, 2)
+    }
+    .background {
+      RoundedRectangle(cornerRadius: 10)
+        .fill(.primitiveStrong)
     }
   }
   
   private var content: some View {
     Text(feedback.content)
-      .font(.system(size: 16)) // FIXME: 폰트 수정
-      .foregroundStyle(Color.black) // FIXME: 컬러 수정
-      .lineLimit(3) // FIXME: 수정
+      .font(.body1Medium)
+      .foregroundStyle(.labelStrong)
       .frame(maxWidth: .infinity, alignment: .leading)
   }
   
@@ -132,9 +154,12 @@ struct FeedbackCard: View {
     } label: {
       HStack(spacing: 4) {
         Image(systemName: "message")
-          .font(.system(size: 16)) // FIXME: 폰트 수정 // FIXME: 이미지 수정
+          .font(.system(size: 12))
+          .foregroundStyle(.primitiveAssitive)
+          .scaleEffect(x: -1, y: 1)
         Text("\(replyCount)")
-          .font(.system(size: 16)) // FIXME: 폰트 수정
+          .font(.system(size: 12))
+          .foregroundStyle(.primitiveAssitive)
       }
     }
     .frame(maxWidth: .infinity, alignment: .trailing)
@@ -156,7 +181,7 @@ struct FeedbackCard: View {
     authorUser: User(
       userId: "1",
       email: "",
-      name: "재훈",
+      name: "조재훈",
       loginType: LoginType.apple,
       fcmToken: "",
       termsAgreed: true,
@@ -164,27 +189,45 @@ struct FeedbackCard: View {
     ),
     taggedUsers: [
       User(
-        userId: "ddd",
+        userId: "dd1",
         email: "",
-        name: "dddd",
+        name: "조조조재훈",
         loginType: LoginType.apple,
         fcmToken: "",
         termsAgreed: true,
         privacyAgreed: true
       ),
       User(
-        userId: "ddd",
+        userId: "ddd2",
         email: "",
-        name: "dddd",
+        name: "조조조훈",
         loginType: LoginType.apple,
         fcmToken: "",
         termsAgreed: true,
         privacyAgreed: true
       ),
       User(
-        userId: "ddd",
+        userId: "ddd3",
         email: "",
-        name: "dddd",
+        name: "조재재재재재훈",
+        loginType: LoginType.apple,
+        fcmToken: "",
+        termsAgreed: true,
+        privacyAgreed: true
+      ),
+      User(
+        userId: "d4",
+        email: "",
+        name: "조재훈",
+        loginType: LoginType.apple,
+        fcmToken: "",
+        termsAgreed: true,
+        privacyAgreed: true
+      ),
+      User(
+        userId: "d5",
+        email: "",
+        name: "조재훈",
         loginType: LoginType.apple,
         fcmToken: "",
         termsAgreed: true,

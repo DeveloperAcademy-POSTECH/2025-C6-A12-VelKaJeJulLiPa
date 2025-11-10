@@ -84,7 +84,6 @@ extension FeedbackViewModel {
     atTime: Double
   ) async {
     await MainActor.run {
-      self.isLoading = true
       self.errorMsg = nil
     }
     
@@ -104,11 +103,9 @@ extension FeedbackViewModel {
 
       await MainActor.run {
         self.feedbacks.insert(feedback, at: 0)
-        self.isLoading = false
       }
     } catch { // TODO: 에러처리
       await MainActor.run {
-        self.isLoading = false
         self.errorMsg = "피드백 작성에 실패했습니다!"
       }
       print("피드백 생성 실패: \(error)")
@@ -124,7 +121,6 @@ extension FeedbackViewModel {
     endTime: Double
   ) async {
     await MainActor.run {
-      self.isLoading = true
       self.errorMsg = nil
     }
     
@@ -144,14 +140,12 @@ extension FeedbackViewModel {
 
       await MainActor.run {
         self.feedbacks.insert(feedback, at: 0)
-        self.isLoading = false
 
         self.isRecordingInterval = false
         self.intervalStartTime = nil
       }
     } catch {
       await MainActor.run {
-        self.isLoading = false
         self.errorMsg = "피드백 작성에 실패했습니다!"
       }
       print("구간 피드백 생성 실패: \(error)")

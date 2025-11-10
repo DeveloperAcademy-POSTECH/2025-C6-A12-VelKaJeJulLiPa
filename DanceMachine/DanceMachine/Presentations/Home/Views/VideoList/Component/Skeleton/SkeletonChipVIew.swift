@@ -9,7 +9,10 @@ import SwiftUI
 
 struct SkeletonChipVIew: View {
   var body: some View {
-    SkeletonView(Capsule())
+    SkeletonView(
+      Capsule(),
+      Color.fillAssitive
+    )
     .frame(width: 64, height: 36)
   }
 }

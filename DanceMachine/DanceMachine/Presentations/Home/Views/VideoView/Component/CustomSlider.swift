@@ -29,22 +29,21 @@ struct CustomSlider: View {
       GeometryReader { g in
         ZStack(alignment: .leading) {
           Rectangle()
-            .fill(Color.white.opacity(0.3))
+            .fill(Color.labelStrong.opacity(0.6))
             .frame(height: 4)
             .clipShape(RoundedRectangle(cornerRadius: 2))
           
           Rectangle()
-            .fill(Color.white)
+            .fill(Color.secondaryStrong)
             .frame(width: progressWidth(g.size.width), height: 4)
             .clipShape(RoundedRectangle(cornerRadius: 2))
           
           Circle()
-            .fill(Color.white)
+            .fill(Color.labelStrong)
             .frame(
               width: isDragging ? 25 : 20,
               height: isDragging ? 25 : 20
             )
-          //          .scaleEffect(isDragging ? 1.2 : 1.0)
             .offset(
               x: progressWidth(g.size.width) -
               (isDragging ? 10 : 5)
@@ -79,10 +78,12 @@ struct CustomSlider: View {
       .frame(height: 20)
       HStack {
         Text(startTime)
-          .foregroundStyle(.white)
+          .font(.caption1Medium)
+          .foregroundStyle(.labelStrong)
         Spacer()
         Text(endTime)
-          .foregroundStyle(.white)
+          .font(.caption1Medium)
+          .foregroundStyle(.labelStrong)
       }
       .padding(.bottom, 10)
     }

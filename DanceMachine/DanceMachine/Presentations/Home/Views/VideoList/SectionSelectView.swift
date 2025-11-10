@@ -16,7 +16,8 @@ struct SectionSelectView: View {
 
   @State private var vm: SectionSelectViewModel = .init()
   @State private var selectedSectionId: String
-
+  @State private var showExitAlert: Bool = false
+  
   init(
     section: [Section],
     sectionId: String,
@@ -44,26 +45,38 @@ struct SectionSelectView: View {
         }
       }
     }
-    .padding(.horizontal, 16)
-    .background(Color.white) // FIXME: 다크모드 배경색 명시
+    .padding([.top, .horizontal], 16)
+    .background(.backgroundElevated)
+    .toolbarTitleDisplayMode(.inline)
     .toolbar {
-      ToolbarLeadingBackButton(icon: .xmark)
-      ToolbarCenterTitle(text: "섹션 선택")
+      ToolbarLeadingBackButton(icon: .xmark) {
+        if selectedSectionId != sectionId {
+          showExitAlert = true
+        } else {
+          dismiss()
+        }
+      }
+      ToolbarCenterTitle(text: "파트 선택")
     }
     .safeAreaInset(edge: .bottom) {
       confirmButton
         .padding(.horizontal, 16)
     }
-    .alert(vm.errorMsg ?? "알 수 없는 오류가 발생했습니다.",
-           isPresented: $vm.showAlert) {
-      Button("확인") { dismiss() } }
+    .unsavedChangesAlert(
+      isPresented: $showExitAlert,
+      onConfirm: { dismiss() }
+    )
+//    .alert(vm.errorMsg ?? "알 수 없는 오류가 발생했습니다.",
+//           isPresented: $vm.showAlert) {
+//      Button("확인") { dismiss() }
+//    }
   }
   
   private var confirmButton: some View {
     ActionButton(
       title: "영상 이동하기",
       color:
-        selectedSectionId == sectionId ? Color.blue.opacity(0.3) : Color.blue, // FIXME: 컬러 수정
+        selectedSectionId == sectionId ? .fillAssitive : .secondaryStrong, // FIXME: 컬러 수정
       height: 47,
       isEnabled: selectedSectionId != sectionId,
       action: {
@@ -74,7 +87,9 @@ struct SectionSelectView: View {
             tracksId: tracksId,
             oldSectionId: sectionId
           )
-          SectionUpdateManager.shared.onTrackMoved?(track.trackId, selectedSectionId)
+          // 캐시에 업데이트되었으므로 뒤로 가면 자동 반영됨
+          NotificationCenter.post(.showEditToast, object: nil)
+          dismiss()
         }
       }
     )

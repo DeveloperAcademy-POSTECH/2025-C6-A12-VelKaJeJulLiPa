@@ -29,9 +29,11 @@ struct ReplyRecycle: View {
   }
   
   var body: some View {
-    VStack(spacing: 8) {
+    VStack(spacing: 16) {
       replyTo
-      taggedView
+      if !mM.taggedUsers.isEmpty {
+        taggedView
+      }
       CustomTextField(
         content: $content,
         placeHolder: mM.taggedUsers.isEmpty ? "@팀원 태그" : "답글을 입력해주세요.",
@@ -46,17 +48,16 @@ struct ReplyRecycle: View {
         onFocusChange: {_ in },
         autoFocus: true
       )
-      .animation(.easeInOut(duration: 0.2), value: mM.showPicker)
       .onChange(of: content) { oldValue, newValue in
         mM.handleMention(oldValue: oldValue, newValue: newValue)
       }
     }
-    .padding(.vertical, 8)
-    .padding(.horizontal, 16)
+    .padding([.vertical, .horizontal], 16)
     .background(
       RoundedRectangle(cornerRadius: 20)
-        .fill(Color.gray)
+        .fill(Color.backgroundElevated)
     )
+    .animation(.easeInOut(duration: 0.2), value: content.count)
     .overlay(alignment: .bottom) {
       if mM.showPicker {
         MentionPicker(
@@ -71,7 +72,7 @@ struct ReplyRecycle: View {
           },
           taggedUsers: mM.taggedUsers
         )
-        .padding(.bottom, 60)
+        .padding(.bottom, 65)
       }
     }
   }
@@ -79,8 +80,8 @@ struct ReplyRecycle: View {
   private var replyTo: some View {
     HStack {
       Text("@\(replyingTo?.name ?? "알수 없는 유저")에게 답글 남기는중")
-        .font(.system(size: 14))
-        .foregroundColor(.secondary)
+        .font(.footnoteMedium)
+        .foregroundStyle(.labelNormal)
       Spacer()
       clearButton
     }
@@ -90,10 +91,9 @@ struct ReplyRecycle: View {
     Button {
       refresh()
     } label: {
-      HStack { // FIXME: 아이콘 수정, 폰트 수정
-        Image(systemName: "arrow.trianglehead.clockwise.rotate.90")
-      }
-      .foregroundStyle(.black) // FIXME: 컬러 수정
+      Image(systemName: "xmark")
+        .font(.system(size: 17))
+        .foregroundStyle(.labelNormal)
     }
   }
   // MARK: 태그된 사용자 표시
@@ -106,16 +106,17 @@ struct ReplyRecycle: View {
           // @All 태그 표시
           HStack(spacing: 0) {
             Text("@")
-              .font(.system(size: 16)) // FIXME: 폰트 수정
-              .foregroundStyle(.purple) // FIXME: 컬러 수정
+              .font(.headline2Medium)
+              .foregroundStyle(.accentBlueStrong)
             Text("All")
-              .font(.system(size: 16, weight: .semibold)) // FIXME: 폰트 수정
-              .foregroundStyle(.purple) // FIXME: 컬러 수정
+              .font(.headline2Medium)
+              .foregroundStyle(.accentBlueStrong)
             Button {
               mM.taggedUsers.removeAll()
             } label: {
               Image(systemName: "xmark.circle.fill")
-                .foregroundStyle(Color.red) // FIXME: 컬러 수정
+                .font(.system(size: 16))
+                .foregroundStyle(Color.labelAssitive)
             }
           }
           .animation(nil, value: mM.taggedUsers)
@@ -124,16 +125,17 @@ struct ReplyRecycle: View {
           ForEach(mM.taggedUsers, id: \.userId) { user in
             HStack(spacing: 0) {
               Text("@")
-                .font(.system(size: 16)) // FIXME: 폰트 수정
-                .foregroundStyle(.purple) // FIXME: 컬러 수정
+                .font(.headline2Medium)
+                .foregroundStyle(.accentBlueStrong)
               Text(user.name)
-                .font(.system(size: 16)) // FIXME: 폰트 수정
-                .foregroundStyle(.purple) // FIXME: 컬러 수정
+                .font(.headline2Medium)
+                .foregroundStyle(.accentBlueStrong)
               Button {
                 mM.taggedUsers.removeAll { $0.userId == user.userId }
               } label: {
                 Image(systemName: "xmark.circle.fill")
-                  .foregroundStyle(Color.red) // FIXME: 컬러 수정
+                  .font(.system(size: 16))
+                  .foregroundStyle(Color.labelAssitive)
               }
             }
             .animation(nil, value: mM.taggedUsers)
@@ -141,63 +143,6 @@ struct ReplyRecycle: View {
         }
       }
     }
-  }
-  // MARK: 멘션 피커
-  private var mentionPicker: some View {
-    VStack(alignment: .leading, spacing: 0) {
-      Text("팀원 선택")
-        .font(.system(size: 14, weight: .medium))
-        .foregroundStyle(.white.opacity(0.7))
-        .padding(.horizontal, 16)
-        .padding(.top, 12)
-        .padding(.bottom, 8)
-
-      ScrollView {
-        LazyVStack(alignment: .leading, spacing: 4) {
-          ForEach(filteredMembers, id: \.userId) { user in
-            Button {
-              mM.selectMention(user: user)
-              self.content = ""
-            } label: {
-              HStack(spacing: 8) {
-                Image(systemName: "person.circle.fill")
-                  .foregroundStyle(
-                    mM.taggedUsers.contains(where: { $0.userId == user.userId })
-                    ? .purple
-                    : .gray
-                  )
-
-                Text(user.name)
-                  .font(.system(size: 16))
-                  .foregroundStyle(.white)
-
-                Spacer()
-
-                if mM.taggedUsers.contains(where: { $0.userId == user.userId }) {
-                  Image(systemName: "checkmark.circle.fill")
-                    .foregroundStyle(.purple)
-                }
-              }
-              .padding(.horizontal, 16)
-              .padding(.vertical, 12)
-              .background(
-                mM.taggedUsers.contains(where: { $0.userId == user.userId })
-                ? Color.purple.opacity(0.1)
-                : Color.clear
-              )
-              .clipShape(RoundedRectangle(cornerRadius: 10))
-              .contentShape(Rectangle())
-            }
-          }
-        }
-        .padding(.horizontal, 8)
-      }
-      .frame(maxHeight: 160)
-    }
-    .background(
-      RoundedRectangle(cornerRadius: 16)
-        .fill(Color.gray)
-    )
   }
 }
 

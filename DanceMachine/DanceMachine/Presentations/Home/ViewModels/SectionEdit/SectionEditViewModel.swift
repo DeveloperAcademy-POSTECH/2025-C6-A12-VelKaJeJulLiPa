@@ -16,11 +16,19 @@ final class SectionEditViewModel {
   var sections: [Section]
   var editingSectionid: String? = nil
   var editText: String = ""
-  
+
   var isNewSection: Bool = false // 수정모드와 추가모드 플래그
-  
+
+  private let initialSections: [Section] // 초기 상태 저장
+
   init(sections: [Section]) {
     self.sections = sections
+    self.initialSections = sections
+  }
+
+  // 편집/추가 모드인지 체크 (간단 버전)
+  var isEditing: Bool {
+    editingSectionid != nil
   }
   
   func startEdit(section: Section) {
@@ -65,12 +73,19 @@ extension SectionEditViewModel {
         subCollection: .section,
         strategy: strategy
       )
-      // 캐시도 수정
-      await dataCacheManager.updateSectionTitle(
-        sectionId: updatedSection.sectionId,
-        newTitle: self.editText,
-        in: tracksId
-      )
+      
+      if isNewSection {
+        await dataCacheManager.addSection(
+          updatedSection,
+          to: tracksId
+        )
+      } else {
+        await dataCacheManager.updateSectionTitle(
+          sectionId: updatedSection.sectionId,
+          newTitle: self.editText,
+          in: tracksId
+        )
+      }
       
       await MainActor.run {
         if let index = sections.firstIndex(where: { $0.sectionId == section.sectionId }) {
@@ -109,9 +124,6 @@ extension SectionEditViewModel {
         to: tracksId
       )
       
-      await MainActor.run {
-        sections.append(newSection)
-      }
     } catch { // TODO: 에러 처리
       print("섹션 추가 실패: \(error)")
     }

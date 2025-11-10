@@ -26,26 +26,6 @@ struct CustomPicker: View {
       ],
       spacing: spacing
     ) {
-#if DEBUG
-      if ProcessInfo.processInfo.environment ["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
-        ForEach(0..<24, id: \.self) { _ in
-          VideoThumbnailCell_Preview()
-            .frame(width: itemWidth, height: itemWidth)
-        }
-      } else {
-        ForEach(videos, id: \.localIdentifier) { asset in
-          VideoThumbnailCell(
-            asset: asset,
-            isSelected:
-              selectedAsset?.localIdentifier == asset.localIdentifier,
-            size: itemWidth
-          )
-            .onTapGesture {
-              selectedAsset = asset
-            }
-        }
-      }
-#else
       ForEach(videos, id: \.localIdentifier) { asset in
         VideoThumbnailCell(
           asset: asset,
@@ -58,7 +38,6 @@ struct CustomPicker: View {
             selectedAsset = asset
           }
       }
-#endif
     }
   }
 }

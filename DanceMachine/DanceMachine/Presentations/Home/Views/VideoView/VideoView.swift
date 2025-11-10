@@ -73,6 +73,7 @@ struct VideoView: View {
           landscapeView(proxy: proxy) // 가로모드
         } else {
           portraitView(proxy: proxy) // 세로모드
+            .background(.backgroundNormal)
         }
       }
       .onChange(of: showFeedbackInput) { _, newValue in
@@ -82,27 +83,6 @@ struct VideoView: View {
       }
       .toolbar(.hidden, for: .tabBar)
     }
-    .background(Color.white) // FIXME: 다크모드 배경색 명시
-    //    .overlay {
-    //      if vm.isLoading {
-    //        VStack {
-    //          ProgressView()
-    //            .progressViewStyle(CircularProgressViewStyle())
-    //            .tint(.black)
-    //            .scaleEffect(1)
-    //
-    //          if vm.videoVM.loadingProgress > 0 {
-    //            Text("다운로드 중... \(Int(vm.videoVM.loadingProgress * 100))%")
-    //              .foregroundStyle(.black)
-    //              .font(.system(size: 14))
-    //          } else {
-    //            Text("로딩 중...")
-    //              .foregroundStyle(.black)
-    //              .font(.system(size: 14))
-    //          }
-    //        }
-    //      }
-    //    } // FIXME: 임시 로딩 뷰
     .task {
       await self.vm.loadAllData(
         videoId: videoId,
@@ -117,40 +97,6 @@ struct VideoView: View {
       updateOrientation()
     }
   }
-  
-  // MARK: 피드백 빈 화면
-  private var pointEmptyView: some View {
-      VStack(alignment: .leading) {
-        Spacer()
-        Text("시점 피드백\n동영상 재생 중 원하는 시점에 버튼을 눌러\n타임스탬프를 남겨 피드백을 작성할 수 있습니다.")
-          .font(.system(size: 15))
-          .foregroundStyle(.black)
-        Spacer()
-        Text("구간 피드백\n오른쪽 회색 버튼을 눌러 시작 시점과 끝 시점을\n지정하고, 해당 구간에 대한 피드백을 남길 수 있\n습니다.")
-          .font(.system(size: 15))
-          .foregroundStyle(.black)
-        Spacer()
-      }
-      .frame(maxWidth: .infinity)
-      .frame(height: 400)
-  }
-  
-  private var intervalEmptyView: some View {
-    VStack(alignment: .leading) {
-      Spacer()
-      Text("구간 피드백\n동영상 재생 중 시작 시점과 끝 시점을 지정하고\n타임스탬프를 남겨 피드백을 작성할 수 있습니다.")
-        .font(.system(size: 18))
-        .foregroundStyle(.black)
-      Spacer()
-      Text("시점 피드백\n회색 버튼을 눌러 원하는 시점에 버튼을 눌러\n타임스탬프를 남겨 피드백을 작성할 수 있습니다.")
-        .font(.system(size: 18))
-        .foregroundStyle(.black)
-      Spacer()
-    }
-    .frame(maxWidth: .infinity)
-    .frame(height: 400)
-  }
-  
   // MARK: 세로모드 레이아웃
   private func portraitView(proxy: GeometryProxy) -> some View {
     VStack(spacing: 0) {
@@ -160,7 +106,7 @@ struct VideoView: View {
       VStack(spacing: 0) {
         feedbackSection.padding(.vertical, 8)
         Divider()
-        feedbackListView.padding(.top, 16)
+        feedbackListView
       }
       .ignoresSafeArea(.keyboard)
       .contentShape(Rectangle())
@@ -171,6 +117,7 @@ struct VideoView: View {
         }
       }
     }
+//    .background(Color.backgroundNormal)
     .safeAreaInset(edge: .bottom) {
       Group {
         if showFeedbackInput {
@@ -348,8 +295,18 @@ struct VideoView: View {
         
         if showFeedbackPanel {
           VStack(spacing: 0) {
-            feedbackSection
-              .padding(.vertical, 16)
+            HStack(spacing: 0) {
+              feedbackSection
+                .padding(.vertical, 16)
+              Button {
+                self.showFeedbackPanel = false
+              } label: {
+                Image(systemName: "xmark.circle")
+                  .font(.system(size: 20))
+                  .foregroundStyle(.labelStrong)
+              }
+              .frame(width: 44, height: 44)
+            }
             Divider()
             feedbackListView
               .padding(.vertical, 8)
@@ -357,6 +314,7 @@ struct VideoView: View {
           .frame(width: proxy.size.height * 0.45)
           .background(Color.black.opacity(0.95))
           .transition(.move(edge: .trailing))
+          .transition(.move(edge: .leading))
         }
       }
       .frame(width: proxy.size.height, height: proxy.size.width)
@@ -456,22 +414,14 @@ struct VideoView: View {
         }
       }
     }
-    .overlay { // FIXME: 로딩뷰 디자인 받기전까지 임시
+    .overlay {
       if vm.videoVM.isLoading {
-        VStack {
-          ProgressView()
-            .progressViewStyle(CircularProgressViewStyle())
-            .tint(.black)
-            .scaleEffect(1)
-          
-          if vm.videoVM.loadingProgress > 0 {
-            Text("다운로드 중... \(Int(vm.videoVM.loadingProgress * 100))%")
-              .foregroundStyle(.white)
-              .font(.system(size: 14))
+        ZStack {
+          Color.backgroundElevated
+          if vm.videoVM.isDownloading {
+            downloadProgress(progress: vm.videoVM.loadingProgress)
           } else {
-            Text("로딩 중...")
-              .foregroundStyle(.white)
-              .font(.system(size: 14))
+            VideoLottieView()
           }
         }
       }
@@ -496,12 +446,7 @@ struct VideoView: View {
               SkeletonFeedbackCard()
             }
           } else if vm.feedbackVM.feedbacks.isEmpty && !vm.feedbackVM.isLoading {
-            switch feedbackType {
-            case .point:
-              pointEmptyView
-            case .interval:
-              intervalEmptyView
-            }
+            emptyView
           } else {
             ForEach(filteredFeedbacks, id: \.feedbackId) { f in
               FeedbackCard(
@@ -534,7 +479,6 @@ struct VideoView: View {
           }
           
         }
-        .padding(.horizontal, 16)
         .onAppear {
           self.scrollProxy = proxy
         }
@@ -573,12 +517,14 @@ struct VideoView: View {
         }
       }
     }
+//    .background(.backgroundNormal)
   }
   // MARK: 피드백 섹션
   private var feedbackSection: some View {
     HStack {
       Text(feedbackFilter == .all ? "전체 피드백" : "마이 피드백")
-        .foregroundStyle(.black) // FIXME: 컬러 수정
+        .font(.heading1SemiBold)
+        .foregroundStyle(.labelStrong)
       Spacer()
       Button {
         switch feedbackFilter {
@@ -588,19 +534,28 @@ struct VideoView: View {
           self.feedbackFilter = .all
         }
       } label: {
-        Text(feedbackFilter == .all ? "마이 피드백" : "전체 피드백")
-        // FIXME: 컬러 폰트 수정
-          .foregroundStyle(Color.white)
+        Text("마이피드백")
+          .foregroundStyle(feedbackFilter == .all ? .secondaryAssitive : .labelStrong)
           .padding(.horizontal, 11)
           .padding(.vertical, 7)
           .background(
             RoundedRectangle(cornerRadius: 10)
-              .fill(Color.gray)
-              .stroke(Color.white)
+              .fill(feedbackFilter == .all ? .backgroundElevated : .secondaryStrong)
+              .stroke(feedbackFilter == .all ? .secondaryAssitive : .secondaryNormal)
           )
       }
     }
     .padding(.horizontal, 16)
+  }
+  // MARK: 피드백 비어있는 emptyView
+  private var emptyView: some View {
+    GeometryReader { g in
+      VStack {
+        Text("피드백이 없습니다.")
+      }
+      .frame(width: g.size.width, height: g.size.height)
+    }
+    .frame(height: 300)
   }
 }
 
@@ -613,4 +568,5 @@ struct VideoView: View {
     )
   }
   .environmentObject(MainRouter())
+  .preferredColorScheme(.dark)
 }

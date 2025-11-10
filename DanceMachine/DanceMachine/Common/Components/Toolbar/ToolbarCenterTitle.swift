@@ -15,8 +15,9 @@ struct ToolbarCenterTitle: ToolbarContent {
     ToolbarItem(placement: .principal) {
       Text(text)
         .font(.heading1Medium)
-        .foregroundStyle(Color.labelStrong)
+        .foregroundStyle(.labelStrong)
         .allowsHitTesting(false)
+        .frame(maxWidth: .infinity)
     }
   }
 }

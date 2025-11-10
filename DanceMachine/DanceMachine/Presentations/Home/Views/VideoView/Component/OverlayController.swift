@@ -16,7 +16,7 @@ struct OverlayController: View {
   
   var body: some View {
     VStack {
-      HStack(spacing: 60) {
+      HStack(spacing: 30) {
         leftButton
         centerButton
         rightButton
@@ -30,10 +30,11 @@ struct OverlayController: View {
       leftAction()
     } label: {
       Image(systemName: "gobackward.5")
-        .resizable()
-        .frame(width: 40, height: 40)
-        .foregroundStyle(.white)
+        .font(.system(size: 30))
+        .foregroundStyle(.labelStrong)
     }
+    .frame(width: 55, height: 55)
+    .overlayController()
   }
   
   private var centerButton: some View {
@@ -43,10 +44,11 @@ struct OverlayController: View {
       Image(
         systemName: isPlaying ? "pause.fill" : "play.fill"
       )
-      .resizable()
-      .frame(width: 40, height: 40)
-      .foregroundStyle(.white)
+      .font(.system(size: 44))
+      .foregroundStyle(.labelStrong)
     }
+    .frame(width: 70, height: 70)
+    .overlayController()
   }
   
   private var rightButton: some View {
@@ -54,10 +56,11 @@ struct OverlayController: View {
       rightAction()
     } label: {
       Image(systemName: "goforward.5")
-        .resizable()
-        .frame(width: 40, height: 40)
-        .foregroundStyle(.white)
+        .font(.system(size: 30))
+        .foregroundStyle(.labelStrong)
     }
+    .frame(width: 55, height: 55)
+    .overlayController()
   }
 }
 
@@ -68,4 +71,5 @@ struct OverlayController: View {
     centerAction: {},
     isPlaying: .constant(true)
   )
+//  .preferredColorScheme(.dark)
 }

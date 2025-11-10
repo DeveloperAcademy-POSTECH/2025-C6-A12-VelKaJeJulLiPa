@@ -34,23 +34,12 @@ struct FeedbackButton: View {
               showIntervalButton = false
             }
           } label: {
-            Image(systemName: "circle.fill")
-              .font(.system(size: 24))
-              .foregroundStyle(.white)
-              .frame(width: 50, height: 50)
+            Image(.intervalFeedback)
+              .font(.system(size: 22))
+              .foregroundStyle(.labelStrong)
           }
-          .padding(4)
-          .background {
-            ZStack {
-              Circle().fill(Color.black)
-                .overlay(.ultraThinMaterial)
-            }
-          }
-          .clipShape(Circle())
-//          .glassEffect(
-//            .clear.tint(Color.black.opacity(0.5)).interactive(),
-//            in: .circle
-//          )
+          .frame(width: 48, height: 48)
+          .feedbackCircleButton()
           .matchedGeometryEffect(id: "leftButton", in: buttonNamespace)
           .transition(.asymmetric(
             insertion: .scale(scale: 0.4).combined(with: .offset(x: -15)).combined(with: .opacity),
@@ -61,25 +50,18 @@ struct FeedbackButton: View {
           Button {
             pointAction()
           } label: {
-            Text("시점 피드백")
-              .font(.system(size: 16, weight: .semibold))
-              .foregroundStyle(.white)
-              .frame(maxWidth: .infinity)
-              .padding(.vertical, 16)
-          }
-          .padding(4)
-          .background {
-            ZStack {
-              RoundedRectangle(cornerRadius: 1000)
-                .fill(Color.blue)
-                .overlay(.ultraThinMaterial)
+            HStack {
+              Text("시점 피드백")
+                .font(.headline1Medium)
+                .foregroundStyle(.labelStrong)
+              Image(systemName: "bubble.circle")
+                .font(.system(size: 22))
+                .foregroundStyle(.labelStrong)
             }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 14)
           }
-          .clipShape(RoundedRectangle(cornerRadius: 1000))
-//          .glassEffect(
-//            .clear.tint(Color.blue.opacity(0.7)).interactive(),
-//            in: RoundedRectangle(cornerRadius: 12)
-//          )
+          .feedbackPointButton()
           .matchedGeometryEffect(id: "leftButton", in: buttonNamespace)
           .transition(.asymmetric(
             insertion: .scale(scale: 0.6).combined(with: .opacity),
@@ -96,35 +78,24 @@ struct FeedbackButton: View {
             HStack {
               if isRecordingInterval {
                 Text("구간 선택 중... \(startTime)~\(currentTime)")
-                  .font(.system(size: 16, weight: .semibold))
-                  .foregroundStyle(.white)
+                  .font(.headline1Medium)
+                  .foregroundStyle(.labelStrong)
                 Image(systemName: "stop.circle")
-                  .resizable()
-                  .frame(width: 22, height: 22)
+                  .font(.system(size: 22))
+                  .foregroundStyle(.labelStrong)
               } else {
                 Text("구간 피드백")
-                  .font(.system(size: 16, weight: .semibold))
-                  .foregroundStyle(.white)
+                  .font(.headline1Medium)
+                  .foregroundStyle(.labelStrong)
+                Image(.intervalFeedback)
+                  .font(.system(size: 22))
+                  .foregroundStyle(.labelStrong)
               }
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
+            .padding(.vertical, 14)
           }
-          .padding(4)
-          .background {
-            ZStack {
-              RoundedRectangle(cornerRadius: 1000)
-                .fill(Color.blue)
-                .overlay(.ultraThinMaterial)
-            }
-          }
-          .clipShape(RoundedRectangle(cornerRadius: 1000))
-//          .glassEffect(
-//            .clear.tint(
-//              (isRecordingInterval ? Color.purple : Color.blue).opacity(0.7)
-//            ).interactive(),
-//            in: RoundedRectangle(cornerRadius: 12)
-//          )
+          .feedbackIntervalButton(isRecording: isRecordingInterval)
           .matchedGeometryEffect(id: "rightButton", in: buttonNamespace)
           .transition(.asymmetric(
             insertion: .scale(scale: 0.6).combined(with: .opacity),
@@ -138,24 +109,12 @@ struct FeedbackButton: View {
               showIntervalButton = true
             }
           } label: {
-            Image(systemName: "circle.fill")
-              .font(.system(size: 24))
-              .foregroundStyle(.white)
-              .frame(width: 50, height: 50)
+            Image(systemName: "bubble.circle")
+              .font(.system(size: 22))
+              .foregroundStyle(.labelStrong)
           }
-          .padding(4)
-          .background {
-            ZStack {
-              Circle()
-                .fill(Color.black)
-                .overlay(.ultraThinMaterial)
-            }
-          }
-          .clipShape(Circle())
-//          .glassEffect(
-//            .clear.tint(Color.black.opacity(0.5)).interactive(),
-//            in: .circle
-//          )
+          .frame(width: 48, height: 48)
+          .feedbackCircleButton()
           .matchedGeometryEffect(id: "rightButton", in: buttonNamespace)
           .transition(.asymmetric(
             insertion: .scale(scale: 0.4).combined(with: .offset(x: 15)).combined(with: .opacity),
@@ -164,8 +123,7 @@ struct FeedbackButton: View {
         }
       }
       .padding(.horizontal, 16)
-      .padding(.vertical, 8)
-//    }
+      .environment(\.colorScheme, .light)
   }
 }
 

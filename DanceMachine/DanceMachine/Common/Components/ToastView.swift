@@ -11,13 +11,13 @@ import SwiftUI
 struct ToastView: View {
   var text: String
   var icon: ToastIcon
-
+  
   var body: some View {
     HStack {
-
+      
       Image(systemName: icon.icon)
         .foregroundStyle(icon.iconColor)
-
+      
       Text(text)
         .font(.headline2Medium)
         .foregroundStyle(.labelStrong)
@@ -32,6 +32,25 @@ struct ToastView: View {
       RoundedRectangle(cornerRadius: 10)
         .fill(Color.fillAssitive)
     )
+  }
+}
+
+enum ToastIcon: String {
+  case warning
+  case check
+  
+  var icon: String {
+    switch self {
+    case .warning: return "exclamationmark.circle.fill"
+    case .check: return "checkmark.circle.fill"
+    }
+  }
+  
+  var iconColor: Color {
+    switch self {
+    case .warning: return .accentRedNormal
+    case .check: return .secondaryNormal
+    }
   }
 }
 

@@ -399,9 +399,6 @@ extension HomeViewModel {
       self.selectedProject = project
       self.project.headerTitle = project.projectName
       if tracks.byProject[id] == nil { loadTracks(for: id) }
-      
-      // 프로젝트 펼침 알림
-      NotificationCenter.default.post(name: .projectDidExpand, object: nil)
     }
     print("프로젝트 확장 토글이 완료되었습니다. (toggleExpand 종료)")
   }
