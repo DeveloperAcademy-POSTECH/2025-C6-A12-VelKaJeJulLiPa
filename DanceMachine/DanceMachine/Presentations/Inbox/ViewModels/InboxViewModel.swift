@@ -34,7 +34,7 @@ final class InboxViewModel: ObservableObject {
     defer { isLoading = false }
     
     do {
-      let userId = FirebaseAuthManager.shared.userInfo?.userId ?? "lUqpEVMVOIOJ3bO8gI63PX8Y62J2"// FIXME: 태스트할 때는 "lUqpEVMVOIOJ3bO8gI63PX8Y62J2" (파이디온 계정)
+      let userId = FirebaseAuthManager.shared.userInfo?.userId ?? ""
       let currentTeamspaceId = FirebaseAuthManager.shared.currentTeamspace?.teamspaceId.uuidString ?? ""
       let (fetched, lastDoc): ([Notification], DocumentSnapshot?) = try await FirestoreManager.shared.fetchNotificationList(
         userId: userId,
@@ -150,7 +150,7 @@ final class InboxViewModel: ObservableObject {
         .getDocument()
       
       if let data = snapshot.data(),
-         let isRead = data["is_read"] as? Bool {
+         let isRead = data[UserNotification.CodingKeys.isRead.rawValue] as? Bool {
         return isRead
       } else {
         return false // 문서가 없거나 필드가 없으면 읽지 않은 것으로 간주

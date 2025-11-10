@@ -124,12 +124,12 @@ struct HomeView: View {
         }
       }
       .toast(
-          isPresented: $showToastMessage,
-          duration: 2,
-          position: .bottom,
-          bottomPadding: 16   // 하단에서 얼마나 띄울지(버튼 위치)
+        isPresented: $showToastMessage,
+        duration: 2,
+        position: .bottom,
+        bottomPadding: 16   // 하단에서 얼마나 띄울지(버튼 위치)
       ) {
-          ToastView(text: "프로젝트 이름은 20자 이내로 입력해주세요.")
+        ToastView(text: "프로젝트 이름은 20자 이내로 입력해주세요.", icon: .warning)
       }
       .sheet(item: $presentingRemovalSheetProject) { project in
         BottomConfirmSheetView(
@@ -165,9 +165,9 @@ struct HomeView: View {
             await viewModel.fetchCurrentTeamspaceProject()
           }
         })
-          .presentationDragIndicator(.visible)
-          .presentationDetents([.fraction(0.9)])
-          .presentationCornerRadius(16)
+        .presentationDragIndicator(.visible)
+        .presentationDetents([.fraction(0.9)])
+        .presentationCornerRadius(16)
       }
       // 프로젝트 생성 시트
       .sheet(isPresented: $presentingCreateProjectSheet) {
@@ -246,6 +246,12 @@ struct HomeView: View {
         } else {
           // 팀스페이스가 다른 것으로 교체된 경우
           await viewModel.reloadProjectsAfterTeamspaceChange()
+          
+          // 팀스페이스가 교체되면 탭바 수신함의 뱃지 카운트를 교체된 팀스페이스에 맞췃 갱신
+          try await NotificationManager.shared.fetchUnreadNotificationCount(
+            userId: FirebaseAuthManager.shared.user?.uid ?? "",
+            teamspaceId: FirebaseAuthManager.shared.currentTeamspace?.teamspaceId.uuidString ?? ""
+          )
         }
       }
     }

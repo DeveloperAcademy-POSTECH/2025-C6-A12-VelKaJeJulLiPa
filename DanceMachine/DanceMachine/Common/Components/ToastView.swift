@@ -7,15 +7,17 @@
 
 import SwiftUI
 
+
 struct ToastView: View {
   var text: String
-  
+  var icon: ToastIcon
+
   var body: some View {
     HStack {
-      
-      Image(systemName: "exclamationmark.circle.fill")
-        .foregroundStyle(Color.accentRedNormal)
-      
+
+      Image(systemName: icon.icon)
+        .foregroundStyle(icon.iconColor)
+
       Text(text)
         .font(.headline2Medium)
         .foregroundStyle(.labelStrong)
@@ -23,7 +25,7 @@ struct ToastView: View {
         .fixedSize(horizontal: false, vertical: true)
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity, minHeight: 43, alignment: .leading)
-      
+
     }
     .padding(.leading, 16)
     .background(
@@ -34,5 +36,5 @@ struct ToastView: View {
 }
 
 #Preview {
-  ToastView(text: "배고프다")
+  ToastView(text: "배고프다", icon: .check)
 }

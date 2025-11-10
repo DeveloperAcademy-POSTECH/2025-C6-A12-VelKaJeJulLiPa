@@ -132,6 +132,9 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
 extension AppDelegate: MessagingDelegate {
   func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
     guard let fcmToken = fcmToken else { return }
+    
+    // 로그아웃 했다가 다시 로그인 할 때, 서버에 저장하기 위해 FCM 토큰을 로컬 저장
+    UserDefaults.standard.set(fcmToken, forKey: UserDefaultsKey.fcmToken.rawValue)
     print("📲 FCM token is now: \(fcmToken)")
     
     let dataDict: [String: String] = ["token": fcmToken]
@@ -149,7 +152,7 @@ extension AppDelegate: MessagingDelegate {
           documentId: userId,
           asDictionary: [User.CodingKeys.fcmToken.rawValue: fcmToken]
         )
-        print("Firestore updated with valid fcmToken for \(userId)")
+        print("🔑 New FCM token assigned to user \(userId): \(fcmToken)")
       }
     }
   }

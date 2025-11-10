@@ -145,31 +145,31 @@ final class FirebaseAuthManager: ObservableObject {
     
     return formatter.string(from: nameComponents)
   }
-
+  
   
   /// 로그아웃 메서드
   /// - 수행 순서:
-  ///   1. FCM 토큰 삭제
-  ///   2. Firestore에서 fcm_token 필드 삭제
+  ///   1. Firestore에서 fcm_token 빈 문자열("")로 저장
   ///   3. 앱 뱃지 초기화
   ///   4. Firebase 인증 로그아웃 (인증상태 리스너 작동으로 화면 전환됨)
   func signOut() async throws {
-      print("AuthManager 로그아웃 누름")
-
-      // ① FCM 토큰 삭제(비활성화) - DB에서 삭제되는 것은 아님
-      // FIXME: 재로그인 시 토큰이 다시 갱신되어서 푸시 알림 잘 오는지 확인
-//      try await Messaging.messaging().deleteToken()
-//      print("🧹 FCM 토큰 삭제 완료")
-
-      // ③ 앱 뱃지 초기화
-      try await UNUserNotificationCenter.current().setBadgeCount(0)
-      print("🔢 뱃지 카운트 0으로 초기화 완료")
-
-      // ④ Firebase 로그아웃
-      try firebaseAuth.signOut()
-      print("✅ Firebase 로그아웃 완료, currentUser: \(String(describing: firebaseAuth.currentUser))")
+    //FCM 토큰 빈 문자열 처리 (로그아웃한 사용자는 알림 받지 않을 수 있도록)
+    try await FirestoreManager.shared.updateFields(
+      collection: .users,
+      documentId: self.userInfo?.userId ?? "",
+      asDictionary: [ User.CodingKeys.fcmToken.rawValue: "" ]
+    )
+    
+    //앱 뱃지 초기화
+    try await UNUserNotificationCenter.current().setBadgeCount(0)
+    print("🔢 뱃지 카운트 0으로 초기화 완료")
+    
+    //Firebase 로그아웃
+    try firebaseAuth.signOut()
+    print("✅ Firebase 로그아웃 완료, currentUser: \(String(describing: firebaseAuth.currentUser))")
   }
-
+  
+  
   
   /// Firebase Authentication 계정 삭제 메서드
   /// 1. 토큰 취소하기 위해  (Revoke Access / Refresh Token) 애플 로그인
