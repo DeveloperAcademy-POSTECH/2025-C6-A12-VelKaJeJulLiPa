@@ -6,10 +6,12 @@
 //
 
 import Foundation
+import UIKit
 
 @Observable
 final class FeedbackViewModel {
   private let store = FirestoreManager.shared
+  private let storage = FireStorageManager.shared
   
   var isLoading: Bool = false
   var errorMsg: String? = nil
@@ -75,19 +77,36 @@ extension FeedbackViewModel {
       print("피드백 조회 실패: \(error)")
     }
   }
-  // 시점 피드백 생성
+  // 시점 피드백 생성 -
   func createPointFeedback(
     videoId: String,
     authorId: String,
     content: String,
     taggedUserIds: [String],
-    atTime: Double
+    atTime: Double,
+    image: UIImage?
   ) async {
     await MainActor.run {
       self.errorMsg = nil
     }
     
     do {
+      // 1) 이미지가 있을 때만 업로드
+      var imageURL: String? = nil
+      
+      if let image,
+         let imageData = image.pngData() {
+        
+        let path = try await storage.uploadStorage(
+          data: imageData,
+          type: .feedbackImage(UUID().uuidString)
+        )
+        imageURL = try await FireStorageManager.shared.getDownloadURL(for: path)
+      } else {
+        print("이미지 없음 또는 PNG 변환 실패 – 이미지 없이 피드백만 저장") // FIXME: - 적절한 에러 처리
+      }
+      
+      // 2) 피드백 문서 생성 (이미지 유무 상관없이)
       let feedback = Feedback(
         feedbackId: UUID(),
         videoId: videoId,
@@ -98,13 +117,16 @@ extension FeedbackViewModel {
         endTime: nil,
         createdAt: Date(),
         teamspaceId: FirebaseAuthManager.shared.currentTeamspace?.teamspaceId.uuidString ?? "",
+        imageURL: imageURL
       )
+      
       try await store.create(feedback)
-
+      
       await MainActor.run {
         self.feedbacks.insert(feedback, at: 0)
       }
-    } catch { // TODO: 에러처리
+      
+    } catch {
       await MainActor.run {
         self.errorMsg = "피드백 작성에 실패했습니다!"
       }
