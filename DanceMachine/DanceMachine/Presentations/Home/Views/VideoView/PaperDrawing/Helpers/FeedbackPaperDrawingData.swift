@@ -135,7 +135,6 @@ final class FeedbackPaperDrawingData {
     
     let frame = markup.bounds
     
-    // 먼저 배경을 꽉 채워서 칠해준다
     if let bg = backgroundColor {
       context.saveGState()
       context.setFillColor(bg.cgColor)
@@ -143,12 +142,12 @@ final class FeedbackPaperDrawingData {
       context.restoreGState()
     }
     
-    // 그 위에 PaperKit(이미지 + 펜슬 드로잉) 렌더
-    await markup.draw(in: context, frame: frame)
-    
-    guard let cgImage = context.makeImage() else {
-      return nil
-    }
+    let options = RenderingOptions(traitCollection: controller.traitCollection) // PencilKit 색상 반전 안되게 설정
+
+    await markup.draw(in: context, frame: frame, options: options)
+
+    guard let cgImage = context.makeImage() else { return nil }
+
     return UIImage(cgImage: cgImage, scale: scale, orientation: .up)
   }
   
