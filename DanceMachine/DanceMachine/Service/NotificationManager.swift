@@ -31,6 +31,8 @@ final class NotificationManager: ObservableObject {
     }
     
     do {
+      unreadNotificationCount = count
+      print("✅ 수신함 뱃지 카운트가 \(count)로 설정됨")
       try await center.setBadgeCount(count)
       print("✅ 앱 뱃지 카운트가 \(count)로 설정됨")
     } catch {
@@ -71,12 +73,24 @@ final class NotificationManager: ObservableObject {
     }
   }
   
+  /// 특정 사용자의 user_notification 서브 컬렉션 문서를 삭제하는 메서드
+  func deleteUserNotification(userId: String, notificationId: String) async throws {
+    do {
+      try await FirestoreManager.shared.deleteFromSubcollection(
+        under: .users,
+        parentId: userId,
+        subCollection: .userNotification,
+        target: notificationId
+      )
+      print("📬 user_notification 에서 \(notificationId) 삭제 처리 완료")
+    } catch {
+      throw NotificationError.delelteNotificationFalied(underlying: error)
+    }
+  }
   
-  /// 특정 유저의 특정 팀스페이스 내 읽지 않은 알림 개수를 가져오는 메서드
-  func fetchUnreadNotificationCount(
-    userId: String,
-    teamspaceId: String
-  ) async throws  {
+  
+  /// 특정 유저의 내 읽지 않은 알림 개수를 가져오는 메서드
+  func fetchUnreadNotificationCount(userId: String) async throws  {
     let oneMonthAgo = Calendar.current.date(byAdding: .month, value: -1, to: Date.now)!
     let oneMonthAgoTimestamp = Timestamp(date: oneMonthAgo)
     
@@ -86,11 +100,10 @@ final class NotificationManager: ObservableObject {
         .document(userId)
         .collection(CollectionType.userNotification.rawValue)
         .whereField(UserNotification.CodingKeys.createdAt.rawValue, isGreaterThanOrEqualTo: oneMonthAgoTimestamp)
-        .whereField(UserNotification.CodingKeys.teamspaceId.rawValue, isEqualTo: teamspaceId)
         .whereField(UserNotification.CodingKeys.isRead.rawValue, isEqualTo: false)
         .getDocuments()
       
-      unreadNotificationCount = snapshot.documents.count
+      try await updateAppBadgeCount(to: snapshot.documents.count)
     } catch {
       throw NotificationError.fetchUnreadCountFailed(underlying: error)
     }
