@@ -42,10 +42,8 @@ struct VideoListView: View {
     VStack(spacing: 0) {
       if vm.filteredVideos.isEmpty && vm.isLoading != true && !pickerViewModel.isUploading {
         emptyView
-        //        uploadButtons
       } else {
         listView
-        //        uploadButtons
       }
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -157,7 +155,7 @@ struct VideoListView: View {
         Button {
           self.showCustomPicker = true
         } label: {
-          ZStack {
+          
             // 작은 버튼 (원형)
             if isScrollDown {
               Image(systemName: "video.fill.badge.plus")
@@ -173,18 +171,12 @@ struct VideoListView: View {
                 .frame(maxWidth: .infinity)
                 .transition(.opacity)
             }
-          }
-          .padding(.horizontal, 20)
-          .padding(.vertical, 14)
-//          .padding(.horizontal, isScrollDown ? 8 : 20)
-//          .padding(.vertical, isScrollDown ? 8 : 14)
-          .frame(maxWidth: isScrollDown ? nil : .infinity)
         }
-        .background(
-          RoundedRectangle(cornerRadius: isScrollDown ? 24 : 1000)
-            .uploadGlassButton()
-            .environment(\.colorScheme, .light)
-        )
+        .buttonStyle(.plain)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 14)
+        .frame(maxWidth: isScrollDown ? nil : .infinity)
+        .uploadGlassButton(isScrollDown: isScrollDown)
         .shadow(radius: 5)
       }
       .padding(.horizontal, 16)
