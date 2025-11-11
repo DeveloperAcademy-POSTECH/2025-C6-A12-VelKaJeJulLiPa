@@ -7,6 +7,7 @@
 
 import SwiftUI
 import AVKit
+import Kingfisher
 
 struct VideoView: View {
   
@@ -269,35 +270,24 @@ struct VideoView: View {
                   }
                 }
               
-              AsyncImage(url: url) { phase in
-                switch phase {
-                case .empty:
-                  ProgressView()
-                  
-                case .success(let image):
-                  image
-                    .resizable()
-                    .scaledToFit()
-                    .frame(
-                      maxWidth: proxy.size.width * 0.9,
-                      maxHeight: proxy.size.height * 0.8
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .scaleEffect(feedbackImageScale)
-                    .offset(feedbackImageOffset)
-                    .gesture(
-                      magnification.simultaneously(with: drag)
-                    )
-                  
-                case .failure(_):
-                  Image(systemName: "photo")
-                    .font(.system(size: 40))
-                    .foregroundStyle(Color.labelNormal)
-                  
-                @unknown default:
-                  EmptyView()
+              KFImage(url)
+                .placeholder {
+                  ProgressView() // FIXME: - 임시
                 }
-              }
+                .retry(maxCount: 2, interval: .seconds(2))
+                .cacheOriginalImage()
+                .resizable()
+                .scaledToFit()
+                .frame(
+                  maxWidth: proxy.size.width * 0.9,
+                  maxHeight: proxy.size.height * 0.8
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .scaleEffect(feedbackImageScale)
+                .offset(feedbackImageOffset)
+                .gesture(
+                  magnification.simultaneously(with: drag)
+                )
               
               Spacer()
             }
