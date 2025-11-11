@@ -64,6 +64,7 @@ struct VideoView: View {
   @State private var showDrawingImageFull: Bool = false
   
   // 🔥 피드백 카드 이미지 풀스크린용 상태
+  @Namespace private var feedbackImageNamespace
   @State private var selectedFeedbackImageURL: String? = nil
   @State private var showFeedbackImageFull: Bool = false
   
@@ -123,6 +124,7 @@ struct VideoView: View {
               .cacheOriginalImage()
               .resizable()
               .scaledToFit()
+              .matchedGeometryEffect(id: urlString, in: feedbackImageNamespace)
           }
         }
       }
@@ -588,6 +590,7 @@ struct VideoView: View {
                     self.reportTargetFeedback = f
                   }
                 },
+                imageNamespace: feedbackImageNamespace,
                 onImageTap: { url in
                   self.selectedFeedbackImageURL = url
                   withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {

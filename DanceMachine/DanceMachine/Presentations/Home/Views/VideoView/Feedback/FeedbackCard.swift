@@ -28,6 +28,8 @@ struct FeedbackCard: View {
   var showBottomReplyButton: Bool = false
   var onBottomReplyTap: (() -> Void)? = nil
   
+  var imageNamespace: Namespace.ID? = nil // 애니메이션 용
+  
   var onImageTap: ((String) -> Void)? = nil
   
   @State private var showMenu: Bool = false
@@ -211,24 +213,48 @@ struct FeedbackCard: View {
     Group {
       if let urlString = feedback.imageURL,
          let url = URL(string: urlString) {
-        KFImage(url)
-          .placeholder {
-            ZStack {
-              RoundedRectangle(cornerRadius: 8)
-                .fill(Color.backgroundElevated)
-                .frame(width: 100, height: 100)
-              ProgressView() // FIXME: - 임시
+        // Namespace가 있는 경우와 없는 경우를 분기
+        if let ns = imageNamespace {
+          KFImage(url)
+            .placeholder {
+              ZStack {
+                RoundedRectangle(cornerRadius: 8)
+                  .fill(Color.backgroundElevated)
+                  .frame(width: 100, height: 100)
+                ProgressView() // FIXME: - 임시
+              }
             }
-          }
-          .retry(maxCount: 2, interval: .seconds(2))
-          .cacheOriginalImage()
-          .resizable()
-          .scaledToFill()
-          .frame(width: 100, height: 100)
-          .clipShape(RoundedRectangle(cornerRadius: 8))
-          .onTapGesture {
-            onImageTap?(urlString)   // 지금 VideoView에서 쓰는 콜백
-          }
+            .retry(maxCount: 2, interval: .seconds(2))
+            .cacheOriginalImage()
+            .resizable()
+            .scaledToFill()
+            .frame(width: 100, height: 100)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .matchedGeometryEffect(id: urlString, in: ns)   // 🔥 hero 연결
+            .onTapGesture {
+              onImageTap?(urlString)
+            }
+        } else {
+          // 기존 동작(히어로 없이)도 유지
+          KFImage(url)
+            .placeholder {
+              ZStack {
+                RoundedRectangle(cornerRadius: 8)
+                  .fill(Color.backgroundElevated)
+                  .frame(width: 100, height: 100)
+                ProgressView() // FIXME: - 임시
+              }
+            }
+            .retry(maxCount: 2, interval: .seconds(2))
+            .cacheOriginalImage()
+            .resizable()
+            .scaledToFill()
+            .frame(width: 100, height: 100)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .onTapGesture {
+              onImageTap?(urlString)
+            }
+        }
       }
     }
   }
