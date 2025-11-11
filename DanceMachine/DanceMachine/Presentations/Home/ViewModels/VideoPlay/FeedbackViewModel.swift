@@ -133,20 +133,36 @@ extension FeedbackViewModel {
       print("피드백 생성 실패: \(error)")
     }
   }
-  // 구간 피드백 생성
+  // 구간 피드백 생성 -
   func createIntervalFeedback(
     videoId: String,
     authorId: String,
     content: String,
     taggedUserIds: [String],
     startTime: Double,
-    endTime: Double
+    endTime: Double,
+    image: UIImage?
   ) async {
     await MainActor.run {
       self.errorMsg = nil
     }
     
     do {
+      // 1) 이미지가 있을 때만 업로드
+      var imageURL: String? = nil
+      
+      if let image,
+         let imageData = image.pngData() {
+        
+        let path = try await storage.uploadStorage(
+          data: imageData,
+          type: .feedbackImage(UUID().uuidString)
+        )
+        imageURL = try await FireStorageManager.shared.getDownloadURL(for: path)
+      } else {
+        print("이미지 없음 또는 PNG 변환 실패 – 이미지 없이 피드백만 저장") // FIXME: - 적절한 에러 처리
+      }
+      
       let feedback = Feedback(
         feedbackId: UUID(),
         videoId: videoId,
@@ -157,6 +173,7 @@ extension FeedbackViewModel {
         endTime: endTime,
         createdAt: Date(),
         teamspaceId: FirebaseAuthManager.shared.currentTeamspace?.teamspaceId.uuidString ?? "",
+        imageURL: imageURL
       )
       try await store.create(feedback)
 

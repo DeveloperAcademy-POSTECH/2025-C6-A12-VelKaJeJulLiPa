@@ -398,7 +398,8 @@ struct VideoView: View {
                     content: content,
                     taggedUserIds: taggedUserId,
                     startTime: vm.feedbackVM.intervalStartTime ?? 0,
-                    endTime: vm.videoVM.currentTime
+                    endTime: vm.videoVM.currentTime,
+                    image: self.editedOverlayImage
                   )
                 }
                 showFeedbackInput = false
