@@ -35,10 +35,8 @@ final class InboxViewModel: ObservableObject {
     
     do {
       let userId = FirebaseAuthManager.shared.userInfo?.userId ?? ""
-      let currentTeamspaceId = FirebaseAuthManager.shared.currentTeamspace?.teamspaceId.uuidString ?? ""
       let (fetched, lastDoc): ([Notification], DocumentSnapshot?) = try await FirestoreManager.shared.fetchNotificationList(
         userId: userId,
-        currentTeamspaceId: currentTeamspaceId,
         lastDocument: reset ? nil : lastDocument
       )
       
@@ -84,34 +82,74 @@ final class InboxViewModel: ObservableObject {
   ///  - notifications: DB의 notification 문서 정보
   ///  - reset: 새로고침 여부
   private func appendInboxNotifications(from notifications: [Notification], reset: Bool) async throws {
-    let transformed: [InboxNotification] = try await withThrowingTaskGroup(of: InboxNotification.self) { group in
+    let userId = FirebaseAuthManager.shared.userInfo?.userId ?? ""
+    
+    let transformed: [InboxNotification] = await withTaskGroup(of: Result<InboxNotification, Error>.self) { group in
       for notification in notifications {
         group.addTask {
-          async let videoDoc = self.getVideoDoc(from: notification.videoId)
-          async let senderDoc = self.getSenderDoc(from: notification.senderId)
-          async let isRead = self.getNotificationReadState(
-            userId: FirebaseAuthManager.shared.userInfo?.userId ?? "",
-            notificationId: notification.notificationId.uuidString
-          )
-          let type = self.getInboxNotificationType(from: notification)
-          
-          return InboxNotification(
-            notificationId: notification.notificationId.uuidString,
-            type: type,
-            videoId: notification.videoId,
-            videoURL: try await videoDoc.videoURL,
-            videoTitle: try await videoDoc.videoTitle,
-            senderName: try await senderDoc.name,
-            content: notification.content,
-            date: notification.createdAt,
-            isRead: try await isRead
-          )
+          do {
+            async let videoDoc = self.getVideoDoc(from: notification.videoId)
+            async let senderDoc = self.getSenderDoc(from: notification.senderId)
+            async let teamspaceDoc = self.getTeamspaceDoc(from: notification.teamspaceId)
+            async let isRead = self.getNotificationReadState(
+              userId: userId,
+              notificationId: notification.notificationId.uuidString
+            )
+            
+            let type = self.getInboxNotificationType(from: notification)
+            
+            let video = try await videoDoc
+            let sender = try await senderDoc
+            let readState = try await isRead
+            let teamspace = try await teamspaceDoc
+            
+            let inbox = InboxNotification(
+              notificationId: notification.notificationId.uuidString,
+              type: type,
+              videoId: notification.videoId,
+              videoURL: video.videoURL,
+              videoTitle: video.videoTitle,
+              senderName: sender.name,
+              teamspace: teamspace,
+              content: notification.content,
+              date: notification.createdAt,
+              isRead: readState
+            )
+            
+            return .success(inbox)
+          } catch {
+            print("⚠️ Failed to transform notification \(notification.notificationId): \(error)")
+            
+            // 아래의 경우에 notification 문서와 user_notification 문서를 삭제합니다.
+            //  1.
+            let userId = userId
+            let notificationId = notification.notificationId.uuidString
+            
+            Task {
+              do {
+                try await FirestoreManager.shared.delete(collectionType: .notification, documentID: notificationId)
+                try await NotificationManager.shared.deleteUserNotification(
+                  userId: userId,
+                  notificationId: notificationId
+                )
+                print("🧹 Deleted video related notification in both notification and user_notification document: \(notificationId)")
+              } catch {
+                print("❌ Failed to delete Deleted video related notification in both notification and user_notification document: \(error)")
+              }
+            }
+            return .failure(error)
+          }
         }
       }
       
       var results: [InboxNotification] = []
-      for try await inbox in group {
-        results.append(inbox)
+      for await result in group {
+        switch result {
+        case .success(let inbox):
+          results.append(inbox)
+        case .failure:
+          continue
+        }
       }
       return results
     }
@@ -126,6 +164,7 @@ final class InboxViewModel: ObservableObject {
       }
     }
   }
+  
   
   private func getVideoDoc(from id: String) async throws -> Video {
     let videoDoc: Video = try await FirestoreManager.shared.get(id, from: .video)
@@ -160,8 +199,6 @@ final class InboxViewModel: ObservableObject {
       return false
     }
   }
-
-  
   
   
   /// 알림 유형 판별 메서드
@@ -176,9 +213,7 @@ final class InboxViewModel: ObservableObject {
     } catch {
       print("error: \(error.localizedDescription)")
     }
-    
   }
-  
 }
 
 // FIXME: - 코드 위치 변경
