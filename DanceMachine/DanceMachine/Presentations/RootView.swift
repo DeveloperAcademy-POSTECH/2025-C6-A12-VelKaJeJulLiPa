@@ -11,7 +11,8 @@ struct RootView: View {
   
   @EnvironmentObject private var router: MainRouter
   @State var tabcase: TabCase = .home
-  
+  @StateObject private var notificationManager = NotificationManager.shared
+
   var body: some View {
     TabView(selection: $tabcase, content: {
       ForEach(TabCase.allCases, id: \.rawValue) { tab in
@@ -34,6 +35,7 @@ struct RootView: View {
           label: {
             tabLabel(tab)
           })
+        .badge(tab == .inbox ? notificationManager.unreadNotificationCount : 0)
       }
       //                  Tab(value: tabcase, role: .search) {
       //                    Color.clear
@@ -52,9 +54,6 @@ struct RootView: View {
         router.destination.removeAll()
       }
     }
-    
-    
-    
   }
   
   private func tabLabel(_ tab: TabCase) -> some View {
