@@ -72,7 +72,7 @@ struct InboxView: View {
             await viewModel.refresh()
           }
           
-          if viewModel.isLoading {
+          if !viewModel.isRefreshing && viewModel.isLoading {
             LoadingSpinner()
               .frame(maxWidth: 28, maxHeight: 28, alignment: .center)
               .padding(.top, 7)
