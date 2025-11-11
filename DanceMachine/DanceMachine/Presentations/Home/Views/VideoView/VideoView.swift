@@ -94,55 +94,25 @@ struct VideoView: View {
           portraitView(proxy: proxy) // 세로모드
             .background(.backgroundNormal)
         }
-        
-        // 드로잉 이미지 전체 프리뷰
-        if let image = editedOverlayImage {
-          ZoomableImageOverlay(
-            isPresented: $showDrawingImageFull,
-            backgroundColor: Color.backgroundNormal
-          ) {
-            Image(uiImage: image)
-              .resizable()
-              .scaledToFit()
-              .matchedGeometryEffect(id: "feedbackImage", in: drawingImageNamespace)
-
-          }
-        }
-        
-        // 피드백 카드 이미지 전체 프리뷰
-        if let urlString = selectedFeedbackImageURL,
-           let url = URL(string: urlString) {
-          ZoomableImageOverlay(
-            isPresented: $showFeedbackImageFull,
-            backgroundColor: Color.backgroundNormal
-          ) {
-            KFImage(url)
-              .placeholder {
-                ProgressView()
-              }
-              .retry(maxCount: 2, interval: .seconds(2))
-              .cacheOriginalImage()
-              .resizable()
-              .scaledToFit()
-              .matchedGeometryEffect(id: urlString, in: feedbackImageNamespace)
-          }
-        }
       }
       .onChange(of: showFeedbackInput) { _, newValue in
         if !newValue {
           vm.feedbackVM.isRecordingInterval = false
+          editedOverlayImage = nil // 인풋 뷰가 내려갈 때 이미지도 초기화
         }
       }
       .toolbar(.hidden, for: .tabBar)
     }
+    // 드로잉 이미지 확대 시, 툴 바 숨기기 처리
     .toolbar(
       showDrawingImageFull || showFeedbackImageFull ? .hidden : .visible,
       for: .navigationBar
-    ) // 드로잉 이미지 확대 시, 툴 바 숨기기 처리
+    )
     .fullScreenCover(isPresented: $showFeedbackPaperDrawingView) {
       if #available(iOS 26.0, *) {
         FeedbackPaperDrawingView(image: $capturedImage) { image in
           editedOverlayImage = image
+          self.capturedImage = nil
         }
       }
       else {
