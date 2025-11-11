@@ -25,6 +25,8 @@ struct FeedbackCard: View {
 
   var showBottomReplyButton: Bool = false
   var onBottomReplyTap: (() -> Void)? = nil
+  
+  var onImageTap: ((String) -> Void)? = nil
 
   @State private var showMenu: Bool = false
   
@@ -36,7 +38,7 @@ struct FeedbackCard: View {
         timeStamp
         Spacer().frame(height: 2)
         content
-
+        feedbackImageView
         HStack {
           if showBottomReplyButton {
             Button {
@@ -197,6 +199,48 @@ struct FeedbackCard: View {
           onReport()
         } label: {
           Label("신고하기", systemImage: "light.beacon.max")
+        }
+      }
+    }
+  }
+  
+  // MARK: - 피드백 이미지
+  private var feedbackImageView: some View {
+    Group {
+      if let urlString = feedback.imageURL,
+         let url = URL(string: urlString) {
+        AsyncImage(url: url) { phase in
+          switch phase {
+          case .empty:
+            ZStack {
+              RoundedRectangle(cornerRadius: 8)
+                .fill(Color.backgroundElevated)
+                .frame(width: 100, height: 100)
+              ProgressView()
+            }
+            
+          case .success(let image):
+            image
+              .resizable()
+              .scaledToFill()
+              .frame(width: 100, height: 100)
+              .clipShape(RoundedRectangle(cornerRadius: 8))
+              .onTapGesture {
+                onImageTap?(urlString)
+              }
+          case .failure(_):
+            ZStack {
+              RoundedRectangle(cornerRadius: 8)
+                .fill(Color.backgroundElevated)
+                .frame(width: 100, height: 100)
+              Image(systemName: "photo")
+                .font(.system(size: 20))
+                .foregroundStyle(.labelAssitive)
+            }
+            
+          @unknown default:
+            EmptyView()
+          }
         }
       }
     }
