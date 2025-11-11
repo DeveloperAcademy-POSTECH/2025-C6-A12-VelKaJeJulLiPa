@@ -95,9 +95,10 @@ struct VideoView: View {
             .background(.backgroundNormal)
         }
         // ✅ 드로잉 이미지 전체 프리뷰 오버레이
-        if showDrawingImageFull, let image = editedOverlayImage {
+        if showDrawingImageFull,
+            let image = editedOverlayImage {
           ZStack {
-            Color.secondaryNormal.ignoresSafeArea()
+            Color.backgroundNormal.ignoresSafeArea()
 
             VStack {
               // 상단 X 버튼
@@ -113,11 +114,12 @@ struct VideoView: View {
                   }
                 } label: {
                   Image(systemName: "xmark.circle.fill")
-                    .font(.system(size: 26, weight: .semibold))
-                    .foregroundStyle(.black.opacity(0.95))
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 44, height: 44)
+                    .foregroundStyle(Color.labelNormal)
                 }
-                .padding(.top, 16)
-                .padding(.leading, 16)
+                .padding([.top, .leading], 16)
 
                 Spacer()
               }
@@ -127,7 +129,7 @@ struct VideoView: View {
               let magnification = MagnificationGesture()
                 .onChanged { value in
                   let newScale = drawingImageBaseScale * value
-                  drawingImageScale = min(max(newScale, 1.0), 10.0)  // 1~10배 줌
+                  drawingImageScale = min(max(newScale, 1.0), 8.0)  // 1~8배 줌
                   if drawingImageScale == 1 {
                     // 1배로 돌아오면 위치도 원점으로
                     drawingImageOffset = .zero
@@ -177,7 +179,6 @@ struct VideoView: View {
               Spacer()
             }
           }
-          .transition(.opacity)
           .zIndex(10)
         }
       }
@@ -188,6 +189,7 @@ struct VideoView: View {
       }
       .toolbar(.hidden, for: .tabBar)
     }
+    .toolbar(showDrawingImageFull ? .hidden : .visible, for: .navigationBar) // 드로잉 이미지 확대 시, 툴 바 숨기기 처리
     .fullScreenCover(isPresented: $showFeedbackPaperDrawingView) {
       if #available(iOS 26.0, *) {
         FeedbackPaperDrawingView(image: $capturedImage) { image in
