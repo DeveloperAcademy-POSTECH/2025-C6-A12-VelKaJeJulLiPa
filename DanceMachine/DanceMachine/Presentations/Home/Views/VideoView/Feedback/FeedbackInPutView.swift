@@ -44,8 +44,8 @@ struct FeedbackInPutView: View {
   var body: some View {
     VStack(spacing: 16) {
       topRow
-      if !mM.taggedUsers.isEmpty {
       feedbackImageView.frame(maxWidth: .infinity, alignment: .leading)
+      if !mM.taggedUsers.isEmpty {
       taggedView
       }
       CustomTextField(
@@ -134,6 +134,14 @@ struct FeedbackInPutView: View {
         )
       }
       Spacer()
+      
+      // TODO: 여기에 드로잉 버튼으로 갈 이미지 삽입
+      Button {
+        drawingButtonTapped()
+      } label: {
+        Text("드로잉 이동")
+      }
+      
       clearButton
     }
   }

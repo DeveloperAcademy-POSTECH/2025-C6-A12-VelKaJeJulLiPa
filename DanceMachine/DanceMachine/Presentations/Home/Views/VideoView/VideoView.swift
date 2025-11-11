@@ -53,12 +53,12 @@ struct VideoView: View {
   @State private var reportTargetFeedback: Feedback? = nil
   @State private var showCreateReportSuccessToast: Bool = false
   
-  // MARK: 이미지 캡쳐 결과
+  // MARK: 이미지 캡쳐 결과 //
   @State private var showFeedbackPaperDrawingView: Bool = false
   @State private var capturedImage: UIImage? = nil
   @State private var editedOverlayImage: UIImage? = nil
   
-  // 🔥 전체 화면 프리뷰용 상태 & 네임스페이스
+  // 🔥 전체 화면 프리뷰용 상태 & 네임스페이스 //
   @Namespace private var drawingImageNamespace
   @State private var showDrawingImageFull: Bool = false
   
@@ -190,15 +190,12 @@ struct VideoView: View {
     }
     .fullScreenCover(isPresented: $showFeedbackPaperDrawingView) {
       if #available(iOS 26.0, *) {
-        
         FeedbackPaperDrawingView(image: $capturedImage) { image in
-          // 여기서 그린 결과 이미지를 상태에 저장만 한다 (닫지는 않음)
           editedOverlayImage = image
-          
-          
         }
-      else {
       }
+      else {
+      
         // TODO: iOS 26 이하 교체
       }
     }
@@ -256,7 +253,7 @@ struct VideoView: View {
     .safeAreaInset(edge: .bottom) {
       Group {
         if showFeedbackInput {
-          /// FeedbackInPutView
+          /// FeedbackInPutView 여기
           FeedbackInPutView(
             teamMembers: vm.teamMembers,
             feedbackType: feedbackType,

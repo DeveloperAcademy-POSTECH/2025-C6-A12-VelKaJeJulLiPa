@@ -44,6 +44,11 @@ fileprivate struct PaperControllerView: UIViewControllerRepresentable {
   var controller: PaperMarkupViewController
   
   func makeUIViewController(context: Context) -> some PaperMarkupViewController {
+    let bgView = UIView()
+    bgView.backgroundColor = UIColor(Color.materialDimmer)
+    controller.contentView = bgView
+    
+    
     return controller
   }
   

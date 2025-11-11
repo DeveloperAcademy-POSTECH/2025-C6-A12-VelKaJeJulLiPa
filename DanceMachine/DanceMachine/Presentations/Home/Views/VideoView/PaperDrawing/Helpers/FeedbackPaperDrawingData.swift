@@ -38,7 +38,7 @@ final class FeedbackPaperDrawingData {
     let markup = PaperMarkup(bounds: rect)
     let controller = PaperMarkupViewController(
       markup: markup,
-      supportedFeatureSet: featureSet
+      supportedFeatureSet: featureSet,
     )
     
     self.controller = controller
@@ -50,7 +50,7 @@ final class FeedbackPaperDrawingData {
     // 확대는 8배까지(유튜브가 8배 zoom), 축소는 1배 미만 불가
     controller.zoomRange = 1.0 ... 8.0
     
-    controller.view.backgroundColor = UIColor(Color.fillAssitive) // FIXME: - 컬러 수정
+    controller.view.backgroundColor = UIColor(Color.backgroundNormal)
     
 
     // 초기 이미지 있으면 먼저 캔버스에 올리기 (initiakize)
@@ -59,8 +59,6 @@ final class FeedbackPaperDrawingData {
       insertImage(image, rect: targetRect)
     }
   }
-  
-  
   
   /// 이미지 비율 유지하면서 rect 안에 맞춰 넣는 유틸
   private func aspectFitRect(for imageSize: CGSize, in boundingRect: CGRect) -> CGRect {

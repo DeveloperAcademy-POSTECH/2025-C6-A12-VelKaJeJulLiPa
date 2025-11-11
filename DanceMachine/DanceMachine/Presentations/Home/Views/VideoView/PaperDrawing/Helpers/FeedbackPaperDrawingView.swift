@@ -31,7 +31,7 @@ struct FeedbackPaperDrawingView: View {
   
   var body: some View {
     ZStack {
-      Color.pink.ignoresSafeArea()
+      Color.backgroundNormal.ignoresSafeArea()
       VStack {
         topTitleView.padding(.horizontal, 16)
         drawingView
@@ -64,6 +64,7 @@ struct FeedbackPaperDrawingView: View {
             .resizable()
             .scaledToFit()
             .frame(width: 24, height: 24)
+            .foregroundStyle(Color.labelStrong)
         }
         
         /// 앞으로 가기
@@ -74,6 +75,7 @@ struct FeedbackPaperDrawingView: View {
             .resizable()
             .scaledToFit()
             .frame(width: 24, height: 24)
+            .foregroundStyle(Color.labelStrong)
         }
         
         
@@ -85,6 +87,7 @@ struct FeedbackPaperDrawingView: View {
             .resizable()
             .scaledToFit()
             .frame(width: 24, height: 24)
+            .foregroundStyle(Color.labelStrong)
         }
         
         
@@ -113,6 +116,7 @@ struct FeedbackPaperDrawingView: View {
             .resizable()
             .scaledToFit()
             .frame(width: 24, height: 24)
+            .foregroundStyle(Color.labelStrong)
         }
         
         
@@ -127,12 +131,14 @@ struct FeedbackPaperDrawingView: View {
               .resizable()
               .scaledToFit()
               .frame(width: 24, height: 24)
+              .foregroundStyle(Color.labelStrong)
           }
           else {
             Image(systemName: "pencil.circle")
               .resizable()
               .scaledToFit()
               .frame(width: 24, height: 24)
+              .foregroundStyle(Color.labelStrong)
           }
         }
         
@@ -140,12 +146,10 @@ struct FeedbackPaperDrawingView: View {
         // 완료 버튼
         Button {
           Task { @MainActor in
-            // ColorScheme 에 따라 배경색 결정 (예시: 라이트/다크 동일 회색)
-            let bgColor: UIColor = (colorScheme == .dark) ? .clear : .clear
             
             if let image = await feedbackPaperDrawingData.exportAsImage(
               scale: displayScale,
-              backgroundColor: bgColor
+              backgroundColor: UIColor(Color.materialDimmer)
             ) {
               onComplete?(image)
               dismiss()
@@ -159,6 +163,7 @@ struct FeedbackPaperDrawingView: View {
             .resizable()
             .scaledToFit()
             .frame(width: 24, height: 24)
+            .foregroundStyle(Color.labelStrong)
         }
         
       }
@@ -169,7 +174,7 @@ struct FeedbackPaperDrawingView: View {
         Image(systemName: "xmark.circle.fill")
           .resizable()
           .frame(width: 24, height: 24) // FIXME: - 크기 수정
-          .foregroundStyle(Color.black) // FIXME: - 컬러 수정
+          .foregroundStyle(Color.labelStrong)
       }
     }
     .font(.headline)
