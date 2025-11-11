@@ -151,7 +151,7 @@ struct VideoListView: View {
         if isScrollDown {
           Spacer()
         }
-        
+
         Button {
           self.showCustomPicker = true
         } label: {
@@ -159,9 +159,10 @@ struct VideoListView: View {
             // 작은 버튼 (원형)
             if isScrollDown {
               Image(systemName: "video.fill.badge.plus")
-                .font(.system(size: 17))
+                .font(.system(size: 22))
                 .foregroundStyle(.labelStrong)
-                .transition(.opacity)
+//                .transition(.opacity)
+                .padding(.vertical, 14)
             }
             // 큰 버튼 (직사각형)
             if !isScrollDown {
@@ -169,14 +170,12 @@ struct VideoListView: View {
                 .font(.headline1Medium)
                 .foregroundStyle(.labelStrong)
                 .frame(maxWidth: .infinity)
-                .transition(.opacity)
+                .padding(.vertical, 14)
+//                .transition(.opacity)
             }
         }
-        .buttonStyle(.plain)
-        .padding(.horizontal, 20)
-        .padding(.vertical, 14)
-        .frame(maxWidth: isScrollDown ? nil : .infinity)
         .uploadGlassButton(isScrollDown: isScrollDown)
+//        .frame(maxWidth: isScrollDown ? nil : .infinity)
         .shadow(radius: 5)
       }
       .padding(.horizontal, 16)
