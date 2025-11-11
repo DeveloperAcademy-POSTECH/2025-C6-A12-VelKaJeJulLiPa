@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import Kingfisher
+
 
 struct FeedbackCard: View {
   let feedback: Feedback
@@ -14,20 +16,20 @@ struct FeedbackCard: View {
   let replyCount: Int
   let action: () -> Void
   let showReplySheet: () -> Void
-
+  
   let currentTime: Double
   let startTime: Double?
   let timeSeek: () -> Void
-
+  
   let currentUserId: String
   let onDelete: () -> Void
   let onReport: () -> Void
-
+  
   var showBottomReplyButton: Bool = false
   var onBottomReplyTap: (() -> Void)? = nil
   
   var onImageTap: ((String) -> Void)? = nil
-
+  
   @State private var showMenu: Bool = false
   
   var body: some View {
@@ -55,7 +57,7 @@ struct FeedbackCard: View {
       }
       .padding(.horizontal, 16)
       .padding(.vertical, 16)
-
+      
       Menu {
         contextRow
       } label: {
@@ -143,7 +145,7 @@ struct FeedbackCard: View {
           .truncationMode(.tail)
         }
       }
-//      Spacer()
+      //      Spacer()
     }
   }
   
@@ -209,39 +211,24 @@ struct FeedbackCard: View {
     Group {
       if let urlString = feedback.imageURL,
          let url = URL(string: urlString) {
-        AsyncImage(url: url) { phase in
-          switch phase {
-          case .empty:
+        KFImage(url)
+          .placeholder {
             ZStack {
               RoundedRectangle(cornerRadius: 8)
                 .fill(Color.backgroundElevated)
                 .frame(width: 100, height: 100)
-              ProgressView()
+              ProgressView() // FIXME: - 임시
             }
-            
-          case .success(let image):
-            image
-              .resizable()
-              .scaledToFill()
-              .frame(width: 100, height: 100)
-              .clipShape(RoundedRectangle(cornerRadius: 8))
-              .onTapGesture {
-                onImageTap?(urlString)
-              }
-          case .failure(_):
-            ZStack {
-              RoundedRectangle(cornerRadius: 8)
-                .fill(Color.backgroundElevated)
-                .frame(width: 100, height: 100)
-              Image(systemName: "photo")
-                .font(.system(size: 20))
-                .foregroundStyle(.labelAssitive)
-            }
-            
-          @unknown default:
-            EmptyView()
           }
-        }
+          .retry(maxCount: 2, interval: .seconds(2))
+          .cacheOriginalImage()
+          .resizable()
+          .scaledToFill()
+          .frame(width: 100, height: 100)
+          .clipShape(RoundedRectangle(cornerRadius: 8))
+          .onTapGesture {
+            onImageTap?(urlString)   // 지금 VideoView에서 쓰는 콜백
+          }
       }
     }
   }
