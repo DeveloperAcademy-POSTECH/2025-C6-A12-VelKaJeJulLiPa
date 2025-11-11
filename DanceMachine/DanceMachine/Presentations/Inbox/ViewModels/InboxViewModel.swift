@@ -45,6 +45,7 @@ final class InboxViewModel: ObservableObject {
       canLoadMore = fetched.count == 20
       
       try await appendInboxNotifications(from: fetched, reset: reset)
+      try await NotificationManager.shared.refreshBadge(for: FirebaseAuthManager.shared.userInfo?.userId ?? "")
     } catch {
       print("❌ Failed to load notifications: \(error)")
     }
@@ -178,6 +179,12 @@ final class InboxViewModel: ObservableObject {
   }
   
   
+  private func getTeamspaceDoc(from id: String) async throws -> Teamspace {
+    let teamspaceDoc: Teamspace = try await FirestoreManager.shared.get(id, from: .teamspace)
+    return teamspaceDoc
+  }
+  
+  
   /// 특정 유저의 user_notification 서브컬렉션에서 is_read 상태를 가져옵니다.
   private func getNotificationReadState(userId: String, notificationId: String) async throws -> Bool {
     do {
@@ -224,6 +231,7 @@ struct InboxNotification: Equatable {
   let videoURL: String
   let videoTitle: String
   let senderName: String
+  let teamspace: Teamspace
   let content: String
   let date: Date
   let isRead: Bool
