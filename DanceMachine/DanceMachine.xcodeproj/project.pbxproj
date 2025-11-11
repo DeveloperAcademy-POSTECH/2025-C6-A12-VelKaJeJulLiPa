@@ -123,11 +123,12 @@
 				};
 			};
 			buildConfigurationList = C99909152E8A9CC100A6C7CC /* Build configuration list for PBXProject "DanceMachine" */;
-			developmentRegion = en;
+			developmentRegion = ko;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
 				Base,
+				ko,
 			);
 			mainGroup = C99909112E8A9CC100A6C7CC;
 			minimizedProjectReferenceProxies = 1;

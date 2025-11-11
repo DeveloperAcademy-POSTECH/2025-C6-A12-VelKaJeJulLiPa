@@ -53,6 +53,21 @@ struct VideoView: View {
   @State private var reportTargetFeedback: Feedback? = nil
   @State private var showCreateReportSuccessToast: Bool = false
   
+  // MARK: 이미지 캡쳐 결과
+  @State private var showFeedbackPaperDrawingView: Bool = false
+  @State private var capturedImage: UIImage? = nil
+  @State private var editedOverlayImage: UIImage? = nil
+  
+  // 🔥 전체 화면 프리뷰용 상태 & 네임스페이스
+  @Namespace private var drawingImageNamespace
+  @State private var showDrawingImageFull: Bool = false
+  
+  // MARK: - 프리뷰 줌 사이즈
+  @State private var drawingImageScale: CGFloat = 1.0
+  @State private var drawingImageBaseScale: CGFloat = 1.0
+  @State private var drawingImageOffset: CGSize = .zero
+  @State private var drawingImageBaseOffset: CGSize = .zero
+  
   // MARK: 전역으로 관리되는 ID
   let teamspaceId = FirebaseAuthManager.shared.currentTeamspace?.teamspaceId
   let userId = FirebaseAuthManager.shared.userInfo?.userId ?? ""
@@ -79,6 +94,92 @@ struct VideoView: View {
           portraitView(proxy: proxy) // 세로모드
             .background(.backgroundNormal)
         }
+        // ✅ 드로잉 이미지 전체 프리뷰 오버레이
+        if showDrawingImageFull, let image = editedOverlayImage {
+          ZStack {
+            Color.secondaryNormal.ignoresSafeArea()
+
+            VStack {
+              // 상단 X 버튼
+              HStack {
+                Button {
+                  withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                    showDrawingImageFull = false
+                    // 닫을 때 상태 리셋
+                    drawingImageScale = 1.0
+                    drawingImageBaseScale = 1.0
+                    drawingImageOffset = .zero
+                    drawingImageBaseOffset = .zero
+                  }
+                } label: {
+                  Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 26, weight: .semibold))
+                    .foregroundStyle(.black.opacity(0.95))
+                }
+                .padding(.top, 16)
+                .padding(.leading, 16)
+
+                Spacer()
+              }
+
+              Spacer()
+
+              let magnification = MagnificationGesture()
+                .onChanged { value in
+                  let newScale = drawingImageBaseScale * value
+                  drawingImageScale = min(max(newScale, 1.0), 10.0)  // 1~10배 줌
+                  if drawingImageScale == 1 {
+                    // 1배로 돌아오면 위치도 원점으로
+                    drawingImageOffset = .zero
+                    drawingImageBaseOffset = .zero
+                  }
+                }
+                .onEnded { _ in
+                  drawingImageBaseScale = drawingImageScale
+                }
+
+              let drag = DragGesture()
+                .onChanged { value in
+                  guard drawingImageScale > 1.0 else {
+                    drawingImageOffset = .zero
+                    return
+                  }
+                  let newOffset = CGSize(
+                    width: drawingImageBaseOffset.width + value.translation.width,
+                    height: drawingImageBaseOffset.height + value.translation.height
+                  )
+                  drawingImageOffset = newOffset
+                }
+                .onEnded { _ in
+                  if drawingImageScale > 1.0 {
+                    drawingImageBaseOffset = drawingImageOffset
+                  } else {
+                    drawingImageOffset = .zero
+                    drawingImageBaseOffset = .zero
+                  }
+                }
+
+              Image(uiImage: image)
+                .resizable()
+                .scaledToFit()
+                .matchedGeometryEffect(id: "feedbackImage", in: drawingImageNamespace)
+                .frame(
+                  maxWidth: proxy.size.width * 0.9,
+                  maxHeight: proxy.size.height * 0.8
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .scaleEffect(drawingImageScale)
+                .offset(drawingImageOffset)
+                .gesture(
+                  magnification.simultaneously(with: drag)
+                )
+
+              Spacer()
+            }
+          }
+          .transition(.opacity)
+          .zIndex(10)
+        }
       }
       .onChange(of: showFeedbackInput) { _, newValue in
         if !newValue {
@@ -86,6 +187,20 @@ struct VideoView: View {
         }
       }
       .toolbar(.hidden, for: .tabBar)
+    }
+    .fullScreenCover(isPresented: $showFeedbackPaperDrawingView) {
+      if #available(iOS 26.0, *) {
+        
+        FeedbackPaperDrawingView(image: $capturedImage) { image in
+          // 여기서 그린 결과 이미지를 상태에 저장만 한다 (닫지는 않음)
+          editedOverlayImage = image
+          
+          
+        }
+      else {
+      }
+        // TODO: iOS 26 이하 교체
+      }
     }
     .task {
       await self.vm.loadAllData(
@@ -141,6 +256,7 @@ struct VideoView: View {
     .safeAreaInset(edge: .bottom) {
       Group {
         if showFeedbackInput {
+          /// FeedbackInPutView
           FeedbackInPutView(
             teamMembers: vm.teamMembers,
             feedbackType: feedbackType,
@@ -180,7 +296,11 @@ struct VideoView: View {
               self.showFeedbackInput = false
               dismissKeyboard()
             },
-            timeSeek: { vm.videoVM.seekToTime(to: self.pointTime) }
+            timeSeek: { vm.videoVM.seekToTime(to: self.pointTime) },
+            drawingButtonTapped: { captureCurrentFrame() },
+            feedbackDrawingImage: $editedOverlayImage,
+            imageNamespace: drawingImageNamespace,
+            showImageFull: $showDrawingImageFull
           )
         } else {
           FeedbackButton(
@@ -612,6 +732,36 @@ struct VideoView: View {
     }
     .frame(height: 300)
   }
+  
+  /// 현재 플레이어 시점의 프레임을 이미지로 캡쳐
+  private func captureCurrentFrame() {
+    guard let player = vm.videoVM.player,
+          let asset = player.currentItem?.asset else {
+      return
+    }
+
+    let time = player.currentTime()
+    let generator = AVAssetImageGenerator(asset: asset)
+    generator.appliesPreferredTrackTransform = true
+    generator.requestedTimeToleranceAfter  = .zero   // 가능한 정확하게
+    generator.requestedTimeToleranceBefore = .zero
+
+    DispatchQueue.global(qos: .userInitiated).async {
+      do {
+        let cgImage = try generator.copyCGImage(at: time, actualTime: nil)
+        let image   = UIImage(cgImage: cgImage)
+        DispatchQueue.main.async {
+          self.capturedImage = image
+          self.showFeedbackPaperDrawingView = true
+          print("이미지 캡처 성공")
+        }
+      } catch {
+        print("⚠️ frame capture error:", error)
+      }
+    }
+  }
+  
+  
 }
 
 #Preview {
@@ -625,3 +775,4 @@ struct VideoView: View {
   .environmentObject(MainRouter())
   .preferredColorScheme(.dark)
 }
+
