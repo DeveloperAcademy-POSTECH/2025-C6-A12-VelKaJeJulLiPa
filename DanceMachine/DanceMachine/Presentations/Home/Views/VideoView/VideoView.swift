@@ -9,6 +9,7 @@ import SwiftUI
 import AVKit
 
 struct VideoView: View {
+  @EnvironmentObject private var router: MainRouter
   
   @State private var vm: VideoDetailViewModel = .init()
   
@@ -107,6 +108,16 @@ struct VideoView: View {
       bottomPadding: 63, // FIXME: 신고하기 - 하단 공백 조정 필요
       content: {
         ToastView(text: "신고가 접수되었습니다.\n조치사항은 이메일로 안내해드리겠습니다.", icon: .check)
+      }
+    )
+    .alert(
+      "영상 정보가 없어용~",
+      isPresented: $vm.videoVM.notiFalseAlert,
+      actions: {
+        Button("나가기", role: .destructive) { router.pop() }
+      },
+      message: {
+        Text("ㅅㄱ")
       }
     )
     // MARK: 신고 완료 토스트 리시버
