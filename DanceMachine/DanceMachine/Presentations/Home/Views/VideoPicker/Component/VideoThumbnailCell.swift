@@ -17,12 +17,14 @@ struct VideoThumbnailCell: View {
   @State private var thumbnail: UIImage?
   
   var body: some View {
+    let validSize = max(0, size)
+
     ZStack(alignment: .bottomTrailing) {
       if let image = thumbnail {
         Image(uiImage: image)
           .resizable()
           .aspectRatio(contentMode: .fill)
-          .frame(width: size, height: size)
+          .frame(width: validSize, height: validSize)
           .clipped()
         duration
       } else {
@@ -30,7 +32,7 @@ struct VideoThumbnailCell: View {
           .fill(Color.gray.opacity(0.3))
       }
     }
-    .frame(width: size, height: size)
+    .frame(width: validSize, height: validSize)
     .contentShape(Rectangle())
     .task {
       await loadThumbnail()
