@@ -36,6 +36,8 @@ struct ReplySheet: View {
   
   let onFeedbackDelete: () -> Void
   
+  let imageNamespace: Namespace.ID
+  
   @State private var selectedReply: Reply?
   @State private var reportTargetReply: Reply?
   @State private var content: String = ""
@@ -82,6 +84,7 @@ struct ReplySheet: View {
           onBottomReplyTap: {
             self.inputMode = .reply
           },
+          imageNamespace: imageNamespace,
           onImageTap: { url in
             onImageTap(url)
             dismiss()
@@ -316,6 +319,8 @@ struct ReplySheet: View {
 
 #Preview {
   NavigationStack {
+    @Namespace var previewNamespace
+    
     ReplySheet(
       reply: [
         Reply(
@@ -425,6 +430,7 @@ struct ReplySheet: View {
       currentUserId: "",
       onDelete: {_,_ in },
       onFeedbackDelete: {},
+      imageNamespace: previewNamespace,
       onImageTap: { _ in }
     )
   }

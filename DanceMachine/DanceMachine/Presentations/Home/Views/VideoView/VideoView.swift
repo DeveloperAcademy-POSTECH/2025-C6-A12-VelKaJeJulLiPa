@@ -637,6 +637,7 @@ struct VideoView: View {
                 await vm.feedbackVM.deleteFeedback(feedback)
               }
             },
+            imageNamespace: feedbackImageNamespace,
             onImageTap: { url in
               self.selectedFeedbackImageURL = url
               withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
