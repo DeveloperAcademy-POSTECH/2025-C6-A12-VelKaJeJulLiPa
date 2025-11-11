@@ -96,12 +96,7 @@ struct VideoListView: View {
       }
     }
     // MARK: 영상 피커 시트
-    .sheet(isPresented: $showCustomPicker, onDismiss: {
-      // sheet 닫힐 때 선택 초기화
-      pickerViewModel.selectedAsset = nil
-      pickerViewModel.videoTitle = ""
-      pickerViewModel.cleanupPlayer()
-    }) {
+    .sheet(isPresented: $showCustomPicker) {
       VideoPickerView(
         pickerViewModel: pickerViewModel,
         tracksId: tracksId,
