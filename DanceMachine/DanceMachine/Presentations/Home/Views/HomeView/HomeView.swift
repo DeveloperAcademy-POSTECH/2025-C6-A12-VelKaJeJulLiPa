@@ -263,6 +263,7 @@ struct HomeView: View {
         try await viewModel.fetchUserInfo()
         await viewModel.ensureTeamspaceInitialized()
         await viewModel.fetchCurrentTeamspaceProject()
+        try await NotificationManager.shared.refreshBadge(for: FirebaseAuthManager.shared.user?.uid ?? "")
       } catch {
         
       }
