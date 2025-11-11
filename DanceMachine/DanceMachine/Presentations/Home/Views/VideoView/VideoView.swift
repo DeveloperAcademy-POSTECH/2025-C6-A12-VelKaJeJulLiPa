@@ -67,18 +67,6 @@ struct VideoView: View {
   @State private var selectedFeedbackImageURL: String? = nil
   @State private var showFeedbackImageFull: Bool = false
   
-  // MARK: - 프리뷰 줌 사이즈
-  @State private var drawingImageScale: CGFloat = 1.0
-  @State private var drawingImageBaseScale: CGFloat = 1.0
-  @State private var drawingImageOffset: CGSize = .zero
-  @State private var drawingImageBaseOffset: CGSize = .zero
-  
-  // MARK: - 피드백 이미지 프리뷰 줌 사이즈
-  @State private var feedbackImageScale: CGFloat = 1.0
-  @State private var feedbackImageBaseScale: CGFloat = 1.0
-  @State private var feedbackImageOffset: CGSize = .zero
-  @State private var feedbackImageBaseOffset: CGSize = .zero
-  
   // MARK: 전역으로 관리되는 ID
   let teamspaceId = FirebaseAuthManager.shared.currentTeamspace?.teamspaceId
   let userId = FirebaseAuthManager.shared.userInfo?.userId ?? ""
@@ -106,196 +94,37 @@ struct VideoView: View {
             .background(.backgroundNormal)
         }
         
-        // ✅ 드로잉 이미지 전체 프리뷰 오버레이
-        if showDrawingImageFull,
-           let image = editedOverlayImage {
-          ZStack {
-            Color.backgroundNormal.ignoresSafeArea()
-            
-            VStack {
-              // 상단 X 버튼
-              HStack {
-                Button {
-                  withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                    showDrawingImageFull = false
-                    // 닫을 때 상태 리셋
-                    drawingImageScale = 1.0
-                    drawingImageBaseScale = 1.0
-                    drawingImageOffset = .zero
-                    drawingImageBaseOffset = .zero
-                  }
-                } label: {
-                  Image(systemName: "xmark.circle.fill")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 44, height: 44)
-                    .foregroundStyle(Color.labelNormal)
-                }
-                .padding([.top, .leading], 16)
-                
-                Spacer()
-              }
-              
-              Spacer()
-              
-              let magnification = MagnificationGesture()
-                .onChanged { value in
-                  let newScale = drawingImageBaseScale * value
-                  drawingImageScale = min(max(newScale, 1.0), 8.0)  // 1~8배 줌
-                  if drawingImageScale == 1 {
-                    drawingImageOffset = .zero
-                    drawingImageBaseOffset = .zero
-                  }
-                }
-                .onEnded { _ in
-                  drawingImageBaseScale = drawingImageScale
-                }
-              
-              let drag = DragGesture()
-                .onChanged { value in
-                  guard drawingImageScale > 1.0 else {
-                    drawingImageOffset = .zero
-                    return
-                  }
-                  let newOffset = CGSize(
-                    width: drawingImageBaseOffset.width + value.translation.width,
-                    height: drawingImageBaseOffset.height + value.translation.height
-                  )
-                  drawingImageOffset = newOffset
-                }
-                .onEnded { _ in
-                  if drawingImageScale > 1.0 {
-                    drawingImageBaseOffset = drawingImageOffset
-                  } else {
-                    drawingImageOffset = .zero
-                    drawingImageBaseOffset = .zero
-                  }
-                }
-              
-              Image(uiImage: image)
-                .resizable()
-                .scaledToFit()
-                .matchedGeometryEffect(id: "feedbackImage", in: drawingImageNamespace)
-                .frame(
-                  maxWidth: proxy.size.width * 0.9,
-                  maxHeight: proxy.size.height * 0.8
-                )
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-                .scaleEffect(drawingImageScale)
-                .offset(drawingImageOffset)
-                .gesture(
-                  magnification.simultaneously(with: drag)
-                )
-              
-              Spacer()
-            }
+        // 드로잉 이미지 전체 프리뷰
+        if let image = editedOverlayImage {
+          ZoomableImageOverlay(
+            isPresented: $showDrawingImageFull,
+            backgroundColor: Color.backgroundNormal
+          ) {
+            Image(uiImage: image)
+              .resizable()
+              .scaledToFit()
+              .matchedGeometryEffect(id: "feedbackImage", in: drawingImageNamespace)
+
           }
-          .zIndex(10)
         }
         
-        // ✅ 피드백 카드 이미지 전체 프리뷰 오버레이 (줌/드래그 추가 버전)
-        if showFeedbackImageFull,
-           let urlString = selectedFeedbackImageURL,
+        // 피드백 카드 이미지 전체 프리뷰
+        if let urlString = selectedFeedbackImageURL,
            let url = URL(string: urlString) {
-          ZStack {
-            Color.backgroundNormal.ignoresSafeArea()
-              .onTapGesture {
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                  showFeedbackImageFull = false
-                  // 닫을 때 상태 리셋
-                  feedbackImageScale = 1.0
-                  feedbackImageBaseScale = 1.0
-                  feedbackImageOffset = .zero
-                  feedbackImageBaseOffset = .zero
-                }
+          ZoomableImageOverlay(
+            isPresented: $showFeedbackImageFull,
+            backgroundColor: Color.backgroundNormal
+          ) {
+            KFImage(url)
+              .placeholder {
+                ProgressView()
               }
-            
-            VStack {
-              HStack {
-                Button {
-                  withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                    showFeedbackImageFull = false
-                    // 닫을 때 상태 리셋
-                    feedbackImageScale = 1.0
-                    feedbackImageBaseScale = 1.0
-                    feedbackImageOffset = .zero
-                    feedbackImageBaseOffset = .zero
-                  }
-                } label: {
-                  Image(systemName: "xmark.circle.fill")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 44, height: 44)
-                    .foregroundStyle(Color.labelNormal)
-                }
-                .padding([.top, .leading], 16)
-                
-                Spacer()
-              }
-              
-              Spacer()
-              
-              // 🔍 확대 & 드래그 제스처 정의
-              let magnification = MagnificationGesture()
-                .onChanged { value in
-                  let newScale = feedbackImageBaseScale * value
-                  feedbackImageScale = min(max(newScale, 1.0), 8.0)  // 1~8배 줌
-                  if feedbackImageScale == 1.0 {
-                    feedbackImageOffset = .zero
-                    feedbackImageBaseOffset = .zero
-                  }
-                }
-                .onEnded { _ in
-                  feedbackImageBaseScale = feedbackImageScale
-                }
-              
-              let drag = DragGesture()
-                .onChanged { value in
-                  guard feedbackImageScale > 1.0 else {
-                    feedbackImageOffset = .zero
-                    return
-                  }
-                  let newOffset = CGSize(
-                    width: feedbackImageBaseOffset.width + value.translation.width,
-                    height: feedbackImageBaseOffset.height + value.translation.height
-                  )
-                  feedbackImageOffset = newOffset
-                }
-                .onEnded { _ in
-                  if feedbackImageScale > 1.0 {
-                    feedbackImageBaseOffset = feedbackImageOffset
-                  } else {
-                    feedbackImageOffset = .zero
-                    feedbackImageBaseOffset = .zero
-                  }
-                }
-              
-              KFImage(url)
-                .placeholder {
-                  ProgressView() // FIXME: - 임시
-                }
-                .retry(maxCount: 2, interval: .seconds(2))
-                .cacheOriginalImage()
-                .resizable()
-                .scaledToFit()
-                .frame(
-                  maxWidth: proxy.size.width * 0.9,
-                  maxHeight: proxy.size.height * 0.8
-                )
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-                .scaleEffect(feedbackImageScale)
-                .offset(feedbackImageOffset)
-                .gesture(
-                  magnification.simultaneously(with: drag)
-                )
-              
-              Spacer()
-            }
+              .retry(maxCount: 2, interval: .seconds(2))
+              .cacheOriginalImage()
+              .resizable()
+              .scaledToFit()
           }
-          .transition(.opacity)
-          .zIndex(20)
         }
-        
       }
       .onChange(of: showFeedbackInput) { _, newValue in
         if !newValue {
@@ -803,7 +632,14 @@ struct VideoView: View {
             onFeedbackDelete: {
               Task {
                 await vm.feedbackVM.deleteFeedback(feedback)
-              } }
+              }
+            },
+            onImageTap: { url in
+              self.selectedFeedbackImageURL = url
+              withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                self.showFeedbackImageFull = true
+              }
+            }
           )
         }
         .sheet(item: $reportTargetFeedback) { feedback in

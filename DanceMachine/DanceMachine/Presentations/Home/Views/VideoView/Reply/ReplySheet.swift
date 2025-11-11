@@ -40,6 +40,8 @@ struct ReplySheet: View {
   @State private var reportTargetReply: Reply?
   @State private var content: String = ""
   
+  let onImageTap: (String) -> Void
+  
   private var filteredMembers: [User] {
     if mM.mentionQuery.isEmpty {
       return teamMembers
@@ -79,6 +81,10 @@ struct ReplySheet: View {
           showBottomReplyButton: true,
           onBottomReplyTap: {
             self.inputMode = .reply
+          },
+          onImageTap: { url in
+            onImageTap(url)
+            dismiss()
           }
         )
         replyList
@@ -380,7 +386,8 @@ struct ReplySheet: View {
       replyCount: 20,
       currentTime: 30.0,
       startTime: 50.0,
-      timeSeek: {},
+      timeSeek: {
+      },
       getTaggedUsers: { ids in
         let all = [
           User(
@@ -417,7 +424,8 @@ struct ReplySheet: View {
       onReplySubmit: {_,_ in },
       currentUserId: "",
       onDelete: {_,_ in },
-      onFeedbackDelete: {}
+      onFeedbackDelete: {},
+      onImageTap: { _ in }
     )
   }
   .environmentObject(MainRouter())
