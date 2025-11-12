@@ -62,6 +62,7 @@ struct GridCell: View {
   
   private var content: some View {
     VStack(alignment: .leading) {
+      Spacer().frame(height: 8)
       Text(title)
         .font(.headline2Medium)
         .foregroundStyle(.labelStrong)
@@ -76,7 +77,6 @@ struct GridCell: View {
       Spacer().frame(height: 8)
     }
     .frame(maxWidth: .infinity, alignment: .leading)
-    .padding(.top, 8)
     .padding(.horizontal, 8)
   }
   
@@ -87,7 +87,7 @@ struct GridCell: View {
           thumbnailURL: url,
           videoId: videoId,
           size: size,
-          height: size / 1.5
+          height: size / 1.79
         )
       }
     }
