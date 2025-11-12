@@ -19,6 +19,7 @@ struct VideoListView: View {
   @State private var showDeleteToast: Bool = false
   @State private var showEditToast: Bool = false
   @State private var showEditVideoTitleToast: Bool = false
+  @State private var showCreateReportSuccessToast: Bool = false
 
   @State private var pickerViewModel = VideoPickerViewModel()
 
@@ -139,6 +140,15 @@ struct VideoListView: View {
         ToastView(text: "영상 이름이 수정되었습니다.", icon: .check)
       }
     )
+    .toast(
+      isPresented: $showCreateReportSuccessToast,
+      duration: 3,
+      position: .bottom,
+      bottomPadding: 63, // FIXME: 신고하기 - 하단 공백 조정 필요
+      content: {
+        ToastView(text: "신고가 접수되었습니다.\n조치사항은 이메일로 안내해드리겠습니다.", icon: .check)
+      }
+    )
     // MARK: 영상 삭제 토스트 리시버
     .onReceive(NotificationCenter.default.publisher(for: .showDeleteToast)) { _ in
       self.showDeleteToast = true
@@ -150,6 +160,13 @@ struct VideoListView: View {
     // MARK: 영상 섹션 이동 토스트 리시버
     .onReceive(NotificationCenter.default.publisher(for: .showEditToast)) { _ in
       self.showEditToast = true
+    }
+    // MARK: 신고 완료 토스트 리시버
+    .onReceive(NotificationCenter.default.publisher(for: .showCreateReportSuccessToast)) { notification in
+      if let toastViewName = notification.userInfo?["toastViewName"] as? ReportToastReceiveViewType,
+         toastViewName == .videoListView {
+        showCreateReportSuccessToast = true
+      }
     }
   }
     
