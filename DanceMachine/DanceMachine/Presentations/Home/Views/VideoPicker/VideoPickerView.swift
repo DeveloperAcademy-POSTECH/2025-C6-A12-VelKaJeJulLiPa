@@ -38,6 +38,30 @@ struct VideoPickerView: View {
           // 권한이 있을 때 기존 UI 표시
           mainContent
         }
+
+        // iCloud 다운로드 오버레이
+        if vm.isDownloadingFromCloud {
+          ZStack {
+            Color.black.opacity(0.7)
+              .ignoresSafeArea()
+
+            VStack(spacing: 16) {
+              ProgressView(value: vm.downloadProgress)
+                .progressViewStyle(.linear)
+                .tint(.secondaryNormal)
+                .frame(width: 200)
+
+              Text("iCloud에서 다운로드 중... \(Int(vm.downloadProgress * 100))%")
+                .font(.headline2Medium)
+                .foregroundColor(.labelStrong)
+            }
+            .padding(24)
+            .background(
+              RoundedRectangle(cornerRadius: 16)
+                .fill(Color.fillStrong)
+            )
+          }
+        }
       }
       .toast(
         isPresented: $showToast,
@@ -190,8 +214,10 @@ struct VideoPickerView: View {
         self.showToast = true
         return
       }
-      vm.exportVideo(tracksId: tracksId, sectionId: sectionId)
-      dismiss()
+      // iCloud 다운로드 완료 후 피커 닫기
+      vm.exportVideo(tracksId: tracksId, sectionId: sectionId) {
+        dismiss()
+      }
     } label: {
       Image(systemName: "arrow.up")
         .foregroundStyle(
