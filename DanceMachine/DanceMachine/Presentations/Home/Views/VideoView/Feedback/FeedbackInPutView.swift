@@ -46,7 +46,7 @@ struct FeedbackInPutView: View {
       topRow
       feedbackImageView.frame(maxWidth: .infinity, alignment: .leading)
       if !mM.taggedUsers.isEmpty {
-      taggedView
+        taggedView
       }
       CustomTextField(
         content: $content,
@@ -86,30 +86,6 @@ struct FeedbackInPutView: View {
         .padding(.bottom, 65)
       }
     }
-//    .overlay {
-//      if showImageFull, let image = feedbackDrawingImage {
-//        ZStack {
-//          // 뒷배경 어둡게
-//          Color.black.opacity(0.4)
-//            .ignoresSafeArea()
-//            .onTapGesture {
-//              withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-//                showImageFull = false
-//              }
-//            }
-//          
-//          Image(uiImage: image)
-//            .resizable()
-//            .scaledToFit()
-//            .matchedGeometryEffect(id: "feedbackImage", in: imageNamespace)
-//            .frame(maxWidth: UIScreen.main.bounds.width * 0.9,
-//                   maxHeight: UIScreen.main.bounds.height * 0.7)
-//            .clipShape(RoundedRectangle(cornerRadius: 12))
-//        }
-//        .transition(.opacity)
-//        .zIndex(1)     // 카드 위로
-//      }
-//    }
     .animation(.easeInOut(duration: 0.2), value: mM.showPicker)
     .onAppear {
       isFocused = true
@@ -150,9 +126,9 @@ struct FeedbackInPutView: View {
     Button {
       refresh()
     } label: {
-        Image(systemName: "xmark")
-          .font(.system(size: 17))
-          .foregroundStyle(.labelNormal)
+      Image(systemName: "xmark")
+        .font(.system(size: 17))
+        .foregroundStyle(.labelNormal)
     }
   }
   
@@ -178,7 +154,7 @@ struct FeedbackInPutView: View {
   // MARK: 태그된 사용자 표시
   private var taggedView: some View {
     let isAllTagged = !teamMembers.isEmpty && mM.taggedUsers.count == teamMembers.count
-
+    
     return ScrollView(.horizontal, showsIndicators: false) {
       HStack(spacing: 4) {
         if isAllTagged {
