@@ -19,7 +19,7 @@ struct InboxView: View {
         if viewModel.isLoading && viewModel.inboxNotifications.isEmpty {
           LoadingSpinner()
             .frame(maxWidth: 28, maxHeight: 28, alignment: .center)
-        } else if !viewModel.inboxNotifications.isEmpty {
+        } else if viewModel.inboxNotifications.isEmpty {
           GeometryReader { geometry in
             ScrollView {
               VStack {
