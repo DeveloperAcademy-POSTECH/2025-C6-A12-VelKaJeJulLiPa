@@ -40,7 +40,7 @@ struct VideoPreview: View {
   private var realBody: some View {
     VStack {
       if vm.isLoading {
-        loadingView
+        VideoLottieView()
           .frame(maxWidth: .infinity)
           .frame(height: size)
       } else if let p = vm.player {
