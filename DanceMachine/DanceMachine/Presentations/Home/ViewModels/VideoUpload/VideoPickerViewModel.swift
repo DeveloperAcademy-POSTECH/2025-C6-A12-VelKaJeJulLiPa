@@ -17,6 +17,7 @@ final class VideoPickerViewModel {
   private let progressManager = VideoProgressManager.shared
   private let dataCacheManager = VideoCacheManager.shared
   private let cleanupService = UploadCleanupService()
+  private let compressionManager = VideoCompressionManager.shared
 
   var videos: [PHAsset] = []
   var selectedAsset: PHAsset? = nil
@@ -31,12 +32,21 @@ final class VideoPickerViewModel {
 
   var photoLibraryStatus: PHAuthorizationStatus = .notDetermined
 
+  // iCloud 다운로드 상태
+  var isDownloadingFromCloud: Bool = false
+  var downloadProgress: Double = 0.0
+
   // 업로드 성공한 비디오/트랙 (VideoListView에서 감지)
   var lastUploadedVideo: Video? = nil
   var lastUploadedTrack: Track? = nil
 
   // 실패 시 재시도용 정보
-  private var failedContext: (videoId: String, tracksId: String, sectionId: String, tempURL: URL)? = nil
+  private var failedContext: (
+    videoId: String,
+    tracksId: String,
+    sectionId: String,
+    tempURL: URL
+  )? = nil
 
   var isUploading: Bool {
     if case .uploading = progressManager.uploadState { return true }
@@ -72,38 +82,90 @@ final class VideoPickerViewModel {
 
 // MARK: 비디오 업로드 관련
 extension VideoPickerViewModel {
-  func exportVideo(tracksId: String, sectionId: String) {
+  func exportVideo(tracksId: String, sectionId: String, onDownloadComplete: @escaping () -> Void) {
     self.isLoading = true
     self.cleanupPlayer() // 재생중에 업로드 버튼 누를시 계속 재생되는 현상
-    
-    Task { @MainActor in
-      self.progressManager.startUpload()
-    }
     
     // PHAsset 에서 비디오 파일 추출
     let o = PHVideoRequestOptions()
     o.isNetworkAccessAllowed = true // iCloud에 있어도 다운로드
-    o.deliveryMode = .highQualityFormat // 화질
-    
+    o.deliveryMode = .highQualityFormat // 고화질 요청
+
+    // iCloud 다운로드 진행률 추적
+    o.progressHandler = { progress, error, stop, info in
+      Task { @MainActor in
+        self.isDownloadingFromCloud = true
+        self.downloadProgress = progress
+        print("iCloud 다운로드 중: \(Int(progress * 100))%")
+
+        if let error = error {
+          print("iCloud 다운로드 에러: \(error.localizedDescription)")
+          self.isDownloadingFromCloud = false
+          self.isLoading = false
+        }
+      }
+    }
+
     PHImageManager.default().requestAVAsset(
       forVideo: selectedAsset ?? PHAsset(),
-      options: o) {
-        av,
-        _,
-        _ in
-        guard let urlAsset = av as? AVURLAsset else { return }
-        
+      options: o) { av, audioMix, info in
+
+        // iCloud 다운로드 중인지 체크 (첫 번째 콜백)
+        if let isInCloud = info?[PHImageResultIsInCloudKey] as? Bool, isInCloud {
+          print("iCloud에서 다운로드 시작...")
+          return  // 두 번째 콜백 기다림
+        }
+
+        // 다운로드 에러 체크
+        if let error = info?[PHImageErrorKey] as? Error {
+          Task { @MainActor in
+            self.isDownloadingFromCloud = false
+            self.isLoading = false
+            print("PHAsset 가져오기 실패: \(error.localizedDescription)")
+          }
+          return
+        }
+
+        guard let urlAsset = av as? AVURLAsset else {
+          Task { @MainActor in
+            self.isDownloadingFromCloud = false
+            self.isLoading = false
+            print("AVURLAsset 변환 실패")
+          }
+          return
+        }
+
+        // iCloud 다운로드 완료 -> 피커 닫기
+        Task { @MainActor in
+          self.isDownloadingFromCloud = false
+          print("Cloud 다운로드 완료")
+          onDownloadComplete()
+        }
+
         Task {
           let videoId = UUID().uuidString
 
           do {
             let duration = try await self.getDuration(from: urlAsset)
-
-            // 임시 파일로 복사
-            let tempURL = try await self.copyToTemp(urlAsset, videoId: videoId)
-
-            let (video, track) = try await self.generateVideo(
-              from: urlAsset,
+            
+            await MainActor.run {
+              self.progressManager.startCompressing()
+            }
+            // 압축
+            let compressionURL = try await self.compressionManager.compressIfNeeded(
+              urlAsset,
+              outputFileName: videoId) { progress in
+                Task { @MainActor in
+                  self.progressManager.updatedCompressionProgress(progress)
+                }
+              }
+            
+            await MainActor.run {
+              self.progressManager.startUpload()
+            }
+            
+            let (video, track) = try await self.generateVideo( 
+              videoURL: compressionURL,
               duration: duration,
               tracksId: tracksId,
               sectionId: sectionId,
@@ -115,7 +177,7 @@ extension VideoPickerViewModel {
               self.lastUploadedVideo = video
               self.lastUploadedTrack = track
               self.progressManager.finishUpload()
-              self.deleteTempFile(tempURL)
+              self.compressionManager.deleteTempFile(compressionURL)
               self.isLoading = false
               self.showSuccessAlert = true
               
@@ -125,13 +187,18 @@ extension VideoPickerViewModel {
 
           } catch let error as VideoError {
             // 실패 시 임시 파일 복사 (재시도용)
-            let tempURL = try? await self.copyToTemp(urlAsset, videoId: videoId)
+//            let tempURL = try? await self.copyToTemp(urlAsset, videoId: videoId)
 
             await MainActor.run {
               self.isLoading = false
-              if let url = tempURL {
-                self.failedContext = (videoId, tracksId, sectionId, url)
-              }
+            }
+            switch error {
+            case .fileTooLarge: // 파일 너무 클때
+              self.progressManager.fileTooLarge(message: error.userMsg)
+            case .compressionError, .uploadFailed, .networkError, .uploadTimeout: // 그 외 실패
+              self.failedContext = (videoId, tracksId, sectionId, urlAsset.url)
+              self.progressManager.failUpload(message: error.userMsg)
+            default:
               self.progressManager.failUpload(message: error.userMsg)
             }
           } catch {
@@ -151,18 +218,19 @@ extension VideoPickerViewModel {
   }
   
   private func generateVideo(
-    from asset: AVURLAsset,
+    videoURL: URL,
     duration: Double,
     tracksId: String,
     sectionId: String,
     videoId: String,
     uploaderId: String,
   ) async throws -> (Video, Track) {
-    let videoData = try Data(contentsOf: asset.url)
-
+    
+    let videoData = try Data(contentsOf: videoURL)
     let trackId = UUID().uuidString
 
     // 썸네일 생성
+    let asset = AVURLAsset(url: videoURL)
     let thumbnailImage = try await self.generateThumbnail(from: asset)
     guard let thumbData = thumbnailImage?.jpegData(compressionQuality: 0.8) else {
       throw VideoError.thumbnailFailed
@@ -368,7 +436,7 @@ extension VideoPickerViewModel {
 
     await MainActor.run {
       self.isLoading = true
-      self.progressManager.startUpload()
+      self.progressManager.startCompressing()
     }
 
     // 기존 데이터 정리
@@ -382,9 +450,21 @@ extension VideoPickerViewModel {
     do {
       let asset = AVURLAsset(url: context.tempURL)
       let duration = try await getDuration(from: asset)
+      
+      let compreesionURL = try await compressionManager.compressIfNeeded(
+        asset,
+        outputFileName: context.videoId) { progress in
+          Task { @MainActor in
+            self.progressManager.updatedCompressionProgress(progress)
+          }
+        }
+      
+      await MainActor.run {
+        self.progressManager.startUpload()
+      }
 
       let (video, track) = try await generateVideo(
-        from: asset,
+        videoURL: compreesionURL,
         duration: duration,
         tracksId: context.tracksId,
         sectionId: context.sectionId,
@@ -401,6 +481,11 @@ extension VideoPickerViewModel {
         self.isLoading = false
         self.showSuccessAlert = true
       }
+    } catch let error as VideoError {
+      await MainActor.run {
+        self.isLoading = false
+        self.progressManager.failUpload(message: error.userMsg)
+      }
     } catch {
       await MainActor.run {
         self.isLoading = false
@@ -411,19 +496,22 @@ extension VideoPickerViewModel {
 
   /// 취소
   func cancelUpload() async {
-    guard let context = failedContext else { return }
+    if let context = failedContext {
+      // 데이터 정리
+      await cleanupService.cleanupFailedUpload(
+        videoId: context.videoId,
+        tracksId: context.tracksId,
+        sectionId: context.sectionId
+      )
+      deleteTempFile(context.tempURL)
 
-    // 데이터 정리
-    await cleanupService.cleanupFailedUpload(
-      videoId: context.videoId,
-      tracksId: context.tracksId,
-      sectionId: context.sectionId
-    )
+      await MainActor.run {
+        self.failedContext = nil
+      }
+    }
 
-    deleteTempFile(context.tempURL)
-
+    // failedContext 없어도 progress는 초기화
     await MainActor.run {
-      self.failedContext = nil
       self.progressManager.reset()
     }
   }
