@@ -10,11 +10,13 @@ import SwiftUI
 struct CreateReportView: View {
   @Environment(\.dismiss) private var dismiss
   @State private var viewModel = CreateReportViewModel()
-
+  
   @State var description: String = ""
   @FocusState private var isFocusTextField: Bool
+  @State private var needToCreateReport: Bool = false
+  @State private var showMailSheet: Bool = false
   @State private var showExitAlert: Bool = false
-
+  
   var reportedId: String
   var reportContentType: ReportContentType
   var video: Video? = nil
@@ -27,7 +29,34 @@ struct CreateReportView: View {
   var inputHelperText: String {
     isInvalid ? "100자 미만으로 입력해주세요." : "\(description.count)/\(maxLength)"
   }
+  
+  let username = FirebaseAuthManager.shared.userInfo?.name ?? "Unknown"
+  var subject: String {
+    return "[신고] - \(username)님의 신고"
+  }
+  var targetContentId: String {
+    switch reportContentType {
+    case .feedback:
+      return feedback?.id ?? ""
+    case .reply:
+      return reply?.id ?? ""
+    case .video:
+      return video?.id ?? ""
+    }
+  }
+  var mailBody: String {
+    """
+                                신고자 정보
+                                • 사용자 ID: \(FirebaseAuthManager.shared.userInfo?.userId ?? "Unknown")
+                                • 이메일: \(FirebaseAuthManager.shared.userInfo?.email ?? "이메일을 입력해주세요")
 
+                                신고정보
+                                • 신고유형: \(reportContentType.rawValue)
+                                • 콘텐츠 ID: \(targetContentId)                          
+                                • 신고 사유: \(description)
+                                """
+  }
+  
   
   var body: some View {
     VStack(spacing: 0) {
@@ -54,6 +83,37 @@ struct CreateReportView: View {
       bottomButtonView
         .padding(.all, 16)
     }
+    .sheet(
+      isPresented: $showMailSheet,
+      onDismiss: {
+        if needToCreateReport {
+          Task {
+            try await viewModel.createReport(
+              reportedId: reportedId,
+              video: video,
+              feedback: feedback,
+              reply: reply,
+              type: ReportType.other,
+              reportContentType: reportContentType,
+              description: description
+            )
+            NotificationCenter.default.post(
+              name: .showCreateReportSuccessToast,
+              object: nil,
+              userInfo: ["toastViewName": toastReceiveView]
+            )
+          }
+        }
+        dismiss()
+      },
+      content: {
+        MailView(
+          needToCreateReport: $needToCreateReport,
+          subject: subject,
+          body: mailBody
+        )
+      }
+    )
     .toolbar {
       ToolbarLeadingBackButton(icon: .xmark) {
         if !description.isEmpty {
@@ -82,24 +142,7 @@ struct CreateReportView: View {
       height: 47,
       isEnabled: description.isEmpty ? false : true
     ) {
-      // FIXME: 신고 정보 서버에 저장 + 성공 Toast 메시지 보여주기
-      Task {
-        try await viewModel.createReport(
-          reportedId: reportedId,
-          video: video,
-          feedback: feedback,
-          reply: reply,
-          type: ReportType.other,
-          reportContentType: reportContentType,
-          description: description
-        )
-        NotificationCenter.default.post(
-          name: .showCreateReportSuccessToast,
-          object: nil,
-          userInfo: ["toastViewName": toastReceiveView]
-        )
-        await MainActor.run { dismiss() }
-      }
+      showMailSheet = true
     }
   }
 }
