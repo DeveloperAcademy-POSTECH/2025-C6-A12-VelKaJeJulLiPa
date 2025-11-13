@@ -103,10 +103,6 @@ final class InboxViewModel: ObservableObject {
   }
   
   /// 하나의 Notification을 InboxNotification 변환하는 메서드
-  /// - Parameters:
-  ///  - notificationId: 알림 문서 ID
-  ///  - userId: 사용자 ID
-  /// - 알림 문서의 정보를 통해 InboxNotification 에 필요한 정보를 서버로 부터 호출하는 메서드입니다.
   private func transformNotificationToInbox(notification: Notification, userId: String) async -> InboxResult {
     do {
       async let videoDoc = getVideoDoc(from: notification.videoId)
@@ -147,33 +143,27 @@ final class InboxViewModel: ObservableObject {
   
   
   /// 삭제된 영상에 대한 notification 문서 삭제 및  user_notification 문서 삭제
+  /// BatchManager 를 사용해 두 문서를 모두 삭제 (모두 성공하거나 모두 실패)
   private func handleInvalidNotification(notificationId: String, userId: String) async {
-    async let deleteNotification: Void = {
-      do {
-        try await FirestoreManager.shared.delete(
-          collectionType: .notification,
-          documentID: notificationId
-        )
-      } catch {
-        print("❌ Failed to delete notification document: \(notificationId), error: \(error)")
-      }
-    }()
+    let db = Firestore.firestore()
     
-    async let deleteUserNotification: Void = {
-      do {
-        try await NotificationManager.shared.deleteUserNotification(
-          userId: userId,
-          notificationId: notificationId
-        )
-      } catch {
-        print("❌ Failed to delete user_notification document: \(notificationId), error: \(error)")
-      }
-    }()
+    let notificationRef = db.collection(CollectionType.notification.rawValue).document(notificationId)
+    let userNotificationRef = db.collection(CollectionType.users.rawValue)
+      .document(userId)
+      .collection(CollectionType.userNotification.rawValue)
+      .document(notificationId)
     
-    // 삭제 작업 병렬 처리 — 실행 중 에러는 각자 내부에서 각각 처리
-    _ = await (deleteNotification, deleteUserNotification)
-    print("🧹 Cleanup attempted for invalid notification: \(notificationId)")
+    do {
+      try await BatchManager.shared.perform { batch in
+        batch.deleteDocument(notificationRef)
+        batch.deleteDocument(userNotificationRef)
+      }
+      print("🧹 Batch cleanup completed for invalid notification: \(notificationId)")
+    } catch {
+      print("❌ Failed batch cleanup: \(notificationId), error: \(error)")
+    }
   }
+
   
   private func getVideoDoc(from id: String) async throws -> Video {
     try await FirestoreManager.shared.get(id, from: .video)
