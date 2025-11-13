@@ -35,7 +35,7 @@ struct GridCell: View {
       content
       Spacer()
     }
-    .frame(width: size, height: size * 1.22)
+    .frame(width: size, height: size * 1.15)
     .contentShape(Rectangle())
     .background(
       RoundedRectangle(cornerRadius: 12)
@@ -73,7 +73,7 @@ struct GridCell: View {
       Text("\(uploadDate.formattedDate())")
         .font(.caption1Medium)
         .foregroundStyle(.labelAssitive)
-      Spacer().frame(height: 16)
+      Spacer().frame(height: 8)
     }
     .frame(maxWidth: .infinity, alignment: .leading)
     .padding(.top, 8)

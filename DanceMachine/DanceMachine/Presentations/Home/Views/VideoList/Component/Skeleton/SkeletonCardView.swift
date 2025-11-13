@@ -18,7 +18,7 @@ struct SkeletonCardView: View {
     }
     .frame(
       width: cardSize,
-      height: cardSize * 1.22
+      height: cardSize * 1.15
     )
     .background(
       RoundedRectangle(cornerRadius: 10)

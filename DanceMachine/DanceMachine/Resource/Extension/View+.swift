@@ -111,13 +111,33 @@ extension View {
   }
   
   @ViewBuilder
-  func uploadGlassButton() -> some View {
+  func uploadGlassButton(isScrollDown: Bool) -> some View {
     if #available(iOS 26.0, *) {
-      self
-        .glassEffect(.clear.tint(Color(red: 0x7E/255, green: 0x7C/255, blue: 0xFF/255)).interactive(), in: RoundedRectangle(cornerRadius: 1000))
+      if isScrollDown {
+        self
+          .glassEffect(.clear.tint(.secondaryNormal).interactive(), in: .circle)
+          .environment(\.colorScheme, .light)
+      } else {
+        self
+          .glassEffect(.clear.tint(.secondaryNormal).interactive(), in: RoundedRectangle(cornerRadius: 24))
+          .environment(\.colorScheme, .light)
+      }
     } else {
-      self
-      .background(Color.secondaryNormal)
+      if isScrollDown {
+        self
+          .background(
+            Circle()
+              .fill(Color.secondaryNormal)
+          )
+          .environment(\.colorScheme, .light)
+      } else {
+        self
+          .background(
+            RoundedRectangle(cornerRadius: 24)
+              .fill(Color.secondaryNormal)
+          )
+          .environment(\.colorScheme, .light)
+      }
     }
   }
   

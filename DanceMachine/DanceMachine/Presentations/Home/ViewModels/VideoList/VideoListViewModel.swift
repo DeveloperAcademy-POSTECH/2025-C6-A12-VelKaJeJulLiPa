@@ -181,38 +181,38 @@ extension VideoListViewModel {
       print("새 영상 캐시에 추가: \(video.videoTitle)")
     }
   }
-
+  
   // MARK: 강제 서버 새로고침 (Pull-to-refresh용)
   func forceRefreshFromServer(tracksId: String) async {
     if ProcessInfo.isRunningInPreviews { return }
-
+    
     let startTime = Date()
-
+    
     await MainActor.run {
       self.isLoading = true
       self.errorMsg = nil
     }
-
+    
     // 캐시 무시하고 무조건 서버에서 로드
     do {
       print("강제 서버 새로고침 시작")
-
+      
       let fetchSection = try await self.fetchSection(in: tracksId)
       var allTrack: [Track] = []
       var videoIds: Set<String> = []
-
+      
       for section in fetchSection {
         let track = try await self.fetchTrack(
           in: tracksId,
           withIn: section.sectionId
         )
         allTrack.append(contentsOf: track)
-
+        
         for t in track {
           videoIds.insert(t.videoId)
         }
       }
-
+      
       var fetchedVideos: [Video] = []
       for videoId in videoIds {
         do {
@@ -223,11 +223,11 @@ extension VideoListViewModel {
           continue
         }
       }
-
+      
       fetchedVideos.sort {
         ($0.createdAt ?? .distantPast > ($1.createdAt ?? .distantPast))
       }
-
+      
       // 새로 받은 데이터로 캐시 업데이트
       try await dataCacheManager.cache(
         video: fetchedVideos,
@@ -235,25 +235,25 @@ extension VideoListViewModel {
         section: fetchSection,
         for: tracksId
       )
-
+      
       // 최소 로딩 시간 보장 (1.5초)
       await TaskTimeUtility.waitForMinimumLoadingTime(
         startTime: startTime
       )
-
+      
       await MainActor.run {
         let previousSelectedId = self.selectedSection?.sectionId
         self.section = fetchSection
         self.track = allTrack
         self.videos = fetchedVideos
-
+        
         if let prevId = previousSelectedId,
            let stillExists = fetchSection.first(where: { $0.sectionId == prevId }) {
           self.selectedSection = stillExists
         } else {
           self.selectedSection = fetchSection.first
         }
-
+        
         self.isLoading = false
         print("강제 새로고침 완료")
       }
@@ -261,7 +261,7 @@ extension VideoListViewModel {
       await TaskTimeUtility.waitForMinimumLoadingTime(
         startTime: startTime
       )
-
+      
       await MainActor.run {
         self.isLoading = false
         if self.videos.isEmpty {
@@ -282,10 +282,10 @@ extension VideoListViewModel {
       self.isLoading = true
       self.errorMsg = nil
     }
-
+    
     do {
       let videoId = video.videoId.uuidString
-
+      
       // Firestore에 비디오 제목 업데이트
       try await store.updateFields(
         collection: .video,
@@ -300,7 +300,7 @@ extension VideoListViewModel {
         newTitle: newTitle,
         in: tracksId
       )
-
+      
       // 로컬 UI 업데이트
       await MainActor.run {
         if let index = self.videos.firstIndex(where: { $0.videoId == video.videoId }) {
@@ -310,7 +310,7 @@ extension VideoListViewModel {
         }
         self.isLoading = false
       }
-
+      
       // 제목 수정 완료 토스트 알림
       NotificationCenter.default.post(name: .showEditVideoTitleToast, object: nil)
       print("비디오 제목 업데이트 성공: \(newTitle)")
@@ -322,22 +322,22 @@ extension VideoListViewModel {
       print("영상 제목 수정 실패: \(error)")
     }
   }
-
+  
   // 영상 삭제 메서드 Storage + Firestore(Video + Track)
   func deleteVideo(video: Video, tracksId: String) async {
     let startTime = Date()
-
+    
     await MainActor.run {
       self.isLoading = true
       self.errorMsg = nil
     }
-
+    
     do {
       let videoId = video.videoId.uuidString
-
+      
       let videoPath = StorageType.video(videoId).path
       let thumbnailPath = StorageType.thumbnail(videoId).path
-
+      
       try await withThrowingTaskGroup(of: Void.self) { group in
         group.addTask {
           _ = try await self.storage.deleteVideo(at: videoPath)
@@ -350,28 +350,31 @@ extension VideoListViewModel {
         }
         group.addTask {
           _ = try await self.store.delete(collectionType: .video, documentID: videoId)
-          print(videoId)
+          print("\(videoId) 비디오 삭제")
+        }
+        group.addTask {
+          _ = try await self.deleteFeedback(videoId: videoId)
         }
         try await group.waitForAll()
       }
-
+      
       // 캐시도 삭제
       await dataCacheManager.removeVideo(
         videoId: videoId,
         from: tracksId
       )
-
+      
       // 최소 로딩 시간 보장 (스켈레톤 뷰 1.5초)
       await TaskTimeUtility.waitForMinimumLoadingTime(
         startTime: startTime
       )
-
+      
       await MainActor.run {
         self.videos.removeAll { $0.videoId == video.videoId }
         self.track.removeAll { $0.videoId == videoId }
         self.isLoading = false
       }
-
+      
       // 삭제 완료 토스트 알림
       NotificationCenter.default.post(name: .showDeleteToast, object: nil)
     } catch {
@@ -379,7 +382,7 @@ extension VideoListViewModel {
       await TaskTimeUtility.waitForMinimumLoadingTime(
         startTime: startTime
       )
-
+      
       await MainActor.run { // TODO: 에러 처리
         self.isLoading = false
         self.errorMsg = "영상 삭제에 실패했습니다. 다시 시도해 주세요."
@@ -431,6 +434,45 @@ private extension VideoListViewModel {
         target: track.trackId
       )
       print(track.trackId)
+    }
+  }
+  
+  func deleteFeedback(videoId: String) async throws {
+    do {
+      // 1. 해당 videoId의 모든 feedback 문서 가져오기
+      let feedbacks: [Feedback] = try await self.store.fetchAll(
+        videoId,
+        from: .feedback,
+        where: "video_id"
+      )
+      
+      // 2. 각 feedback의 reply 서브컬렉션 삭제 후 feedback 삭제
+      try await withThrowingTaskGroup(of: Void.self) { group in
+        for feedback in feedbacks {
+          group.addTask {
+            let feedbackId = feedback.feedbackId.uuidString
+            
+            // reply 서브컬렉션의 모든 문서 삭제
+            try await self.store.deleteAllDocumentsInSubcollection(
+              under: .feedback,
+              parentId: feedbackId,
+              subCollection: .reply
+            )
+            
+            // feedback 문서 삭제
+            try await self.store.delete(
+              collectionType: .feedback,
+              documentID: feedbackId
+            )
+          }
+        }
+        try await group.waitForAll()
+      }
+      
+      print("피드백 및 답글 삭제 완료: \(feedbacks.count)")
+    } catch {
+      print("피드백 삭제 실패: \(error)")
+      throw error
     }
   }
 }

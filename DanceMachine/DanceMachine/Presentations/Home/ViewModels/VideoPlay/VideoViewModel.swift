@@ -36,6 +36,8 @@ final class VideoViewModel {
   
   // 배속 변수
   var playbackSpeed: Float = 1.0
+  
+  var notiFalseAlert: Bool = false
 }
 
 // MARK: - 영상관련 메서드
@@ -45,6 +47,13 @@ extension VideoViewModel {
     await MainActor.run {
       self.isLoading = true
       self.loadingProgress = 0.0
+    }
+    
+    /// 알림 버그 수정
+    guard let _: Video = try await FirestoreManager.shared.get(videoId, from: .video) else {
+      print("비디오 정보 없음")
+      self.notiFalseAlert = true
+      return
     }
     
     do {

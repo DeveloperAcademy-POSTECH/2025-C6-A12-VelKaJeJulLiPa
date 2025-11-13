@@ -43,10 +43,8 @@ struct VideoListView: View {
     VStack(spacing: 0) {
       if vm.filteredVideos.isEmpty && vm.isLoading != true && !pickerViewModel.isUploading {
         emptyView
-        //        uploadButtons
       } else {
         listView
-        //        uploadButtons
       }
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -97,12 +95,7 @@ struct VideoListView: View {
       }
     }
     // MARK: 영상 피커 시트
-    .sheet(isPresented: $showCustomPicker, onDismiss: {
-      // sheet 닫힐 때 선택 초기화
-      pickerViewModel.selectedAsset = nil
-      pickerViewModel.videoTitle = ""
-      pickerViewModel.cleanupPlayer()
-    }) {
+    .sheet(isPresented: $showCustomPicker) {
       VideoPickerView(
         pickerViewModel: pickerViewModel,
         tracksId: tracksId,
@@ -175,17 +168,18 @@ struct VideoListView: View {
         if isScrollDown {
           Spacer()
         }
-        
+
         Button {
           self.showCustomPicker = true
         } label: {
-          ZStack {
+          
             // 작은 버튼 (원형)
             if isScrollDown {
               Image(systemName: "video.fill.badge.plus")
-                .font(.system(size: 17))
+                .font(.system(size: 22))
                 .foregroundStyle(.labelStrong)
-                .transition(.opacity)
+//                .transition(.opacity)
+                .padding(.vertical, 14)
             }
             // 큰 버튼 (직사각형)
             if !isScrollDown {
@@ -193,20 +187,12 @@ struct VideoListView: View {
                 .font(.headline1Medium)
                 .foregroundStyle(.labelStrong)
                 .frame(maxWidth: .infinity)
-                .transition(.opacity)
+                .padding(.vertical, 14)
+//                .transition(.opacity)
             }
-          }
-          .padding(.horizontal, 20)
-          .padding(.vertical, 14)
-//          .padding(.horizontal, isScrollDown ? 8 : 20)
-//          .padding(.vertical, isScrollDown ? 8 : 14)
-          .frame(maxWidth: isScrollDown ? nil : .infinity)
         }
-        .background(
-          RoundedRectangle(cornerRadius: isScrollDown ? 24 : 1000)
-            .uploadGlassButton()
-            .environment(\.colorScheme, .light)
-        )
+        .uploadGlassButton(isScrollDown: isScrollDown)
+//        .frame(maxWidth: isScrollDown ? nil : .infinity)
         .shadow(radius: 5)
       }
       .padding(.horizontal, 16)
