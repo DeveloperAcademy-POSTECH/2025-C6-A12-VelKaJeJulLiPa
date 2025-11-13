@@ -60,7 +60,7 @@ struct VideoSettingButtons: View {
     Button {
       action()
     } label: {
-      Image(systemName: "clock.arrow.trianglehead.clockwise.rotate.90.path.dotted")
+      Image(.speedometer)
         .font(.system(size: 20))
         .foregroundStyle(.labelStrong)
     }
