@@ -741,30 +741,31 @@ struct VideoView: View {
     }
     .frame(height: 300)
   }
-  /// 현재 플레이어 시점의 프레임을 이미지로 캡쳐
+
+  /// 현재 플레이어 시점의 프레임을 이미지로 캡처 (copyCGImage 대체)
   private func captureCurrentFrame() {
     guard let player = vm.videoVM.player,
-          let asset = player.currentItem?.asset else {
-      return
-    }
+          let asset  = player.currentItem?.asset else { return }
     
     let time = player.currentTime()
+    
     let generator = AVAssetImageGenerator(asset: asset)
     generator.appliesPreferredTrackTransform = true
-    generator.requestedTimeToleranceAfter  = .zero   // 가능한 정확하게
     generator.requestedTimeToleranceBefore = .zero
+    generator.requestedTimeToleranceAfter  = .zero
+    generator.dynamicRangePolicy = .forceSDR
     
-    DispatchQueue.global(qos: .userInitiated).async {
-      do {
-        let cgImage = try generator.copyCGImage(at: time, actualTime: nil)
-        let image   = UIImage(cgImage: cgImage)
-        DispatchQueue.main.async {
-          self.capturedImage = image
-          self.showFeedbackPaperDrawingView = true
-          print("이미지 캡처 성공")
-        }
-      } catch {
-        print("⚠️ frame capture error:", error)
+    generator.generateCGImageAsynchronously(for: time) { cgImage, actualTime, error in
+      guard let cgImage = cgImage, error == nil else {
+        // print("error: \(error ?? NSError()")
+        print("적절한 에러 처리 추가하기")
+        return
+      }
+      let image = UIImage(cgImage: cgImage)
+      DispatchQueue.main.async {
+        self.capturedImage = image
+        self.showFeedbackPaperDrawingView = true
+        print("이미지 캡처 성공 @ \(CMTimeGetSeconds(actualTime))s")
       }
     }
   }
