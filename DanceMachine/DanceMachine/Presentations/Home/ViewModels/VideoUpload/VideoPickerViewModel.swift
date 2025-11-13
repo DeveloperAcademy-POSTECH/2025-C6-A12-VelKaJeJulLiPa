@@ -147,7 +147,7 @@ extension VideoPickerViewModel {
 
           do {
             let duration = try await self.getDuration(from: urlAsset)
-            
+
             await MainActor.run {
               self.progressManager.startCompressing()
             }
@@ -159,12 +159,12 @@ extension VideoPickerViewModel {
                   self.progressManager.updatedCompressionProgress(progress)
                 }
               }
-            
+
             await MainActor.run {
               self.progressManager.startUpload()
             }
-            
-            let (video, track) = try await self.generateVideo( 
+
+            let (video, track) = try await self.generateVideo(
               videoURL: compressionURL,
               duration: duration,
               tracksId: tracksId,
@@ -177,7 +177,7 @@ extension VideoPickerViewModel {
               self.lastUploadedVideo = video
               self.lastUploadedTrack = track
               self.progressManager.finishUpload()
-              self.compressionManager.deleteTempFile(compressionURL)
+              self.compressionManager.cleanupCurrentCompression()
               self.isLoading = false
               self.showSuccessAlert = true
               
@@ -186,22 +186,34 @@ extension VideoPickerViewModel {
             }
 
           } catch let error as VideoError {
-            // 실패 시 임시 파일 복사 (재시도용)
-//            let tempURL = try? await self.copyToTemp(urlAsset, videoId: videoId)
+            // 압축 파일 정리
+            self.compressionManager.cleanupCurrentCompression()
 
             await MainActor.run {
               self.isLoading = false
             }
             switch error {
-            case .fileTooLarge: // 파일 너무 클때
+            case .fileTooLarge: // 파일 너무 클때 (재시도 불가)
               self.progressManager.fileTooLarge(message: error.userMsg)
-            case .compressionError, .uploadFailed, .networkError, .uploadTimeout: // 그 외 실패
-              self.failedContext = (videoId, tracksId, sectionId, urlAsset.url)
+
+            case .compressionError: // 압축 실패 (재시도 불가)
               self.progressManager.failUpload(message: error.userMsg)
+
+            case .uploadFailed, .networkError, .uploadTimeout: // 업로드 실패 (재시도 가능)
+              // 재시도를 위해 임시 파일 복사
+              let tempURL = try? await self.copyToTemp(urlAsset, videoId: videoId)
+              if let url = tempURL {
+                self.failedContext = (videoId, tracksId, sectionId, url)
+              }
+              self.progressManager.failUpload(message: error.userMsg)
+
             default:
               self.progressManager.failUpload(message: error.userMsg)
             }
           } catch {
+            // 압축 파일 정리
+            self.compressionManager.cleanupCurrentCompression()
+
             // 실패 시 임시 파일 복사 (재시도용)
             let tempURL = try? await self.copyToTemp(urlAsset, videoId: videoId)
 
@@ -476,17 +488,24 @@ extension VideoPickerViewModel {
         self.lastUploadedVideo = video
         self.lastUploadedTrack = track
         self.progressManager.finishUpload()
+        // 압축 파일 정리
+        self.compressionManager.cleanupCurrentCompression()
+        // 원본 임시 파일 삭제
         self.deleteTempFile(context.tempURL)
         self.failedContext = nil
         self.isLoading = false
         self.showSuccessAlert = true
       }
     } catch let error as VideoError {
+      // 재시도 실패 시 압축 파일 정리
+      self.compressionManager.cleanupCurrentCompression()
       await MainActor.run {
         self.isLoading = false
         self.progressManager.failUpload(message: error.userMsg)
       }
     } catch {
+      // 재시도 실패 시 압축 파일 정리
+      self.compressionManager.cleanupCurrentCompression()
       await MainActor.run {
         self.isLoading = false
         self.progressManager.failUpload(message: "재시도 실패")
@@ -503,12 +522,16 @@ extension VideoPickerViewModel {
         tracksId: context.tracksId,
         sectionId: context.sectionId
       )
+      // 원본 임시 파일 삭제
       deleteTempFile(context.tempURL)
 
       await MainActor.run {
         self.failedContext = nil
       }
     }
+
+    // 압축 파일 정리
+    compressionManager.cleanupCurrentCompression()
 
     // failedContext 없어도 progress는 초기화
     await MainActor.run {
