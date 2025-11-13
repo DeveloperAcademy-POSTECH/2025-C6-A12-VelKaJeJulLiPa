@@ -41,26 +41,7 @@ struct VideoPickerView: View {
 
         // iCloud 다운로드 오버레이
         if vm.isDownloadingFromCloud {
-          ZStack {
-            Color.black.opacity(0.7)
-              .ignoresSafeArea()
-
-            VStack(spacing: 16) {
-              ProgressView(value: vm.downloadProgress)
-                .progressViewStyle(.linear)
-                .tint(.secondaryNormal)
-                .frame(width: 200)
-
-              Text("iCloud에서 다운로드 중... \(Int(vm.downloadProgress * 100))%")
-                .font(.headline2Medium)
-                .foregroundColor(.labelStrong)
-            }
-            .padding(24)
-            .background(
-              RoundedRectangle(cornerRadius: 16)
-                .fill(Color.fillStrong)
-            )
-          }
+          iCloudOverlay
         }
       }
       .toast(
@@ -135,6 +116,36 @@ struct VideoPickerView: View {
           }
         }
       }
+    }
+  }
+  
+  private var iCloudOverlay: some View {
+    ZStack {
+      Color.black.opacity(0.7)
+        .ignoresSafeArea()
+
+      VStack(spacing: .zero) {
+        ProgressView(value: vm.downloadProgress)
+          .progressViewStyle(.linear)
+          .tint(.secondaryNormal)
+          .frame(maxWidth: .infinity)
+          .padding(.horizontal, 16)
+        Spacer().frame(height: 18)
+        Text("iCloud로부터 미디어 다운받는 중")
+          .font(.headline2Medium)
+          .foregroundColor(.labelStrong)
+        Spacer().frame(height: 6)
+        Text("\(Int(vm.downloadProgress * 100))%")
+          .font(.headline2Medium)
+          .foregroundColor(.labelStrong)
+      }
+      .frame(maxWidth: .infinity)
+      .padding(.vertical, 20)
+      .background(
+        RoundedRectangle(cornerRadius: 20)
+          .fill(Color.fillStrong)
+      )
+      .padding(.horizontal, 64)
     }
   }
   
@@ -214,6 +225,7 @@ struct VideoPickerView: View {
         self.showToast = true
         return
       }
+      self.isFocused = false
       // iCloud 다운로드 완료 후 피커 닫기
       vm.exportVideo(tracksId: tracksId, sectionId: sectionId) {
         dismiss()
