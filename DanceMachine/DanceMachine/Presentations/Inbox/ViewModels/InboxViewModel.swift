@@ -20,7 +20,7 @@ final class InboxViewModel: ObservableObject {
   private var lastDocument: DocumentSnapshot? = nil
   private var canLoadMore = true
   
-  /// 알림 목록 불러오는 메서드
+  // MARK: - Public Methods
   func loadNotifications(reset: Bool = false) async {
     guard !isLoading else { return }
     
@@ -45,13 +45,12 @@ final class InboxViewModel: ObservableObject {
       canLoadMore = fetched.count == 20
       
       try await appendInboxNotifications(from: fetched, reset: reset)
-      try await NotificationManager.shared.refreshBadge(for: FirebaseAuthManager.shared.userInfo?.userId ?? "")
+      try await NotificationManager.shared.refreshBadge(for: userId)
     } catch {
       print("❌ Failed to load notifications: \(error)")
     }
   }
   
-  /// 새로고침
   func refresh() async {
     guard !isRefreshing else { return }
     isRefreshing = true
@@ -60,130 +59,137 @@ final class InboxViewModel: ObservableObject {
   }
   
   
-  /// 새로고침 관련 데이터 초기화
-  private func prepareForInitialLoad() {
-    lastDocument = nil
-    canLoadMore = true
-    notifications = []
+  // MARK: - Private: Notification Transform
+  
+  private enum InboxResult {
+    case success(InboxNotification)
+    case failure(String) // notificationId
   }
   
-  /// 서버에서 받아온 Notification 정보를 notification 변수에 업데이트하는 메서드
-  private func updateNotifications(with list: [Notification], reset: Bool) {
-    if reset {
-      notifications = list
-    } else {
-      notifications.append(contentsOf: list)
-    }
-  }
-  
-  /// notification 정보를  InboxNotification 변환하는 메서드
-  /// notification 정보를 활용해서 비디오 제목, 알림 보내는 사람의 이름을 DB에서 가져오고, 알림을 보여주기 위한 정보를 세팅합니다.
-  /// reset 상태(새로고침 여부)에 따라 분기처리합니다.
-  /// - Parameters:
-  ///  - notifications: DB의 notification 문서 정보
-  ///  - reset: 새로고침 여부
+  /// notification 정보를 InboxNotification으로 병렬로 변환하는 메서드
   private func appendInboxNotifications(from notifications: [Notification], reset: Bool) async throws {
     let userId = FirebaseAuthManager.shared.userInfo?.userId ?? ""
     
-    let transformed: [InboxNotification] = await withTaskGroup(of: Result<InboxNotification, Error>.self) { group in
+    let transformed: [InboxNotification] = await withTaskGroup(of: InboxResult.self) { group in
       for notification in notifications {
         group.addTask {
-          do {
-            async let videoDoc = self.getVideoDoc(from: notification.videoId)
-            async let senderDoc = self.getSenderDoc(from: notification.senderId)
-            async let teamspaceDoc = self.getTeamspaceDoc(from: notification.teamspaceId)
-            async let isRead = self.getNotificationReadState(
-              userId: userId,
-              notificationId: notification.notificationId.uuidString
-            )
-            
-            let type = self.getInboxNotificationType(from: notification)
-            
-            let video = try await videoDoc
-            let sender = try await senderDoc
-            let readState = try await isRead
-            let teamspace = try await teamspaceDoc
-            
-            let inbox = InboxNotification(
-              notificationId: notification.notificationId.uuidString,
-              type: type,
-              videoId: notification.videoId,
-              videoURL: video.videoURL,
-              videoTitle: video.videoTitle,
-              senderName: sender.name,
-              teamspace: teamspace,
-              content: notification.content,
-              date: notification.createdAt,
-              isRead: readState
-            )
-            
-            return .success(inbox)
-          } catch {
-            print("⚠️ Failed to transform notification \(notification.notificationId): \(error)")
-            
-            // 아래의 경우에 notification 문서와 user_notification 문서를 삭제합니다.
-            //  1.
-            let userId = userId
-            let notificationId = notification.notificationId.uuidString
-            
-            Task {
-              do {
-                try await FirestoreManager.shared.delete(collectionType: .notification, documentID: notificationId)
-                try await NotificationManager.shared.deleteUserNotification(
-                  userId: userId,
-                  notificationId: notificationId
-                )
-                print("🧹 Deleted video related notification in both notification and user_notification document: \(notificationId)")
-              } catch {
-                print("❌ Failed to delete Deleted video related notification in both notification and user_notification document: \(error)")
-              }
-            }
-            return .failure(error)
-          }
+          await self.transformNotificationToInbox(notification: notification, userId: userId)
         }
       }
       
       var results: [InboxNotification] = []
+      
       for await result in group {
         switch result {
         case .success(let inbox):
           results.append(inbox)
-        case .failure:
-          continue
+          
+        case .failure(let notificationId):
+          await self.handleInvalidNotification(notificationId: notificationId, userId: userId)
         }
       }
       return results
     }
     
-    let sortedTransformed = transformed.sorted(by: { $0.date > $1.date })
+    let sorted = transformed.sorted(by: { $0.date > $1.date })
     
     await MainActor.run {
       if reset {
-        self.inboxNotifications = sortedTransformed
+        self.inboxNotifications = sorted
       } else {
-        self.inboxNotifications.append(contentsOf: sortedTransformed)
+        self.inboxNotifications.append(contentsOf: sorted)
       }
     }
   }
   
+  /// 하나의 Notification을 InboxNotification 변환하는 메서드
+  /// - Parameters:
+  ///  - notificationId: 알림 문서 ID
+  ///  - userId: 사용자 ID
+  /// - 알림 문서의 정보를 통해 InboxNotification 에 필요한 정보를 서버로 부터 호출하는 메서드입니다.
+  private func transformNotificationToInbox(notification: Notification, userId: String) async -> InboxResult {
+    do {
+      async let videoDoc = getVideoDoc(from: notification.videoId)
+      async let senderDoc = getSenderDoc(from: notification.senderId)
+      async let teamspaceDoc = getTeamspaceDoc(from: notification.teamspaceId)
+      async let readState = getNotificationReadState(
+        userId: userId,
+        notificationId: notification.notificationId.uuidString
+      )
+      
+      let notificationType = getInboxNotificationType(from: notification)
+      
+      let video = try await videoDoc
+      let sender = try await senderDoc
+      let teamspace = try await teamspaceDoc
+      let isRead = try await readState
+      
+      let inbox = InboxNotification(
+        notificationId: notification.notificationId.uuidString,
+        type: notificationType,
+        videoId: notification.videoId,
+        videoURL: video.videoURL,
+        videoTitle: video.videoTitle,
+        senderName: sender.name,
+        teamspace: teamspace,
+        content: notification.content,
+        date: notification.createdAt,
+        isRead: isRead
+      )
+      
+      return .success(inbox)
+      
+    } catch {
+      print("⚠️ Error transforming notification into inboxNotification: \(notification.notificationId.uuidString) / error: \(error)")
+      return .failure(notification.notificationId.uuidString)
+    }
+  }
+  
+  
+  /// 삭제된 영상에 대한 notification 문서 삭제 및  user_notification 문서 삭제
+  private func handleInvalidNotification(notificationId: String, userId: String) async {
+    async let deleteNotification: Void = {
+      do {
+        try await FirestoreManager.shared.delete(
+          collectionType: .notification,
+          documentID: notificationId
+        )
+      } catch {
+        print("❌ Failed to delete notification document: \(notificationId), error: \(error)")
+      }
+    }()
+    
+    async let deleteUserNotification: Void = {
+      do {
+        try await NotificationManager.shared.deleteUserNotification(
+          userId: userId,
+          notificationId: notificationId
+        )
+      } catch {
+        print("❌ Failed to delete user_notification document: \(notificationId), error: \(error)")
+      }
+    }()
+    
+    // 삭제 작업 병렬 처리 — 실행 중 에러는 각자 내부에서 각각 처리
+    _ = await (deleteNotification, deleteUserNotification)
+    print("🧹 Cleanup attempted for invalid notification: \(notificationId)")
+  }
   
   private func getVideoDoc(from id: String) async throws -> Video {
-    let videoDoc: Video = try await FirestoreManager.shared.get(id, from: .video)
-    return videoDoc
+    try await FirestoreManager.shared.get(id, from: .video)
   }
-  
   
   private func getSenderDoc(from id: String) async throws -> User {
-    let senderDoc: User = try await FirestoreManager.shared.get(id, from: .users)
-    return senderDoc
+    try await FirestoreManager.shared.get(id, from: .users)
   }
-  
   
   private func getTeamspaceDoc(from id: String) async throws -> Teamspace {
-    let teamspaceDoc: Teamspace = try await FirestoreManager.shared.get(id, from: .teamspace)
-    return teamspaceDoc
+    try await FirestoreManager.shared.get(id, from: .teamspace)
   }
   
+  nonisolated private func getInboxNotificationType(from notification: Notification) -> InboxNotificationType {
+    return notification.replyId == nil ? .feedback : .reply
+  }
   
   /// 특정 유저의 user_notification 서브컬렉션에서 is_read 상태를 가져옵니다.
   private func getNotificationReadState(userId: String, notificationId: String) async throws -> Bool {
@@ -199,7 +205,7 @@ final class InboxViewModel: ObservableObject {
          let isRead = data[UserNotification.CodingKeys.isRead.rawValue] as? Bool {
         return isRead
       } else {
-        return false // 문서가 없거나 필드가 없으면 읽지 않은 것으로 간주
+        return false
       }
     } catch {
       print("❌ is_read 불러오기 실패:", error.localizedDescription)
@@ -208,12 +214,8 @@ final class InboxViewModel: ObservableObject {
   }
   
   
-  /// 알림 유형 판별 메서드
-  nonisolated private func getInboxNotificationType(from notification: Notification) -> InboxNotificationType {
-    return notification.replyId == nil ? .feedback : .reply
-  }
+  // MARK: - Notification Read State
   
-  // 알림 읽음 처리
   func markAsRead(userId: String, notificationId: String) async throws {
     do {
       try await NotificationManager.shared.markNotificationAsRead(userId: userId, notificationId: notificationId)
@@ -221,9 +223,28 @@ final class InboxViewModel: ObservableObject {
       print("error: \(error.localizedDescription)")
     }
   }
+  
+  
+  // MARK: - Helpers: Pagination & State
+  
+  private func prepareForInitialLoad() {
+    lastDocument = nil
+    canLoadMore = true
+    notifications = []
+  }
+  
+  private func updateNotifications(with list: [Notification], reset: Bool) {
+    if reset {
+      notifications = list
+    } else {
+      notifications.append(contentsOf: list)
+    }
+  }
 }
 
-// FIXME: - 코드 위치 변경
+
+// MARK: - InboxNotification
+
 struct InboxNotification: Equatable {
   let notificationId: String
   let type: InboxNotificationType
