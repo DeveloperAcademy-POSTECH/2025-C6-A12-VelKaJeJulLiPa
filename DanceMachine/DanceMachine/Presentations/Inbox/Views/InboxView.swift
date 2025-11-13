@@ -20,17 +20,25 @@ struct InboxView: View {
           LoadingSpinner()
             .frame(maxWidth: 28, maxHeight: 28, alignment: .center)
         } else if viewModel.inboxNotifications.isEmpty {
-          VStack {
-            Spacer()
-            Image(systemName: "bell.slash.fill")
-              .resizable()
-              .foregroundStyle(.fillAssitive)
-              .frame(width: 138, height: 110)
-            Spacer().frame(height: 10)
-            Text("받은 알림이 없습니다.")
-              .font(.headline2Medium)
-              .foregroundStyle(.labelAssitive)
-            Spacer()
+          GeometryReader { geometry in
+            ScrollView {
+              VStack {
+                Spacer()
+                Image(systemName: "bell.slash.fill")
+                  .font(.system(size: 75))
+                  .foregroundStyle(.fillAssitive)
+                Spacer().frame(height: 10)
+                Text("받은 알림이 없습니다.")
+                  .font(.headline2Medium)
+                  .foregroundStyle(.labelAssitive)
+                Spacer()
+              }
+              .frame(maxWidth: .infinity, minHeight: geometry.size.height)
+            }
+            .presentationDragIndicator(.hidden)
+            .refreshable {
+              await viewModel.refresh()
+            }
           }
         } else {
           ScrollView {
@@ -72,7 +80,7 @@ struct InboxView: View {
             await viewModel.refresh()
           }
           
-          if viewModel.isLoading {
+          if !viewModel.isRefreshing && viewModel.isLoading {
             LoadingSpinner()
               .frame(maxWidth: 28, maxHeight: 28, alignment: .center)
               .padding(.top, 7)

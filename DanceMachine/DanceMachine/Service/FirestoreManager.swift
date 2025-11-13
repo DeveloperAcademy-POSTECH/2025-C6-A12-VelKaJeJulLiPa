@@ -368,10 +368,8 @@ final class FirestoreManager {
   /// 특정 유저의 알림 목록을 가져옵니다.
   /// - Parameters:
   ///   - userId: 유저의 document ID
-  ///   - currentTeamspaceId: 현재 팀스페이스 ID
   ///   - type: 콜렉션 타입 (현재 Notification)
   ///   - receiverIds: 푸시 알림 수신자 배열의 필드명
-  ///   - teamspaceField: 알림 문서의 팀스페이스 필드명
   ///   - orderKey: 정렬 기준 (현재, createdAt)
   ///   - descending: 내림 차순 정렬 여부 (현재는 true)
   ///   - limit: 가져오는 최대 목록 개수 (현재 최대 20개)
@@ -379,10 +377,8 @@ final class FirestoreManager {
   /// - Returns: 튜플 형태로 알림 목록과 해당 목록의 마지막 문서를 반환
   func fetchNotificationList<T: Decodable>(
     userId: String,
-    currentTeamspaceId: String,
     from type: CollectionType = .notification,
     where receiverIds: String = Notification.CodingKeys.receiverIds.rawValue,
-    teamspaceField: String = Notification.CodingKeys.teamspaceId.rawValue,
     orderBy orderKey: String = Notification.CodingKeys.createdAt.rawValue,
     descending: Bool = true,
     limit: Int = 20,
@@ -393,7 +389,6 @@ final class FirestoreManager {
     
     var q: Query = db.collection(type.rawValue)
       .whereField(receiverIds, arrayContains: userId)
-      .whereField(teamspaceField, isEqualTo: currentTeamspaceId)
       .whereField(orderKey, isGreaterThan: oneMonthAgoTimestamp)
       .order(by: orderKey, descending: descending)
       .limit(to: limit)

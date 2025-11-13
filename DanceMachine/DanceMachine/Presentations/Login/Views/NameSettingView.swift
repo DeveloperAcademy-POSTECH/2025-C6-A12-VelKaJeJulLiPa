@@ -82,7 +82,7 @@ struct NameSettingView: View {
         
         Spacer()
         
-        Text("이름이 정확하신가요?")
+        Text("이름이 정확한가요?")
           .font(.headline2Medium)
           .foregroundStyle(Color.labelNormal)
         
