@@ -11,7 +11,8 @@ import MessageUI
 struct MailView: UIViewControllerRepresentable {
   @Environment(\.dismiss) var dismiss
   @Binding var needToCreateReport: Bool
-  
+  @Binding var showMailSendFailedAlert: Bool
+
   let subject: String
   let recipients: [String] = ["ask.diract@gmail.com"]
   let body: String
@@ -30,24 +31,36 @@ struct MailView: UIViewControllerRepresentable {
   func makeCoordinator() -> Coordinator {
     Coordinator(
       needToCreateReport: $needToCreateReport,
+      showMailSendFailedAlert: $showMailSendFailedAlert,
       dismiss: dismiss
     )
   }
   
   class Coordinator: NSObject, MFMailComposeViewControllerDelegate {
     var needToCreateReport: Binding<Bool>
+    var showMailSendFailedAlert: Binding<Bool>
+
     var dismiss: DismissAction
     
-    init(needToCreateReport: Binding<Bool>, dismiss: DismissAction) {
+    init(
+      needToCreateReport: Binding<Bool>,
+      showMailSendFailedAlert: Binding<Bool>,
+      dismiss: DismissAction
+    ) {
       self.needToCreateReport = needToCreateReport
+      self.showMailSendFailedAlert = showMailSendFailedAlert
       self.dismiss = dismiss
     }
     
-    func mailComposeController(_ controller: MFMailComposeViewController,
-                               didFinishWith result: MFMailComposeResult,
-                               error: Error?) {
+    func mailComposeController(
+      _ controller: MFMailComposeViewController,
+      didFinishWith result: MFMailComposeResult,
+      error: Error?
+    ) {
       if result == .sent {
-          self.needToCreateReport.wrappedValue = true
+        self.needToCreateReport.wrappedValue = true
+      } else if result == .failed {
+        self.showMailSendFailedAlert.wrappedValue = true
       }
       dismiss()
     }

@@ -16,6 +16,8 @@ struct CreateReportView: View {
   @State private var needToCreateReport: Bool = false
   @State private var showMailSheet: Bool = false
   @State private var showExitAlert: Bool = false
+  @State private var showMailSendFailedAlert: Bool = false
+  @State private var showCreateReportFailedAlert: Bool = false
   
   var reportedId: String
   var reportContentType: ReportContentType
@@ -45,11 +47,11 @@ struct CreateReportView: View {
     }
   }
   var mailBody: String {
-    """
+                                """
                                 신고자 정보
                                 • 사용자 ID: \(FirebaseAuthManager.shared.userInfo?.userId ?? "Unknown")
                                 • 이메일: \(FirebaseAuthManager.shared.userInfo?.email ?? "이메일을 입력해주세요")
-
+                                
                                 신고정보
                                 • 신고유형: \(reportContentType.rawValue)
                                 • 콘텐츠 ID: \(targetContentId)                          
@@ -86,22 +88,30 @@ struct CreateReportView: View {
     .sheet(
       isPresented: $showMailSheet,
       onDismiss: {
+        if showMailSendFailedAlert { return }
+        
         if needToCreateReport {
           Task {
-            try await viewModel.createReport(
-              reportedId: reportedId,
-              video: video,
-              feedback: feedback,
-              reply: reply,
-              type: ReportType.other,
-              reportContentType: reportContentType,
-              description: description
-            )
-            NotificationCenter.default.post(
-              name: .showCreateReportSuccessToast,
-              object: nil,
-              userInfo: ["toastViewName": toastReceiveView]
-            )
+            do {
+              try await viewModel.createReport(
+                reportedId: reportedId,
+                video: video,
+                feedback: feedback,
+                reply: reply,
+                type: ReportType.other,
+                reportContentType: reportContentType,
+                description: description
+              )
+              
+              NotificationCenter.default.post(
+                name: .showCreateReportSuccessToast,
+                object: nil,
+                userInfo: ["toastViewName": toastReceiveView]
+              )
+              
+            } catch {
+              showCreateReportFailedAlert = true
+            }
           }
         }
         dismiss()
@@ -109,6 +119,7 @@ struct CreateReportView: View {
       content: {
         MailView(
           needToCreateReport: $needToCreateReport,
+          showMailSendFailedAlert: $showMailSendFailedAlert,
           subject: subject,
           body: mailBody
         )
@@ -131,8 +142,24 @@ struct CreateReportView: View {
         dismiss()
       }
     )
+    .alert(
+        "신고 메일을 보내는데 실패했습니다.",
+        isPresented: $showMailSendFailedAlert
+    ) {
+        Button("확인", role: .cancel) {}
+    } message: {
+        Text("잠시 후 다시 시도해주세요.")
+    }
+    .alert(
+        "신고 정보를 서버에 저장하는데 실패했습니다.",
+        isPresented: $showCreateReportFailedAlert
+    ) {
+        Button("확인", role: .cancel) {}
+    } message: {
+        Text("잠시 후 다시 시도해주세요.")
+    }
   }
-  
+
   
   // MARK: - 하단 신고하기 버튼 뷰
   private var bottomButtonView: some View {
