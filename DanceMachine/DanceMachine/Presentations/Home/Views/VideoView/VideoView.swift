@@ -238,8 +238,8 @@ struct VideoView: View {
       showDrawingImageFull || showFeedbackImageFull ? .hidden : .visible,
       for: .navigationBar
     )
-//    .statusBar(hidden: shouldShowLayout)
     .fullScreenCover(isPresented: $showFeedbackPaperDrawingView) {
+      // MARK: - iOS 18 / 26 분기 처리 (Drawing)
       if #available(iOS 26.0, *) {
         FeedbackPaperDrawingView(image: $capturedImage) { image in
           editedOverlayImage = image
@@ -247,8 +247,21 @@ struct VideoView: View {
         }
       }
       else {
-        
-        // TODO: iOS 26 이하 교체
+        FeedbackPencilDrawingView(image: $capturedImage,
+          onDone: { merged in
+          DispatchQueue.main.async {
+            editedOverlayImage = merged
+            self.capturedImage = nil
+            showFeedbackPaperDrawingView = false
+          }
+        },
+          onCancel: {
+          DispatchQueue.main.async {
+            self.capturedImage = nil
+            showFeedbackPaperDrawingView = false
+          }
+        }
+        )
       }
     }
     .task {
@@ -788,12 +801,6 @@ struct VideoView: View {
     forceShowLandscape = false
   }
   
-}
-
-extension UIWindowScene {
-  var keyWindow: UIWindow? {
-    windows.first { $0.isKeyWindow }
-  }
 }
 
 #Preview {
