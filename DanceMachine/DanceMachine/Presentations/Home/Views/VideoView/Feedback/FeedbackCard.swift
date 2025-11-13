@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import Kingfisher
+
 
 struct FeedbackCard: View {
   let feedback: Feedback
@@ -14,18 +16,22 @@ struct FeedbackCard: View {
   let replyCount: Int
   let action: () -> Void
   let showReplySheet: () -> Void
-
+  
   let currentTime: Double
   let startTime: Double?
   let timeSeek: () -> Void
-
+  
   let currentUserId: String
   let onDelete: () -> Void
   let onReport: () -> Void
-
+  
   var showBottomReplyButton: Bool = false
   var onBottomReplyTap: (() -> Void)? = nil
-
+  
+  var imageNamespace: Namespace.ID? = nil // 애니메이션 용
+  
+  var onImageTap: ((String) -> Void)? = nil
+  
   @State private var showMenu: Bool = false
   
   var body: some View {
@@ -36,7 +42,7 @@ struct FeedbackCard: View {
         timeStamp
         Spacer().frame(height: 2)
         content
-
+        feedbackImageView
         HStack {
           if showBottomReplyButton {
             Button {
@@ -53,7 +59,7 @@ struct FeedbackCard: View {
       }
       .padding(.horizontal, 16)
       .padding(.vertical, 16)
-
+      
       Menu {
         contextRow
       } label: {
@@ -141,7 +147,7 @@ struct FeedbackCard: View {
           .truncationMode(.tail)
         }
       }
-//      Spacer()
+      //      Spacer()
     }
   }
   
@@ -197,6 +203,57 @@ struct FeedbackCard: View {
           onReport()
         } label: {
           Label("신고하기", systemImage: "light.beacon.max")
+        }
+      }
+    }
+  }
+  
+  // MARK: - 피드백 이미지
+  private var feedbackImageView: some View {
+    Group {
+      if let urlString = feedback.imageURL,
+         let url = URL(string: urlString) {
+        // Namespace가 있는 경우와 없는 경우를 분기
+        if let ns = imageNamespace {
+          KFImage(url)
+            .placeholder {
+              ZStack {
+                RoundedRectangle(cornerRadius: 8)
+                  .fill(Color.backgroundElevated)
+                  .frame(width: 100, height: 100)
+                ProgressView() // FIXME: - 임시
+              }
+            }
+            .retry(maxCount: 2, interval: .seconds(2))
+            .cacheOriginalImage()
+            .resizable()
+            .scaledToFill()
+            .frame(width: 100, height: 100)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .matchedGeometryEffect(id: urlString, in: ns)   // 🔥 hero 연결
+            .onTapGesture {
+              onImageTap?(urlString)
+            }
+        } else {
+          // 기존 동작(히어로 없이)도 유지
+          KFImage(url)
+            .placeholder {
+              ZStack {
+                RoundedRectangle(cornerRadius: 8)
+                  .fill(Color.backgroundElevated)
+                  .frame(width: 100, height: 100)
+                ProgressView() // FIXME: - 임시
+              }
+            }
+            .retry(maxCount: 2, interval: .seconds(2))
+            .cacheOriginalImage()
+            .resizable()
+            .scaledToFill()
+            .frame(width: 100, height: 100)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .onTapGesture {
+              onImageTap?(urlString)
+            }
         }
       }
     }

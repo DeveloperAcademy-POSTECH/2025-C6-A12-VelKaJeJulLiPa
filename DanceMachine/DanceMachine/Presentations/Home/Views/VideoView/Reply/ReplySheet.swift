@@ -36,9 +36,13 @@ struct ReplySheet: View {
   
   let onFeedbackDelete: () -> Void
   
+  let imageNamespace: Namespace.ID
+  
   @State private var selectedReply: Reply?
   @State private var reportTargetReply: Reply?
   @State private var content: String = ""
+  
+  let onImageTap: (String) -> Void
   
   private var filteredMembers: [User] {
     if mM.mentionQuery.isEmpty {
@@ -79,6 +83,11 @@ struct ReplySheet: View {
           showBottomReplyButton: true,
           onBottomReplyTap: {
             self.inputMode = .reply
+          },
+          imageNamespace: imageNamespace,
+          onImageTap: { url in
+            onImageTap(url)
+            dismiss()
           }
         )
         replyList
@@ -310,6 +319,8 @@ struct ReplySheet: View {
 
 #Preview {
   NavigationStack {
+    @Namespace var previewNamespace
+    
     ReplySheet(
       reply: [
         Reply(
@@ -380,7 +391,8 @@ struct ReplySheet: View {
       replyCount: 20,
       currentTime: 30.0,
       startTime: 50.0,
-      timeSeek: {},
+      timeSeek: {
+      },
       getTaggedUsers: { ids in
         let all = [
           User(
@@ -417,7 +429,9 @@ struct ReplySheet: View {
       onReplySubmit: {_,_ in },
       currentUserId: "",
       onDelete: {_,_ in },
-      onFeedbackDelete: {}
+      onFeedbackDelete: {},
+      imageNamespace: previewNamespace,
+      onImageTap: { _ in }
     )
   }
   .environmentObject(MainRouter())
