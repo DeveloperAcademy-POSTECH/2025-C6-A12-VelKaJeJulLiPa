@@ -12,6 +12,9 @@ import AVFoundation
 final class VideoCompressionManager {
   static let shared = VideoCompressionManager()
   private init() {}
+
+  // 현재 압축 중이거나 마지막으로 생성된 압축 파일 추적
+  private var currentCompressionURL: URL? = nil
   
   // 압축 설정 (테스트/유저 피드백에 따라 조절)
   struct CompressionConfig {
@@ -71,6 +74,7 @@ final class VideoCompressionManager {
     // 720p 이하이고 용량도 목표치 이하면 압축 스킵
     if max <= config.maxResolution && fileSizeMB <= targetSizeMB {
       print("압축 스킵: 720p 이하 + \(String(format: "%.0f", targetSizeMB))MB 이하")
+      currentCompressionURL = nil  // 압축 안했으므로 초기화
       return asset.url
     }
 
@@ -144,16 +148,19 @@ final class VideoCompressionManager {
       monitoringTask.cancel()
       print("압축 완료!")
       try validatedFileSize(outputURL)
+      currentCompressionURL = outputURL  // 압축 파일 추적
       return outputURL
     } catch let error as VideoError {
       monitoringTask.cancel()
       print("용량 초과로 압축 거부~")
-      try? FileManager.default.removeItem(at: outputURL)
+      deleteTempFile(outputURL)
+      currentCompressionURL = nil
       throw error
     } catch {
       monitoringTask.cancel()
       print("압축 실패...")
-      try? FileManager.default.removeItem(at: outputURL)
+      deleteTempFile(outputURL)
+      currentCompressionURL = nil
       throw VideoError.compressionError
     }
   }
@@ -169,7 +176,7 @@ final class VideoCompressionManager {
     // 최대 허용 용량 초과 여부 체크
     if fileSizeMB > config.maxCompressedFileSizeMB {
       print("압축 후 용량 초과: \(String(format: "%.2f", fileSizeMB))MB > \(Int(config.maxCompressedFileSizeMB))MB")
-      try? FileManager.default.removeItem(at: url)
+      deleteTempFile(url)
       throw VideoError.fileTooLarge
     }
 
@@ -188,5 +195,16 @@ final class VideoCompressionManager {
       try? FileManager.default.removeItem(at: url)
       print("압축 성공 후 저장되었던 캐시파일 삭제")
     }
+  }
+
+  /// 현재 추적 중인 압축 파일 정리 (업로드 성공/실패/취소 시 호출)
+  func cleanupCurrentCompression() {
+    guard let url = currentCompressionURL else { return }
+
+    if FileManager.default.fileExists(atPath: url.path) {
+      try? FileManager.default.removeItem(at: url)
+      print("🧹 압축 파일 정리: \(url.lastPathComponent)")
+    }
+    currentCompressionURL = nil
   }
 }
