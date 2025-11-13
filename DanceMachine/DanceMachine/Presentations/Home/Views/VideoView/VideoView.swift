@@ -39,11 +39,6 @@ struct VideoView: View {
   @State private var forceShowLandscape: Bool = false // 전체 화면 버튼으로 가는 가로모드
   @State private var showFeedbackPanel: Bool = false
   
-  /// 실제로 보여줄 레이아웃을 결정하는 불리언 변수
-  private var shouldShowLayout: Bool {
-    isLandscape || forceShowLandscape
-  }
-  
   // MARK: 배속 좆러
   @State private var showSpeedSheet: Bool = false
   
@@ -93,8 +88,13 @@ struct VideoView: View {
   var body: some View {
     GeometryReader { proxy in
       Group {
-        if shouldShowLayout {
-          landscapeView(proxy: proxy) // 가로모드
+        if forceShowLandscape {
+          ZStack {
+            Color.backgroundNormal.ignoresSafeArea()
+            VStack {
+              landscapeView(proxy: proxy) // 가로모드
+            }
+          }
         } else {
           ZStack {
             Color.backgroundNormal.ignoresSafeArea()
@@ -145,7 +145,7 @@ struct VideoView: View {
       .toolbar(.hidden, for: .tabBar)
     }
     .safeAreaInset(edge: .bottom) {
-      if shouldShowLayout || isImageOverlayPresented {
+      if forceShowLandscape || isImageOverlayPresented {
         EmptyView()
       } else {
         Group {
@@ -238,7 +238,7 @@ struct VideoView: View {
       showDrawingImageFull || showFeedbackImageFull ? .hidden : .visible,
       for: .navigationBar
     )
-    .statusBar(hidden: shouldShowLayout)
+//    .statusBar(hidden: shouldShowLayout)
     .fullScreenCover(isPresented: $showFeedbackPaperDrawingView) {
       if #available(iOS 26.0, *) {
         FeedbackPaperDrawingView(image: $capturedImage) { image in
@@ -260,9 +260,6 @@ struct VideoView: View {
     }
     .onDisappear {
       vm.videoVM.cleanPlayer()
-    }
-    .onAppear { // 화면이 나타날때 세로모드 가로모드를 정함
-      updateOrientation()
     }
     .toast(
       isPresented: $showCreateReportSuccessToast,
@@ -311,110 +308,137 @@ struct VideoView: View {
   // MARK: 가로모드 레이아웃
   private func landscapeView(proxy: GeometryProxy) -> some View {
     ZStack {
-      // 비디오 + 컨트롤 + 피드백 패널을 함께 회전
+      Color.black.ignoresSafeArea()
+      
       HStack(spacing: 0) {
-        // 비디오 플레이어 + 슬라이더 + 버튼
+        
+        // MARK: 왼쪽 - 비디오 영역
         ZStack {
-          // 비디오 (85% width)
-          ZStack {
+          // 1) 비디오 레이어
+          Group {
             if let player = vm.videoVM.player {
               VideoController(player: player)
                 .aspectRatio(16/9, contentMode: .fit)
+                .clipped()
+                .allowsHitTesting(false)
             } else {
               Color.black
-                .aspectRatio(16/9, contentMode: .fit)
-            }
-            
-            TapClearArea(
-              leftTap: { vm.videoVM.leftTab() },
-              rightTap: { vm.videoVM.rightTap() },
-              centerTap: { vm.videoVM.centerTap() },
-              showControls: $vm.videoVM.showControls
-            )
-            
-            if vm.videoVM.showControls {
-              OverlayController(
-                leftAction: {
-                  vm.videoVM.seekToTime(to: vm.videoVM.currentTime - 5)
-                  if vm.videoVM.isPlaying {
-                    vm.videoVM.startAutoHideControls()
-                  }
-                },
-                rightAction: {
-                  vm.videoVM.seekToTime(to: vm.videoVM.currentTime + 5)
-                  if vm.videoVM.isPlaying {
-                    vm.videoVM.startAutoHideControls()
-                  }
-                },
-                centerAction: {
-                  vm.videoVM.togglePlayPause()
-                },
-                isPlaying: $vm.videoVM.isPlaying
-              )
-              .padding(.bottom, 20)
-              .transition(.opacity)
             }
           }
-          .frame(width: showFeedbackPanel ? proxy.size.height * 0.55 : proxy.size.height * 0.83)
+          .background(Color.black)
           
-          // 슬라이더 (전체 width로 확장)
+          // 2) 탭 영역 (비디오 위)
+          TapClearArea(
+            leftTap: { vm.videoVM.leftTab() },
+            rightTap: { vm.videoVM.rightTap() },
+            centerTap: { vm.videoVM.centerTap() },
+            showControls: $vm.videoVM.showControls
+          )
+          .contentShape(Rectangle())
+          .frame(
+            width: max(
+              proxy.size.width,
+              proxy.size.height * 16.0 / 9.0
+            )
+          )
+          
+          // 3) 오버레이 컨트롤 (재생/일시정지, 슬라이더, 버튼들)
           if vm.videoVM.showControls {
-            VStack {
-              Spacer()
-
-              CustomSlider(
-                isDragging: $isDragging,
-                currentTime: isDragging ? sliderValue : vm.videoVM.currentTime,
-                duration: vm.videoVM.duration,
-                onSeek: { time in
-                  vm.videoVM.seekToTime(to: time)
-                },
-                onDragChanged: { time in
-                  self.sliderValue = time
-                  vm.videoVM.seekToTime(to: time)
-                },
-                startTime: vm.videoVM.currentTime.formattedTime(),
-                endTime: vm.videoVM.duration.formattedTime()
-              )
-              .padding(.horizontal, 20)
-              .padding(.bottom, 10)
-              .onChange(of: vm.videoVM.currentTime) { _, newValue in
-                if !isDragging {
-                  sliderValue = newValue
+            
+            // 중앙 재생/탐색 컨트롤
+            OverlayController(
+              leftAction: {
+                vm.videoVM.seekToTime(to: vm.videoVM.currentTime - 5)
+                if vm.videoVM.isPlaying {
+                  vm.videoVM.startAutoHideControls()
                 }
+              },
+              rightAction: {
+                vm.videoVM.seekToTime(to: vm.videoVM.currentTime + 5)
+                if vm.videoVM.isPlaying {
+                  vm.videoVM.startAutoHideControls()
+                }
+              },
+              centerAction: {
+                vm.videoVM.togglePlayPause()
+              },
+              isPlaying: $vm.videoVM.isPlaying
+            )
+            .frame(
+              width: max(
+                proxy.size.width,
+                proxy.size.height * 16.0 / 9.0
+              )
+            )
+            
+            
+            // 슬라이더
+            CustomSlider(
+              isDragging: $isDragging,
+              currentTime: isDragging ? sliderValue : vm.videoVM.currentTime,
+              duration: vm.videoVM.duration,
+              onSeek: { time in
+                vm.videoVM.seekToTime(to: time)
+              },
+              onDragChanged: { time in
+                self.sliderValue = time
+                vm.videoVM.seekToTime(to: time)
+              },
+              startTime: vm.videoVM.currentTime.formattedTime(),
+              endTime: vm.videoVM.duration.formattedTime()
+            )
+            .frame(
+              width: max(
+                proxy.size.width,
+                proxy.size.height * 16.0 / 9.0
+              )
+            )
+            .onChange(of: vm.videoVM.currentTime) { _, newValue in
+              if !isDragging {
+                sliderValue = newValue
               }
             }
-            .frame(width: showFeedbackPanel ? proxy.size.height * 0.55 : proxy.size.height)
-            .transition(.opacity)
-
-            // 버튼 (전체 width로 확장)
+            
+            // 속도 / 전체화면 / 패널 버튼
             VideoSettingButtons(
               action: { self.showSpeedSheet = true },
               toggleOrientations: {
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                   self.forceShowLandscape.toggle()
+                  if self.forceShowLandscape {
+                    // 전체 화면 ON → 가로 강제
+                    enterLandscapeMode()
+                  } else {
+                    // 전체 화면 OFF → 세로 복귀
+                    exitLandscapeMode()
+                  }
                 }
               },
-              isLandscapeMode: shouldShowLayout,
+              isLandscapeMode: forceShowLandscape,
               toggleFeedbackPanel: {
+                print("토글 눌림")
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                   showFeedbackPanel.toggle()
                 }
               },
               showFeedbackPanel: showFeedbackPanel
             )
-            .frame(width: showFeedbackPanel ? proxy.size.height * 0.55 : proxy.size.height)
-            .padding(.bottom, 10)
-            .transition(.opacity)
+            .frame(
+              width: max(
+                proxy.size.width,
+                proxy.size.height * 16.0 / 9.0
+              )
+            )
           }
         }
-        .frame(width: showFeedbackPanel ? proxy.size.height * 0.55 : proxy.size.height)
         
+        // MARK: 오른쪽 - 피드백 패널
         if showFeedbackPanel {
           VStack(spacing: 0) {
             HStack(spacing: 0) {
               feedbackSection
                 .padding(.vertical, 16)
+              
               Button {
                 self.showFeedbackPanel = false
               } label: {
@@ -428,33 +452,18 @@ struct VideoView: View {
             feedbackListView
               .padding(.vertical, 8)
           }
-          .frame(width: proxy.size.height * 0.45)
+          .onAppear(perform: {
+            print("보인다")
+          })
+          .frame(width: proxy.size.width * 0.4, height: proxy.size.height)
           .background(Color.black.opacity(0.95))
           .transition(.move(edge: .trailing))
-          .transition(.move(edge: .leading))
         }
       }
-      .frame(width: proxy.size.height, height: proxy.size.width)
-      .rotationEffect(.degrees(90))
-      .frame(width: proxy.size.width, height: proxy.size.height)
-      .clipped()
     }
-    .background(Color.black)
+    .ignoresSafeArea()
   }
   
-  private func updateOrientation() {
-    let orientation = UIDevice.current.orientation
-    switch orientation {
-    case .landscapeLeft, .landscapeRight:
-      isLandscape = true
-      forceShowLandscape = false
-    case .portrait, .portraitUpsideDown:
-      isLandscape = false
-      forceShowLandscape = false
-    default:
-      break
-    }
-  }
   // MARK: 비디오 섹션
   private var videoView: some View {
     ZStack {
@@ -521,15 +530,20 @@ struct VideoView: View {
         }
         .transition(.opacity)
         
-        if !shouldShowLayout {
+        if !forceShowLandscape {
           VideoSettingButtons(
             action: { self.showSpeedSheet = true },
             toggleOrientations: {
               withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                 self.forceShowLandscape.toggle()
+                      if self.forceShowLandscape {
+                        enterLandscapeMode()
+                      } else {
+                        exitLandscapeMode()
+                      }
               }
             },
-            isLandscapeMode: shouldShowLayout,
+            isLandscapeMode: forceShowLandscape,
             toggleFeedbackPanel: {
               withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                 showFeedbackPanel.toggle()
@@ -583,12 +597,12 @@ struct VideoView: View {
                   vm.getTaggedUsers(for: f.taggedUserIds),
                 replyCount: vm.feedbackVM.reply[f.feedbackId.uuidString]?.count ?? 0,
                 action: { // showReplySheet와 동일한 네비게이션
-                  if !shouldShowLayout { // 가로모드 시트 x
+                  if !forceShowLandscape { // 가로모드 시트 x
                     self.selectedFeedback = f
                   }
                 },
                 showReplySheet: { // showReplySheet와 동일한 네비게이션
-                  if !shouldShowLayout {
+                  if !forceShowLandscape {
                     self.selectedFeedback = f
                   }
                 },
@@ -602,7 +616,7 @@ struct VideoView: View {
                   }
                 },
                 onReport: {
-                  if !shouldShowLayout { // 가로모드 시트 x
+                  if !forceShowLandscape { // 가로모드 시트 x
                     self.reportTargetFeedback = f
                   }
                 },
@@ -714,7 +728,6 @@ struct VideoView: View {
     }
     .frame(height: 300)
   }
-  
   /// 현재 플레이어 시점의 프레임을 이미지로 캡쳐
   private func captureCurrentFrame() {
     guard let player = vm.videoVM.player,
@@ -743,7 +756,44 @@ struct VideoView: View {
     }
   }
   
+  @MainActor
+  func enterLandscapeMode() {
+   
+    AppDelegate.orientationMask = .landscape
+    
+    guard let scene = UIApplication.shared.connectedScenes
+      .compactMap({ $0 as? UIWindowScene })
+      .first else { return }
+    
+    scene.keyWindow?.rootViewController?.setNeedsUpdateOfSupportedInterfaceOrientations()
+    
+    scene.requestGeometryUpdate(.iOS(interfaceOrientations: .landscapeRight))
+    
+    forceShowLandscape = true
+  }
   
+  @MainActor
+  func exitLandscapeMode() {
+    AppDelegate.orientationMask = .portrait
+    
+    guard let scene = UIApplication.shared.connectedScenes
+      .compactMap({ $0 as? UIWindowScene })
+      .first else { return }
+    
+    scene.keyWindow?.rootViewController?.setNeedsUpdateOfSupportedInterfaceOrientations()
+    
+    
+    scene.requestGeometryUpdate(.iOS(interfaceOrientations: .portrait))
+    
+    forceShowLandscape = false
+  }
+  
+}
+
+extension UIWindowScene {
+  var keyWindow: UIWindow? {
+    windows.first { $0.isKeyWindow }
+  }
 }
 
 #Preview {
