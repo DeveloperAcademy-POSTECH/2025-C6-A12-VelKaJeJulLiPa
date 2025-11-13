@@ -61,7 +61,7 @@ struct ThumbnailAsyncImage: View {
   private var thumbnailSkeletonView: some View {
     SkeletonView(
       RoundedCorner(radius: 10, corners: [.topLeft, .topRight]),
-      Color.fillNormal
+      Color.fillAssitive
     )
   }
   
