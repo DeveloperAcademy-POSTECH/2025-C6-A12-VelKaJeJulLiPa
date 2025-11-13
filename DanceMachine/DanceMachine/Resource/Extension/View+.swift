@@ -115,11 +115,11 @@ extension View {
     if #available(iOS 26.0, *) {
       if isScrollDown {
         self
-          .glassEffect(.clear.tint(Color(red: 0x7E/255, green: 0x7C/255, blue: 0xFF/255)).interactive(), in: .circle)
+          .glassEffect(.clear.tint(.secondaryNormal).interactive(), in: .circle)
           .environment(\.colorScheme, .light)
       } else {
         self
-          .glassEffect(.clear.tint(Color(red: 0x7E/255, green: 0x7C/255, blue: 0xFF/255)).interactive(), in: RoundedRectangle(cornerRadius: 24))
+          .glassEffect(.clear.tint(.secondaryNormal).interactive(), in: RoundedRectangle(cornerRadius: 24))
           .environment(\.colorScheme, .light)
       }
     } else {
