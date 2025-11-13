@@ -9,6 +9,10 @@ import Foundation
 import AVFoundation
 
 /// 비디오 압축 전용 매니저 입니다.
+/// - 720p 화질이 넘는다면 무조건 압축을 진행합니다.
+/// - 모든 영상은 비트레이트를 50mb 근사치까지 압축합니다.
+/// - 720p 이하인데 지정한 용량(maxOriginalFileSizeMB)가 넘으면 업로드를 차단합니다.
+/// - 압축 후 에도 지정한 용량(maxCompressedFileSizeMB)가 넘으면 업로드를 차단합니다.
 final class VideoCompressionManager {
   static let shared = VideoCompressionManager()
   private init() {}
