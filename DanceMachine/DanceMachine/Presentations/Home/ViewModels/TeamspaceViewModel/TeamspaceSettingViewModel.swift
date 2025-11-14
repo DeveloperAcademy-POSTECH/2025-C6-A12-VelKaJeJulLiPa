@@ -93,6 +93,12 @@ final class TeamspaceSettingViewModel {
   func leaveTeamspace() async throws {
     do {
       try await self.removeUserFromCurrentTeamspace(userId: FirebaseAuthManager.shared.userInfo?.userId ?? "")
+      /// updated_at 갱신하기
+      try await FirestoreManager.shared.updateTimestampField(
+        field: .update,
+        in: .users,
+        documentId: FirebaseAuthManager.shared.userInfo?.userId ?? ""
+      )
       let userTeamspaces = try await self.fetchUserTeamspace(userId: FirebaseAuthManager.shared.userInfo?.userId ?? "")
       let loadTeamspaces = try await self.fetchTeamspaces(userTeamspaces: userTeamspaces)
       
@@ -116,7 +122,10 @@ final class TeamspaceSettingViewModel {
   /// 팀원 내보내기 + 내보내진 팀원 서브컬렉션에서도 팀 스페이스 제거 + 팀 스페이스 현재 멤버 새로고침
   func removeTeamMemberAndReload(userId: String) async throws -> [User] {
     do {
+      
+      // FIXME: - batch 추가하기
       try await self.removingTeamspaceMember(userId: userId) // 팀원 내보내기
+      
       
       try await FirestoreManager.shared.deleteFromSubcollection(
         under: .users,
@@ -124,6 +133,16 @@ final class TeamspaceSettingViewModel {
         subCollection: .userTeamspace,
         target: self.currentTeamspace?.teamspaceId.uuidString ?? ""
       ) // 내보내진 팀원 서브컬렉션에서도 팀 스페이스 제거
+      
+      
+      // FIXME: - 테스트 필요
+      /// 제거 유저 updated_at 갱신하기
+      try await FirestoreManager.shared.updateTimestampField(
+        field: .update,
+        in: .users,
+        documentId: userId
+      )
+      
       
       return await self.fetchCurrentTeamspaceAllMember()
     } catch {
@@ -136,6 +155,7 @@ final class TeamspaceSettingViewModel {
   /// 팀 스페이스 이름 수정하기 + 팀 스페이스 새로 고침
   func renameCurrentTeamspaceAndReload(editedName: String) async throws {
     do {
+      // FIXME: - batch 추가하기
       try await self.updateTeamspaceName(
         teamspaceId: self.currentTeamspace?.teamspaceId.uuidString ?? "",
         newTeamspaceName: editedName
@@ -146,6 +166,15 @@ final class TeamspaceSettingViewModel {
         self.currentTeamspace?.teamspaceId.uuidString ?? "",
         from: .teamspace
       )
+      
+      // FIXME: - 테스트 필요
+      /// 제거 유저 updated_at 갱신하기
+      try await FirestoreManager.shared.updateTimestampField(
+        field: .update,
+        in: .users,
+        documentId: FirebaseAuthManager.shared.userInfo?.userId ?? ""
+      )
+      
     } catch {
       print("error: \(error.localizedDescription)") // FIXME: - 에러에 맞게 로직 수정
     }
@@ -204,6 +233,7 @@ extension TeamspaceSettingViewModel {
   // TODO: 프로젝트도 삭제, tracks
   func removeTeamspaceAndDetachFromAllUsers() async throws {
     do {
+      // FIXME: - batch 추가하기      
       let teamspaceId = self.currentTeamspace?.teamspaceId.uuidString ?? ""
       
       // 1) members 서브컬렉션에서 모든 멤버 조회
@@ -254,7 +284,13 @@ extension TeamspaceSettingViewModel {
       )
       
       
-      
+      // FIXME: - 테스트 필요
+      /// 제거 유저 updated_at 갱신하기
+      try await FirestoreManager.shared.updateTimestampField(
+        field: .update,
+        in: .users,
+        documentId: FirebaseAuthManager.shared.userInfo?.userId ?? ""
+      )
       
       
       let userTeamspaces = try await self.fetchUserTeamspace(userId: FirebaseAuthManager.shared.userInfo?.userId ?? "")
