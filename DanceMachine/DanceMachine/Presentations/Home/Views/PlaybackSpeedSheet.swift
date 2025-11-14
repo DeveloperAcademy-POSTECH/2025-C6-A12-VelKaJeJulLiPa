@@ -10,20 +10,23 @@ import SwiftUI
 struct PlaybackSpeedSheet: View {
   @Environment(\.dismiss) private var dismiss
   @Binding var playbackSpeed: Float
-  
+
   let onSpeedChange: (Float) -> Void
-  
+
   private let minSpeed: Float = 0.25
-  private let maxSpeed: Float = 3.0
+  private let maxSpeed: Float = 2.0
   private let speedStep: Float = 0.25
-  
+
   private let presetSpeeds: [Float] = [0.3, 0.5, 0.9, 0.8, 1.0]
+
+  @State private var tempSpeed: Float = 1.0
+
   var body: some View {
     VStack(spacing: 16) {
-      Text("\(String(format: "%.2f", playbackSpeed)) X")
+      Text("\(String(format: "%.2f", tempSpeed)) X")
         .font(.headline2Medium)
         .foregroundStyle(.labelStrong)
-      
+
       HStack {
         Button {
           decreaseSpeed()
@@ -36,19 +39,19 @@ struct PlaybackSpeedSheet: View {
             .clipShape(Circle())
         }
         Slider(
-          value: Binding(
-            get: { playbackSpeed },
-            set: { newValue in
-              let rounded = round(newValue / speedStep) * speedStep
+          value: $tempSpeed,
+          in: minSpeed...maxSpeed,
+          step: speedStep,
+          onEditingChanged: { isEditing in
+            if !isEditing {
+              let rounded = round(tempSpeed / speedStep) * speedStep
               updateSpeed(rounded)
             }
-          ),
-          in: minSpeed...maxSpeed,
-          step: speedStep
+          }
         )
         .tint(Color.primitiveAssitive)
         .contentShape(Rectangle())
-        
+
         Button {
           increaseSpeed()
         } label: {
@@ -61,16 +64,18 @@ struct PlaybackSpeedSheet: View {
         }
       }
       .padding(.horizontal, 16)
-      
+
       freeSetButton
     }
-//    .padding(.vertical, 16)
+    .padding(.top, 16)
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(.backgroundElevated)
-//    .background {
-//      RoundedRectangle(cornerRadius: 24)
-//        .fill(Color.backgroundElevated)
-//    }
+    .onAppear {
+      tempSpeed = playbackSpeed
+    }
+    .onChange(of: playbackSpeed) { _, newValue in
+      tempSpeed = newValue
+    }
   }
   private var freeSetButton: some View {
     HStack {
@@ -92,15 +97,16 @@ struct PlaybackSpeedSheet: View {
   }
   
   private func updateSpeed(_ speed: Float) {
+    self.tempSpeed = speed
     self.playbackSpeed = speed
     self.onSpeedChange(speed)
   }
   private func increaseSpeed() {
-    let new = min(playbackSpeed + speedStep, maxSpeed)
+    let new = min(tempSpeed + speedStep, maxSpeed)
     updateSpeed(new)
   }
   private func decreaseSpeed() {
-    let new = max(playbackSpeed - speedStep, minSpeed)
+    let new = max(tempSpeed - speedStep, minSpeed)
     updateSpeed(new)
   }
   private func formatSpeed(_ speed: Float) -> String {

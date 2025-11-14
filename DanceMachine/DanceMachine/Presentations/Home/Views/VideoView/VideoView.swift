@@ -494,7 +494,7 @@ struct VideoView: View {
             vm.videoVM.setPlaybackSpeed(speed)
           }
         )
-        .frame(width: 350, height: 200)
+        .frame(width: 350, height: 160)
         .clipShape(RoundedRectangle(cornerRadius: 24))
         .offset(y: -40)
         .transition(.scale.combined(with: .opacity))
@@ -519,7 +519,6 @@ struct VideoView: View {
         centerTap: { vm.videoVM.centerTap() },
         showControls: $vm.videoVM.showControls
       )
-      .border(Color.red)
       
       if vm.videoVM.showControls {
         ZStack {
@@ -612,7 +611,7 @@ struct VideoView: View {
         playbackSpeed: $vm.videoVM.playbackSpeed) { speed in
           vm.videoVM.setPlaybackSpeed(speed)
         }
-        .presentationDetents([.fraction(0.25)])
+        .presentationDetents([.fraction(0.2)])
     }
   }
   // MARK: 피드백 리스트
