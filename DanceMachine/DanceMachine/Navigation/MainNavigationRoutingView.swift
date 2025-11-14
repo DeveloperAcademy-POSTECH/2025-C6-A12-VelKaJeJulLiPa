@@ -65,11 +65,12 @@ struct MainNavigationRoutingView: View {
             trackName: trackName,
             sectionId: sectionId
           )
-        case .play(let videoId, let videoTitle, let videoURL):
+        case .play(let videoId, let videoTitle, let videoURL, let teamspaceId):
           VideoView(
             videoId: videoId,
             videoTitle: videoTitle,
-            videoURL: videoURL
+            videoURL: videoURL,
+            teamspaceId: teamspaceId
           )
         }
       }

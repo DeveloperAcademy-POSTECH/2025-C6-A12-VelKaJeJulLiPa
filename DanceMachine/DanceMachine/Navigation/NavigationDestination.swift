@@ -67,7 +67,7 @@ enum MyPageRoute: Hashable {
 enum VideoRoute: Hashable {
   case list(tracksId: String, sectionId: String, trackName: String)
   case section(section: [Section], tracksId: String, trackName: String, sectionId: String)
-  case play(videoId: String, videoTitle: String, videoURL: String)
+  case play(videoId: String, videoTitle: String, videoURL: String, teamspaceId: String)
 }
 
 enum FloatingButtonType {
