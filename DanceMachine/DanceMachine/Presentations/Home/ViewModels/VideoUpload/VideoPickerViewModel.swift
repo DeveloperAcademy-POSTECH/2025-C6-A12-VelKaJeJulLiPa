@@ -49,8 +49,12 @@ final class VideoPickerViewModel {
   )? = nil
 
   var isUploading: Bool {
-    if case .uploading = progressManager.uploadState { return true }
-    return false
+    switch progressManager.uploadState {
+    case .compressing, .uploading:
+      return true
+    default:
+      return false
+    }
   }
   
   // MARK: 동영상 미리보기 로드
