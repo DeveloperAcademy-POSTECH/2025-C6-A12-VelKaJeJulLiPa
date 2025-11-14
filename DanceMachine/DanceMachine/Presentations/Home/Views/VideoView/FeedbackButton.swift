@@ -127,6 +127,13 @@ struct FeedbackButton: View {
   }
 }
 
-//#Preview {
-//  FeedbackButton()
-//}
+#Preview {
+  FeedbackButton(
+    pointAction: {},
+    intervalAction: {},
+    isRecordingInterval: true,
+    startTime: "",
+    currentTime: "",
+    feedbackType: .constant(.point)
+  )
+}

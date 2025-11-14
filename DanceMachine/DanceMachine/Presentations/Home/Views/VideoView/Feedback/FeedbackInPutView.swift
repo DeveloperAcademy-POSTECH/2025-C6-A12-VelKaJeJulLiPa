@@ -8,6 +8,9 @@
 import SwiftUI
 
 struct FeedbackInPutView: View {
+  
+  @EnvironmentObject private var router: MainRouter
+  
   @State private var mM = MentionManager()
   
   let teamMembers: [User]
@@ -18,10 +21,17 @@ struct FeedbackInPutView: View {
   let refresh: () -> Void
   let timeSeek: () -> Void
   
+  let drawingButtonTapped: () -> Void
+  
   @State private var content: String = ""
   @FocusState private var isFocused: Bool
   @State private var taggedViewHeight: CGFloat = 0
 
+  
+  @Binding var feedbackDrawingImage: UIImage? // 드로잉 피드백 이미지
+  let imageNamespace: Namespace.ID
+  @Binding var showImageFull: Bool
+  
   private var filteredMembers: [User] {
     if mM.mentionQuery.isEmpty {
       return teamMembers
@@ -34,6 +44,7 @@ struct FeedbackInPutView: View {
   var body: some View {
     VStack(spacing: 16) {
       topRow
+      feedbackImageView.frame(maxWidth: .infinity, alignment: .leading)
       if !mM.taggedUsers.isEmpty {
         taggedView
       }
@@ -99,6 +110,14 @@ struct FeedbackInPutView: View {
         )
       }
       Spacer()
+      
+      // TODO: 여기에 드로잉 버튼으로 갈 이미지 삽입
+      Button {
+        drawingButtonTapped()
+      } label: {
+        Text("드로잉 이동")
+      }
+      
       clearButton
     }
   }
@@ -107,15 +126,35 @@ struct FeedbackInPutView: View {
     Button {
       refresh()
     } label: {
-        Image(systemName: "xmark")
-          .font(.system(size: 17))
-          .foregroundStyle(.labelNormal)
+      Image(systemName: "xmark")
+        .font(.system(size: 17))
+        .foregroundStyle(.labelNormal)
     }
   }
+  
+  // MARK: - 피드백 이미지
+  private var feedbackImageView: some View {
+    VStack(alignment: .leading) {
+      if let image = feedbackDrawingImage {
+        Image(uiImage: image)
+          .resizable()
+          .scaledToFill()
+          .frame(width: 100, height: 100)
+          .clipShape(RoundedRectangle(cornerRadius: 8))
+          .matchedGeometryEffect(id: "feedbackImage", in: imageNamespace)
+          .onTapGesture {
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+              showImageFull = true
+            }
+          }
+      }
+    }
+  }
+  
   // MARK: 태그된 사용자 표시
   private var taggedView: some View {
     let isAllTagged = !teamMembers.isEmpty && mM.taggedUsers.count == teamMembers.count
-
+    
     return ScrollView(.horizontal, showsIndicators: false) {
       HStack(spacing: 4) {
         if isAllTagged {
@@ -160,43 +199,45 @@ struct FeedbackInPutView: View {
   }
 }
 
-#Preview {
-  @Previewable @State var taggedUsers: [User] = .init(
-    [User(
-      userId: "1",
-      email: "",
-      name: "서영",
-      loginType: LoginType.apple,
-      fcmToken: "",
-      termsAgreed: true,
-      privacyAgreed: true
-    ),
-     User(
-      userId: "2",
-      email: "",
-      name: "카단",
-      loginType: LoginType.apple,
-      fcmToken: "",
-      termsAgreed: true,
-      privacyAgreed: true
-     ),
-     User(
-      userId: "3",
-      email: "",
-      name: "벨코",
-      loginType: LoginType.apple,
-      fcmToken: "",
-      termsAgreed: true,
-      privacyAgreed: true
-     )]
-  )
-  FeedbackInPutView(
-    teamMembers: taggedUsers,
-    feedbackType: .interval,
-    currentTime: 5.111111,
-    startTime: 0.2,
-    onSubmit: {_, _ in },
-    refresh: {},
-    timeSeek: {}
-  )
-}
+//#Preview {
+//  @Previewable @State var taggedUsers: [User] = .init(
+//    [User(
+//      userId: "1",
+//      email: "",
+//      name: "서영",
+//      loginType: LoginType.apple,
+//      fcmToken: "",
+//      termsAgreed: true,
+//      privacyAgreed: true
+//    ),
+//     User(
+//      userId: "2",
+//      email: "",
+//      name: "카단",
+//      loginType: LoginType.apple,
+//      fcmToken: "",
+//      termsAgreed: true,
+//      privacyAgreed: true
+//     ),
+//     User(
+//      userId: "3",
+//      email: "",
+//      name: "벨코",
+//      loginType: LoginType.apple,
+//      fcmToken: "",
+//      termsAgreed: true,
+//      privacyAgreed: true
+//     )]
+//  )
+//  FeedbackInPutView(
+//    teamMembers: taggedUsers,
+//    feedbackType: .interval,
+//    currentTime: 5.111111,
+//    startTime: 0.2,
+//    onSubmit: {_, _ in },
+//    refresh: {},
+//    timeSeek: {},
+//    drawingButtonTapped: {},
+//    feedbackDrawingImage: .constant(nil)
+//  )
+//}

@@ -184,6 +184,9 @@ extension VideoPickerViewModel {
               self.compressionManager.cleanupCurrentCompression()
               self.isLoading = false
               self.showSuccessAlert = true
+              
+              self.selectedAsset = nil
+              self.videoTitle = ""
             }
 
           } catch let error as VideoError {
