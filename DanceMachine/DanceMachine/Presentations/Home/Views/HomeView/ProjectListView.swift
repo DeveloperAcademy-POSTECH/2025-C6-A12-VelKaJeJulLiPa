@@ -177,99 +177,99 @@ struct ProjectListView<ExpandedContent: View>: View {
   }
 }
 
-#Preview {
-  PreviewWrapper()
-}
+//#Preview {
+//  PreviewWrapper()
+//}
 
 
-// MARK: - 프리뷰
-
-private struct PreviewWrapper: View {
-  // ViewModel & Bindings for preview
-  @State private var vm = HomeViewModel()
-  
-  @State private var labelText: String = "프로젝트 목록"
-  
-  @State private var projects: [Project] = [
-    Project(
-      projectId: UUID(),
-      teamspaceId: "teamspace-demo-001",
-      creatorId: "user-demo-alice",
-      projectName: "뉴진스 - Hype Boy"
-    ),
-    Project(
-      projectId: UUID(),
-      teamspaceId: "teamspace-demo-001",
-      creatorId: "user-demo-bob",
-      projectName: "아이브 - Love Dive"
-    ),
-    Project(
-      projectId: UUID(),
-      teamspaceId: "teamspace-demo-002",
-      creatorId: "user-demo-charlie",
-      projectName: "르세라핌 - Easy"
-    )
-  ]
-  
-  @State private var rowState: ProjectRowState = .viewing
-  @State private var editingProjectID: UUID? = nil
-  @State private var editText: String = ""
-  
-  // Tracks 헤더 전환용
-  @State private var tracksRowState: TracksRowState = .viewing
-  
-  // 어떤 프로젝트가 펼쳐졌는지 (미니 라우터처럼 사용)
-  @State private var expandedID: UUID? = nil
-  
-  var body: some View {
-    ProjectListView(
-      viewModel: vm,
-      labelText: $labelText,
-      projects: $projects,
-      rowState: $rowState,
-      editingProjectID: $editingProjectID,
-      editText: $editText,
-      onCommitEdit: { _, _ in /* no-op for preview */
-      },
-      onDelete: { _ in /* no-op for preview */ },
-      onTap: { project in
-        // 토글 + 헤더 타이틀 동기화
-        if expandedID == project.projectId {
-          expandedID = nil
-          labelText = "프로젝트 목록"
-        } else {
-          expandedID = project.projectId
-          labelText = project.projectName
-        }
-      },
-      isExpanded: { project in
-        expandedID == project.projectId
-      },
-      expandedContent: { project in
-        // 펼쳐졌을 때 보여줄 임시 콘텐츠 (실제에선 TracksInlineView 등)
-        VStack(alignment: .leading, spacing: 8) {
-          Text("Tracks for \(project.projectName)")
-            .font(.headline)
-          Text("여기에 TracksInlineView가 들어갑니다.")
-            .font(.subheadline)
-            .foregroundStyle(.secondary)
-        }
-        .padding(.vertical, 8)
-      },
-      // 헤더 전환 판단값
-      isAnyProjectExpanded: expandedID != nil,
-      // Tracks 헤더 바인딩/콜백
-      tracksRowState: $tracksRowState,
-      isTracksPrimaryDisabled: false,
-      onTracksPrimaryUpdate: {},
-      onTracksCancelSideEffects: {
-      },
-      showToastMessage: .constant(false),
-      presentingRemovalProjectAlert: .constant(false)
-    )
-    .padding()
-  }
-}
-
-
-
+//// MARK: - 프리뷰
+//
+//private struct PreviewWrapper: View {
+//  // ViewModel & Bindings for preview
+//  @State private var vm = HomeViewModel()
+//  
+//  @State private var labelText: String = "프로젝트 목록"
+//  
+//  @State private var projects: [Project] = [
+//    Project(
+//      projectId: UUID(),
+//      teamspaceId: "teamspace-demo-001",
+//      creatorId: "user-demo-alice",
+//      projectName: "뉴진스 - Hype Boy"
+//    ),
+//    Project(
+//      projectId: UUID(),
+//      teamspaceId: "teamspace-demo-001",
+//      creatorId: "user-demo-bob",
+//      projectName: "아이브 - Love Dive"
+//    ),
+//    Project(
+//      projectId: UUID(),
+//      teamspaceId: "teamspace-demo-002",
+//      creatorId: "user-demo-charlie",
+//      projectName: "르세라핌 - Easy"
+//    )
+//  ]
+//  
+//  @State private var rowState: ProjectRowState = .viewing
+//  @State private var editingProjectID: UUID? = nil
+//  @State private var editText: String = ""
+//  
+//  // Tracks 헤더 전환용
+//  @State private var tracksRowState: TracksRowState = .viewing
+//  
+//  // 어떤 프로젝트가 펼쳐졌는지 (미니 라우터처럼 사용)
+//  @State private var expandedID: UUID? = nil
+//  
+//  var body: some View {
+//    ProjectListView(
+//      viewModel: vm,
+//      labelText: $labelText,
+//      projects: $projects,
+//      rowState: $rowState,
+//      editingProjectID: $editingProjectID,
+//      editText: $editText,
+//      onCommitEdit: { _, _ in /* no-op for preview */
+//      },
+//      onDelete: { _ in /* no-op for preview */ },
+//      onTap: { project in
+//        // 토글 + 헤더 타이틀 동기화
+//        if expandedID == project.projectId {
+//          expandedID = nil
+//          labelText = "프로젝트 목록"
+//        } else {
+//          expandedID = project.projectId
+//          labelText = project.projectName
+//        }
+//      },
+//      isExpanded: { project in
+//        expandedID == project.projectId
+//      },
+//      expandedContent: { project in
+//        // 펼쳐졌을 때 보여줄 임시 콘텐츠 (실제에선 TracksInlineView 등)
+//        VStack(alignment: .leading, spacing: 8) {
+//          Text("Tracks for \(project.projectName)")
+//            .font(.headline)
+//          Text("여기에 TracksInlineView가 들어갑니다.")
+//            .font(.subheadline)
+//            .foregroundStyle(.secondary)
+//        }
+//        .padding(.vertical, 8)
+//      },
+//      // 헤더 전환 판단값
+//      isAnyProjectExpanded: expandedID != nil,
+//      // Tracks 헤더 바인딩/콜백
+//      tracksRowState: $tracksRowState,
+//      isTracksPrimaryDisabled: false,
+//      onTracksPrimaryUpdate: {},
+//      onTracksCancelSideEffects: {
+//      },
+//      showToastMessage: .constant(false),
+//      presentingRemovalProjectAlert: .constant(false)
+//    )
+//    .padding()
+//  }
+//}
+//
+//
+//
