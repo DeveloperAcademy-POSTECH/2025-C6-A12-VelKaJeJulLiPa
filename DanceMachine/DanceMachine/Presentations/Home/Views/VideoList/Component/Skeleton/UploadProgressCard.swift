@@ -106,7 +106,7 @@ struct UploadProgressCard: View {
     )
   }
   
-  // MARK: fileToLarge
+  // MARK: fileTooLarge
   private var fileTooLargeView: some View {
     VStack {
       ZStack {
@@ -270,7 +270,7 @@ struct UploadProgressCard: View {
 
 #Preview("fileToLarge") {
   @Previewable @State var vm = VideoProgressManager.shared
-  vm.uploadState = .fileToLarge(message: "100MB까지 업로드 가능합니다.")
+  vm.uploadState = .fileToLarge(message: "더 짧거나 낮은 화질의 영상을\n선택해주세요.")
   return UploadProgressCard(
     cardSize: 172,
     progressManager: vm,

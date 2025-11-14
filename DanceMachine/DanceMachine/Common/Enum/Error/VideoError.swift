@@ -60,7 +60,7 @@ enum VideoError: Error {
     case .compressionError:
       "동영상 압축을 실패했습니다."
     case .fileTooLarge:
-      "영상 용량이 너무 큽니다.\n더 짧거나 낮은 화질의 영상을 선택해주세요."
+      "더 짧거나 낮은 화질의 영상을\n선택해주세요."
     }
   }
 }
