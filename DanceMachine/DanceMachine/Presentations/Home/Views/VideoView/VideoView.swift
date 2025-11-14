@@ -42,6 +42,7 @@ struct VideoView: View {
   
   // MARK: 배속 좆러
   @State private var showSpeedSheet: Bool = false
+  @State private var showSpeedModal: Bool = false
   
   // MARK: 스크롤 관련
   @State private var scrollProxy: ScrollViewProxy? = nil
@@ -90,12 +91,7 @@ struct VideoView: View {
     GeometryReader { proxy in
       Group {
         if forceShowLandscape {
-          ZStack {
-            Color.backgroundNormal.ignoresSafeArea()
-            VStack {
-              landscapeView(proxy: proxy) // 가로모드
-            }
-          }
+          landscapeView(proxy: proxy) // 가로모드
         } else {
           ZStack {
             Color.backgroundNormal.ignoresSafeArea()
@@ -236,7 +232,7 @@ struct VideoView: View {
     .onChange(of: isImageOverlayPresented) { dismissKeyboard() } // 오버레이(이미지 확대)로 교체시 키보드 내리기
     // 드로잉 이미지 확대 시, 툴 바 숨기기 처리
     .toolbar(
-      showDrawingImageFull || showFeedbackImageFull ? .hidden : .visible,
+      showDrawingImageFull || showFeedbackImageFull || forceShowLandscape ? .hidden : .visible,
       for: .navigationBar
     )
     .fullScreenCover(isPresented: $showFeedbackPaperDrawingView) {
@@ -309,7 +305,9 @@ struct VideoView: View {
         .frame(height: proxy.size.width * 9 / 16)
       
       VStack(spacing: 0) {
-        feedbackSection.padding(.vertical, 8)
+        feedbackSection
+          .padding(.horizontal, 16)
+          .padding(.vertical, 8)
         Divider()
         feedbackListView
       }
@@ -331,54 +329,51 @@ struct VideoView: View {
   
   // MARK: 가로모드 레이아웃
   private func landscapeView(proxy: GeometryProxy) -> some View {
-    ZStack {
-      Color.black.ignoresSafeArea()
-      
-      HStack(spacing: 0) {
-        
-        // MARK: 왼쪽 - 비디오 영역
-        ZStack {
-          // 1) 비디오 레이어
-          Group {
-            if let player = vm.videoVM.player {
-              VideoController(player: player)
-                .aspectRatio(16/9, contentMode: .fit)
-                .clipped()
-                .allowsHitTesting(false)
-            } else {
-              Color.black
+    ZStack(alignment: .bottom) {
+    HStack(spacing: 0) {
+      // MARK: 비디오 + 컨트롤 영역
+      ZStack {
+        Color.black
+
+        // 비디오
+        if let player = vm.videoVM.player {
+          VideoController(player: player)
+            .aspectRatio(16/9, contentMode: .fit)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+
+        // 탭 영역
+        GeometryReader { tapProxy in
+          Color.clear
+            .contentShape(Rectangle())
+            .onTapGesture { location in
+              let tapWidth = tapProxy.size.width
+              if location.x < tapWidth / 3 {
+                vm.videoVM.leftTab()
+              } else if location.x > tapWidth * 2 / 3 {
+                vm.videoVM.rightTap()
+              } else {
+                vm.videoVM.centerTap()
+              }
             }
-          }
-          .background(Color.black)
-          
-          // 2) 탭 영역 (비디오 위)
-          TapClearArea(
-            leftTap: { vm.videoVM.leftTab() },
-            rightTap: { vm.videoVM.rightTap() },
-            centerTap: { vm.videoVM.centerTap() },
-            showControls: $vm.videoVM.showControls
-          )
-          .contentShape(Rectangle())
-          .frame(
-            width: max(
-              proxy.size.width,
-              proxy.size.height * 16.0 / 9.0
-            )
-          )
-          
-          // 3) 오버레이 컨트롤 (재생/일시정지, 슬라이더, 버튼들)
-          if vm.videoVM.showControls {
-            
-            // 중앙 재생/탐색 컨트롤
+        }
+
+        // 컨트롤
+        if vm.videoVM.showControls {
+          ZStack {
             OverlayController(
               leftAction: {
-                vm.videoVM.seekToTime(to: vm.videoVM.currentTime - 5)
+                vm.videoVM.seekToTime(
+                  to: vm.videoVM.currentTime - 5
+                )
                 if vm.videoVM.isPlaying {
                   vm.videoVM.startAutoHideControls()
                 }
               },
               rightAction: {
-                vm.videoVM.seekToTime(to: vm.videoVM.currentTime + 5)
+                vm.videoVM.seekToTime(
+                  to: vm.videoVM.currentTime + 5
+                )
                 if vm.videoVM.isPlaying {
                   vm.videoVM.startAutoHideControls()
                 }
@@ -388,15 +383,8 @@ struct VideoView: View {
               },
               isPlaying: $vm.videoVM.isPlaying
             )
-            .frame(
-              width: max(
-                proxy.size.width,
-                proxy.size.height * 16.0 / 9.0
-              )
-            )
-            
-            
-            // 슬라이더
+            .padding(.bottom, 20)
+
             CustomSlider(
               isDragging: $isDragging,
               currentTime: isDragging ? sliderValue : vm.videoVM.currentTime,
@@ -411,81 +399,107 @@ struct VideoView: View {
               startTime: vm.videoVM.currentTime.formattedTime(),
               endTime: vm.videoVM.duration.formattedTime()
             )
-            .frame(
-              width: max(
-                proxy.size.width,
-                proxy.size.height * 16.0 / 9.0
-              )
-            )
+            .padding(.horizontal, 20)
             .onChange(of: vm.videoVM.currentTime) { _, newValue in
               if !isDragging {
                 sliderValue = newValue
               }
             }
-            
-            // 속도 / 전체화면 / 패널 버튼
+
             VideoSettingButtons(
-              action: { self.showSpeedSheet = true },
+              action: { self.showSpeedModal = true },
               toggleOrientations: {
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                   self.forceShowLandscape.toggle()
                   if self.forceShowLandscape {
-                    // 전체 화면 ON → 가로 강제
                     enterLandscapeMode()
                   } else {
-                    // 전체 화면 OFF → 세로 복귀
                     exitLandscapeMode()
                   }
                 }
               },
               isLandscapeMode: forceShowLandscape,
               toggleFeedbackPanel: {
-                print("토글 눌림")
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                   showFeedbackPanel.toggle()
                 }
               },
               showFeedbackPanel: showFeedbackPanel
             )
-            .frame(
-              width: max(
-                proxy.size.width,
-                proxy.size.height * 16.0 / 9.0
-              )
-            )
           }
-        }
-        
-        // MARK: 오른쪽 - 피드백 패널
-        if showFeedbackPanel {
-          VStack(spacing: 0) {
-            HStack(spacing: 0) {
-              feedbackSection
-                .padding(.vertical, 16)
-              
-              Button {
-                self.showFeedbackPanel = false
-              } label: {
-                Image(systemName: "xmark.circle")
-                  .font(.system(size: 20))
-                  .foregroundStyle(.labelStrong)
-              }
-              .frame(width: 44, height: 44)
-            }
-            Divider()
-            feedbackListView
-              .padding(.vertical, 8)
-          }
-          .onAppear(perform: {
-            print("보인다")
-          })
-          .frame(width: proxy.size.width * 0.4, height: proxy.size.height)
-          .background(Color.black.opacity(0.95))
-          .transition(.move(edge: .trailing))
+          .padding(.horizontal, showFeedbackPanel ? 0 : 44)
+  //        .frame(maxWidth: .infinity, maxHeight: .infinity)
+          .transition(.opacity)
+          .zIndex(10)
         }
       }
+      .frame(width: showFeedbackPanel ? proxy.size.width * 0.6 : nil)
+      .clipped()
+
+      // MARK: 피드백 패널
+      if showFeedbackPanel {
+        VStack {
+          RoundedRectangle(cornerRadius: 20)
+            .fill(.backgroundNormal)
+            .frame(width: proxy.size.width * 0.4)
+            .overlay {
+              VStack(spacing: 0) {
+                HStack(spacing: 0) {
+                  feedbackSection.padding(.vertical, 10)
+                  Spacer()
+                  Button {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                      showFeedbackPanel = false
+                    }
+                  } label: {
+                    Image(systemName: "xmark.circle")
+                      .font(.system(size: 20))
+                      .foregroundStyle(.labelStrong)
+                  }
+                  .frame(width: 44, height: 44)
+                  .contentShape(Rectangle())
+//                  .padding(.trailing, 44)
+                }
+                Divider()
+                feedbackListView
+                  .scrollIndicators(.hidden)
+              }
+              .padding(.horizontal, 16)
+            }
+        }
+        .transition(.move(edge: .trailing))
+        
+//        .frame(width: proxy.size.width * 0.4)
+//        .background(Color.backgroundNormal)
+//        .ignoresSafeArea()
+//        .transition(.move(edge: .trailing))
+      }
     }
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
     .ignoresSafeArea()
+
+      // MARK: Speed Sheet 오버레이
+      if showSpeedModal {
+        Color.black.opacity(0.7)
+          .ignoresSafeArea()
+          .onTapGesture {
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+              self.showSpeedModal = false
+            }
+          }
+
+        PlaybackSpeedSheet(
+          playbackSpeed: $vm.videoVM.playbackSpeed,
+          onSpeedChange: { speed in
+            vm.videoVM.setPlaybackSpeed(speed)
+          }
+        )
+        .frame(width: 350, height: 200)
+        .clipShape(RoundedRectangle(cornerRadius: 24))
+        .offset(y: -40)
+        .transition(.scale.combined(with: .opacity))
+      }
+    }
   }
   
   // MARK: 비디오 섹션
@@ -505,66 +519,65 @@ struct VideoView: View {
         centerTap: { vm.videoVM.centerTap() },
         showControls: $vm.videoVM.showControls
       )
+      .border(Color.red)
       
       if vm.videoVM.showControls {
-        OverlayController(
-          leftAction: {
-            vm.videoVM.seekToTime(
-              to: vm.videoVM.currentTime - 5
-            )
-            if vm.videoVM.isPlaying {
-              vm.videoVM.startAutoHideControls()
+        ZStack {
+          OverlayController(
+            leftAction: {
+              vm.videoVM.seekToTime(
+                to: vm.videoVM.currentTime - 5
+              )
+              if vm.videoVM.isPlaying {
+                vm.videoVM.startAutoHideControls()
+              }
+            },
+            rightAction: {
+              vm.videoVM.seekToTime(
+                to: vm.videoVM.currentTime + 5
+              )
+              if vm.videoVM.isPlaying {
+                vm.videoVM.startAutoHideControls()
+              }
+            },
+            centerAction: {
+              vm.videoVM.togglePlayPause()
+            },
+            isPlaying: $vm.videoVM.isPlaying
+          )
+          .padding(.bottom, 20)
+
+          CustomSlider(
+            isDragging: $isDragging,
+            currentTime: isDragging ? sliderValue : vm.videoVM.currentTime,
+            duration: vm.videoVM.duration,
+            onSeek: { time in
+              vm.videoVM.seekToTime(to: time)
+            },
+            onDragChanged: { time in
+              self.sliderValue = time
+              vm.videoVM.seekToTime(to: time)
+            },
+            startTime: vm.videoVM.currentTime.formattedTime(),
+            endTime: vm.videoVM.duration.formattedTime()
+          )
+          .padding(.horizontal, 20)
+          .onChange(of: vm.videoVM.currentTime) { _, newValue in
+            if !isDragging {
+              sliderValue = newValue
             }
-          },
-          rightAction: {
-            vm.videoVM.seekToTime(
-              to: vm.videoVM.currentTime + 5
-            )
-            if vm.videoVM.isPlaying {
-              vm.videoVM.startAutoHideControls()
-            }
-          },
-          centerAction: {
-            vm.videoVM.togglePlayPause()
-          },
-          isPlaying: $vm.videoVM.isPlaying
-        )
-        .padding(.bottom, 20)
-        .transition(.opacity)
-        
-        CustomSlider(
-          isDragging: $isDragging,
-          currentTime: isDragging ? sliderValue : vm.videoVM.currentTime,
-          duration: vm.videoVM.duration,
-          onSeek: { time in
-            vm.videoVM.seekToTime(to: time)
-          },
-          onDragChanged: { time in
-            self.sliderValue = time
-            vm.videoVM.seekToTime(to: time)
-          },
-          startTime: vm.videoVM.currentTime.formattedTime(),
-          endTime: vm.videoVM.duration.formattedTime()
-        )
-        .padding(.horizontal, 20)
-        .onChange(of: vm.videoVM.currentTime) { _, newValue in
-          if !isDragging {
-            sliderValue = newValue
           }
-        }
-        .transition(.opacity)
-        
-        if !forceShowLandscape {
+
           VideoSettingButtons(
             action: { self.showSpeedSheet = true },
             toggleOrientations: {
               withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                 self.forceShowLandscape.toggle()
-                      if self.forceShowLandscape {
-                        enterLandscapeMode()
-                      } else {
-                        exitLandscapeMode()
-                      }
+                if self.forceShowLandscape {
+                  enterLandscapeMode()
+                } else {
+                  exitLandscapeMode()
+                }
               }
             },
             isLandscapeMode: forceShowLandscape,
@@ -575,8 +588,11 @@ struct VideoView: View {
             },
             showFeedbackPanel: showFeedbackPanel
           )
-          .transition(.opacity)
+          .zIndex(100)
         }
+//        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .transition(.opacity)
+        .zIndex(10)
       }
     }
     .overlay {
@@ -740,7 +756,6 @@ struct VideoView: View {
           )
       }
     }
-    .padding(.horizontal, 16)
   }
   // MARK: 피드백 비어있는 emptyView
   private var emptyView: some View {
