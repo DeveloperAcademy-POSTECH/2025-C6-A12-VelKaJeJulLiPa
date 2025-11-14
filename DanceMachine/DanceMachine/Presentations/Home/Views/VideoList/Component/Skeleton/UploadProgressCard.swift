@@ -46,16 +46,7 @@ struct UploadProgressCard: View {
       case .idle:
         content
       }
-//      content
-//      if case .failed(let message) = progressManager.uploadState {
-//        failedMessage(message: message)
-//      }
-      Spacer()
     }
-    .frame(
-      width: cardSize,
-      height: cardSize * 1.037
-    )
     .background(
       RoundedRectangle(cornerRadius: 12)
         .fill(Color.fillAssitive)
@@ -75,20 +66,18 @@ struct UploadProgressCard: View {
   }
   
   private var content: some View {
-    VStack(alignment: .leading) {
+    VStack(alignment: .leading, spacing: 0) {
       Spacer().frame(height: 8)
       bottomSkeletonView
-        .frame(width: cardSize * 0.7, height: 18)
-      Spacer().frame(width: 8)
+        .frame(width: cardSize * 0.7, height: 20)
+      Spacer().frame(height: 8)
       bottomSkeletonView
-        .frame(width: cardSize * 0.2, height: 12)
-      Spacer().frame(width: 4)
+        .frame(width: cardSize * 0.3, height: 16)
+      Spacer().frame(height: 4)
       bottomSkeletonView
-        .frame(width: cardSize * 0.4, height: 12)
-//      Spacer().frame(height: 16)
-      Spacer()
+        .frame(width: cardSize * 0.5, height: 15)
+      Spacer().frame(height: 16)
     }
-    .frame(maxWidth: .infinity, alignment: .leading)
     .padding(.horizontal, 8)
   }
   
@@ -139,6 +128,7 @@ struct UploadProgressCard: View {
         .font(.caption1Medium)
         .foregroundStyle(Color.labelNormal)
         .multilineTextAlignment(.leading)
+      Spacer().frame(height: 16)
     }
     .padding(.horizontal, 8)
   }
@@ -240,7 +230,7 @@ struct UploadProgressCard: View {
   private func failedMessage(message: String) -> some View {
     // 에러 메시지
     VStack(alignment: .leading) {
-      Spacer()
+      Spacer().frame(height: 8)
       HStack {
         Image(systemName: "exclamationmark.circle")
           .foregroundStyle(.accentRedNormal)
@@ -253,7 +243,7 @@ struct UploadProgressCard: View {
         .font(.caption1Medium)
         .foregroundStyle(Color.labelNormal)
         .multilineTextAlignment(.leading)
-      Spacer().frame(height: 8)
+      Spacer().frame(height: 4)
       // 취소 버튼
       Button {
         Task { await onCancel() }
@@ -262,7 +252,7 @@ struct UploadProgressCard: View {
           .font(.caption1Medium)
           .foregroundStyle(.accentRedNormal)
       }
-      Spacer()
+      Spacer().frame(height: 16)
     }
     .padding(.horizontal, 8)
   }

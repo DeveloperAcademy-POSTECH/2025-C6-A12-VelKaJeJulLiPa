@@ -14,12 +14,7 @@ struct SkeletonCardView: View {
     VStack(alignment: .leading) {
       thumbnail
       content
-      Spacer()
     }
-    .frame(
-      width: cardSize,
-      height: cardSize * 1.15
-    )
     .background(
       RoundedRectangle(cornerRadius: 12)
         .fill(Color.fillAssitive)
@@ -38,19 +33,18 @@ struct SkeletonCardView: View {
   }
   
   private var content: some View {
-    VStack(alignment: .leading) {
+    VStack(alignment: .leading, spacing: 0) {
       Spacer().frame(height: 8)
       bottomSkeletonView
         .frame(width: cardSize * 0.7, height: 20)
-      Spacer().frame(width: 8)
+      Spacer().frame(height: 8)
       bottomSkeletonView
         .frame(width: cardSize * 0.3, height: 16)
-      Spacer().frame(width: 4)
+      Spacer().frame(height: 4)
       bottomSkeletonView
         .frame(width: cardSize * 0.5, height: 15)
-      Spacer().frame(width: 16)
+      Spacer().frame(height: 16)
     }
-    .frame(maxWidth: .infinity, alignment: .leading)
     .padding(.horizontal, 8)
   }
   
