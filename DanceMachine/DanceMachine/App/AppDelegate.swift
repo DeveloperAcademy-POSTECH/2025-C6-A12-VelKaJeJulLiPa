@@ -145,7 +145,7 @@ extension AppDelegate: MessagingDelegate {
     // 로그인 상태일 때 Firestore에 업데이트
     if let userId = FirebaseAuthManager.shared.user?.uid {
       Task {
-        try await FirestoreManager.shared.updateFields(
+        try await FirestoreManager.shared.updateLastLoginFields(
           collection: .users,
           documentId: userId,
           asDictionary: [User.CodingKeys.fcmToken.rawValue: fcmToken]

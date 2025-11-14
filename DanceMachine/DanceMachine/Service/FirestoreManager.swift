@@ -118,6 +118,21 @@ final class FirestoreManager {
       .updateData([strategy.rawValue: FieldValue.serverTimestamp()])
   }
   
+  /// 첫 로그인용 메서드 ❗️ (조금 범용적으로 사용할 수 있게 수정해야함)
+  func updateLastLoginFields(
+    collection: CollectionType,
+    documentId: String,
+    asDictionary: [String: Any]
+  ) async throws {
+    var asDictionary = asDictionary
+    asDictionary[WriteStrategy.userStrategy.rawValue] = FieldValue.serverTimestamp() // 업데이트 시간을 포함
+    
+    try await db
+      .collection(collection.rawValue)
+      .document(documentId)
+      .updateData(asDictionary)
+  }
+  
   
   /// 특정 필드만 부분 업데이트를 진행하는 메서드입니다.
   /// - Parameters:
