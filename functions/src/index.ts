@@ -1,3 +1,40 @@
+/**
+ * =============================================================================
+ * ⚠️ Notice
+ * -----------------------------------------------------------------------------
+ * 이 파일은 Cloud Functions에 배포하는 코드입니다.
+ * 기능 수정 또는 로직 변경 시 반드시 아래 절차를 준수해주세요.
+ *
+ * 1) 코드 변경 후 반드시 저장 (File > Save)
+ * 2) 로컬 환경에서 빌드 및 배포:
+ *       ```bash
+ *       npm run deploy
+ *       ```
+ *    - 해당 스크립트는 TypeScript 빌드 후 Cloud Functions 전체를 배포합니다.
+ *    - 배포에는 다소 시간이 소요될 수 있습니다. (현재는 5분 내외)
+ *
+ * 3) 배포 전 확인사항:
+ *    - logger 활용한 적절한 로깅 처리가 잘 되어있는지 확인 
+ *    - Firestore 컬렉션 및 필드 네이밍이 실제와 일치하는지 확인
+ *    - Infinite loop 가능성이 있는 Firestore 트리거 코드를 반드시 검토
+ *    - region 설정 및 maxInstances 설정 변경 시 팀원과 사전 공유 필수
+ *
+ * 4) 주의:
+ *    - 테스트 환경과 운영 환경의 설정(firebase config)이 다를 수 있습니다.
+ *    - IAM 권한 또는 Firestore 보안 규칙 변경이 필요한 경우 팀 리드에게 확인 요청
+ *
+ * ※ 배포 실패 시:
+ *     Firebase Console > Functions > CLI 출력 로그를 통해 원인을 확인하세요.
+ * 
+ * * 운영 로그 확인:
+ *     Firebase Console > Functions > Google Cloud Console > Logs Exmplorer 애서 로그를 확인할 수 있습니다.
+ *  
+ * -----------------------------------------------------------------------------
+ * 담당자: Paidion(김준구)
+ * 최근 수정: 2025-11-14
+ * =============================================================================
+ */
+
 import * as admin from "firebase-admin";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { setGlobalOptions } from "firebase-functions";
@@ -32,13 +69,13 @@ async function isUserBlockedBy(receiverId: string, senderId: string): Promise<bo
  * @param receivers 사용자 ID 배열
  * @param title 알림 제목
  * @param body 알림 본문
- * @param extra 추가 데이터 (video_id, video_title, video_url, notification_id)
+ * @param extra 추가 데이터 (video_id, video_title, video_url, notification_id, teamspace_id)
  */
 async function sendPushNotificationsWithBadge(
   receivers: string[],
   title: string,
   body: string,
-  extra: { video_id: string; video_title: string; video_url: string, notification_id: string }
+  extra: { video_id: string; video_title: string; video_url: string, notification_id: string, teamspace_id: string }
 ) {
   if (receivers.length === 0) {
     logger.error("sendPushNotificationsWithBadge: no receivers", { receivers });
@@ -53,14 +90,14 @@ async function sendPushNotificationsWithBadge(
   const badgeCounts = await Promise.all(
     receivers.map(async (uid) => {
       // user_notification 서브컬렉션에서 한 달 전부터, is_read == false 인 문서 수 계산
-      const qSnap = await db
+      const snapshot = await db
         .collection("users").doc(uid)
         .collection("user_notification")
         .where("created_at", ">=", oneMonthAgo)
         .where("is_read", "==", false)
         .get();
 
-      return { uid, unreadCount: qSnap.size };
+      return { uid, unreadCount: snapshot.size };
     })
   );
 
@@ -84,10 +121,10 @@ async function sendPushNotificationsWithBadge(
       }
 
       // 딥링크 생성
-      let deeplink = "";
       const encodedTitle = encodeURIComponent(extra.video_title);
       const encodedUrl = encodeURIComponent(extra.video_url);
-      deeplink = `${URL_SCHEME}://video/view?videoId=${extra.video_id}&videoTitle=${encodedTitle}&videoURL=${encodedUrl}`;
+      const encodedTeamspaceId = encodeURIComponent(extra.teamspace_id);
+      let deeplink = `${URL_SCHEME}://video/view?videoId=${extra.video_id}&videoTitle=${encodedTitle}&videoURL=${encodedUrl}&teamspaceId=${encodedTeamspaceId}`;
       
 
       const message: admin.messaging.Message = {
@@ -127,7 +164,7 @@ async function sendPushNotificationsWithBadge(
 export const onFeedbackCreated = onDocumentCreated("feedback/{feedbackId}", async (event) => {
   const snap = event.data;
   if (!snap) {
-    logger.error("onFeedbackCreated: no snapshot", { eventId: event.id });
+    logger.error("[Feedback] - No snapshot", { eventId: event.id });
     return;
   }
   const feedback = snap.data();
@@ -135,7 +172,7 @@ export const onFeedbackCreated = onDocumentCreated("feedback/{feedbackId}", asyn
   const { feedback_id, author_id, tagged_user_ids, content, video_id, teamspace_id } = feedback;
 
   if (!tagged_user_ids || tagged_user_ids.length === 0) {
-    logger.error("onFeedbackCreated: no tagged users", { feedback_id });
+    logger.info("[Feedback] - No tagged users", { feedback_id });
     return;
   }
 
@@ -147,12 +184,12 @@ export const onFeedbackCreated = onDocumentCreated("feedback/{feedbackId}", asyn
     })
   );
 
-  logger.debug("Valid tagged users after block filter", { validTaggedUsers });
-
   if (validTaggedUsers.length === 0) {
-    logger.error("onFeedbackCreated: no valid tagged users after filter", { feedback_id });
+    logger.error("[Feedback] - No valid tagged users", { feedback_id });
     return;
   }
+
+  logger.debug("[Feedback] - Valid tagged users", { validTaggedUsers });
 
   const notification_id = uuidv4().toUpperCase();
 
@@ -167,7 +204,7 @@ export const onFeedbackCreated = onDocumentCreated("feedback/{feedbackId}", asyn
     teamspace_id,
     content,
   });
-  logger.info("Notification doc created (feedback)", { feedback_id, validTaggedUsers, notification_id });
+  logger.info("[Feedback] - Notification doc created", { feedback_id, validTaggedUsers, notification_id });
 
   // user_notification 생성
   await Promise.all(
@@ -185,29 +222,29 @@ export const onFeedbackCreated = onDocumentCreated("feedback/{feedbackId}", asyn
         });
     })
   );
-  logger.info("user_notification documents created (feedback)", { validTaggedUsers });
+  logger.info("[Feedback] - user_notification documents created", { validTaggedUsers });
 
   // 푸시 전송
   const authorDoc = await db.collection("users").doc(author_id).get();
   const name = authorDoc.exists ? authorDoc.get("name") : null;
   if (!name) {
-    logger.error("Author name not found", { author_id });
+    logger.error("[Feedback] - Author name not found", { author_id });
     return;
   }
   const videoDoc = await db.collection("video").doc(video_id).get();
   const video_title = videoDoc.exists ? videoDoc.get("video_title") : null;
   const video_url = videoDoc.exists ? videoDoc.get("video_url") : null;
   if (!video_title || !video_url) {
-    logger.error("Video info not found", { video_id });
+    logger.error("[Feedback] - Video info not found", { video_id });
     return;
   }
 
   const title = `${josa(name, "이/가")} 피드백을 남겼어요`;
   const body = content;
-  const extra = { video_id, video_title, video_url, notification_id };
+  const extra = { video_id, video_title, video_url, notification_id, teamspace_id };
 
   await sendPushNotificationsWithBadge(validTaggedUsers, title, body, extra);
-  logger.info("Push notification process completed (feedback)", { validTaggedUsers, title, body, extra });
+  logger.info("[Feedback] - Push notification process completed", { validTaggedUsers, title, body, extra });
 });
 
 /**
@@ -216,7 +253,7 @@ export const onFeedbackCreated = onDocumentCreated("feedback/{feedbackId}", asyn
 export const onReplyCreated = onDocumentCreated("feedback/{feedbackId}/reply/{replyId}", async (event) => {
   const snap = event.data;
   if (!snap) {
-    logger.error("onReplyCreated: no snapshot", { eventId: event.id });
+    logger.error("[Reply] - No snapshot", { eventId: event.id });
     return;
   }
   const reply = snap.data();
@@ -227,7 +264,7 @@ export const onReplyCreated = onDocumentCreated("feedback/{feedbackId}/reply/{re
   const teamspace_id = feedbackDoc.exists ? feedbackDoc.get("teamspace_id") : null;
   const video_id = feedbackDoc.exists ? feedbackDoc.get("video_id") : null;
   if (!feedbackAuthorId || !teamspace_id || !video_id) {
-    logger.error("Feedback doc incomplete", { feedback_id, feedbackAuthorId, teamspace_id, video_id });
+    logger.error("[Reply] - Feedback document is incomplete", { feedback_id, feedbackAuthorId, teamspace_id, video_id });
     return;
   }
 
@@ -238,11 +275,11 @@ export const onReplyCreated = onDocumentCreated("feedback/{feedbackId}/reply/{re
       if (!blocked) validTaggedUsers.push(receiverId);
     })
   );
-  logger.debug("Valid tagged users after block filter (reply)", { validTaggedUsers });
+  logger.debug("[Reply] - Valid tagged users", { validTaggedUsers });
 
   // 피드백 작성자 == 댓글 작성자 && 태그된 사용자 없음 → 알림 없음
   if (feedbackAuthorId === author_id && validTaggedUsers.length === 0) {
-    logger.info("Reply author equals to feedback author and no valid tagged users, skipping notification", { reply_id })
+    logger.info("[Reply] - Reply author is same as feedback author and no tagged users — skipping notification", { reply_id });
     return;
   }
 
@@ -259,7 +296,7 @@ export const onReplyCreated = onDocumentCreated("feedback/{feedbackId}/reply/{re
   validReceivers = validReceivers.filter((uid) => uid !== author_id);
 
   if (validReceivers.length === 0) {
-    logger.info("onReplyCreated: no valid receivers", { reply_id });
+    logger.info("[Reply] - No valid receivers", { reply_id });
     return;
   }
 
@@ -276,7 +313,7 @@ export const onReplyCreated = onDocumentCreated("feedback/{feedbackId}/reply/{re
     teamspace_id,
     content,
   });
-  logger.info("Notification doc created (reply)", { reply_id, validReceivers, notification_id });
+  logger.info("[Reply] - Notification document created", { reply_id, validReceivers, notification_id });
 
   // user_notification 생성
   await Promise.all(
@@ -294,26 +331,26 @@ export const onReplyCreated = onDocumentCreated("feedback/{feedbackId}/reply/{re
         });
     })
   );
-  logger.info("user_notification documents created (reply)", { validReceivers });
+  logger.info("[Reply] - user_notification documents created", { validReceivers });
 
   const authorDoc = await db.collection("users").doc(author_id).get();
   const name = authorDoc.exists ? authorDoc.get("name") : null;
   if (!name) {
-    logger.error("Reply author name not found", { author_id });
+    logger.error("[Reply] - Reply author name not found", { author_id });
     return;
   }
   const videoDoc = await db.collection("video").doc(video_id).get();
   const video_title = videoDoc.exists ? videoDoc.get("video_title") : null;
   const video_url = videoDoc.exists ? videoDoc.get("video_url") : null;
   if (!video_title || !video_url) {
-    logger.error("Video info not found", { video_id });
+    logger.error("[Reply] - Video info not found", { video_id });
     return;
   }
 
   const title = `${josa(name, "이/가")} 댓글을 남겼어요`;
   const body = content;
-  const extra = { video_id, video_title, video_url, notification_id };
+  const extra = { video_id, video_title, video_url, notification_id, teamspace_id };
 
   await sendPushNotificationsWithBadge(validReceivers, title, body, extra);
-  logger.info("Push notification process completed (reply)", { validReceivers, title, body, extra });
+  logger.info("[Reply] - Push notification process completed", { validReceivers, title, body, extra });
 });
