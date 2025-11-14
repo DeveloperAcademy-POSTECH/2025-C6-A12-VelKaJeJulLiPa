@@ -9,6 +9,7 @@ import SwiftUI
 import FirebaseCore
 import FirebaseFirestore
 import AuthenticationServices
+import SwiftData
 
 
 @main
@@ -22,11 +23,20 @@ struct DanceMachineApp: App {
   @StateObject private var authManager = FirebaseAuthManager.shared
   @StateObject private var inviteRouter = InviteRouter()
   
+  let container: ModelContainer
+  let cacheStore: CacheStore
+  
   init() {
     Task {
       await ListDataCacheManager.shared.cleanupOldCache()
       await VideoCacheManager.shared.cleanupOldCache()
     }
+    
+    let container = try! ModelContainer(
+      for: TeamspaceCache.self
+    )
+    self.container = container
+    self.cacheStore = CacheStore(container: container)
     
     let tabBarAppearance = UITabBarAppearance()
     let itemAppearance = tabBarAppearance.stackedLayoutAppearance
@@ -58,6 +68,8 @@ struct DanceMachineApp: App {
                 .environmentObject(mainRouter)
                 .environmentObject(inviteRouter)
                 .transition(.move(edge: .trailing))
+                .modelContainer(container)
+                .environment(\.cacheStore, cacheStore)
               
               // URL Scheme 또는 Universal Link로 들어온 경우 처리
                 .onOpenURL { url in
