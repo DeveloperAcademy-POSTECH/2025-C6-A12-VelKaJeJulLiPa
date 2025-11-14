@@ -59,5 +59,19 @@ extension Date {
         df.dateFormat = sameYear ? "M월 d일" : "yyyy. M. d."
         return df.string(from: self)
     }
+  
+  // ISO8601 (KST, 밀리초 포함)
+  /// 캐싱을 위한 밀리초 까지 계산 메서드
+     func iso8601KST() -> String {
+         let iso = ISO8601DateFormatter()
+         iso.timeZone = .kst
+         iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+         return iso.string(from: self)
+     }
+}
+
+
+extension TimeZone {
+    static let kst = TimeZone(identifier: "Asia/Seoul")!
 }
 
