@@ -59,6 +59,7 @@ struct VideoGrid: View {
         ForEach(videos, id: \.videoId) { video in
           if let track = track.first(where: { $0.videoId == video.videoId.uuidString }) {
             let currentUserId = FirebaseAuthManager.shared.userInfo?.userId ?? ""
+            let currentTeamspaceId: String = FirebaseAuthManager.shared.currentTeamspace?.teamspaceId.uuidString ?? ""
             
             GridCell(
               size: size,
@@ -86,6 +87,7 @@ struct VideoGrid: View {
                       videoId: video.videoId.uuidString,
                       videoTitle: video.videoTitle,
                       videoURL: video.videoURL,
+                      teamspaceId: currentTeamspaceId
                     )
                   )
                 )

@@ -61,7 +61,8 @@ struct InboxView: View {
                           .play(
                             videoId: notification.videoId,
                             videoTitle: notification.videoTitle,
-                            videoURL: notification.videoURL
+                            videoURL: notification.videoURL,
+                            teamspaceId: notification.teamspace.teamspaceId.uuidString
                           )
                         )
                       )
