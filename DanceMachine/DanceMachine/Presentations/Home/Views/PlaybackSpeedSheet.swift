@@ -64,9 +64,13 @@ struct PlaybackSpeedSheet: View {
       
       freeSetButton
     }
-    .padding(.vertical, 16)
+//    .padding(.vertical, 16)
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(.backgroundElevated)
+//    .background {
+//      RoundedRectangle(cornerRadius: 24)
+//        .fill(Color.backgroundElevated)
+//    }
   }
   private var freeSetButton: some View {
     HStack {

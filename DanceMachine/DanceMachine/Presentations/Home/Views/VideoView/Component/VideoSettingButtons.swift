@@ -30,7 +30,7 @@ struct VideoSettingButtons: View {
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .padding(.horizontal, 16)
   }
-  
+
   private var topButton: some View {
     HStack(spacing: 15) {
       if isLandscapeMode { // 가로모드일때
@@ -43,7 +43,7 @@ struct VideoSettingButtons: View {
       }
     }
   }
-  
+
   private var feedbackToggleButton: some View {
     Button {
       toggleFeedbackPanel?()
@@ -53,9 +53,10 @@ struct VideoSettingButtons: View {
         .foregroundStyle(.labelStrong)
     }
     .frame(width: 44, height: 44)
+    .contentShape(Rectangle())
     .overlayController()
   }
-  
+
   private var timeButton: some View {
     Button {
       action()
@@ -65,6 +66,7 @@ struct VideoSettingButtons: View {
         .foregroundStyle(.labelStrong)
     }
     .frame(width: 44, height: 44)
+    .contentShape(Rectangle())
     .overlayController()
   }
 
@@ -78,6 +80,7 @@ struct VideoSettingButtons: View {
         .foregroundStyle(.labelStrong)
     }
     .frame(width: 44, height: 44)
+    .contentShape(Rectangle())
     .overlayController()
   }
 }
