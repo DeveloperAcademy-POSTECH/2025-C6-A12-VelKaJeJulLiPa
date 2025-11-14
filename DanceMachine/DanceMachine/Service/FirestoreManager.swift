@@ -102,6 +102,23 @@ final class FirestoreManager {
     try await save(data, strategy: .invite)
   }
   
+  /// 지정한 문서에서 특정 필드만 서버 타임스탬프로 업데이트합니다.
+  /// - Parameters:
+  ///   - strategy: 필드 키로 사용할 WriteStrategy (ex: .update, .join, .userStrategy ...)
+  ///   - collection: 대상 컬렉션
+  ///   - documentId: 대상 문서 ID
+  func updateTimestampField(
+    field strategy: WriteStrategy,
+    in collection: CollectionType,
+    documentId: String
+  ) async throws {
+    try await db
+      .collection(collection.rawValue)
+      .document(documentId)
+      .updateData([strategy.rawValue: FieldValue.serverTimestamp()])
+  }
+  
+  
   /// 특정 필드만 부분 업데이트를 진행하는 메서드입니다.
   /// - Parameters:
   ///     - collection: 컬렉션 타입
