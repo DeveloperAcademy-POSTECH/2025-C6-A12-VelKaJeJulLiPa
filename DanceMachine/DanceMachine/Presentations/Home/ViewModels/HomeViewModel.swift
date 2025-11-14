@@ -164,7 +164,7 @@ final class HomeViewModel {
       
       
       // 같다
-      if try cache.checkedUpdatedAt(userId: FirebaseAuthManager.shared.userInfo?.userId ?? "") == user.updatedAt?.iso8601KST() {
+      if try cache.checkedUpdatedAt(userId: FirebaseAuthManager.shared.userInfo?.userId ?? "") == user.updatedAt?.iso8601KST()  {
         let teamspace = try cache.loadTeamspaces(userId: FirebaseAuthManager.shared.userInfo?.userId ?? "")
         self.teamspace.list = teamspace
         self.teamspace.state = teamspace.isEmpty ? .empty : .nonEmpty
@@ -209,6 +209,15 @@ final class HomeViewModel {
       
       
       // 🤔 만약에 AppStoreage에 저장된 Id가 userTeamspaces에 포함 된다면...
+
+      
+     
+      
+      
+      
+     
+      
+      
       ///
       
       // @AppStorage(최근 접속한 팀 스페이스)에 저장된 Teamsapce아이디가 존재하면 그 아이디로 접속 시도.
@@ -232,52 +241,24 @@ final class HomeViewModel {
           }
         } else {
           FirebaseAuthManager.shared.currentTeamspace = first
-          
-          if let updatedAt = user.updatedAt {
-            try cache.replaceTeamspaces(
-              userId: FirebaseAuthManager.shared.userInfo?.userId ?? "",
-              userUpdatedAt: updatedAt,
-              teamspace: self.teamspace.list
-            )
-          }
         }
       }
       
+      // 3. 프로젝트 리턴
+      let list: [Project] = try await FirestoreManager.shared.fetchAll(
+        currentTeamspace?.teamspaceId.uuidString ?? "",
+        from: .project,
+        where: Project.CodingKeys.teamspaceId.stringValue
+      )
       
-//      let currentTeamspace: Teamspace = try await FirestoreManager.shared.get(
-//        FirebaseAuthManager.shared.currentTeamspace?.teamspaceId.uuidString ?? "",
-//        from: .teamspace
-//      )
-      
-      if try cache.checkedProjectUpdatedAt(
-        teamspaceId: self.currentTeamspace?.teamspaceId.uuidString ?? ""
-      ) == currentTeamspace?.updatedAt?.iso8601KST() ?? "" {
-        let project = try cache.loadProjects(teamspaceId: self.currentTeamspace?.teamspaceId.uuidString ?? "")
-        self.project.projects = project
-        print("🔥🔥🔥프로젝트 캐싱 불러오기 성공🔥🔥🔥")
-      } else {
-        // 3. 프로젝트 리턴
-        let list: [Project] = try await FirestoreManager.shared.fetchAll(
-          self.currentTeamspace?.teamspaceId.uuidString ?? "",
-          from: .project,
-          where: Project.CodingKeys.teamspaceId.stringValue
-        )
-        
-        self.project.projects = list
-        
-        if let updatedAt = self.currentTeamspace?.updatedAt {
-          try cache.replaceProjects(
-            teamspaceId: self.currentTeamspace?.teamspaceId.uuidString ?? "",
-            teamspaceUpdatedAt: updatedAt,
-            project: list
-          )
-        }
-        print("⚠️ 프로젝트 캐싱 진행")
-      }
-  
+      self.project.projects = list
     } catch {
       print("error: \(error.localizedDescription)")
     }
+    
+    
+    
+    
   }
   
   
