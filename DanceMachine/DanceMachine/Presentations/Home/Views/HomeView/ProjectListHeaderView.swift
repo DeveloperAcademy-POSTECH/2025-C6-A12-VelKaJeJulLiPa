@@ -47,47 +47,47 @@ struct ProjectListHeaderView<S: RowEditingState>: View {
 }
 
 
-#Preview("Project · viewing") {
-  ZStack {
-    Color.backgroundNormal.ignoresSafeArea()
-    ProjectListHeaderView(
-      viewModel: HomeViewModel(),
-      state: .constant(ProjectRowState.viewing),
-      labelText: .constant("프로젝트 목록"),
-      isPrimaryDisabled: false,
-      onPrimaryUpdate: {},
-      onCancelSideEffects: {}
-    )
-    .padding()
-  }
-}
-
-#Preview("Project · updating (enabled)") {
-  ZStack {
-    Color.backgroundNormal.ignoresSafeArea()
-    ProjectListHeaderView(
-      viewModel: HomeViewModel(),
-      state: .constant(ProjectRowState.editing(.update)),
-      labelText: .constant("프로젝트 이름 수정"),
-      isPrimaryDisabled: false,
-      onPrimaryUpdate: {},
-      onCancelSideEffects: {}
-    )
-    .padding()
-  }
-}
-
-#Preview("Tracks · editing none (disabled)") {
-  ZStack {
-    Color.backgroundNormal.ignoresSafeArea()
-    ProjectListHeaderView(
-      viewModel: HomeViewModel(),
-      state: .constant(TracksRowState.editing(.none)),
-      labelText: .constant("트랙 목록"),
-      isPrimaryDisabled: true,
-      onPrimaryUpdate: {},
-      onCancelSideEffects: {}
-    )
-    .padding()
-  }
-}
+//#Preview("Project · viewing") {
+//  ZStack {
+//    Color.backgroundNormal.ignoresSafeArea()
+//    ProjectListHeaderView(
+//      viewModel: HomeViewModel(),
+//      state: .constant(ProjectRowState.viewing),
+//      labelText: .constant("프로젝트 목록"),
+//      isPrimaryDisabled: false,
+//      onPrimaryUpdate: {},
+//      onCancelSideEffects: {}
+//    )
+//    .padding()
+//  }
+//}
+//
+//#Preview("Project · updating (enabled)") {
+//  ZStack {
+//    Color.backgroundNormal.ignoresSafeArea()
+//    ProjectListHeaderView(
+//      viewModel: HomeViewModel(),
+//      state: .constant(ProjectRowState.editing(.update)),
+//      labelText: .constant("프로젝트 이름 수정"),
+//      isPrimaryDisabled: false,
+//      onPrimaryUpdate: {},
+//      onCancelSideEffects: {}
+//    )
+//    .padding()
+//  }
+//}
+//
+//#Preview("Tracks · editing none (disabled)") {
+//  ZStack {
+//    Color.backgroundNormal.ignoresSafeArea()
+//    ProjectListHeaderView(
+//      viewModel: HomeViewModel(),
+//      state: .constant(TracksRowState.editing(.none)),
+//      labelText: .constant("트랙 목록"),
+//      isPrimaryDisabled: true,
+//      onPrimaryUpdate: {},
+//      onCancelSideEffects: {}
+//    )
+//    .padding()
+//  }
+//}
