@@ -28,6 +28,29 @@ final class HomeViewModel {
   @ObservationIgnored
   @AppStorage(AppStorageKey.lastAccessedTeamspaceId.rawValue) private(set) var lastAccessedTeamspaceId: String = ""
   
+  // private let cache: CacheStore
+  
+//  init(cache: CacheStore) {
+//    self.cache = cache
+//  }
+  
+  @ObservationIgnored private(set) var cacheStore: CacheStore?
+
+   init(cacheStore: CacheStore? = nil) {
+     self.cacheStore = cacheStore
+   }
+
+   func setCacheStore(_ cache: CacheStore) {
+     self.cacheStore = cache
+   }
+
+   private var cache: CacheStore {
+     guard let cacheStore else {
+       fatalError("CacheStore not injected. Call setCacheStore(_:) first.")
+     }
+     return cacheStore
+   }
+  
   
   /// 프로젝트 목록과 편집 상태를 관리하는 구조체
   struct ProjectListState {
@@ -110,6 +133,139 @@ final class HomeViewModel {
     )
   }
   
+  /// ❗️❗️ 캐싱 테스트 메서드
+  func homeViewOnnAppear() async {
+    
+    do {
+      // 1. fetchUserInfo()
+      try await FirebaseAuthManager.shared.fetchUserInfo(for: FirebaseAuthManager.shared.user?.uid ?? "")
+      
+      
+      // 2. ensureTeamspaceInitialized
+      let userTeamspaces: [UserTeamspace] = try await FirestoreManager.shared.fetchAllFromSubcollection(
+        under: .users,
+        parentId: FirebaseAuthManager.shared.userInfo?.userId ?? "",
+        subCollection: .userTeamspace
+      )
+      
+      self.userTeamspaces = userTeamspaces
+      
+      // TODO: 캐싱 => 초대받아도 updated_at 갱신 되어야 함.
+      // 지금 구현을 팀 스페이스에 대한 설정을 하면, 자동으로 유저 updated_at이 갱신된다.
+      // 그러면, user updated_at이 이전과 똑같으면 저렇게 구할 필요 없이? 바로 팀 스페이스를 불러오면 됨.
+      // 같다? => 캐싱에서 가져오기, 다르다? => 네트워크 조회하고, 캐싱에 저장해두기, 없다? => 캐싱 하기
+    
+      
+      
+      let user: User = try await FirestoreManager.shared.get(
+        FirebaseAuthManager.shared.userInfo?.userId ?? "",
+        from: .users
+      )
+      
+      
+      // 같다
+      if try cache.checkedUpdatedAt(userId: FirebaseAuthManager.shared.userInfo?.userId ?? "") == user.updatedAt?.iso8601KST()  {
+        let teamspace = try cache.loadTeamspaces(userId: FirebaseAuthManager.shared.userInfo?.userId ?? "")
+        self.teamspace.list = teamspace
+        self.teamspace.state = teamspace.isEmpty ? .empty : .nonEmpty
+        print("🔥🔥🔥캐싱 불러오기 성공🔥🔥🔥")
+      } else {
+        var seen = Set<String>()
+        let ids = userTeamspaces.compactMap { ut -> String? in
+          if seen.insert(ut.teamspaceId).inserted { return ut.teamspaceId }
+          return nil
+        }
+        
+        struct Indexed { let index: Int; let item: Teamspace }
+        
+        let fetched: [Indexed] = try await withThrowingTaskGroup(of: Indexed.self) { group in
+          for (idx, id) in ids.enumerated() {
+            group.addTask {
+              let teamspace: Teamspace = try await FirestoreManager.shared.get(id, from: .teamspace)
+              return Indexed(index: idx, item: teamspace)
+            }
+          }
+          var acc: [Indexed] = []
+          for try await v in group { acc.append(v) }
+          return acc
+        }
+        
+        // 유저 서브컬렉션 (유저 팀스페이스가 교체가 된다면 updated_at 수정)
+        let teamspace = fetched.sorted { $0.index < $1.index }.map(\.item)
+        
+        self.teamspace.list = teamspace
+        self.teamspace.state = teamspace.isEmpty ? .empty : .nonEmpty
+        
+        
+        if let updatedAt = user.updatedAt {
+          try cache.replaceTeamspaces(
+            userId: FirebaseAuthManager.shared.userInfo?.userId ?? "",
+            userUpdatedAt: updatedAt,
+            teamspace: self.teamspace.list
+          )
+          print("캐싱 진행")
+        }
+      }
+      
+      
+      // 🤔 만약에 AppStoreage에 저장된 Id가 userTeamspaces에 포함 된다면...
+
+      
+     
+      
+      
+      
+     
+      
+      
+      ///
+      
+      // @AppStorage(최근 접속한 팀 스페이스)에 저장된 Teamsapce아이디가 존재하면 그 아이디로 접속 시도.
+      if let first = self.teamspace.list.first,
+         currentTeamspace == nil {
+        
+        // 1) AppStorage에 저장된 값이 있고
+        // 2) 그 ID가 userTeamspaces 안에 존재하는지 확인
+        let hasLast = !lastAccessedTeamspaceId.isEmpty &&
+        userTeamspaces.contains { $0.teamspaceId == lastAccessedTeamspaceId }
+        
+        if hasLast {
+          // 3) Firestore에서 해당 팀스페이스를 가져오고, 실패하면 first로 fallback
+          if let lastAccessedTeamspace: Teamspace = try? await FirestoreManager.shared.get(
+            lastAccessedTeamspaceId,
+            from: .teamspace
+          ) {
+            FirebaseAuthManager.shared.currentTeamspace = lastAccessedTeamspace
+          } else {
+            FirebaseAuthManager.shared.currentTeamspace = first
+          }
+        } else {
+          FirebaseAuthManager.shared.currentTeamspace = first
+        }
+      }
+      
+      // 3. 프로젝트 리턴
+      let list: [Project] = try await FirestoreManager.shared.fetchAll(
+        currentTeamspace?.teamspaceId.uuidString ?? "",
+        from: .project,
+        where: Project.CodingKeys.teamspaceId.stringValue
+      )
+      
+      self.project.projects = list
+    } catch {
+      print("error: \(error.localizedDescription)")
+    }
+    
+    
+    
+    
+  }
+  
+  
+  
+  /// 
+
+
   /// 유저 정보를 FirebaseAuthManager를 통해 비동기적으로 가져옵니다.
   @MainActor
   func fetchUserInfo() async throws {
@@ -534,33 +690,33 @@ extension HomeViewModel {
 }
 
 // MARK: - 프리뷰 데이터
-extension HomeViewModel {
-  /// 미리보기용 데이터가 채워진 HomeViewModel 인스턴스를 생성합니다.
-  static func previewFilled() -> HomeViewModel {
-    let viewModel = HomeViewModel()
-    viewModel.teamspace.state = .nonEmpty
-    viewModel.teamspace.list = [
-      Teamspace(
-        teamspaceId: UUID(),
-        ownerId: "",
-        teamspaceName: "이거뭐야"
-      )
-    ]
-    viewModel.setCurrentTeamspace(viewModel.teamspace.list[0])
-    
-    viewModel.project.projects = [
-      Project(projectId: UUID(), teamspaceId: viewModel.currentTeamspace!.teamspaceId.uuidString, creatorId: "preview-user", projectName: "뉴진스"),
-      Project(projectId: UUID(), teamspaceId: viewModel.currentTeamspace!.teamspaceId.uuidString, creatorId: "preview-user", projectName: "르세라핌")
-    ]
-    viewModel.project.headerTitle = "프로젝트 목록"
-    viewModel.project.expandedID = viewModel.project.projects[0].projectId
-    viewModel.selectedProject = viewModel.project.projects[0]
-    viewModel.tracks.byProject[viewModel.project.projects[0].projectId] = [
-      Tracks(tracksId: UUID(), projectId: viewModel.project.projects[0].projectId.uuidString, creatorId: "preview-user", trackName: "Hype Boy (1절)")
-    ]
-    return viewModel
-  }
-}
+//extension HomeViewModel {
+//  /// 미리보기용 데이터가 채워진 HomeViewModel 인스턴스를 생성합니다.
+//  static func previewFilled() -> HomeViewModel {
+//    let viewModel = HomeViewModel(cache: CacheStore(container: <#T##ModelContainer#>))
+//    viewModel.teamspace.state = .nonEmpty
+//    viewModel.teamspace.list = [
+//      Teamspace(
+//        teamspaceId: UUID(),
+//        ownerId: "",
+//        teamspaceName: "이거뭐야"
+//      )
+//    ]
+//    viewModel.setCurrentTeamspace(viewModel.teamspace.list[0])
+//    
+//    viewModel.project.projects = [
+//      Project(projectId: UUID(), teamspaceId: viewModel.currentTeamspace!.teamspaceId.uuidString, creatorId: "preview-user", projectName: "뉴진스"),
+//      Project(projectId: UUID(), teamspaceId: viewModel.currentTeamspace!.teamspaceId.uuidString, creatorId: "preview-user", projectName: "르세라핌")
+//    ]
+//    viewModel.project.headerTitle = "프로젝트 목록"
+//    viewModel.project.expandedID = viewModel.project.projects[0].projectId
+//    viewModel.selectedProject = viewModel.project.projects[0]
+//    viewModel.tracks.byProject[viewModel.project.projects[0].projectId] = [
+//      Tracks(tracksId: UUID(), projectId: viewModel.project.projects[0].projectId.uuidString, creatorId: "preview-user", trackName: "Hype Boy (1절)")
+//    ]
+//    return viewModel
+//  }
+//}
 
 // MARK: - 알림 허용 권한
 extension HomeViewModel {
