@@ -43,7 +43,7 @@ struct TimestampInput: View {
           .font(.footnoteMedium)
           .foregroundStyle(.labelStrong)
       }
-      .padding(.vertical, 4)
+      .padding(.vertical, 6)
       .padding(.horizontal, 8)
     }
     .background {

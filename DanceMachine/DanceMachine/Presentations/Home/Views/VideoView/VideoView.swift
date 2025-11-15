@@ -460,7 +460,7 @@ struct VideoView: View {
                   .contentShape(Rectangle())
 //                  .padding(.trailing, 44)
                 }
-                Divider()
+                Divider().foregroundStyle(.strokeNormal)
                 feedbackListView
                   .scrollIndicators(.hidden)
               }
