@@ -28,7 +28,7 @@ struct VideoView: View {
   @State private var intervalTime: Double = 0
   
   // MARK: 답글 관련
-  @State private var selectedFeedback: Feedback? = nil
+//  @State private var selectedFeedback: Feedback? = nil
   
   // MARK: 글래스 이팩트 버튼
   @Namespace private var buttonNamespace
@@ -36,19 +36,19 @@ struct VideoView: View {
   @State private var buttonSpacing: CGFloat = 4
   
   // MARK: 가로모드 관련
-  @State private var isLandscape: Bool = false // 디바이스 가로모드 감지
-  @State private var forceShowLandscape: Bool = false // 전체 화면 버튼으로 가는 가로모드
+//  @State private var isLandscape: Bool = false // 디바이스 가로모드 감지
+//  @State private var forceShowLandscape: Bool = false // 전체 화면 버튼으로 가는 가로모드
   @State private var showFeedbackPanel: Bool = false
   
   // MARK: 배속 좆러
   @State private var showSpeedSheet: Bool = false
-  @State private var showSpeedModal: Bool = false
+//  @State private var showSpeedModal: Bool = false
   
   // MARK: 스크롤 관련
   @State private var scrollProxy: ScrollViewProxy? = nil
   
   // MARK: 신고하기 관련
-  @State private var reportTargetFeedback: Feedback? = nil
+//  @State private var reportTargetFeedback: Feedback? = nil
   @State private var showCreateReportSuccessToast: Bool = false
   
   // MARK: 이미지 캡쳐 결과 //
@@ -90,13 +90,35 @@ struct VideoView: View {
   var body: some View {
     GeometryReader { proxy in
       Group {
-        if forceShowLandscape {
-          landscapeView(proxy: proxy) // 가로모드
+        if vm.forceShowLandscape {
+          LandscapeView(
+            vm: vm,
+            isDragging: $isDragging,
+            sliderValue: $sliderValue,
+            feedbackFilter: $feedbackFilter,
+            pointTime: $pointTime,
+            intervalTime: $intervalTime,
+            filteredFeedback: filteredFeedbacks,
+            userId: userId,
+            proxy: proxy,
+          )
         } else {
           ZStack {
             Color.backgroundNormal.ignoresSafeArea()
             VStack {
-              portraitView(proxy: proxy) // 세로모드
+              PortraitView(
+                vm: vm,
+                isDragging: $isDragging,
+                sliderValue: $sliderValue,
+                feedbackFilter: $feedbackFilter,
+                pointTime: $pointTime,
+                intervalTime: $intervalTime,
+                showFeedbackInput: $showFeedbackInput,
+                filteredFeedback: filteredFeedbacks,
+                userId: userId,
+                proxy: proxy,
+                videoTitle: videoTitle
+              )
             }
           }
         }
@@ -142,7 +164,7 @@ struct VideoView: View {
       .toolbar(.hidden, for: .tabBar)
     }
     .safeAreaInset(edge: .bottom) {
-      if forceShowLandscape || isImageOverlayPresented {
+      if vm.forceShowLandscape || isImageOverlayPresented {
         EmptyView()
       } else {
         Group {
@@ -232,7 +254,7 @@ struct VideoView: View {
     .onChange(of: isImageOverlayPresented) { dismissKeyboard() } // 오버레이(이미지 확대)로 교체시 키보드 내리기
     // 드로잉 이미지 확대 시, 툴 바 숨기기 처리
     .toolbar(
-      showDrawingImageFull || showFeedbackImageFull || forceShowLandscape ? .hidden : .visible,
+      showDrawingImageFull || showFeedbackImageFull || vm.forceShowLandscape ? .hidden : .visible,
       for: .navigationBar
     )
     .fullScreenCover(isPresented: $showFeedbackPaperDrawingView) {
@@ -298,475 +320,6 @@ struct VideoView: View {
       }
     }
   }
-  // MARK: 세로모드 레이아웃
-  private func portraitView(proxy: GeometryProxy) -> some View {
-    VStack(spacing: 0) {
-      videoView
-        .frame(height: proxy.size.width * 9 / 16)
-      
-      VStack(spacing: 0) {
-        feedbackSection
-          .padding(.horizontal, 16)
-          .padding(.vertical, 8)
-        Divider()
-        feedbackListView
-      }
-      .ignoresSafeArea(.keyboard)
-      .contentShape(Rectangle())
-      .onTapGesture {
-        if showFeedbackInput {
-          showFeedbackInput = false
-          dismissKeyboard()
-        }
-      }
-    }
-    .toolbarTitleDisplayMode(.inline)
-    .toolbar {
-      ToolbarLeadingBackButton(icon: .chevron)
-      ToolbarCenterTitle(text: videoTitle)
-    }
-  }
-  
-  // MARK: 가로모드 레이아웃
-  private func landscapeView(proxy: GeometryProxy) -> some View {
-    ZStack(alignment: .bottom) {
-    HStack(spacing: 0) {
-      // MARK: 비디오 + 컨트롤 영역
-      ZStack {
-        Color.black
-
-        // 비디오
-        if let player = vm.videoVM.player {
-          VideoController(player: player)
-            .aspectRatio(16/9, contentMode: .fit)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-        }
-
-        // 탭 영역
-        GeometryReader { tapProxy in
-          Color.clear
-            .contentShape(Rectangle())
-            .onTapGesture { location in
-              let tapWidth = tapProxy.size.width
-              if location.x < tapWidth / 3 {
-                vm.videoVM.leftTab()
-              } else if location.x > tapWidth * 2 / 3 {
-                vm.videoVM.rightTap()
-              } else {
-                vm.videoVM.centerTap()
-              }
-            }
-        }
-
-        // 컨트롤
-        if vm.videoVM.showControls {
-          ZStack {
-            OverlayController(
-              leftAction: {
-                vm.videoVM.seekToTime(
-                  to: vm.videoVM.currentTime - 5
-                )
-                if vm.videoVM.isPlaying {
-                  vm.videoVM.startAutoHideControls()
-                }
-              },
-              rightAction: {
-                vm.videoVM.seekToTime(
-                  to: vm.videoVM.currentTime + 5
-                )
-                if vm.videoVM.isPlaying {
-                  vm.videoVM.startAutoHideControls()
-                }
-              },
-              centerAction: {
-                vm.videoVM.togglePlayPause()
-              },
-              isPlaying: $vm.videoVM.isPlaying
-            )
-            .padding(.bottom, 20)
-
-            CustomSlider(
-              isDragging: $isDragging,
-              currentTime: isDragging ? sliderValue : vm.videoVM.currentTime,
-              duration: vm.videoVM.duration,
-              onSeek: { time in
-                vm.videoVM.seekToTime(to: time)
-              },
-              onDragChanged: { time in
-                self.sliderValue = time
-                vm.videoVM.seekToTime(to: time)
-              },
-              startTime: vm.videoVM.currentTime.formattedTime(),
-              endTime: vm.videoVM.duration.formattedTime()
-            )
-            .padding(.horizontal, 20)
-            .onChange(of: vm.videoVM.currentTime) { _, newValue in
-              if !isDragging {
-                sliderValue = newValue
-              }
-            }
-
-            VideoSettingButtons(
-              action: { self.showSpeedModal = true },
-              toggleOrientations: {
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                  self.forceShowLandscape.toggle()
-                  if self.forceShowLandscape {
-                    enterLandscapeMode()
-                  } else {
-                    exitLandscapeMode()
-                  }
-                }
-              },
-              isLandscapeMode: forceShowLandscape,
-              toggleFeedbackPanel: {
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                  showFeedbackPanel.toggle()
-                }
-              },
-              showFeedbackPanel: showFeedbackPanel
-            )
-          }
-          .padding(.horizontal, showFeedbackPanel ? 0 : 44)
-  //        .frame(maxWidth: .infinity, maxHeight: .infinity)
-          .transition(.opacity)
-          .zIndex(10)
-        }
-      }
-      .frame(width: showFeedbackPanel ? proxy.size.width * 0.6 : nil)
-      .clipped()
-
-      // MARK: 피드백 패널
-      if showFeedbackPanel {
-        VStack {
-          RoundedRectangle(cornerRadius: 20)
-            .fill(.backgroundNormal)
-            .frame(width: proxy.size.width * 0.4)
-            .overlay {
-              VStack(spacing: 0) {
-                HStack(spacing: 0) {
-                  feedbackSection.padding(.vertical, 10)
-                  Spacer()
-                  Button {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                      showFeedbackPanel = false
-                    }
-                  } label: {
-                    Image(systemName: "xmark.circle")
-                      .font(.system(size: 20))
-                      .foregroundStyle(.labelStrong)
-                  }
-                  .frame(width: 44, height: 44)
-                  .contentShape(Rectangle())
-//                  .padding(.trailing, 44)
-                }
-                Divider().foregroundStyle(.strokeNormal)
-                feedbackListView
-                  .scrollIndicators(.hidden)
-              }
-              .padding(.horizontal, 16)
-            }
-        }
-        .transition(.move(edge: .trailing))
-        
-//        .frame(width: proxy.size.width * 0.4)
-//        .background(Color.backgroundNormal)
-//        .ignoresSafeArea()
-//        .transition(.move(edge: .trailing))
-      }
-    }
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .ignoresSafeArea()
-
-      // MARK: Speed Sheet 오버레이
-      if showSpeedModal {
-        Color.black.opacity(0.7)
-          .ignoresSafeArea()
-          .onTapGesture {
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-              self.showSpeedModal = false
-            }
-          }
-
-        PlaybackSpeedSheet(
-          playbackSpeed: $vm.videoVM.playbackSpeed,
-          onSpeedChange: { speed in
-            vm.videoVM.setPlaybackSpeed(speed)
-          }
-        )
-        .frame(width: 350, height: 160)
-        .clipShape(RoundedRectangle(cornerRadius: 24))
-        .offset(y: -40)
-        .transition(.scale.combined(with: .opacity))
-      }
-    }
-  }
-  
-  // MARK: 비디오 섹션
-  private var videoView: some View {
-    ZStack {
-      if let player = vm.videoVM.player {
-        VideoController(player: player)
-          .aspectRatio(16/9, contentMode: .fit)
-      } else {
-        Color.black
-          .aspectRatio(16/9, contentMode: .fit)
-      }
-      
-      TapClearArea(
-        leftTap: { vm.videoVM.leftTab() },
-        rightTap: { vm.videoVM.rightTap() },
-        centerTap: { vm.videoVM.centerTap() },
-        showControls: $vm.videoVM.showControls
-      )
-      
-      if vm.videoVM.showControls {
-        ZStack {
-          OverlayController(
-            leftAction: {
-              vm.videoVM.seekToTime(
-                to: vm.videoVM.currentTime - 5
-              )
-              if vm.videoVM.isPlaying {
-                vm.videoVM.startAutoHideControls()
-              }
-            },
-            rightAction: {
-              vm.videoVM.seekToTime(
-                to: vm.videoVM.currentTime + 5
-              )
-              if vm.videoVM.isPlaying {
-                vm.videoVM.startAutoHideControls()
-              }
-            },
-            centerAction: {
-              vm.videoVM.togglePlayPause()
-            },
-            isPlaying: $vm.videoVM.isPlaying
-          )
-          .padding(.bottom, 20)
-
-          CustomSlider(
-            isDragging: $isDragging,
-            currentTime: isDragging ? sliderValue : vm.videoVM.currentTime,
-            duration: vm.videoVM.duration,
-            onSeek: { time in
-              vm.videoVM.seekToTime(to: time)
-            },
-            onDragChanged: { time in
-              self.sliderValue = time
-              vm.videoVM.seekToTime(to: time)
-            },
-            startTime: vm.videoVM.currentTime.formattedTime(),
-            endTime: vm.videoVM.duration.formattedTime()
-          )
-          .padding(.horizontal, 20)
-          .onChange(of: vm.videoVM.currentTime) { _, newValue in
-            if !isDragging {
-              sliderValue = newValue
-            }
-          }
-
-          VideoSettingButtons(
-            action: { self.showSpeedSheet = true },
-            toggleOrientations: {
-              withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                self.forceShowLandscape.toggle()
-                if self.forceShowLandscape {
-                  enterLandscapeMode()
-                } else {
-                  exitLandscapeMode()
-                }
-              }
-            },
-            isLandscapeMode: forceShowLandscape,
-            toggleFeedbackPanel: {
-              withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                showFeedbackPanel.toggle()
-              }
-            },
-            showFeedbackPanel: showFeedbackPanel
-          )
-          .zIndex(100)
-        }
-//        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .transition(.opacity)
-        .zIndex(10)
-      }
-    }
-    .overlay {
-      if vm.videoVM.isLoading {
-        ZStack {
-          Color.backgroundElevated
-          if vm.videoVM.isDownloading {
-            downloadProgress(progress: vm.videoVM.loadingProgress)
-          } else {
-            VideoLottieView()
-          }
-        }
-      }
-    }
-    .sheet(isPresented: $showSpeedSheet) {
-      PlaybackSpeedSheet(
-        playbackSpeed: $vm.videoVM.playbackSpeed) { speed in
-          vm.videoVM.setPlaybackSpeed(speed)
-        }
-        .presentationDetents([.fraction(0.2)])
-    }
-  }
-  // MARK: 피드백 리스트
-  private var feedbackListView: some View {
-    ScrollViewReader { proxy in
-      ScrollView {
-        LazyVStack {
-          Color.clear.frame(height: 1).id("topFeedback")
-          
-          if vm.feedbackVM.isLoading {
-            ForEach(0..<3, id: \.self) { _ in
-              SkeletonFeedbackCard()
-            }
-          } else if vm.feedbackVM.feedbacks.isEmpty && !vm.feedbackVM.isLoading {
-            emptyView
-          } else {
-            ForEach(filteredFeedbacks, id: \.feedbackId) { f in
-              FeedbackCard(
-                feedback: f,
-                authorUser: vm.getAuthorUser(for: f.authorId),
-                taggedUsers:
-                  vm.getTaggedUsers(for: f.taggedUserIds),
-                replyCount: vm.feedbackVM.reply[f.feedbackId.uuidString]?.count ?? 0,
-                action: { // showReplySheet와 동일한 네비게이션
-                  if !forceShowLandscape { // 가로모드 시트 x
-                    self.selectedFeedback = f
-                  }
-                },
-                showReplySheet: { // showReplySheet와 동일한 네비게이션
-                  if !forceShowLandscape {
-                    self.selectedFeedback = f
-                  }
-                },
-                currentTime: pointTime,
-                startTime: intervalTime,
-                timeSeek: { vm.videoVM.seekToTime(to: f.startTime ?? self.pointTime ) },
-                currentUserId: userId,
-                onDelete: {
-                  Task {
-                    await vm.feedbackVM.deleteFeedback(f)
-                  }
-                },
-                onReport: {
-                  if !forceShowLandscape { // 가로모드 시트 x
-                    self.reportTargetFeedback = f
-                  }
-                },
-                imageNamespace: feedbackImageNamespace,
-                onImageTap: { url in
-                  self.selectedFeedbackImageURL = url
-                  withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                    self.showFeedbackImageFull = true
-                  }
-                }
-              )
-            }
-          }
-          
-        }
-        .onAppear {
-          self.scrollProxy = proxy
-        }
-        .sheet(item: $selectedFeedback) { feedback in
-          ReplySheet(
-            reply: vm.feedbackVM.reply[feedback.feedbackId.uuidString] ?? [],
-            feedback: feedback,
-            taggedUsers: vm.getTaggedUsers(for: feedback.taggedUserIds),
-            teamMembers: vm.teamMembers,
-            replyCount: vm.feedbackVM.reply[feedback.feedbackId.uuidString]?.count ?? 0,
-            currentTime: pointTime,
-            startTime: intervalTime,
-            timeSeek: { vm.videoVM.seekToTime(to: self.pointTime) },
-            getTaggedUsers: { ids in vm.getTaggedUsers(for: ids) },
-            getAuthorUser: { ids in vm.getAuthorUser(for: ids) },
-            onReplySubmit: {content, taggedIds in
-              Task {
-                await vm.feedbackVM.addReply(
-                  to: feedback.feedbackId.uuidString,
-                  authorId: userId,
-                  content: content,
-                  taggedUserIds: taggedIds
-                )
-              }
-            },
-            currentUserId: userId,
-            onDelete: { replyId, feedbackId in
-              await vm.feedbackVM.deleteReply(
-                replyId: replyId, from: feedbackId)
-            },
-            onFeedbackDelete: {
-              Task {
-                await vm.feedbackVM.deleteFeedback(feedback)
-              }
-            },
-            imageNamespace: feedbackImageNamespace,
-            onImageTap: { url in
-              self.selectedFeedbackImageURL = url
-              withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                self.showFeedbackImageFull = true
-              }
-            }
-          )
-        }
-        .sheet(item: $reportTargetFeedback) { feedback in
-          NavigationStack {
-            CreateReportView(
-              reportedId: feedback.authorId,
-              reportContentType: .feedback,
-              feedback: feedback,
-              toastReceiveView: ReportToastReceiveViewType.videoView
-            )
-          }
-        }
-      }
-    }
-    //    .background(.backgroundNormal)
-  }
-  // MARK: 피드백 섹션
-  private var feedbackSection: some View {
-    HStack {
-      Text(feedbackFilter == .all ? "전체 피드백" : "마이 피드백")
-        .font(.heading1SemiBold)
-        .foregroundStyle(.labelStrong)
-      Spacer()
-      Button {
-        switch feedbackFilter {
-        case .all:
-          self.feedbackFilter = .mine
-        case .mine:
-          self.feedbackFilter = .all
-        }
-      } label: {
-        Text("마이피드백")
-          .foregroundStyle(feedbackFilter == .all ? .secondaryAssitive : .labelStrong)
-          .padding(.horizontal, 11)
-          .padding(.vertical, 7)
-          .background(
-            RoundedRectangle(cornerRadius: 10)
-              .fill(feedbackFilter == .all ? .backgroundElevated : .secondaryStrong)
-              .stroke(feedbackFilter == .all ? .secondaryAssitive : .secondaryNormal)
-          )
-      }
-    }
-  }
-  // MARK: 피드백 비어있는 emptyView
-  private var emptyView: some View {
-    GeometryReader { g in
-      VStack {
-        Text("피드백이 없습니다.")
-      }
-      .frame(width: g.size.width, height: g.size.height)
-    }
-    .frame(height: 300)
-  }
-
   /// 현재 플레이어 시점의 프레임을 이미지로 캡처 (copyCGImage 대체)
   private func captureCurrentFrame() {
     guard let player = vm.videoVM.player,
@@ -794,39 +347,6 @@ struct VideoView: View {
       }
     }
   }
-  
-  @MainActor
-  func enterLandscapeMode() {
-   
-    AppDelegate.orientationMask = .landscape
-    
-    guard let scene = UIApplication.shared.connectedScenes
-      .compactMap({ $0 as? UIWindowScene })
-      .first else { return }
-    
-    scene.keyWindow?.rootViewController?.setNeedsUpdateOfSupportedInterfaceOrientations()
-    
-    scene.requestGeometryUpdate(.iOS(interfaceOrientations: .landscapeRight))
-    
-    forceShowLandscape = true
-  }
-  
-  @MainActor
-  func exitLandscapeMode() {
-    AppDelegate.orientationMask = .portrait
-    
-    guard let scene = UIApplication.shared.connectedScenes
-      .compactMap({ $0 as? UIWindowScene })
-      .first else { return }
-    
-    scene.keyWindow?.rootViewController?.setNeedsUpdateOfSupportedInterfaceOrientations()
-    
-    
-    scene.requestGeometryUpdate(.iOS(interfaceOrientations: .portrait))
-    
-    forceShowLandscape = false
-  }
-  
 }
 
 #Preview {

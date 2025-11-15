@@ -9,41 +9,52 @@ import SwiftUI
 
 struct ReplySheet: View {
   @Environment(\.dismiss) private var dismiss
-  
+
   @State private var mM = MentionManager()
-  
+
   @State private var isKeyboardVisible: Bool = false
-  
+
   @State private var isReportSheetPresented: Bool = false
   @State private var showCreateReportSuccessToast: Bool = false
-  
+
   let reply: [Reply]
   let feedback: Feedback
   let taggedUsers: [User] // 이전화면에서 받아오는 태그 된 유저 (피드백 카드)
   let teamMembers: [User]
   let replyCount: Int
-  
+
   let currentTime: Double
   let startTime: Double
   let timeSeek: () -> Void
-  
+
   let getTaggedUsers: ([String]) -> [User]
   let getAuthorUser: (String) -> User?
   let onReplySubmit: (String, [String]) -> Void
-  
+
   let currentUserId: String
   let onDelete: (String, String) async -> Void
-  
+
   let onFeedbackDelete: () -> Void
-  
+
   let imageNamespace: Namespace.ID
-  
+
   @State private var selectedReply: Reply?
   @State private var reportTargetReply: Reply?
   @State private var content: String = ""
-  
+
   let onImageTap: (String) -> Void
-  
+
+  var onDismiss: (() -> Void)? = nil  // 가로모드 패널용 dismiss 콜백
+
+  // dismiss 호출 helper
+  private func dismissSheet() {
+    if let onDismiss = onDismiss {
+      onDismiss()
+    } else {
+      dismiss()
+    }
+  }
+
   private var filteredMembers: [User] {
     if mM.mentionQuery.isEmpty {
       return teamMembers
@@ -77,7 +88,7 @@ struct ReplySheet: View {
           currentUserId: currentUserId,
           onDelete: {
             onFeedbackDelete()
-            dismiss()
+            dismissSheet()
           },
           onReport: { isReportSheetPresented = true },
           showBottomReplyButton: true,
@@ -87,7 +98,7 @@ struct ReplySheet: View {
           imageNamespace: imageNamespace,
           onImageTap: { url in
             onImageTap(url)
-            dismiss()
+            dismissSheet()
           }
         )
         replyList
@@ -318,8 +329,8 @@ struct ReplySheet: View {
 }
 
 #Preview {
+  @Previewable @Namespace var previewNamespace
   NavigationStack {
-    @Namespace var previewNamespace
     
     ReplySheet(
       reply: [

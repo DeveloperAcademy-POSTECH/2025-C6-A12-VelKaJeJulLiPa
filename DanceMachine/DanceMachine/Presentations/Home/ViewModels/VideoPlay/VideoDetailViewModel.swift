@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import UIKit
 
 @Observable
 final class VideoDetailViewModel {
@@ -15,6 +16,8 @@ final class VideoDetailViewModel {
   
   var videoVM: VideoViewModel
   var feedbackVM: FeedbackViewModel
+  
+  var forceShowLandscape: Bool = false
   
   var isLoading: Bool = false
   // TODO: 에러메세지 타입 구현!
@@ -103,6 +106,40 @@ extension VideoDetailViewModel {
   func searchMembers(query: String) -> [User] {
     guard !query.isEmpty else { return teamMembers }
     return teamMembers.filter { $0.name.lowercased().contains(query.lowercased()) }
+  }
+}
+// MARK: - 가로모드
+extension VideoDetailViewModel {
+  @MainActor
+  func enterLandscapeMode() {
+   
+    AppDelegate.orientationMask = .landscape
+    
+    guard let scene = UIApplication.shared.connectedScenes
+      .compactMap({ $0 as? UIWindowScene })
+      .first else { return }
+    
+    scene.keyWindow?.rootViewController?.setNeedsUpdateOfSupportedInterfaceOrientations()
+    
+    scene.requestGeometryUpdate(.iOS(interfaceOrientations: .landscapeRight))
+    
+    forceShowLandscape = true
+  }
+  
+  @MainActor
+  func exitLandscapeMode() {
+    AppDelegate.orientationMask = .portrait
+    
+    guard let scene = UIApplication.shared.connectedScenes
+      .compactMap({ $0 as? UIWindowScene })
+      .first else { return }
+    
+    scene.keyWindow?.rootViewController?.setNeedsUpdateOfSupportedInterfaceOrientations()
+    
+    
+    scene.requestGeometryUpdate(.iOS(interfaceOrientations: .portrait))
+    
+    forceShowLandscape = false
   }
 }
 // MARK: - 프리뷰 전용 목데이터

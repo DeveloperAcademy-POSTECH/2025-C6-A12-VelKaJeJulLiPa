@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Feedback: Codable {
+struct Feedback: Codable, Hashable {
   let feedbackId: UUID
   let videoId: String
   let authorId: String
