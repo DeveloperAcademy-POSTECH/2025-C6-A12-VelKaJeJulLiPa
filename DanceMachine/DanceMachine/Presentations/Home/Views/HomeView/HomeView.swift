@@ -75,7 +75,8 @@ struct HomeView: View {
             onCommitEdit: { _, _ in await viewModel.commitProjectEdit()
             },
             onDelete: { project in presentingRemovalProject = project },
-            onTap: { project in viewModel.toggleExpand(project) },
+            onTap: { project in Task { await viewModel.toggleExpand(project) }
+            },
             isExpanded: { project in viewModel.isExpanded(project) },
             expandedContent: { project in
               TracksInlineView(
@@ -188,7 +189,7 @@ struct HomeView: View {
           )
           
           if let pid = viewModel.project.expandedID {
-            viewModel.loadTracks(for: pid) // 삭제 후 갱신
+            Task { await viewModel.editLoadTracks(for: pid) } // 삭제 후 갱신
           }
         }
       }
@@ -234,9 +235,7 @@ struct HomeView: View {
         onCreated: { // 곡 생성 됐을 때, 로직
           if let pid = viewModel.project.expandedID {
             // FIXME: - batch 추가하기
-            viewModel.loadTracks(for: pid) // 생성 후 갱신
-            
-            // TODO: 해당 프로젝트 updatedAt 갱신하기.
+            Task { await viewModel.editLoadTracks(for: pid) } // 생성 후 갱신
           }
         }
       )
