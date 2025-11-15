@@ -22,6 +22,13 @@ struct DanceMachineApp: App {
   @StateObject private var authManager = FirebaseAuthManager.shared
   @StateObject private var inviteRouter = InviteRouter()
   
+  init() {
+    Task {
+      await VideoDataCacheManager.shared.cleanupOldCache()
+      await VideoCacheManager.shared.cleanupOldCache()
+    }
+  }
+  
   
   var body: some Scene {
     WindowGroup {
@@ -76,6 +83,12 @@ struct DanceMachineApp: App {
                           print("❌ 알림 읽음 처리 실패:", error.localizedDescription)
                         }
                       }
+                    }
+                  }
+                  if newPhase == .background {
+                    Task {
+                      await VideoDataCacheManager.shared.cleanupOldCache()
+                      await VideoCacheManager.shared.cleanupOldCache()
                     }
                   }
                 }

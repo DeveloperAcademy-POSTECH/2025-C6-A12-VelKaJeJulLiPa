@@ -174,6 +174,25 @@ actor VideoDataCacheManager {
     
     return Double(totalSize) / 1_048_576  // MB로 반환
   }
+  
+  // MARK: - 캐시 자동 정리
+  func cleanupOldCache() {
+    let twoMonthsAgo = Date().addingTimeInterval(-60)
+    
+    guard let enumerator = FileManager.default.enumerator(
+      at: cacheDirectory,
+      includingPropertiesForKeys: [.contentModificationDateKey]
+    ) else { return }
+    
+    for case let fileURL as URL in enumerator {
+      guard let resourceValues = try? fileURL.resourceValues(forKeys: [.contentModificationDateKey]),
+            let modifiedDate = resourceValues.contentModificationDate,
+            modifiedDate < twoMonthsAgo else { continue }
+      
+      try? FileManager.default.removeItem(at: fileURL)
+      print("오래된 영상 리스트 캐시 삭제: \(fileURL.lastPathComponent)")
+    }
+  }
 }
 
 // MARK: - 영상 리스트 관련 데이터들 CRUD
@@ -307,5 +326,4 @@ extension VideoDataCacheManager {
       print("캐시에서 섹션 제목 수정: \(newTitle)")
     }
   }
-  
 }
