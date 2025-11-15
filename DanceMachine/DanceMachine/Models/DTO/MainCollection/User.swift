@@ -9,53 +9,60 @@ import Foundation
 import FirebaseAuth
 
 struct User: Codable, Equatable {
+  
+  let userId: String
+  let email: String
+  let name: String
+  let loginType: LoginType.RawValue
+  let status: UserStatus.RawValue
+  let fcmToken: String
+  let termsAgreed: Bool
+  let privacyAgreed: Bool
+  var updatedAt: Date?
+  
+  init(
+    userId: String,
+    email: String,
+    name: String,
+    loginType: LoginType,
+    status: UserStatus = .active,
+    fcmToken: String,
+    termsAgreed: Bool,
+    privacyAgreed: Bool,
+    updatedAt: Date? = nil,
     
-    let userId: String
-    let email: String
-    let name: String
-    let loginType: LoginType.RawValue
-    let status: UserStatus.RawValue
-    let fcmToken: String
-    let termsAgreed: Bool
-    let privacyAgreed: Bool
-
-    init(
-        userId: String,
-        email: String,
-        name: String,
-        loginType: LoginType,
-        status: UserStatus = .active,
-        fcmToken: String,
-        termsAgreed: Bool,
-        privacyAgreed: Bool
-    ) {
-        self.userId = userId
-        self.email = email
-        self.name = name
-        self.loginType = loginType.rawValue
-        self.status = status.rawValue
-        self.fcmToken = fcmToken
-        self.termsAgreed = termsAgreed
-        self.privacyAgreed = privacyAgreed
-    }
-
-    enum CodingKeys: String, CodingKey {
-        case userId = "user_id"
-        case email
-        case name
-        case loginType = "login_type"
-        case status
-        case fcmToken = "fcm_token"
-        case termsAgreed = "terms_agreed"
-        case privacyAgreed = "privacy_agreed"
-    }
+  ) {
+    self.userId = userId
+    self.email = email
+    self.name = name
+    self.loginType = loginType.rawValue
+    self.status = status.rawValue
+    self.fcmToken = fcmToken
+    self.termsAgreed = termsAgreed
+    self.privacyAgreed = privacyAgreed
+    self.updatedAt = updatedAt
+    
+  }
+  
+  enum CodingKeys: String, CodingKey {
+    case userId = "user_id"
+    case email
+    case name
+    case loginType = "login_type"
+    case status
+    case fcmToken = "fcm_token"
+    case termsAgreed = "terms_agreed"
+    case privacyAgreed = "privacy_agreed"
+    case updatedAt     = "updated_at"
+    
+  }
 }
 
 extension User: Identifiable {
-    var id: String { UUID().uuidString }
+  var id: String { UUID().uuidString }
 }
 
 extension User: EntityRepresentable {
-    var entityName: CollectionType { .users }
-    var documentID: String { userId }
+  var entityName: CollectionType { .users }
+  var documentID: String { userId }
 }

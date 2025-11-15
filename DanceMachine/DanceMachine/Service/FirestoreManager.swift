@@ -102,6 +102,38 @@ final class FirestoreManager {
     try await save(data, strategy: .invite)
   }
   
+  /// 지정한 문서에서 특정 필드만 서버 타임스탬프로 업데이트합니다.
+  /// - Parameters:
+  ///   - strategy: 필드 키로 사용할 WriteStrategy (ex: .update, .join, .userStrategy ...)
+  ///   - collection: 대상 컬렉션
+  ///   - documentId: 대상 문서 ID
+  func updateTimestampField(
+    field strategy: WriteStrategy,
+    in collection: CollectionType,
+    documentId: String
+  ) async throws {
+    try await db
+      .collection(collection.rawValue)
+      .document(documentId)
+      .updateData([strategy.rawValue: FieldValue.serverTimestamp()])
+  }
+  
+  /// 첫 로그인용 메서드 ❗️ (조금 범용적으로 사용할 수 있게 수정해야함)
+  func updateLastLoginFields(
+    collection: CollectionType,
+    documentId: String,
+    asDictionary: [String: Any]
+  ) async throws {
+    var asDictionary = asDictionary
+    asDictionary[WriteStrategy.userStrategy.rawValue] = FieldValue.serverTimestamp() // 업데이트 시간을 포함
+    
+    try await db
+      .collection(collection.rawValue)
+      .document(documentId)
+      .updateData(asDictionary)
+  }
+  
+  
   /// 특정 필드만 부분 업데이트를 진행하는 메서드입니다.
   /// - Parameters:
   ///     - collection: 컬렉션 타입

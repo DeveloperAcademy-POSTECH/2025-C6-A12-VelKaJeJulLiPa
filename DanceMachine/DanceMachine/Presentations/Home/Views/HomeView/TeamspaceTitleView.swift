@@ -77,54 +77,54 @@ struct TeamspaceTitleView: View {
 }
 
 
-// MARK: - 프리뷰
-
-#Preview("팀 없을 때") {
-  ZStack {
-    Color.backgroundNormal.ignoresSafeArea()
-    
-    TeamspaceTitleView(
-      viewModel: HomeViewModel(),
-      teamspaceState: .constant(.empty),
-      presentingCreateTeamspaceSheet: .constant(false)
-    )
-    .environmentObject(MainRouter())
-  }
-}
-
-#Preview("팀 있을 때 (Mock)") {
-  PreviewTeamspaceTitleNonEmpty()
-}
-
-
-private struct PreviewTeamspaceTitleNonEmpty: View {
-  @State private var vm = HomeViewModel()
-  @State private var state: TeamspaceState = .nonEmpty
-  
-  var body: some View {
-    ZStack {
-      Color.backgroundNormal.ignoresSafeArea()
-      
-      TeamspaceTitleView(
-        viewModel: vm,
-        teamspaceState: $state,
-        presentingCreateTeamspaceSheet: .constant(false)
-      )
-      .environmentObject(MainRouter())
-      .task {
-        let mock = Teamspace(
-          teamspaceId: UUID(),
-          ownerId: "",
-          teamspaceName: "댄스머신 팀"
-        )
-        
-        FirebaseAuthManager.shared.currentTeamspace = mock
-        
-        vm.teamspace.list = [mock]
-        vm.teamspace.state = .nonEmpty
-        vm.teamspace.isLoading = false
-      }
-    }
-  }
-}
-
+//// MARK: - 프리뷰
+//
+//#Preview("팀 없을 때") {
+//  ZStack {
+//    Color.backgroundNormal.ignoresSafeArea()
+//    
+//    TeamspaceTitleView(
+//      viewModel: HomeViewModel(),
+//      teamspaceState: .constant(.empty),
+//      presentingCreateTeamspaceSheet: .constant(false)
+//    )
+//    .environmentObject(MainRouter())
+//  }
+//}
+//
+//#Preview("팀 있을 때 (Mock)") {
+//  PreviewTeamspaceTitleNonEmpty()
+//}
+//
+//
+//private struct PreviewTeamspaceTitleNonEmpty: View {
+//  @State private var vm = HomeViewModel()
+//  @State private var state: TeamspaceState = .nonEmpty
+//  
+//  var body: some View {
+//    ZStack {
+//      Color.backgroundNormal.ignoresSafeArea()
+//      
+//      TeamspaceTitleView(
+//        viewModel: vm,
+//        teamspaceState: $state,
+//        presentingCreateTeamspaceSheet: .constant(false)
+//      )
+//      .environmentObject(MainRouter())
+//      .task {
+//        let mock = Teamspace(
+//          teamspaceId: UUID(),
+//          ownerId: "",
+//          teamspaceName: "댄스머신 팀"
+//        )
+//        
+//        FirebaseAuthManager.shared.currentTeamspace = mock
+//        
+//        vm.teamspace.list = [mock]
+//        vm.teamspace.state = .nonEmpty
+//        vm.teamspace.isLoading = false
+//      }
+//    }
+//  }
+//}
+//

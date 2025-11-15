@@ -7,18 +7,22 @@
 
 import SwiftUI
 import FirebaseAuth
-
+import SwiftData
 
 struct HomeView: View {
-  
+  @Environment(\.cacheStore) private var cache
   @EnvironmentObject private var router: MainRouter
   @EnvironmentObject private var inviteRouter: InviteRouter
   
-  @State private var viewModel: HomeViewModel
+  @State private var viewModel: HomeViewModel = .init()
   
-  init(previewVM: HomeViewModel? = nil) {
-    _viewModel = State(initialValue: previewVM ?? HomeViewModel())
-  }
+//  init(viewModel: HomeViewModel? = nil) {
+//    // 외부에서 주입 가능, 없으면 환경값으로 생성
+//    _viewModel = State(initialValue: viewModel ?? HomeViewModel(cache: CacheStoreKey.defaultValue))
+//  }
+  
+  @Query private var caches: [TeamspaceCache]
+
   
   // 시트/로딩 등 화면 로컬 상태만 유지
   @State private var presentingRemovalProject: Project?
@@ -71,7 +75,8 @@ struct HomeView: View {
             onCommitEdit: { _, _ in await viewModel.commitProjectEdit()
             },
             onDelete: { project in presentingRemovalProject = project },
-            onTap: { project in viewModel.toggleExpand(project) },
+            onTap: { project in Task { await viewModel.toggleExpand(project) }
+            },
             isExpanded: { project in viewModel.isExpanded(project) },
             expandedContent: { project in
               TracksInlineView(
@@ -133,6 +138,9 @@ struct HomeView: View {
           .padding(.horizontal, 16)
         }
       }
+      .onChange(of: caches) { _, newValue in
+            print("🔎 @Query 변경 감지: \(newValue.count)개")
+          }
       .animation(
         .spring(response: 0.3, dampingFraction: 0.85), // FIXME: - 애니메이션 효과 적절한지
         value: viewModel.project.rowState
@@ -176,10 +184,12 @@ struct HomeView: View {
       Button("삭제", role: .destructive) {
         Task {
           try await viewModel.removeTracksAndSection(
+            projectExpandedId: viewModel.project.expandedID?.uuidString,
             tracksId: self.presentingRemovalTracks?.tracksId.uuidString ?? ""
           )
+          
           if let pid = viewModel.project.expandedID {
-            viewModel.loadTracks(for: pid) // 삭제 후 갱신
+            Task { await viewModel.editLoadTracks(for: pid) } // 삭제 후 갱신
           }
         }
       }
@@ -224,7 +234,8 @@ struct HomeView: View {
         ),
         onCreated: { // 곡 생성 됐을 때, 로직
           if let pid = viewModel.project.expandedID {
-            viewModel.loadTracks(for: pid) // 생성 후 갱신
+            // FIXME: - batch 추가하기
+            Task { await viewModel.editLoadTracks(for: pid) } // 생성 후 갱신
           }
         }
       )
@@ -260,9 +271,12 @@ struct HomeView: View {
       
       // TODO: 딥 링크 타고 들어올때 팀 스페이스 명을 아래 로직을 활용해서 변경해야함.
       do {
-        try await viewModel.fetchUserInfo()
-        await viewModel.ensureTeamspaceInitialized()
-        await viewModel.fetchCurrentTeamspaceProject()
+//        try await viewModel.fetchUserInfo()
+//        await viewModel.ensureTeamspaceInitialized()
+//        await viewModel.fetchCurrentTeamspaceProject()
+        if viewModel.cacheStore == nil { viewModel.setCacheStore(cache) }
+        await viewModel.homeViewOnnAppear()
+        print("self.caches: \(self.caches)")
         try await NotificationManager.shared.refreshBadge(for: FirebaseAuthManager.shared.user?.uid ?? "")
       } catch {
         
@@ -283,11 +297,11 @@ struct HomeView: View {
   }
 }
 
-#Preview("HomeView · 프리뷰 목 데이터") {
-  NavigationStack {
-    HomeView(previewVM: .previewFilled())
-      .environmentObject(MainRouter())
-      .environmentObject(InviteRouter())
-  }
-}
+//#Preview("HomeView · 프리뷰 목 데이터") {
+//  NavigationStack {
+//    HomeView(previewVM: .previewFilled())
+//      .environmentObject(MainRouter())
+//      .environmentObject(InviteRouter())
+//  }
+//}
 

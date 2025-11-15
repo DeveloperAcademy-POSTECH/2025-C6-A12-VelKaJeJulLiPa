@@ -9,6 +9,7 @@ import SwiftUI
 import FirebaseCore
 import FirebaseFirestore
 import AuthenticationServices
+import SwiftData
 
 
 @main
@@ -21,6 +22,21 @@ struct DanceMachineApp: App {
   
   @StateObject private var authManager = FirebaseAuthManager.shared
   @StateObject private var inviteRouter = InviteRouter()
+  
+  // 여기서는 선언만
+  let container: ModelContainer
+  let cacheStore: CacheStore
+  
+  init() {
+    // init에서 한 번만 생성하고 공유
+    let container = try! ModelContainer(
+      for: TeamspaceCache.self,
+      ProjectCache.self,
+      TracksCache.self
+    )
+    self.container = container
+    self.cacheStore = CacheStore(container: container)
+  }
   
   
   var body: some Scene {
@@ -41,7 +57,9 @@ struct DanceMachineApp: App {
                 .environmentObject(mainRouter)
                 .environmentObject(inviteRouter)
                 .transition(.move(edge: .trailing))
-              
+                .modelContainer(container)
+                .environment(\.cacheStore, cacheStore)
+                    
               // URL Scheme 또는 Universal Link로 들어온 경우 처리
                 .onOpenURL { url in
                   handleIncomingURL(url)

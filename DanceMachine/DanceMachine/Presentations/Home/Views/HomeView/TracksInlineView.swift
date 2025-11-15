@@ -152,118 +152,118 @@ struct TracksInlineView: View {
 
 
 
-// MARK: - 프리뷰
-#Preview("TracksInlineView · 기본") {
-  PreviewTracksInlineViewDefault()
-}
-
-#Preview("TracksInlineView · 로딩/에러") {
-  PreviewTracksInlineViewLoadingError()
-}
-
-private struct PreviewTracksInlineViewDefault: View {
-  @State private var vm = HomeViewModel()
-  
-  // 미리 생성해 둔 프로젝트 (tracks의 projectId에 연결)
-  @State private var project: Project = .init(
-    projectId: UUID(),
-    teamspaceId: "teamspace-preview-id",
-    creatorId: "preview-user",
-    projectName: "뉴진스"
-  )
-  
-  // 실제 모델 시그니처에 맞춘 더미 트랙 3개
-  @State private var tracks: [Tracks] = []
-  @State private var rowState: TracksRowState = .viewing
-  @State private var editingTrackID: UUID? = nil
-  @State private var editingText: String = ""
-  
-  init() {
-    let projId = project.projectId.uuidString
-    _tracks = State(initialValue: [
-      Tracks(tracksId: UUID(), projectId: projId, creatorId: "preview-user", trackName: "Hype Boy (1절)"),
-      Tracks(tracksId: UUID(), projectId: projId, creatorId: "preview-user", trackName: "Hype Boy (후렴)"),
-      Tracks(tracksId: UUID(), projectId: projId, creatorId: "preview-user", trackName: "Hype Boy (브릿지)")
-    ])
-  }
-  
-  var body: some View {
-    TracksInlineView(
-      viewModel: vm,
-      project: project,
-      tracks: $tracks,
-      rowState: $rowState,
-      editingTrackID: $editingTrackID,
-      editingText: $editingText,
-      isLoading: false,
-      errorText: nil,
-      onCommitEdit: { id, newName in
-        //                if let idx = tracks.firstIndex(where: { $0.tracksId == id }) {
-        //                    // tracks[idx].trackName = newName
-        //                }
-      },
-      onDelete: { track in
-        tracks.removeAll { $0.tracksId == track.tracksId }
-      },
-      onTap: { track in
-        print("Tapped:", track.trackName)
-      }
-    )
-    .padding()
-    .environmentObject(MainRouter())
-  }
-}
-
-
-private struct PreviewTracksInlineViewLoadingError: View {
-  @State private var vm = HomeViewModel()
-  @State private var project = Project(
-    projectId: UUID(),
-    teamspaceId: "아이브 - IAM",
-    creatorId: "preview-user",
-    projectName: "아이브"
-  )
-  
-  @State private var tracks: [Tracks] = []
-  
-  @State private var rowState: TracksRowState = .viewing
-  @State private var editingTrackID: UUID? = nil
-  @State private var editingText: String = ""
-  
-  var body: some View {
-    VStack(spacing: 24) {
-      // 로딩 상태
-      TracksInlineView(
-        viewModel: vm,
-        project: project,
-        tracks: $tracks,
-        rowState: $rowState,
-        editingTrackID: $editingTrackID,
-        editingText: $editingText,
-        isLoading: true,
-        errorText: nil,
-        onCommitEdit: { _, _ in },
-        onDelete: { _ in },
-        onTap: { _ in }
-      )
-      
-      // 에러 상태
-      TracksInlineView(
-        viewModel: vm,
-        project: project,
-        tracks: $tracks,
-        rowState: $rowState,
-        editingTrackID: $editingTrackID,
-        editingText: $editingText,
-        isLoading: false,
-        errorText: "네트워크 오류로 트랙을 불러오지 못했습니다.",
-        onCommitEdit: { _, _ in },
-        onDelete: { _ in },
-        onTap: { _ in }
-      )
-    }
-    .padding()
-    .environmentObject(MainRouter())
-  }
-}
-
+//// MARK: - 프리뷰
+//#Preview("TracksInlineView · 기본") {
+//  PreviewTracksInlineViewDefault()
+//}
+//
+//#Preview("TracksInlineView · 로딩/에러") {
+//  PreviewTracksInlineViewLoadingError()
+//}
+//
+//private struct PreviewTracksInlineViewDefault: View {
+//  @State private var vm = HomeViewModel()
+//  
+//  // 미리 생성해 둔 프로젝트 (tracks의 projectId에 연결)
+//  @State private var project: Project = .init(
+//    projectId: UUID(),
+//    teamspaceId: "teamspace-preview-id",
+//    creatorId: "preview-user",
+//    projectName: "뉴진스"
+//  )
+//  
+//  // 실제 모델 시그니처에 맞춘 더미 트랙 3개
+//  @State private var tracks: [Tracks] = []
+//  @State private var rowState: TracksRowState = .viewing
+//  @State private var editingTrackID: UUID? = nil
+//  @State private var editingText: String = ""
+//  
+//  init() {
+//    let projId = project.projectId.uuidString
+//    _tracks = State(initialValue: [
+//      Tracks(tracksId: UUID(), projectId: projId, creatorId: "preview-user", trackName: "Hype Boy (1절)"),
+//      Tracks(tracksId: UUID(), projectId: projId, creatorId: "preview-user", trackName: "Hype Boy (후렴)"),
+//      Tracks(tracksId: UUID(), projectId: projId, creatorId: "preview-user", trackName: "Hype Boy (브릿지)")
+//    ])
+//  }
+//  
+//  var body: some View {
+//    TracksInlineView(
+//      viewModel: vm,
+//      project: project,
+//      tracks: $tracks,
+//      rowState: $rowState,
+//      editingTrackID: $editingTrackID,
+//      editingText: $editingText,
+//      isLoading: false,
+//      errorText: nil,
+//      onCommitEdit: { id, newName in
+//        //                if let idx = tracks.firstIndex(where: { $0.tracksId == id }) {
+//        //                    // tracks[idx].trackName = newName
+//        //                }
+//      },
+//      onDelete: { track in
+//        tracks.removeAll { $0.tracksId == track.tracksId }
+//      },
+//      onTap: { track in
+//        print("Tapped:", track.trackName)
+//      }
+//    )
+//    .padding()
+//    .environmentObject(MainRouter())
+//  }
+//}
+//
+//
+//private struct PreviewTracksInlineViewLoadingError: View {
+//  @State private var vm = HomeViewModel()
+//  @State private var project = Project(
+//    projectId: UUID(),
+//    teamspaceId: "아이브 - IAM",
+//    creatorId: "preview-user",
+//    projectName: "아이브"
+//  )
+//  
+//  @State private var tracks: [Tracks] = []
+//  
+//  @State private var rowState: TracksRowState = .viewing
+//  @State private var editingTrackID: UUID? = nil
+//  @State private var editingText: String = ""
+//  
+//  var body: some View {
+//    VStack(spacing: 24) {
+//      // 로딩 상태
+//      TracksInlineView(
+//        viewModel: vm,
+//        project: project,
+//        tracks: $tracks,
+//        rowState: $rowState,
+//        editingTrackID: $editingTrackID,
+//        editingText: $editingText,
+//        isLoading: true,
+//        errorText: nil,
+//        onCommitEdit: { _, _ in },
+//        onDelete: { _ in },
+//        onTap: { _ in }
+//      )
+//      
+//      // 에러 상태
+//      TracksInlineView(
+//        viewModel: vm,
+//        project: project,
+//        tracks: $tracks,
+//        rowState: $rowState,
+//        editingTrackID: $editingTrackID,
+//        editingText: $editingText,
+//        isLoading: false,
+//        errorText: "네트워크 오류로 트랙을 불러오지 못했습니다.",
+//        onCommitEdit: { _, _ in },
+//        onDelete: { _ in },
+//        onTap: { _ in }
+//      )
+//    }
+//    .padding()
+//    .environmentObject(MainRouter())
+//  }
+//}
+//
