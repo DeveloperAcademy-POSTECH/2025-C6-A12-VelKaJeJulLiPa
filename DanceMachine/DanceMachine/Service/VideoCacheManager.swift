@@ -35,25 +35,6 @@ actor VideoCacheManager {
     return videoDir
   }
   
-  // MARK: 썸네일 캐시 경로
-  private var thumbnailCacheDirectory: URL {
-    let path = FileManager.default.urls(
-      for: .documentDirectory,
-      in: .userDomainMask
-    )
-    let thumbDir = path[0].appendingPathComponent(
-      "thumbnails",
-      isDirectory: true
-    )
-    if !FileManager.default.fileExists(atPath: thumbDir.path) {
-      try? FileManager.default.createDirectory(
-        at: thumbDir,
-        withIntermediateDirectories: true
-      )
-    }
-    return thumbDir
-  }
-  
   // MARK: 캐시된 비디오 url 가져오기
   func getCachedVideoURL(for videoId: String) -> URL? {
     let cachedURL = videoCacheDirectory.appendingPathComponent("\(videoId).mov")
@@ -61,18 +42,6 @@ actor VideoCacheManager {
     if FileManager.default.fileExists(atPath: cachedURL.path) {
       print("비디오 캐싱 url 찾: \(videoId)")
       return cachedURL
-    }
-    return nil
-  }
-  // MARK: 캐시된 썸네일 가져오기
-  func getCachedThumbnailURL(for videoId: String) -> UIImage? {
-    let cachedURL = thumbnailCacheDirectory.appendingPathComponent("\(videoId).jpg")
-    
-    if FileManager.default.fileExists(atPath: cachedURL.path),
-       let data = try? Data(contentsOf: cachedURL),
-       let image = UIImage(data: data) {
-      print("썸네일 캐싱 url 찾: \(videoId)")
-      return image
     }
     return nil
   }
@@ -141,58 +110,12 @@ actor VideoCacheManager {
       task.resume()
     }
   }
-  // MARK: 이미지 바로 캐시 저장
-  func cacheThumbnailForImage(_ image: UIImage, videoId: String) async {
-    let thumbDir = thumbnailCacheDirectory
-    let thumbURL = thumbDir.appendingPathComponent("\(videoId).jpg")
-    
-    guard let jpegData = image.jpegData(compressionQuality: 0.8) else {
-      return
-    }
-    
-    do {
-      try jpegData.write(to: thumbURL)
-      print("썸네일 캐시 저장: \(videoId)")
-    } catch {
-      print("썸네일 캐시. ㅓ장 실패: \(error)")
-    }
-  }
-  // MARK: 썸네일 다운로드 및 캐시 저장
-  func downloadAndCacheThumbnail(
-    from urlString: String,
-    videoId: String
-  ) async throws -> UIImage {
-    guard let url = URL(string: urlString) else {
-      throw URLError(.badURL)
-    }
-    print("썸네일 다운로드 시작: \(videoId)")
-    
-    let cachedURL = thumbnailCacheDirectory.appendingPathComponent("\(videoId).jpg")
-    
-    let request = URLRequest(url: url)
-    let (data, response) = try await URLSession.shared.data(for: request)
-    
-    guard let httpRespone = response as? HTTPURLResponse,
-          httpRespone.statusCode == 200,
-          let image = UIImage(data: data) else {
-      throw URLError(.badServerResponse)
-    }
-    
-    // 캐시 저장
-    if let jpegData = image.jpegData(compressionQuality: 0.8) {
-      try jpegData.write(to: cachedURL)
-      print("썸네일 캐시 저장: \(videoId)")
-    }
-    return image
-  }
   
   // MARK: 캐시 삭제 + 썸네일
   // TODO: 동영상 삭제에 추가 해야함
   func clearCache(for videoId: String) {
     let videoCachedURL = videoCacheDirectory.appendingPathComponent("\(videoId).mov")
-    let thumbCachedURL = thumbnailCacheDirectory.appendingPathComponent("\(videoId).jpg")
     try? FileManager.default.removeItem(at: videoCachedURL)
-    try? FileManager.default.removeItem(at: thumbCachedURL)
     print("캐시 삭제: \(videoId)")
   }
   
@@ -200,7 +123,6 @@ actor VideoCacheManager {
   // TODO: 전체 동영상이 삭제되는 케이스에 추가 (트랙 삭제, 곡삭제, 프로젝트 전체 삭제, 팀 삭제 등)
   func clearAllCache() {
     try? FileManager.default.removeItem(at: videoCacheDirectory)
-    try? FileManager.default.removeItem(at: thumbnailCacheDirectory)
     print("전체 캐시 삭제")
   }
   
@@ -219,19 +141,25 @@ actor VideoCacheManager {
         totalSize += Int64(fileSize)
       }
     }
-    
-    // 썸네일 캐시 용량
-    if let thumbEnum = FileManager.default.enumerator(
-      at: thumbnailCacheDirectory,
-      includingPropertiesForKeys: [.fileSizeKey]
-    ) {
-      for case let fileURL as URL in thumbEnum {
-        guard let resourceValues = try? fileURL.resourceValues(forKeys: [.fileSizeKey]),
-              let fileSize = resourceValues.fileSize else { continue }
-        totalSize += Int64(fileSize)
-      }
-    }
-    
     return Double(totalSize) / 1_048_576 // MB로 반환
+  }
+  
+  // MARK: - 캐시 자동 정리
+  func cleanupOldCache() {
+    let twoWeeksAgo = Date().addingTimeInterval(-60)
+    
+    guard let enumerator = FileManager.default.enumerator(
+      at: videoCacheDirectory,
+      includingPropertiesForKeys: [.contentModificationDateKey]
+    ) else { return }
+    
+    for case let fileURL as URL in enumerator {
+      guard let resourceValues = try? fileURL.resourceValues(forKeys: [.contentModificationDateKey]),
+            let modifiedDate = resourceValues.contentModificationDate,
+            modifiedDate < twoWeeksAgo else { continue }
+      
+      try? FileManager.default.removeItem(at: fileURL)
+      print("오래된 video캐시 삭제: \(fileURL.lastPathComponent)")
+    }
   }
 }

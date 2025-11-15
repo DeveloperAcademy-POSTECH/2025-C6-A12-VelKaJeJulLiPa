@@ -213,13 +213,7 @@ extension VideoPickerViewModel {
       }
       try await group.waitForAll()
     }
-    // 썸네일 캐싱
-    if let thumb = thumbnailImage {
-      await dataCacheManager.cacheThumbnailForImage(
-        thumb,
-        videoId: videoId
-      )
-    }
+    
     return (video, track)
   }
   private func createTrack(
