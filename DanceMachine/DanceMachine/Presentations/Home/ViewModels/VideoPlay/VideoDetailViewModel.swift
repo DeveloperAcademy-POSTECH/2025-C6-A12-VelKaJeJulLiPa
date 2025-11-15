@@ -53,7 +53,7 @@ final class VideoDetailViewModel {
           try await self.videoVM.setupPlayer(from: videoURL, videoId: videoId)
         }
         g.addTask {
-          try await self.loadTeamMemvers(teamspaceId: teamspaceId)
+          try await self.loadTeamMembers(teamspaceId: teamspaceId)
         }
         g.addTask {
           try await self.feedbackVM.loadFeedbacks(for: videoId)
@@ -75,7 +75,7 @@ final class VideoDetailViewModel {
 // MARK: 팀 스페이스 관련
 extension VideoDetailViewModel {
   // 팀 스페이스 멤버 조회
-  func loadTeamMemvers(teamspaceId: String) async throws {
+  func loadTeamMembers(teamspaceId: String) async throws {
     do {
       let members: [Members] = try await store.fetchAllFromSubcollection(
         under: .teamspace,

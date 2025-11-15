@@ -141,13 +141,14 @@ extension DanceMachineApp {
           let query = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems,
           let videoId = query.first(where: { $0.name == "videoId" })?.value,
           let videoTitle = query.first(where: { $0.name == "videoTitle" })?.value,
-          let videoURL = query.first(where: { $0.name == "videoURL" })?.value else {
+          let videoURL = query.first(where: { $0.name == "videoURL" })?.value,
+          let teamspaceId = query.first(where: { $0.name == "teamspaceId" })?.value else {
       print("❌ Invalid video deeplink:", url.absoluteString)
       return
     }
     
     // videoView (영상 화면)으로 이동
-    mainRouter.push(to: .video(.play(videoId: videoId, videoTitle: videoTitle, videoURL: videoURL)))
+    mainRouter.push(to: .video(.play(videoId: videoId, videoTitle: videoTitle, videoURL: videoURL, teamspaceId: teamspaceId)))
     
     print("🎬 Navigate to VideoView:", videoTitle)
   }

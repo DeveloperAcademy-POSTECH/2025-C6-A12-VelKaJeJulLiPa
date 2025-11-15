@@ -65,13 +65,13 @@ struct VideoView: View {
   @State private var showFeedbackImageFull: Bool = false
   
   // MARK: 전역으로 관리되는 ID
-  let teamspaceId = FirebaseAuthManager.shared.currentTeamspace?.teamspaceId
-  let userId = FirebaseAuthManager.shared.userInfo?.userId ?? ""
-  
+  let userId: String = FirebaseAuthManager.shared.userInfo?.userId ?? ""
   
   let videoId: String
   let videoTitle: String
   let videoURL: String
+  let teamspaceId: String
+
   
   // 피드백 필터링 (내 피드백, 전체 피드백)
   var filteredFeedbacks: [Feedback] {
@@ -269,7 +269,7 @@ struct VideoView: View {
       await self.vm.loadAllData(
         videoId: videoId,
         videoURL: videoURL,
-        teamspaceId: teamspaceId?.uuidString ?? ""
+        teamspaceId: teamspaceId
       )
     }
     .onDisappear {
@@ -820,7 +820,8 @@ struct VideoView: View {
     VideoView(
       videoId: "3",
       videoTitle: "벨코의 리치맨",
-      videoURL: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+      videoURL: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+      teamspaceId: ""
     )
   }
   .environmentObject(MainRouter())
