@@ -17,9 +17,24 @@ final class VideoProgressManager {
     case idle
     case uploading(progress: Double)
     case failed(message: String)
+    case compressing(progress: Double)
+    case fileToLarge(message: String)
+  }
+  
+  func fileTooLarge(message: String) {
+    uploadState = .fileToLarge(message: message)
   }
 
   var uploadState: UploadState = .idle
+  
+  func startCompressing() {
+    uploadState = .compressing(progress: 0.0)
+  }
+  
+  func updatedCompressionProgress(_ progress: Double) {
+    guard progress.isFinite, progress >= 0, progress <= 1 else { return }
+    uploadState = .compressing(progress: progress)
+  }
 
   func startUpload() {
     uploadState = .uploading(progress: 0.0)

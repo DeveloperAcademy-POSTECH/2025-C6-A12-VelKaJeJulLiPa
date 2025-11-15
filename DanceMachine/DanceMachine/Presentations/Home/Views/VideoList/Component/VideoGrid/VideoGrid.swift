@@ -36,20 +36,16 @@ struct VideoGrid: View {
       ),
       spacing: spacing
     ) {
-      if case .uploading = progressManager.uploadState {
+      switch progressManager.uploadState {
+      case .compressing, .uploading, .failed, .fileToLarge:
         UploadProgressCard(
           cardSize: size,
           progressManager: progressManager,
           onRetry: { await pickerViewModel.retryUpload() },
           onCancel: { await pickerViewModel.cancelUpload() }
         )
-      } else if case .failed = progressManager.uploadState {
-        UploadProgressCard(
-          cardSize: size,
-          progressManager: progressManager,
-          onRetry: { await pickerViewModel.retryUpload() },
-          onCancel: { await pickerViewModel.cancelUpload() }
-        )
+      case .idle:
+        EmptyView()
       }
       if vm.isLoading {
         ForEach(0..<6, id: \.self) { _ in

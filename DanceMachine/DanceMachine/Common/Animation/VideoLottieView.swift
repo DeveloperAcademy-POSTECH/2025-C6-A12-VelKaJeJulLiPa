@@ -12,7 +12,7 @@ import Lottie
 struct VideoLottieView: View {
   var body: some View {
     VStack {
-      LottieView(animation: .named("spinnerPurple"))
+      LottieView(animation: .named("SpinnerPurple"))
         .playing(loopMode: .loop)
         .frame(width: 30, height: 30)
     }
