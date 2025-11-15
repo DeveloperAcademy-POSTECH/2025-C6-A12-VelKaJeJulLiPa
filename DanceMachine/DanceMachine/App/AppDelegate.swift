@@ -122,8 +122,6 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
         AppDelegate.pendingNotificationId = notificationId
       }
     }
-    
-    
   }
 }
 
