@@ -30,7 +30,9 @@ struct DanceMachineApp: App {
   init() {
     // init에서 한 번만 생성하고 공유
     let container = try! ModelContainer(
-      for: TeamspaceCache.self, ProjectCache.self
+      for: TeamspaceCache.self,
+      ProjectCache.self,
+      TracksCache.self
     )
     self.container = container
     self.cacheStore = CacheStore(container: container)
