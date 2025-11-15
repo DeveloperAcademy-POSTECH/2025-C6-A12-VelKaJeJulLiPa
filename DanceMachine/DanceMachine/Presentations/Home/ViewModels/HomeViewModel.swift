@@ -637,13 +637,19 @@ extension HomeViewModel {
     guard case .editing(.update) = tracks.rowState,
           let tid = tracks.editingID,
           let project = selectedProject else { return }
+    
     let name = tracks.editText.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !name.isEmpty else { return }
+    
     do {
-      try await updateTracksName(tracksId: tid.uuidString, newTracksName: name)
+      try await updateTracksName(
+        tracksId: tid.uuidString,
+        newTracksName: name
+      )
       if let fresh = try? await fetchTracks(projectId: project.projectId.uuidString) {
         await MainActor.run { self.tracks.byProject[project.projectId] = fresh }
       }
+      
       tracks.editingID = nil
       tracks.editText = ""
       tracks.rowState = .viewing
@@ -655,22 +661,45 @@ extension HomeViewModel {
   
   /// 트랙 이름을 Firestore에 업데이트합니다.
   func updateTracksName(tracksId: String, newTracksName: String) async throws {
+    
+    // FIXME: - batch 추가하기
     print("트랙 이름 업데이트를 시작합니다. 대상: \(tracksId), 새 이름: \(newTracksName) (updateTracksName 시작)")
     try await FirestoreManager.shared.updateFields(
       collection: .tracks,
       documentId: tracksId,
       asDictionary: [ Tracks.CodingKeys.trackName.stringValue: newTracksName ]
     )
+    
+    guard let projectExpandedId = self.project.expandedID?.uuidString else { print("expandedId == nil, 캐싱 미지정") ; return }
+    
+    
+    /// 열려있는 프로젝트의 updateAt을 갱신하는 메서드입니다.
+    try await FirestoreManager.shared.updateTimestampField(
+      field: .update,
+      in: .project,
+      documentId: projectExpandedId
+    )
+    
     print("트랙 이름 업데이트가 완료되었습니다. (updateTracksName 종료)")
   }
   
   /// 트랙과 해당 섹션들을 Firestore에서 삭제합니다.
-  func removeTracksAndSection(tracksId: String) async throws {
+  func removeTracksAndSection(projectExpandedId: String?, tracksId: String) async throws {
     print("트랙 및 섹션 삭제를 시작합니다. 대상: \(tracksId) (removeTracksAndSection 시작)")
+    // FIXME: - batch 추가하기
     try await FirestoreManager.shared.deleteAllDocumentsInSubcollection(
       under: .tracks, parentId: tracksId, subCollection: .section
     )
+    
     try await FirestoreManager.shared.delete(collectionType: .tracks, documentID: tracksId)
+    
+    guard let expandedId = projectExpandedId else { print("expandedId == nil, 캐싱 미지정"); return }
+    /// 열려있는 프로젝트의 updateAt을 갱신하는 메서드입니다.
+    try await FirestoreManager.shared.updateTimestampField(
+      field: .update,
+      in: .project,
+      documentId: expandedId
+    )
     print("트랙 및 섹션 삭제가 완료되었습니다. (removeTracksAndSection 종료)")
   }
 }
