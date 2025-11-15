@@ -573,21 +573,6 @@ extension VideoPickerViewModel {
       self.fetchVideos()
       return
     }
-    
-    PHPhotoLibrary.requestAuthorization(for: .readWrite) {
-      status in
-      Task { @MainActor in
-        self.photoLibraryStatus = status
-      }
-      switch status {
-      case .authorized, .limited:
-        self.fetchVideos()
-      case .denied, .restricted, .notDetermined:
-        print("사진 라이브러리 접근 거부 또는 제한")
-      @unknown default:
-        print("알 수 없는 권한 상태")
-      }
-    }
   }
   
   private func fetchVideos() {
@@ -613,16 +598,6 @@ extension VideoPickerViewModel {
     
     Task { @MainActor in
       self.videos = fetchedVideos
-    }
-  }
-  
-  func openSettings() {
-    guard let settingsURL = URL(string: UIApplication.openSettingsURLString) else {
-      return
-    }
-    
-    if UIApplication.shared.canOpenURL(settingsURL) {
-      UIApplication.shared.open(settingsURL)
     }
   }
 }

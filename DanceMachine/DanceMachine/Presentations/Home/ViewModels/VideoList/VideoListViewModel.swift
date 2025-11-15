@@ -6,6 +6,8 @@
 //
 
 import Foundation
+import Photos
+import UIKit
 
 @Observable
 final class VideoListViewModel {
@@ -22,6 +24,9 @@ final class VideoListViewModel {
   
   var selectedSection: Section?
   
+  var photoLibraryStatus: PHAuthorizationStatus = .notDetermined
+  var showPermissionModal: Bool = false
+  var showCustomPicker: Bool = false
 }
 // MARK: - UI 관련
 extension VideoListViewModel {
@@ -527,5 +532,42 @@ extension VideoListViewModel {
     vm.isLoading = false
     
     return vm
+  }
+}
+// MARK: - 권한 설정
+extension VideoListViewModel {
+  func requestPermissionAndFetch() async {
+    if ProcessInfo.isRunningInPreviews { return } // 프리뷰 전용
+    
+    let currentStatus = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+    
+    await MainActor.run {
+      self.photoLibraryStatus = currentStatus
+    }
+    
+    PHPhotoLibrary.requestAuthorization(for: .readWrite) {
+      status in
+      Task { @MainActor in
+        self.photoLibraryStatus = status
+      }
+      switch status {
+      case .authorized, .limited:
+        self.showCustomPicker = true
+      case .denied, .restricted, .notDetermined:
+        self.showPermissionModal = true
+      @unknown default:
+        print("알 수 없는 권한 상태")
+      }
+    }
+  }
+  
+  func openSettings() {
+    guard let settingsURL = URL(string: UIApplication.openSettingsURLString) else {
+      return
+    }
+    
+    if UIApplication.shared.canOpenURL(settingsURL) {
+      UIApplication.shared.open(settingsURL)
+    }
   }
 }

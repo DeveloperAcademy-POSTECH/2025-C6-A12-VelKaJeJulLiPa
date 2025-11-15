@@ -9,19 +9,29 @@ import SwiftUI
 
 struct PhotoLibraryPermissionView: View {
   let onOpenSettigns: () -> Void
+  let action: () -> Void
   
   var body: some View {
-    VStack(spacing: 24) {
-      textView
-      button
+    ZStack {
+      Color.black.opacity(0.7)
+        .ignoresSafeArea()
+        .onTapGesture {
+          withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+            action()
+          }
+        }
+      VStack(spacing: 24) {
+        textView
+        button
+      }
+      .frame(maxWidth: .infinity)
+      .padding(.vertical, 20)
+      .background {
+        RoundedRectangle(cornerRadius: 38)
+          .fill(.backgroundElevated)
+      }
+      .padding(.horizontal, 44)
     }
-    .frame(maxWidth: .infinity)
-    .padding(.vertical, 20)
-    .background {
-      RoundedRectangle(cornerRadius: 38)
-        .fill(.backgroundElevated)
-    }
-    .padding(.horizontal, 44)
   }
   
   private var textView: some View {
@@ -56,5 +66,5 @@ struct PhotoLibraryPermissionView: View {
 }
 
 #Preview {
-  PhotoLibraryPermissionView(onOpenSettigns: {})
+  PhotoLibraryPermissionView(onOpenSettigns: {}, action: {})
 }

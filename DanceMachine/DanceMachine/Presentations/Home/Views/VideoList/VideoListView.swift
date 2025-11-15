@@ -6,11 +6,10 @@
 //
 
 import SwiftUI
+import Photos
 
 struct VideoListView: View {
   @EnvironmentObject private var router: MainRouter
-  
-  @State private var showCustomPicker: Bool = false
   
   @State var vm: VideoListViewModel
   
@@ -95,7 +94,7 @@ struct VideoListView: View {
       }
     }
     // MARK: 영상 피커 시트
-    .sheet(isPresented: $showCustomPicker) {
+    .sheet(isPresented: $vm.showCustomPicker) {
       VideoPickerView(
         pickerViewModel: pickerViewModel,
         tracksId: tracksId,
@@ -161,6 +160,14 @@ struct VideoListView: View {
         showCreateReportSuccessToast = true
       }
     }
+    .overlay(alignment: .center) {
+      if vm.showPermissionModal {
+        PhotoLibraryPermissionView(
+          onOpenSettigns: { vm.openSettings() },
+          action: { vm.showPermissionModal = false }
+        )
+      }
+    }
   }
     
     private var uploadButton: some View {
@@ -170,7 +177,9 @@ struct VideoListView: View {
         }
 
         Button {
-          self.showCustomPicker = true
+          Task {
+            await vm.requestPermissionAndFetch()
+          }
         } label: {
           
             // 작은 버튼 (원형)
