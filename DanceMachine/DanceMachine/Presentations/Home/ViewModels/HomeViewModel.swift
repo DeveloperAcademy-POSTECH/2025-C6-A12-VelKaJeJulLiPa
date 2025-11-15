@@ -164,7 +164,7 @@ final class HomeViewModel {
       
       
       // 같다
-      if try cache.checkedUpdatedAt(userId: FirebaseAuthManager.shared.userInfo?.userId ?? "") == user.updatedAt?.iso8601KST()  {
+      if try cache.checkedUpdatedAt(userId: FirebaseAuthManager.shared.userInfo?.userId ?? "") == user.updatedAt?.iso8601KST() {
         let teamspace = try cache.loadTeamspaces(userId: FirebaseAuthManager.shared.userInfo?.userId ?? "")
         self.teamspace.list = teamspace
         self.teamspace.state = teamspace.isEmpty ? .empty : .nonEmpty
@@ -554,7 +554,7 @@ extension HomeViewModel {
   }
   
   /// 프로젝트 확장 토글
-  func toggleExpand(_ project: Project) {
+  func toggleExpand(_ project: Project) async {
     print("프로젝트 확장 토글을 시작합니다. 대상: \(project.projectName) (toggleExpand 시작)")
     let id = project.projectId
     if self.project.expandedID == id {
@@ -573,7 +573,7 @@ extension HomeViewModel {
       self.project.expandedID = id
       self.selectedProject = project
       self.project.headerTitle = project.projectName
-      if tracks.byProject[id] == nil { loadTracks(for: id) }
+      if tracks.byProject[id] == nil { await loadTracks(project: project) } // 캐싱용
     }
     print("프로젝트 확장 토글이 완료되었습니다. (toggleExpand 종료)")
   }
@@ -586,8 +586,62 @@ extension HomeViewModel {
 
 // MARK: - 트랙 관리
 extension HomeViewModel {
+  
   /// 특정 프로젝트의 트랙을 비동기적으로 로드합니다.
-  func loadTracks(for projectID: UUID) {
+  func loadTracks(project: Project) async {
+    print("특정 프로젝트의 트랙 로드를 시작합니다. projectID: \(project.projectId) (loadTracks 시작)")
+    if tracks.loading.contains(project.projectId) {
+      print("이미 해당 프로젝트의 트랙을 로딩 중입니다. 중복 실행을 방지하고 종료합니다. (loadTracks 중단)")
+      return
+    }
+    tracks.loading.insert(project.projectId)
+    tracks.error[project.projectId] = nil
+    Task {
+      do {
+       
+        // 같다
+        if try cache.checkedTracksUpdatedAt(projectId: project.projectId.uuidString) == project.updatedAt?.iso8601KST() {
+          let tracks = try cache.loadTracks(projectId: project.projectId.uuidString)
+          
+          await MainActor.run {
+            self.tracks.byProject[project.projectId] = tracks
+            self.tracks.loading.remove(project.projectId)
+          }
+          print("🔥🔥🔥트랙 캐싱 불러오기 성공🔥🔥🔥")
+        } else {
+          let list = try await fetchTracks(projectId: project.projectId.uuidString)
+          
+          // ⚠️
+          if let updatedAt = project.updatedAt {
+            try cache.replaceTracks(
+              projectId: project.projectId.uuidString,
+              projectIdUpdatedAt: updatedAt,
+              tracks: list
+            )
+          }
+          
+          await MainActor.run {
+            self.tracks.byProject[project.projectId] = list
+            self.tracks.loading.remove(project.projectId)
+            print("특정 프로젝트의 트랙 로드가 완료되었습니다. (loadTracks 종료)")
+          }
+         
+          print("⚠️ 트랙 캐시 삽입")
+          
+        }
+      } catch {
+        print("트랙 로드 중 오류가 발생했습니다. (loadTracks 실패): \(error.localizedDescription)")
+        await MainActor.run {
+          self.tracks.error[project.projectId] = error.localizedDescription
+          self.tracks.loading.remove(project.projectId)
+        }
+      }
+    }
+  }
+  
+  
+  /// 특정 프로젝트의 트랙을 비동기적으로 로드합니다. (수정시)
+  func editLoadTracks(for projectID: UUID) async {
     print("특정 프로젝트의 트랙 로드를 시작합니다. projectID: \(projectID) (loadTracks 시작)")
     if tracks.loading.contains(projectID) {
       print("이미 해당 프로젝트의 트랙을 로딩 중입니다. 중복 실행을 방지하고 종료합니다. (loadTracks 중단)")
@@ -597,12 +651,36 @@ extension HomeViewModel {
     tracks.error[projectID] = nil
     Task {
       do {
-        let list = try await fetchTracks(projectId: projectID.uuidString)
-        print("트랙 목록 \(list.count)개를 가져왔습니다.")
-        await MainActor.run {
-          self.tracks.byProject[projectID] = list
-          self.tracks.loading.remove(projectID)
-          print("특정 프로젝트의 트랙 로드가 완료되었습니다. (loadTracks 종료)")
+        let test: Project = try await FirestoreManager.shared.get(projectID.uuidString, from: .project)
+        // 같다
+        if try cache.checkedTracksUpdatedAt(projectId: projectID.uuidString) == test.updatedAt?.iso8601KST() {
+          let tracks = try cache.loadTracks(projectId: projectID.uuidString)
+          
+          await MainActor.run {
+            self.tracks.byProject[projectID] = tracks
+            self.tracks.loading.remove(projectID)
+          }
+          print("🔥🔥🔥트랙 캐싱 불러오기 성공🔥🔥🔥")
+        } else {
+          let list = try await fetchTracks(projectId: projectID.uuidString)
+          
+          // ⚠️
+          if let updatedAt = test.updatedAt {
+            try cache.replaceTracks(
+              projectId: test.projectId.uuidString,
+              projectIdUpdatedAt: updatedAt,
+              tracks: list
+            )
+          }
+          
+          await MainActor.run {
+            self.tracks.byProject[projectID] = list
+            self.tracks.loading.remove(projectID)
+            print("특정 프로젝트의 트랙 로드가 완료되었습니다. (loadTracks 종료)")
+          }
+         
+          print("⚠️ 트랙 캐시 삽입")
+          
         }
       } catch {
         print("트랙 로드 중 오류가 발생했습니다. (loadTracks 실패): \(error.localizedDescription)")
