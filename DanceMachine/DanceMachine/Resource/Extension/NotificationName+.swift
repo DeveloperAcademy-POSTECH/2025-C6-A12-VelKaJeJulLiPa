@@ -23,6 +23,8 @@ extension Foundation.Notification.Name {
   static let showEditVideoTitleToast = Foundation.Notification.Name("showEditVideoTitleToast")
   // 신고 완료 토스트
   static let showCreateReportSuccessToast = Foundation.Notification.Name("showCreateReportSuccessToast")
+  // 영상 화면에서 영상 정보 업데이트 하기 (푸시 알림으로 영상 화면 정보 업데이트)
+  static let refreshVideoView = Foundation.Notification.Name("refreshVideoView")
 }
 
 enum NotificationEvent {
@@ -35,6 +37,7 @@ enum NotificationEvent {
   case showEditWarningToast
   case showEditVideoTitleToast
   case showCreateReportSuccessToast
+  case refreshVideoView
   
   var name: Foundation.Notification.Name {
     switch self {
@@ -47,6 +50,7 @@ enum NotificationEvent {
     case .showEditWarningToast: .showEditWarningToast
     case .showEditVideoTitleToast: .showEditVideoTitleToast
     case .showCreateReportSuccessToast: .showCreateReportSuccessToast
+    case .refreshVideoView: .refreshVideoView
     }
   }
 }
