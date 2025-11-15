@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Kingfisher
 
 struct ThumbnailAsyncImage: View {
   let thumbnailURL: String?
@@ -19,42 +20,18 @@ struct ThumbnailAsyncImage: View {
   
   var body: some View {
     Group {
-      if let cached = cachedImage {
-        Image(uiImage: cached)
+      if let urlString = thumbnailURL,
+          let url = URL(string: urlString) {
+        KFImage(url)
+          .placeholder { thumbnailSkeletonView }
+          .retry(maxCount: 3, interval: .seconds(0.5))
+          .onFailure { error in print("썸네일 로드 실패") }
           .resizable()
           .aspectRatio(contentMode: .fill)
-          .clipShape(RoundedRectangle(cornerRadius: 10))
-      } else if let url = thumbnailURL, let url = URL(string: url) {
-        AsyncImage(url: url) { i in
-          i
-            .resizable()
-            .aspectRatio(contentMode: .fill)
-            .clipShape(RoundedRectangle(cornerRadius: 10))
-            .onAppear {
-              Task {
-                if let _ = await loadUIImage(from: url),
-                    let url = thumbnailURL {
-                  _ = try await VideoCacheManager.shared.downloadAndCacheThumbnail(
-                    from: url,
-                    videoId: videoId
-                  )
-                }
-              }
-            }
-        } placeholder: {
-          thumbnailSkeletonView
-        }
-      } else {
-        defaultImageView
-      }
-    }
-    .frame(width: size, height: height)
-    .clipped()
-    .clipShape(RoundedCorner(radius: 10, corners: [.topLeft, .topRight]))
-    .task {
-      cachedImage = await VideoCacheManager.shared.getCachedThumbnailURL(
-        for: videoId
-      )
+          .frame(width: size, height: height)
+          .clipped()
+          .clipShape(RoundedCorner(radius: 10, corners: [.topLeft, .topRight]))
+      } else { defaultImageView }
     }
   }
 
@@ -66,24 +43,18 @@ struct ThumbnailAsyncImage: View {
   
   private var defaultImageView: some View {
     Rectangle()
-      .fill(Color.gray.opacity(0.3))
-      .clipShape(RoundedRectangle(cornerRadius: 10))
+      .aspectRatio(contentMode: .fill)
+      .frame(width: size, height: height)
+      .clipped()
+      .clipShape(RoundedCorner(radius: 10, corners: [.topLeft, .topRight]))
       .overlay {
         Image(systemName: "photo")
           .font(.title3)
           .foregroundStyle(.gray)
       }
   }
-  
-  private func loadUIImage(from url: URL) async -> UIImage? {
-    guard let (data, _) = try? await URLSession.shared.data(from: url),
-          let image = UIImage(data: data) else {
-      return nil
-    }
-    return image
-  }
 }
 
 #Preview {
-  ThumbnailAsyncImage(thumbnailURL: "https://picsum.photos/300", videoId: "", size: 179, height: 96)
+  ThumbnailAsyncImage(thumbnailURL: nil, videoId: "", size: 179, height: 96)
 }
