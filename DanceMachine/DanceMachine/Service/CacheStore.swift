@@ -36,6 +36,20 @@ final class ProjectCache {
 }
 
 
+@Model
+final class TracksCache {
+  @Attribute(.unique) var projectId: String
+  var updatedAt: Date
+  var tracks: [Tracks]
+  
+  init(projectId: String, updatedAt: Date, tracks: [Tracks]) {
+    self.projectId = projectId
+    self.updatedAt = updatedAt
+    self.tracks = tracks
+  }
+}
+
+
 @MainActor
 final class CacheStore {
   let container: ModelContainer
@@ -78,12 +92,9 @@ extension CacheStore {
       existing.teamspace = teamspace
       existing.updatedAt = userUpdatedAt
     } else {
-      do {
-        context.insert(TeamspaceCache(userId: userId, updatedAt: userUpdatedAt, teamspace: teamspace))
-        print("context 삽입 성공")
-      } catch {
-        print("insert error: \(error.localizedDescription)")
-      }
+      context.insert(TeamspaceCache(userId: userId, updatedAt: userUpdatedAt, teamspace: teamspace))
+      print("context 삽입 성공")
+      
     }
     try context.save()
   }
@@ -149,12 +160,67 @@ extension CacheStore {
 }
 
 
+// MARK: - Tracks Chache
+extension CacheStore {
+  // Tracks updatedAt 불러오기
+  func checkedTracksUpdatedAt(projectId: String) throws -> String {
+    let cacheData = FetchDescriptor<TracksCache>(
+      predicate: #Predicate { $0.projectId == projectId }
+    )
+    guard let updatedAt = try context.fetch(cacheData).first?.updatedAt.iso8601KST() else { return "" }
+    
+    return updatedAt
+  }
+  
+  // 특정 Tracks 캐시 불러오기
+  func loadTracks(projectId: String) throws -> [Tracks] {
+    let fd = FetchDescriptor<TracksCache>(
+      predicate: #Predicate { $0.projectId == projectId }
+    )
+    return try context.fetch(fd).first?.tracks ?? []
+  }
+  
+  // 전체 교체 저장(upsert)
+  func replaceTracks(projectId: String, projectIdUpdatedAt: Date, tracks: [Tracks]) throws {
+    let fd = FetchDescriptor<TracksCache>(
+      predicate: #Predicate { $0.projectId == projectId }
+    )
+    if let existing = try context.fetch(fd).first {
+      existing.tracks = tracks
+      existing.updatedAt = projectIdUpdatedAt
+    } else {
+        context.insert(
+          TracksCache(
+            projectId: projectId,
+            updatedAt: projectIdUpdatedAt,
+            tracks: tracks
+          )
+        )
+        print("context 삽입 성공")
+    }
+    try context.save()
+  }
+  
+  // 캐시 비우기
+  func tracksCacheClear(projectId: String) throws {
+    let fd = FetchDescriptor<TracksCache>(predicate: #Predicate { $0.projectId == projectId })
+    for item in try context.fetch(fd) { context.delete(item) }
+    try context.save()
+  }
+}
+
+
+
 
 struct CacheStoreKey: EnvironmentKey {
   static let defaultValue: CacheStore = {
-    // 미리보기나 안전용으로 메모리 컨테이너
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: TeamspaceCache.self, configurations: config)
+    let container = try! ModelContainer(
+      for: TeamspaceCache.self,
+          ProjectCache.self,
+          TracksCache.self,
+      configurations: config
+    )
     return CacheStore(container: container)
   }()
 }
