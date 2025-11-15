@@ -22,6 +22,20 @@ final class TeamspaceCache {
 }
 
 
+@Model
+final class ProjectCache {
+  @Attribute(.unique) var teamspaceId: String
+  var updatedAt: Date
+  var project: [Project]
+  
+  init(teamspaceId: String, updatedAt: Date, project: [Project]) {
+    self.teamspaceId = teamspaceId
+    self.updatedAt = updatedAt
+    self.project = project
+  }
+}
+
+
 @MainActor
 final class CacheStore {
   let container: ModelContainer
@@ -31,7 +45,11 @@ final class CacheStore {
     self.container = container
     self.context = ModelContext(container)
   }
-  
+}
+
+
+// MARK: - Teamspace Cache
+extension CacheStore {
   // 특정 사용자 updatedAt 불러오기
   func checkedUpdatedAt(userId: String) throws -> String {
     let cacheData = FetchDescriptor<TeamspaceCache>(
@@ -78,6 +96,57 @@ final class CacheStore {
   }
 }
 
+
+// MARK: - Project Cache
+extension CacheStore {
+  // 특정 사용자 updatedAt 불러오기
+  func checkedProjectUpdatedAt(teamspaceId: String) throws -> String {
+    let cacheData = FetchDescriptor<ProjectCache>(
+      predicate: #Predicate { $0.teamspaceId == teamspaceId }
+    )
+    guard let updatedAt = try context.fetch(cacheData).first?.updatedAt.iso8601KST() else { return "" }
+    
+    return updatedAt
+  }
+  
+  // 특정 팀 스페이스 캐시 불러오기
+  func loadProjects(teamspaceId: String) throws -> [Project] {
+    let fd = FetchDescriptor<ProjectCache>(
+      predicate: #Predicate { $0.teamspaceId == teamspaceId }
+    )
+    return try context.fetch(fd).first?.project ?? []
+  }
+  
+  // 전체 교체 저장(upsert)
+  func replaceProjects(teamspaceId: String, teamspaceUpdatedAt: Date, project: [Project]) throws {
+    let fd = FetchDescriptor<ProjectCache>(
+      predicate: #Predicate { $0.teamspaceId == teamspaceId }
+    )
+    if let existing = try context.fetch(fd).first {
+      existing.project = project
+      existing.updatedAt = teamspaceUpdatedAt
+    } else {
+      do {
+        context.insert(
+          ProjectCache(
+            teamspaceId: teamspaceId,
+            updatedAt: teamspaceUpdatedAt,
+            project: project
+          )
+        )
+        print("context 삽입 성공")
+      }
+    }
+    try context.save()
+  }
+  
+  // 캐시 비우기
+  func projectCacheClear(teamspaceId: String) throws {
+    let fd = FetchDescriptor<ProjectCache>(predicate: #Predicate { $0.teamspaceId == teamspaceId })
+    for item in try context.fetch(fd) { context.delete(item) }
+    try context.save()
+  }
+}
 
 
 
