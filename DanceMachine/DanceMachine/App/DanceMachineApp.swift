@@ -33,7 +33,9 @@ struct DanceMachineApp: App {
     }
     
     let container = try! ModelContainer(
-      for: TeamspaceCache.self, ProjectCache.self
+      for: TeamspaceCache.self,
+      ProjectCache.self,
+      TracksCache.self
     )
     self.container = container
     self.cacheStore = CacheStore(container: container)
