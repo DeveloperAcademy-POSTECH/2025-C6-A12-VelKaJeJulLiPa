@@ -78,18 +78,18 @@ extension View {
   func sectionChip(isSelected: Bool) -> some View {
     if #available(iOS 26.0, *) {
       self
-//        .buttonStyle(.glass)
+      //        .buttonStyle(.glass)
         .glassEffect(
           isSelected ? .clear.tint(Color(red: 0x7E/255, green: 0x7C/255, blue: 0xFF/255)).interactive() : .clear.tint(.clear).interactive(), in: Capsule()
         )
-//        .environment(\.colorScheme, .light)
+      //        .environment(\.colorScheme, .light)
     } else {
       self
         .background(
           Capsule()
             .fill(isSelected ? .secondaryNormal : Color.fillNormal)
         )
-//        .background(isSelected ? .secondaryNormal : Color.fillNormal)
+      //        .background(isSelected ? .secondaryNormal : Color.fillNormal)
     }
   }
   
@@ -98,7 +98,7 @@ extension View {
   func sectionIcon() -> some View {
     if #available(iOS 26.0, *) {
       self
-//        .buttonStyle(.glass)
+      //        .buttonStyle(.glass)
         .glassEffect(.clear.interactive(), in: RoundedRectangle(cornerRadius: 1000))
     } else {
       self
@@ -106,38 +106,27 @@ extension View {
           Capsule()
             .fill(Color.fillNormal)
         )
-//        .background(Color.fillNormal)
+      //        .background(Color.fillNormal)
     }
   }
   
   @ViewBuilder
-  func uploadGlassButton(isScrollDown: Bool) -> some View {
+  func uploadGlassButton() -> some View {
     if #available(iOS 26.0, *) {
-      if isScrollDown {
-        self
-          .glassEffect(.clear.tint(.secondaryNormal).interactive(), in: .circle)
-          .environment(\.colorScheme, .light)
-      } else {
-        self
-          .glassEffect(.clear.tint(.secondaryNormal).interactive(), in: RoundedRectangle(cornerRadius: 24))
-          .environment(\.colorScheme, .light)
-      }
+      self
+        .glassEffect(
+          .clear.tint(.secondaryNormal).interactive(),
+          in: Circle()
+        )
+        .environment(\.colorScheme, .light)
     } else {
-      if isScrollDown {
-        self
-          .background(
-            Circle()
-              .fill(Color.secondaryNormal)
-          )
-          .environment(\.colorScheme, .light)
-      } else {
-        self
-          .background(
-            RoundedRectangle(cornerRadius: 24)
-              .fill(Color.secondaryNormal)
-          )
-          .environment(\.colorScheme, .light)
-      }
+      self
+        .background(
+          Circle()
+            .fill(Color.secondaryNormal)
+            .shadow(color: .white.opacity(0.3), radius: 2, x: 0, y: 1)
+        )
+        .environment(\.colorScheme, .light)
     }
   }
   
@@ -212,6 +201,5 @@ extension View {
             .overlay(.ultraThinMaterial)
         }
         .clipShape(RoundedRectangle(cornerRadius: 1000))
-      }
+    }
   }
-}

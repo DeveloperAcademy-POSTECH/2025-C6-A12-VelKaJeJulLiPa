@@ -48,37 +48,17 @@ struct VideoListView: View {
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(.backgroundNormal)
-    .safeAreaInset(edge: .top, content: {
-      sectionView
-    })
-    .safeAreaInset(edge: .bottom, content: {
-      uploadButton
-        .background(
-          ZStack {
-            // 2. 그 위에 그라데이션 (맨 앞)
-            Color.black.opacity(0.1)
-              .blur(radius: 10)
-            
-            LinearGradient(
-              colors: [
-                Color.clear,
-                Color.black.opacity(0.4),
-                Color.black.opacity(0.7),
-                Color.black.opacity(0.9),
-              ],
-              startPoint: .top,
-              endPoint: .bottom
-            )
-          }
-            .ignoresSafeArea(edges: .bottom)
-        )
-      
-    })
+    .safeAreaInset(edge: .top) { sectionView }
     .navigationBarTitleDisplayMode(.inline)
     .toolbar(.hidden, for: .tabBar)
     .toolbar {
       ToolbarLeadingBackButton(icon: .chevron)
       ToolbarCenterTitle(text: trackName)
+      ToolbarUploadButton {
+        Task {
+          await vm.requestPermissionAndFetch()
+        }
+      }
     }
     .task {
       await vm.loadFromServer(tracksId: tracksId)
@@ -169,45 +149,7 @@ struct VideoListView: View {
       }
     }
   }
-    
-    private var uploadButton: some View {
-      HStack {
-        if isScrollDown {
-          Spacer()
-        }
 
-        Button {
-          Task {
-            await vm.requestPermissionAndFetch()
-          }
-        } label: {
-          
-            // 작은 버튼 (원형)
-            if isScrollDown {
-              Image(systemName: "video.fill.badge.plus")
-                .font(.system(size: 22))
-                .foregroundStyle(.labelStrong)
-//                .transition(.opacity)
-                .padding(.vertical, 14)
-            }
-            // 큰 버튼 (직사각형)
-            if !isScrollDown {
-              Text("동영상 업로드")
-                .font(.headline1Medium)
-                .foregroundStyle(.labelStrong)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
-//                .transition(.opacity)
-            }
-        }
-        .uploadGlassButton(isScrollDown: isScrollDown)
-//        .frame(maxWidth: isScrollDown ? nil : .infinity)
-        .shadow(radius: 5)
-      }
-      .padding(.horizontal, 16)
-      .animation(.spring(response: 0.4, dampingFraction: 0.9), value: isScrollDown)
-    }
-    
     private var emptyView: some View {
       GeometryReader { geometry in
         VStack {
