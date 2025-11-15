@@ -30,6 +30,17 @@ final class VideoPickerViewModel {
   var showSuccessAlert: Bool = false
 
   var photoLibraryStatus: PHAuthorizationStatus = .notDetermined
+  
+  // 비디오 필터 (좋아요 필터 기능)
+  var selectedFilter: VideoType = .all
+  var filteredVideo: [PHAsset] {
+    switch selectedFilter {
+    case .all:
+      return videos
+    case .favorites:
+      return videos.filter { $0.isFavorite }
+    }
+  }
 
   // 업로드 성공한 비디오/트랙 (VideoListView에서 감지)
   var lastUploadedVideo: Video? = nil

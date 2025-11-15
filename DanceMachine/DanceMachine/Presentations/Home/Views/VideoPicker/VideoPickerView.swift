@@ -96,8 +96,10 @@ struct VideoPickerView: View {
             
             textField
             
+            filterSegment
+            
             CustomPicker(
-              videos: $pickerViewModel.videos,
+              videos: pickerViewModel.filteredVideo,
               selectedAsset: $pickerViewModel.selectedAsset,
               spacing: spacing,
               itemWidth: itemWidth
@@ -111,6 +113,32 @@ struct VideoPickerView: View {
           }
         }
       }
+    }
+  }
+  
+  private var filterSegment: some View {
+    Picker("필터", selection: $pickerViewModel.selectedFilter) {
+      ForEach(VideoType.allCases, id: \.self) { f in
+        Text(f.rawValue).tag(f)
+      }
+    }
+    .pickerStyle(.segmented)
+    .padding(.horizontal, 16)
+    .onAppear {
+      // 선택된 세그먼트 배경색
+      UISegmentedControl.appearance().selectedSegmentTintColor = UIColor(.secondaryNormal) // 원하는 색
+
+      // 선택된 텍스트 색상
+      UISegmentedControl.appearance().setTitleTextAttributes(
+        [.foregroundColor: UIColor.labelStrong], // 선택된 텍스트
+        for: .selected
+      )
+
+      // 선택 안된 텍스트 색상
+      UISegmentedControl.appearance().setTitleTextAttributes(
+        [.foregroundColor: UIColor.labelNormal], // 선택 안된 텍스트
+        for: .normal
+      )
     }
   }
   

@@ -10,7 +10,7 @@ import Photos
 
 struct CustomPicker: View {
   
-  @Binding var videos: [PHAsset]
+  let videos: [PHAsset]
   @Binding var selectedAsset: PHAsset?
   
   let spacing: CGFloat
@@ -43,5 +43,5 @@ struct CustomPicker: View {
 }
 
 #Preview {
-  CustomPicker(videos: .constant([]), selectedAsset: .constant(PHAsset()), spacing: 1, itemWidth: 100)
+  CustomPicker(videos: ([]), selectedAsset: .constant(PHAsset()), spacing: 1, itemWidth: 100)
 }
