@@ -183,8 +183,10 @@ struct HomeView: View {
       Button("삭제", role: .destructive) {
         Task {
           try await viewModel.removeTracksAndSection(
+            projectExpandedId: viewModel.project.expandedID?.uuidString,
             tracksId: self.presentingRemovalTracks?.tracksId.uuidString ?? ""
           )
+          
           if let pid = viewModel.project.expandedID {
             viewModel.loadTracks(for: pid) // 삭제 후 갱신
           }
@@ -231,7 +233,10 @@ struct HomeView: View {
         ),
         onCreated: { // 곡 생성 됐을 때, 로직
           if let pid = viewModel.project.expandedID {
+            // FIXME: - batch 추가하기
             viewModel.loadTracks(for: pid) // 생성 후 갱신
+            
+            // TODO: 해당 프로젝트 updatedAt 갱신하기.
           }
         }
       )
