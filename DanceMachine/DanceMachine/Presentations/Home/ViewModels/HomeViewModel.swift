@@ -164,7 +164,7 @@ final class HomeViewModel {
       
       
       // 같다
-      if try cache.checkedUpdatedAt(userId: FirebaseAuthManager.shared.userInfo?.userId ?? "") == user.updatedAt?.iso8601KST()  {
+      if try cache.checkedUpdatedAt(userId: FirebaseAuthManager.shared.userInfo?.userId ?? "") == user.updatedAt?.iso8601KST() {
         let teamspace = try cache.loadTeamspaces(userId: FirebaseAuthManager.shared.userInfo?.userId ?? "")
         self.teamspace.list = teamspace
         self.teamspace.state = teamspace.isEmpty ? .empty : .nonEmpty
