@@ -83,7 +83,6 @@ struct DanceMachineApp: App {
               
               // 앱 종료된 상태에서 푸시 눌렀을 때,
               // currentTeamspace 세팅되고 변화 감지해서 화면 링크 처리
-              // TODO: 팀스페이스가 여러 개일 때, 푸시 알림 처리 논의 필요
                 .onChange(of: authManager.currentTeamspace != nil) { oldState, newState in
                   if newState {
                     Task {
@@ -147,9 +146,21 @@ extension DanceMachineApp {
       return
     }
     
-    // videoView (영상 화면)으로 이동
-    mainRouter.push(to: .video(.play(videoId: videoId, videoTitle: videoTitle, videoURL: videoURL, teamspaceId: teamspaceId)))
-    
-    print("🎬 Navigate to VideoView:", videoTitle)
+    if case .video(.play) = mainRouter.destination.last {
+      // 네비게이션 이동 없이 VideoView 자체 데이터 갱신 이벤트 보내기
+      NotificationCenter.default.post(
+        name: .refreshVideoView,
+        object: nil,
+        userInfo: [
+          "videoId": videoId,
+          "videoTitle": videoTitle,
+          "videoURL": videoURL,
+          "teamspaceId": teamspaceId
+        ]
+      )
+    } else {
+      // VideoView (영상 화면)으로 내비게이션
+      mainRouter.push(to: .video(.play(videoId: videoId, videoTitle: videoTitle, videoURL: videoURL, teamspaceId: teamspaceId)))
+    }
   }
 }
