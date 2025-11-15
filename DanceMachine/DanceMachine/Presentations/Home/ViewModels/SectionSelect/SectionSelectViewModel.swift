@@ -10,7 +10,7 @@ import Foundation
 @Observable
 final class SectionSelectViewModel {
   private let store = FirestoreManager.shared
-  private let dataCacheManager = VideoDataCacheManager.shared
+  private let dataCacheManager = ListDataCacheManager.shared
   
   var isLoading: Bool = false
   var errorMsg: String? = nil
