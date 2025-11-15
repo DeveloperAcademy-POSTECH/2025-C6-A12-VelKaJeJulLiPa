@@ -14,16 +14,16 @@ final class VideoListViewModel {
   private let store = FirestoreManager.shared
   private let storage = FireStorageManager.shared
   private let dataCacheManager = VideoDataCacheManager.shared
-  
+
   var videos: [Video] = []
   var section: [Section] = []
   var track: [Track] = []
-  
+
   var isLoading: Bool = false
   var errorMsg: String? = nil
-  
+
   var selectedSection: Section?
-  
+
   var photoLibraryStatus: PHAuthorizationStatus = .notDetermined
   var showPermissionModal: Bool = false
   var showCustomPicker: Bool = false
@@ -66,11 +66,16 @@ extension VideoListViewModel {
       )
       
       await MainActor.run {
+        let previousSelectedId = self.selectedSection?.sectionId
         self.section = cachedData.section
         self.track = cachedData.track
         self.videos = cachedData.videos
-        
-        if let firstSection = cachedData.section.first {
+
+        // 이전에 선택했던 섹션이 있으면 유지, 없으면 첫 번째 섹션 선택
+        if let prevId = previousSelectedId,
+           let stillExists = cachedData.section.first(where: { $0.sectionId == prevId }) {
+          self.selectedSection = stillExists
+        } else if let firstSection = cachedData.section.first {
           self.selectedSection = firstSection
         }
         self.isLoading = false
@@ -141,14 +146,14 @@ extension VideoListViewModel {
         self.section = fetchSection
         self.track = allTrack
         self.videos = fetchedVideos
-        
+
         if let prevId = previousSelectedId,
            let stillExists = fetchSection.first(where: { $0.sectionId == prevId }) {
           self.selectedSection = stillExists
         } else {
           self.selectedSection = fetchSection.first
         }
-        
+
         self.isLoading = false
       }
     } catch {
@@ -251,14 +256,14 @@ extension VideoListViewModel {
         self.section = fetchSection
         self.track = allTrack
         self.videos = fetchedVideos
-        
+
         if let prevId = previousSelectedId,
            let stillExists = fetchSection.first(where: { $0.sectionId == prevId }) {
           self.selectedSection = stillExists
         } else {
           self.selectedSection = fetchSection.first
         }
-        
+
         self.isLoading = false
         print("강제 새로고침 완료")
       }
