@@ -11,7 +11,7 @@ import Foundation
 final class VideoListViewModel {
   private let store = FirestoreManager.shared
   private let storage = FireStorageManager.shared
-  private let dataCacheManager = VideoDataCacheManager.shared
+  private let dataCacheManager = ListDataCacheManager.shared
   
   var videos: [Video] = []
   var section: [Section] = []

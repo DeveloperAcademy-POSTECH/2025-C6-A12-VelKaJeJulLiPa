@@ -12,7 +12,7 @@ final class UploadCleanupService {
 
   private let firestore = FirestoreManager.shared
   private let storage = FireStorageManager.shared
-  private let cacheManager = VideoDataCacheManager.shared
+  private let cacheManager = ListDataCacheManager.shared
 
   func cleanupFailedUpload(
     videoId: String,

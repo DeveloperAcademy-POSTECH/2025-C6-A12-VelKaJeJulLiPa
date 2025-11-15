@@ -24,7 +24,7 @@ struct DanceMachineApp: App {
   
   init() {
     Task {
-      await VideoDataCacheManager.shared.cleanupOldCache()
+      await ListDataCacheManager.shared.cleanupOldCache()
       await VideoCacheManager.shared.cleanupOldCache()
     }
   }
@@ -87,7 +87,7 @@ struct DanceMachineApp: App {
                   }
                   if newPhase == .background {
                     Task {
-                      await VideoDataCacheManager.shared.cleanupOldCache()
+                      await ListDataCacheManager.shared.cleanupOldCache()
                       await VideoCacheManager.shared.cleanupOldCache()
                     }
                   }

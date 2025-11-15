@@ -7,8 +7,8 @@
 
 import Foundation
 
-actor VideoDataCacheManager {
-  static let shared = VideoDataCacheManager()
+actor ListDataCacheManager {
+  static let shared = ListDataCacheManager()
   
   private init() {}
   
@@ -196,7 +196,7 @@ actor VideoDataCacheManager {
 }
 
 // MARK: - 영상 리스트 관련 데이터들 CRUD
-extension VideoDataCacheManager {
+extension ListDataCacheManager {
   // MARK: - Video 제목 수정
   func updateVideoTitle(
     videoId: String,
