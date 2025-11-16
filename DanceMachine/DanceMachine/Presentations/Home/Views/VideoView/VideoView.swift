@@ -347,6 +347,502 @@ struct VideoView: View {
         }
     }
   }
+  // MARK: 세로모드 레이아웃
+  private func portraitView(proxy: GeometryProxy) -> some View {
+    VStack(spacing: 0) {
+      videoView
+        .frame(height: proxy.size.width * 9 / 16)
+      
+      VStack(spacing: 0) {
+        feedbackSection.padding(.vertical, 8)
+        Divider()
+        feedbackListView
+      }
+      .ignoresSafeArea(.keyboard)
+      .contentShape(Rectangle())
+      .onTapGesture {
+        if showFeedbackInput {
+          showFeedbackInput = false
+          dismissKeyboard()
+        }
+      }
+    }
+    .toolbarTitleDisplayMode(.inline)
+    .toolbar {
+      ToolbarLeadingBackButton(icon: .chevron)
+      ToolbarCenterTitle(text: videoTitle)
+    }
+  }
+  
+  // MARK: 가로모드 레이아웃
+  private func landscapeView(proxy: GeometryProxy) -> some View {
+    ZStack {
+      Color.black.ignoresSafeArea()
+      
+      HStack(spacing: 0) {
+        
+        // MARK: 왼쪽 - 비디오 영역
+        ZStack {
+          // 1) 비디오 레이어
+          Group {
+            if let player = vm.videoVM.player {
+              VideoController(player: player)
+                .aspectRatio(16/9, contentMode: .fit)
+                .clipped()
+                .allowsHitTesting(false)
+            } else {
+              Color.black
+            }
+          }
+          .background(Color.black)
+
+          // 2) 탭 영역 (비디오 위)
+          TapClearArea(
+            leftTap: { vm.videoVM.leftTab() },
+            rightTap: { vm.videoVM.rightTap() },
+            centerTap: { vm.videoVM.centerTap() },
+            showControls: $vm.videoVM.showControls
+          )
+          .contentShape(Rectangle())
+          .frame(
+            width: max(
+              proxy.size.width,
+              proxy.size.height * 16.0 / 9.0
+            )
+          )
+
+          // 더블탭 Seek 인디케이터
+          HStack(spacing: 0) {
+            // 왼쪽 (뒤로가기)
+            if vm.videoVM.showLeftSeekIndicator {
+              DoubleTapSeekIndicator(isForward: false, tapCount: vm.videoVM.leftSeekCount)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.leading, 80)
+            }
+
+            Spacer()
+
+            // 오른쪽 (앞으로가기)
+            if vm.videoVM.showRightSeekIndicator {
+              DoubleTapSeekIndicator(isForward: true, tapCount: vm.videoVM.rightSeekCount)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .padding(.trailing, 80)
+            }
+          }
+          .allowsHitTesting(false)
+          .frame(
+            width: max(
+              proxy.size.width,
+              proxy.size.height * 16.0 / 9.0
+            )
+          )
+          
+          // 3) 오버레이 컨트롤 (재생/일시정지, 슬라이더, 버튼들)
+          if vm.videoVM.showControls {
+            
+            // 중앙 재생/탐색 컨트롤
+            OverlayController(
+              leftAction: {
+                vm.videoVM.seekToTime(to: vm.videoVM.currentTime - 5)
+                if vm.videoVM.isPlaying {
+                  vm.videoVM.startAutoHideControls()
+                }
+              },
+              rightAction: {
+                vm.videoVM.seekToTime(to: vm.videoVM.currentTime + 5)
+                if vm.videoVM.isPlaying {
+                  vm.videoVM.startAutoHideControls()
+                }
+              },
+              centerAction: {
+                vm.videoVM.togglePlayPause()
+              },
+              isPlaying: $vm.videoVM.isPlaying
+            )
+            .frame(
+              width: max(
+                proxy.size.width,
+                proxy.size.height * 16.0 / 9.0
+              )
+            )
+            
+            
+            // 슬라이더
+            CustomSlider(
+              isDragging: $isDragging,
+              currentTime: isDragging ? sliderValue : vm.videoVM.currentTime,
+              duration: vm.videoVM.duration,
+              onSeek: { time in
+                vm.videoVM.seekToTime(to: time)
+              },
+              onDragChanged: { time in
+                self.sliderValue = time
+                vm.videoVM.seekToTime(to: time)
+              },
+              startTime: vm.videoVM.currentTime.formattedTime(),
+              endTime: vm.videoVM.duration.formattedTime()
+            )
+            .frame(
+              width: max(
+                proxy.size.width,
+                proxy.size.height * 16.0 / 9.0
+              )
+            )
+            .onChange(of: vm.videoVM.currentTime) { _, newValue in
+              if !isDragging {
+                sliderValue = newValue
+              }
+            }
+            
+            // 속도 / 전체화면 / 패널 버튼
+            VideoSettingButtons(
+              action: { self.showSpeedSheet = true },
+              toggleOrientations: {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                  self.forceShowLandscape.toggle()
+                  if self.forceShowLandscape {
+                    // 전체 화면 ON → 가로 강제
+                    enterLandscapeMode()
+                  } else {
+                    // 전체 화면 OFF → 세로 복귀
+                    exitLandscapeMode()
+                  }
+                }
+              },
+              isLandscapeMode: forceShowLandscape,
+              toggleFeedbackPanel: {
+                print("토글 눌림")
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                  showFeedbackPanel.toggle()
+                }
+              },
+              showFeedbackPanel: showFeedbackPanel
+            )
+            .frame(
+              width: max(
+                proxy.size.width,
+                proxy.size.height * 16.0 / 9.0
+              )
+            )
+          }
+        }
+        
+        // MARK: 오른쪽 - 피드백 패널
+        if showFeedbackPanel {
+          VStack(spacing: 0) {
+            HStack(spacing: 0) {
+              feedbackSection
+                .padding(.vertical, 16)
+              
+              Button {
+                self.showFeedbackPanel = false
+              } label: {
+                Image(systemName: "xmark.circle")
+                  .font(.system(size: 20))
+                  .foregroundStyle(.labelStrong)
+              }
+              .frame(width: 44, height: 44)
+            }
+            Divider()
+            feedbackListView
+              .padding(.vertical, 8)
+          }
+          .onAppear(perform: {
+            print("보인다")
+          })
+          .frame(width: proxy.size.width * 0.4, height: proxy.size.height)
+          .background(Color.black.opacity(0.95))
+          .transition(.move(edge: .trailing))
+        }
+      }
+    }
+    .ignoresSafeArea()
+  }
+  
+  // MARK: 비디오 섹션
+  private var videoView: some View {
+    ZStack {
+      if let player = vm.videoVM.player {
+        VideoController(player: player)
+          .aspectRatio(16/9, contentMode: .fit)
+      } else {
+        Color.black
+          .aspectRatio(16/9, contentMode: .fit)
+      }
+
+      TapClearArea(
+        leftTap: { vm.videoVM.leftTab() },
+        rightTap: { vm.videoVM.rightTap() },
+        centerTap: { vm.videoVM.centerTap() },
+        showControls: $vm.videoVM.showControls
+      )
+
+      // 더블탭 Seek 인디케이터
+      HStack(spacing: 0) {
+        // 왼쪽 (뒤로가기)
+        if vm.videoVM.showLeftSeekIndicator {
+          DoubleTapSeekIndicator(isForward: false, tapCount: vm.videoVM.leftSeekCount)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.leading, 60)
+        }
+
+        Spacer()
+
+        // 오른쪽 (앞으로가기)
+        if vm.videoVM.showRightSeekIndicator {
+          DoubleTapSeekIndicator(isForward: true, tapCount: vm.videoVM.rightSeekCount)
+            .frame(maxWidth: .infinity, alignment: .trailing)
+            .padding(.trailing, 60)
+        }
+      }
+      .allowsHitTesting(false)
+      
+      if vm.videoVM.showControls {
+        OverlayController(
+          leftAction: {
+            vm.videoVM.seekToTime(
+              to: vm.videoVM.currentTime - 5
+            )
+            if vm.videoVM.isPlaying {
+              vm.videoVM.startAutoHideControls()
+            }
+          },
+          rightAction: {
+            vm.videoVM.seekToTime(
+              to: vm.videoVM.currentTime + 5
+            )
+            if vm.videoVM.isPlaying {
+              vm.videoVM.startAutoHideControls()
+            }
+          },
+          centerAction: {
+            vm.videoVM.togglePlayPause()
+          },
+          isPlaying: $vm.videoVM.isPlaying
+        )
+        .padding(.bottom, 20)
+        .transition(.opacity)
+        
+        CustomSlider(
+          isDragging: $isDragging,
+          currentTime: isDragging ? sliderValue : vm.videoVM.currentTime,
+          duration: vm.videoVM.duration,
+          onSeek: { time in
+            vm.videoVM.seekToTime(to: time)
+          },
+          onDragChanged: { time in
+            self.sliderValue = time
+            vm.videoVM.seekToTime(to: time)
+          },
+          startTime: vm.videoVM.currentTime.formattedTime(),
+          endTime: vm.videoVM.duration.formattedTime()
+        )
+        .padding(.horizontal, 20)
+        .onChange(of: vm.videoVM.currentTime) { _, newValue in
+          if !isDragging {
+            sliderValue = newValue
+          }
+        }
+        .transition(.opacity)
+        
+        if !forceShowLandscape {
+          VideoSettingButtons(
+            action: { self.showSpeedSheet = true },
+            toggleOrientations: {
+              withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                self.forceShowLandscape.toggle()
+                      if self.forceShowLandscape {
+                        enterLandscapeMode()
+                      } else {
+                        exitLandscapeMode()
+                      }
+              }
+            },
+            isLandscapeMode: forceShowLandscape,
+            toggleFeedbackPanel: {
+              withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                showFeedbackPanel.toggle()
+              }
+            },
+            showFeedbackPanel: showFeedbackPanel
+          )
+          .transition(.opacity)
+        }
+      }
+    }
+    .overlay {
+      if vm.videoVM.isLoading {
+        ZStack {
+          Color.backgroundElevated
+          if vm.videoVM.isDownloading {
+            downloadProgress(progress: vm.videoVM.loadingProgress)
+          } else {
+            VideoLottieView()
+          }
+        }
+      }
+    }
+    .sheet(isPresented: $showSpeedSheet) {
+      PlaybackSpeedSheet(
+        playbackSpeed: $vm.videoVM.playbackSpeed) { speed in
+          vm.videoVM.setPlaybackSpeed(speed)
+        }
+        .presentationDetents([.fraction(0.25)])
+    }
+  }
+  // MARK: 피드백 리스트
+  private var feedbackListView: some View {
+    ScrollViewReader { proxy in
+      ScrollView {
+        LazyVStack {
+          Color.clear.frame(height: 1).id("topFeedback")
+          
+          if vm.feedbackVM.isLoading {
+            ForEach(0..<3, id: \.self) { _ in
+              SkeletonFeedbackCard()
+            }
+          } else if vm.feedbackVM.feedbacks.isEmpty && !vm.feedbackVM.isLoading {
+            emptyView
+          } else {
+            ForEach(filteredFeedbacks, id: \.feedbackId) { f in
+              FeedbackCard(
+                feedback: f,
+                authorUser: vm.getAuthorUser(for: f.authorId),
+                taggedUsers:
+                  vm.getTaggedUsers(for: f.taggedUserIds),
+                replyCount: vm.feedbackVM.reply[f.feedbackId.uuidString]?.count ?? 0,
+                action: { // showReplySheet와 동일한 네비게이션
+                  if !forceShowLandscape { // 가로모드 시트 x
+                    self.selectedFeedback = f
+                  }
+                },
+                showReplySheet: { // showReplySheet와 동일한 네비게이션
+                  if !forceShowLandscape {
+                    self.selectedFeedback = f
+                  }
+                },
+                currentTime: pointTime,
+                startTime: intervalTime,
+                timeSeek: { vm.videoVM.seekToTime(to: f.startTime ?? self.pointTime ) },
+                currentUserId: userId,
+                onDelete: {
+                  Task {
+                    await vm.feedbackVM.deleteFeedback(f)
+                  }
+                },
+                onReport: {
+                  if !forceShowLandscape { // 가로모드 시트 x
+                    self.reportTargetFeedback = f
+                  }
+                },
+                imageNamespace: feedbackImageNamespace,
+                onImageTap: { url in
+                  self.selectedFeedbackImageURL = url
+                  withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                    self.showFeedbackImageFull = true
+                  }
+                }
+              )
+            }
+          }
+          
+        }
+        .onAppear {
+          self.scrollProxy = proxy
+        }
+        .sheet(item: $selectedFeedback) { feedback in
+          ReplySheet(
+            reply: vm.feedbackVM.reply[feedback.feedbackId.uuidString] ?? [],
+            feedback: feedback,
+            taggedUsers: vm.getTaggedUsers(for: feedback.taggedUserIds),
+            teamMembers: vm.teamMembers,
+            replyCount: vm.feedbackVM.reply[feedback.feedbackId.uuidString]?.count ?? 0,
+            currentTime: pointTime,
+            startTime: intervalTime,
+            timeSeek: { vm.videoVM.seekToTime(to: self.pointTime) },
+            getTaggedUsers: { ids in vm.getTaggedUsers(for: ids) },
+            getAuthorUser: { ids in vm.getAuthorUser(for: ids) },
+            onReplySubmit: {content, taggedIds in
+              Task {
+                await vm.feedbackVM.addReply(
+                  to: feedback.feedbackId.uuidString,
+                  authorId: userId,
+                  content: content,
+                  taggedUserIds: taggedIds
+                )
+              }
+            },
+            currentUserId: userId,
+            onDelete: { replyId, feedbackId in
+              await vm.feedbackVM.deleteReply(
+                replyId: replyId, from: feedbackId)
+            },
+            onFeedbackDelete: {
+              Task {
+                await vm.feedbackVM.deleteFeedback(feedback)
+              }
+            },
+            imageNamespace: feedbackImageNamespace,
+            onImageTap: { url in
+              self.selectedFeedbackImageURL = url
+              withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                self.showFeedbackImageFull = true
+              }
+            }
+          )
+        }
+        .sheet(item: $reportTargetFeedback) { feedback in
+          NavigationStack {
+            CreateReportView(
+              reportedId: feedback.authorId,
+              reportContentType: .feedback,
+              feedback: feedback,
+              toastReceiveView: ReportToastReceiveViewType.videoView
+            )
+          }
+        }
+      }
+    }
+    //    .background(.backgroundNormal)
+  }
+  // MARK: 피드백 섹션
+  private var feedbackSection: some View {
+    HStack {
+      Text(feedbackFilter == .all ? "전체 피드백" : "마이 피드백")
+        .font(.heading1SemiBold)
+        .foregroundStyle(.labelStrong)
+      Spacer()
+      Button {
+        switch feedbackFilter {
+        case .all:
+          self.feedbackFilter = .mine
+        case .mine:
+          self.feedbackFilter = .all
+        }
+      } label: {
+        Text("마이피드백")
+          .foregroundStyle(feedbackFilter == .all ? .secondaryAssitive : .labelStrong)
+          .padding(.horizontal, 11)
+          .padding(.vertical, 7)
+          .background(
+            RoundedRectangle(cornerRadius: 10)
+              .fill(feedbackFilter == .all ? .backgroundElevated : .secondaryStrong)
+              .stroke(feedbackFilter == .all ? .secondaryAssitive : .secondaryNormal)
+          )
+      }
+    }
+    .padding(.horizontal, 16)
+  }
+  // MARK: 피드백 비어있는 emptyView
+  private var emptyView: some View {
+    GeometryReader { g in
+      VStack {
+        Text("피드백이 없습니다.")
+      }
+      .frame(width: g.size.width, height: g.size.height)
+    }
+    .frame(height: 300)
+  }
 
 }
 

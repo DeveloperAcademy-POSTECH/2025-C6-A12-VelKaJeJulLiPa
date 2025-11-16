@@ -29,6 +29,13 @@ final class VideoViewModel {
   var autoHideControlsTask: Task<Void, Never>?
   var singleTapTask: Task<Void, Never>?
   private let doubleTap: TimeInterval = 0.2
+
+  // 더블탭 애니메이션 관련
+  var showLeftSeekIndicator: Bool = false
+  var showRightSeekIndicator: Bool = false
+  var leftSeekCount: Int = 0
+  var rightSeekCount: Int = 0
+  var seekIndicatorTask: Task<Void, Never>?
   
   var loadingProgress: Double = 0.0
   var isLoading: Bool = false
@@ -194,15 +201,18 @@ extension VideoViewModel {
     let timeTap = now.timeIntervalSince(lastTapTime)
 
     if timeTap < doubleTap {
-      // 더블탭: 싱글탭 Task 취소하고 5초 뒤로 이동
+      // 더블탭: 싱글탭 Task 취소하고 3초 뒤로 이동
       singleTapTask?.cancel()
-      seekToTime(to: currentTime - 5)
+      seekToTime(to: currentTime - 3)
       tapCount += 1
 
-      // 컨트롤이 켜져있고 재생 중이면 자동 숨김 타이머 시작
-      if showControls && isPlaying {
-        startAutoHideControls()
+      // 컨트롤 숨기기
+      withAnimation(.easeOut(duration: 0.2)) {
+        showControls = false
       }
+
+      // 더블탭 애니메이션 표시
+      showDoubleTapSeekIndicator(isForward: false)
     } else {
       // 싱글탭 대기: 0.5초 후 더블탭이 없으면 컨트롤 토글
       tapCount = 1
@@ -232,15 +242,18 @@ extension VideoViewModel {
     let timeTap = now.timeIntervalSince(lastTapTime)
 
     if timeTap < doubleTap {
-      // 더블탭: 싱글탭 Task 취소하고 5초 앞으로 이동
+      // 더블탭: 싱글탭 Task 취소하고 3초 앞으로 이동
       singleTapTask?.cancel()
-      seekToTime(to: currentTime + 5)
+      seekToTime(to: currentTime + 3)
       tapCount += 1
 
-      // 컨트롤이 켜져있고 재생 중이면 자동 숨김 타이머 시작
-      if showControls && isPlaying {
-        startAutoHideControls()
+      // 컨트롤 숨기기
+      withAnimation(.easeOut(duration: 0.2)) {
+        showControls = false
       }
+
+      // 더블탭 애니메이션 표시
+      showDoubleTapSeekIndicator(isForward: true)
     } else {
       // 싱글탭 대기: 0.5초 후 더블탭이 없으면 컨트롤 토글
       tapCount = 1
@@ -273,6 +286,42 @@ extension VideoViewModel {
     // 컨트롤을 켰고 재생 중이면 자동 숨김 타이머 시작
     if showControls && isPlaying {
       startAutoHideControls()
+    }
+  }
+
+  // MARK: 더블탭 애니메이션 표시
+  func showDoubleTapSeekIndicator(isForward: Bool) {
+    // 기존 타이머 취소
+    seekIndicatorTask?.cancel()
+
+    if isForward {
+      rightSeekCount += 1
+      withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+        showRightSeekIndicator = true
+        showLeftSeekIndicator = false
+      }
+    } else {
+      leftSeekCount += 1
+      withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+        showLeftSeekIndicator = true
+        showRightSeekIndicator = false
+      }
+    }
+
+    // 0.8초 후 애니메이션 숨기기
+    seekIndicatorTask = Task {
+      try? await Task.sleep(for: .seconds(0.8))
+      if !Task.isCancelled {
+        await MainActor.run {
+          withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+            self.showLeftSeekIndicator = false
+            self.showRightSeekIndicator = false
+          }
+          // 카운터 초기화
+          self.leftSeekCount = 0
+          self.rightSeekCount = 0
+        }
+      }
     }
   }
 }
