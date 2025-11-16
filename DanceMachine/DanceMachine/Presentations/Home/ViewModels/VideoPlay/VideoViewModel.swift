@@ -101,7 +101,15 @@ extension VideoViewModel {
   // MARK: URL로 플레이어 설정
   private func setupPlayerWithURL(_ url: URL) async {
     let playerItem = AVPlayerItem(url: url)
-    
+
+    // Audio Session 설정 - 무음 모드
+    do {
+      try AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback)
+      try AVAudioSession.sharedInstance().setActive(true)
+    } catch {
+      print("Audio Session 설정 실패: \(error)")
+    }
+
     await MainActor.run {
       self.player = AVPlayer(playerItem: playerItem)
     }
