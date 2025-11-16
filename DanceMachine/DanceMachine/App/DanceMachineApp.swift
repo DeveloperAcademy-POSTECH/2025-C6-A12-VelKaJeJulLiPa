@@ -26,10 +26,10 @@ struct DanceMachineApp: App {
     let tabBarAppearance = UITabBarAppearance()
     let itemAppearance = tabBarAppearance.stackedLayoutAppearance
     
-    itemAppearance.normal.iconColor = UIColor(named: "labelStrong")
-    itemAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor(named: "labelStrong")!]
-    itemAppearance.selected.iconColor = UIColor(named: "secondaryStrong")
-    itemAppearance.selected.titleTextAttributes = [.foregroundColor: UIColor(named: "secondaryStrong")!]
+    itemAppearance.normal.iconColor = UIColor(Color.labelStrong)
+    itemAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor(Color.labelStrong)]
+    itemAppearance.selected.iconColor = UIColor(Color.secondaryStrong)
+    itemAppearance.selected.titleTextAttributes = [.foregroundColor: UIColor(Color.secondaryStrong)]
     
     UITabBar.appearance().standardAppearance = tabBarAppearance
     UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
