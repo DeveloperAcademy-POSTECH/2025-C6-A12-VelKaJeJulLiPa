@@ -230,7 +230,8 @@ struct PortraitView: View {
               showImageFull: $showDrawingImageFull
             )
           } else {
-            FeedbackButton(
+            FeedbackButtons(
+              landScape: false,
               pointAction: {
                 self.feedbackType = .point
                 self.pointTime = vm.videoVM.currentTime

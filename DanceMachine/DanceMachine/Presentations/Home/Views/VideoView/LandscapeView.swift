@@ -165,6 +165,7 @@ struct LandscapeView: View {
                     intervalTime: $intervalTime,
                     showFeedbackInput: $showFeedbackInput,
                     scrollProxy: $scrollProxy,
+                    feedbackType: $feedbackType,
                     filteredFeedback: filteredFeedback,
                     userId: userId,
                     videoId: videoId,
@@ -313,6 +314,7 @@ struct LandscapeView: View {
             },
             refresh: {
               self.showFeedbackInput = false
+              self.vm.feedbackVM.isRecordingInterval = false
               dismissKeyboard()
             },
             timeSeek: { vm.videoVM.seekToTime(to: self.pointTime) },

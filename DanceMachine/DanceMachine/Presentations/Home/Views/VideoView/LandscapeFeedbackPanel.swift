@@ -15,6 +15,7 @@ struct LandscapeFeedbackPanel: View {
   @Binding var intervalTime: Double
   @Binding var showFeedbackInput: Bool
   @Binding var scrollProxy: ScrollViewProxy?
+  @Binding var feedbackType: FeedbackType
 
   let filteredFeedback: [Feedback]
   let userId: String
@@ -66,15 +67,38 @@ struct LandscapeFeedbackPanel: View {
         showFeedbackImageFull: $showFeedbackImageFull
       )
       .scrollIndicators(.hidden)
-      
-      Button {
-        self.showFeedbackInput = true
-      } label: {
-        Text("dd")
-      }
-      .frame(maxWidth: .infinity)
-      .frame(height: 49)
     }
     .background(Color.backgroundNormal)
+    .safeAreaInset(edge: .bottom) {
+      FeedbackButtons(
+        landScape: true,
+        pointAction: {
+          self.feedbackType = .point
+          self.pointTime = vm.videoVM.currentTime
+          self.showFeedbackInput = true // 텍스트 필드로 변하는 시점
+          if vm.videoVM.isPlaying {
+            vm.videoVM.togglePlayPause()
+          }
+        },
+        intervalAction: {
+          if vm.feedbackVM.isRecordingInterval {
+            feedbackType = .interval
+            self.intervalTime = vm.videoVM.currentTime
+            showFeedbackInput = true
+            if vm.videoVM.isPlaying {
+              vm.videoVM.togglePlayPause()
+            }
+          } else {
+            feedbackType = .interval
+            self.pointTime = vm.videoVM.currentTime
+            _ = vm.feedbackVM.handleIntervalButtonType(currentTime: vm.videoVM.currentTime)
+          }
+        },
+        isRecordingInterval: vm.feedbackVM.isRecordingInterval,
+        startTime: pointTime.formattedTime(),
+        currentTime: vm.videoVM.currentTime.formattedTime(),
+        feedbackType: $feedbackType
+      )
+    }
   }
 }
