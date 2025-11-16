@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AVFoundation
 
 struct LandscapeView: View {
   @Bindable var vm: VideoDetailViewModel
@@ -14,19 +15,45 @@ struct LandscapeView: View {
   @Binding var sliderValue: Double
   
   @State private var showSpeedModal: Bool = false
-  
+
   @State private var showFeedbackPanel: Bool = false
+  @State private var selectedFeedbackForReply: Feedback? = nil
+
+  @State private var feedbackType: FeedbackType = .point
+  @State private var showFeedbackInput: Bool = false
+
+  @State private var showReplyInputView: Bool = false
   
   @Binding var feedbackFilter: FeedbackFilter
+  @Binding var scrollProxy: ScrollViewProxy?
   
   @Binding var pointTime: Double
   @Binding var intervalTime: Double
   
-  @Namespace private var feedbackImageNamespace
-  
   let filteredFeedback: [Feedback]
   let userId: String
   let proxy: GeometryProxy
+  let videoId: String
+  
+  /// =================================================
+  /// 드로잉 관련
+  // MARK: 이미지 캡쳐 결과 //
+  @Binding var showFeedbackPaperDrawingView: Bool
+  @Binding var capturedImage: UIImage?
+  @Binding var editedOverlayImage: UIImage?
+  
+  let drawingImageNamespace: Namespace.ID
+  @Binding var showDrawingImageFull: Bool
+
+  let feedbackImageNamespace: Namespace.ID
+  @Binding var selectedFeedbackImageURL: String?
+  @Binding var showFeedbackImageFull: Bool
+  
+  /// 이미지 확대 변수
+  private var isImageOverlayPresented: Bool {
+    showDrawingImageFull || showFeedbackImageFull
+  }
+  /// ==================================================
   
   var body: some View {
     ZStack(alignment: .bottom) {
@@ -34,14 +61,14 @@ struct LandscapeView: View {
         // MARK: 비디오 + 컨트롤 영역
         ZStack {
           Color.black
-          
+
           // 비디오
           if let player = vm.videoVM.player {
             VideoController(player: player)
               .aspectRatio(16/9, contentMode: .fit)
               .frame(maxWidth: .infinity, maxHeight: .infinity)
           }
-          
+
           // 탭 영역
           GeometryReader { tapProxy in
             Color.clear
@@ -57,7 +84,8 @@ struct LandscapeView: View {
                 }
               }
           }
-          
+        }
+        .overlay {
           // 컨트롤
           if vm.videoVM.showControls {
             VideoControlOverlay(
@@ -115,9 +143,7 @@ struct LandscapeView: View {
               }
             }
             .padding(.horizontal, showFeedbackPanel ? 0 : 44)
-            //        .frame(maxWidth: .infinity, maxHeight: .infinity)
             .transition(.opacity)
-            .zIndex(10)
           }
         }
         .frame(width: showFeedbackPanel ? proxy.size.width * 0.6 : nil)
@@ -125,46 +151,75 @@ struct LandscapeView: View {
         
         // MARK: 피드백 패널
         if showFeedbackPanel {
-          VStack {
-            RoundedRectangle(cornerRadius: 8)
-              .fill(.backgroundNormal)
-              .frame(width: proxy.size.width * 0.4)
-              .overlay {
-                ZStack {
-                  // 피드백 리스트 레이어
-                  VStack(spacing: 0) {
-                    HStack(spacing: 0) {
-                      FeedbackSection(feedbackFilter: $feedbackFilter)
-                        .padding(.vertical, 10)
-                      Spacer()
-                      Button {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                          showFeedbackPanel = false
-                        }
-                      } label: {
-                        Image(systemName: "xmark.circle")
-                          .font(.system(size: 20))
-                          .foregroundStyle(.labelStrong)
+          RoundedRectangle(cornerRadius: 8)
+            .fill(.backgroundNormal)
+            .frame(width: proxy.size.width * 0.4)
+            .overlay {
+              ZStack {
+                // 피드백 리스트 패널
+                if selectedFeedbackForReply == nil {
+                  LandscapeFeedbackPanel(
+                    vm: vm,
+                    feedbackFilter: $feedbackFilter,
+                    pointTime: $pointTime,
+                    intervalTime: $intervalTime,
+                    showFeedbackInput: $showFeedbackInput,
+                    scrollProxy: $scrollProxy,
+                    filteredFeedback: filteredFeedback,
+                    userId: userId,
+                    videoId: videoId,
+                    imageNamespace: feedbackImageNamespace,
+                    selectedFeedbackImageURL: $selectedFeedbackImageURL,
+                    showFeedbackImageFull: $showFeedbackImageFull,
+                    onFeedbackSelect: { feedback in
+                      withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        selectedFeedbackForReply = feedback
                       }
-                      .frame(width: 33, height: 33)
-                      .contentShape(Rectangle())
+                    },
+                    onClose: {
+                      withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        showFeedbackPanel = false
+                      }
                     }
-                    .padding(.horizontal, 12)
-                    Divider().foregroundStyle(.strokeNormal)
-                    FeedbackListView(
-                      vm: vm,
-                      pointTime: $pointTime,
-                      intervalTime: $intervalTime,
-                      filteredFeedbacks: filteredFeedback,
-                      userId: userId
-                    )
-                    .scrollIndicators(.hidden)
-                  }
-                  .padding(.horizontal, 4)
+                  )
+                  .opacity(selectedFeedbackForReply == nil ? 1 : 0)
+                  .offset(x: selectedFeedbackForReply == nil ? 0 : -20)
+                }
+
+                // 답글 패널
+                if let feedback = selectedFeedbackForReply {
+                  LandscapeReplyPanel(
+                    vm: vm,
+                    feedback: feedback,
+                    pointTime: $pointTime,
+                    intervalTime: $intervalTime,
+                    userId: userId,
+                    imageNamespace: feedbackImageNamespace,
+                    selectedFeedbackImageURL: $selectedFeedbackImageURL,
+                    showFeedbackImageFull: $showFeedbackImageFull,
+                    showInputView: $showReplyInputView,
+                    onBack: {
+                      withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        selectedFeedbackForReply = nil
+                        self.showReplyInputView = false
+                      }
+                    },
+                    onClose: {
+                      withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        selectedFeedbackForReply = nil
+                        self.showReplyInputView = false
+                      }
+                    }
+                  )
+                  .transition(.asymmetric(
+                    insertion: .move(edge: .trailing).combined(with: .opacity),
+                    removal: .move(edge: .trailing).combined(with: .opacity)
+                  ))
                 }
               }
-          }
-          .transition(.move(edge: .trailing))
+              .clipped()
+            }
+            .transition(.move(edge: .trailing))
         }
       }
       .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -179,7 +234,7 @@ struct LandscapeView: View {
               self.showSpeedModal = false
             }
           }
-        
+
         PlaybackSpeedSheet(
           playbackSpeed: $vm.videoVM.playbackSpeed,
           onSpeedChange: { speed in
@@ -190,6 +245,111 @@ struct LandscapeView: View {
         .clipShape(RoundedRectangle(cornerRadius: 24))
         .offset(y: -40)
         .transition(.scale.combined(with: .opacity))
+      }
+    }
+    .safeAreaInset(edge: .bottom) {
+      Group {
+        if let feedback = selectedFeedbackForReply,
+           self.showReplyInputView {
+          // Reply 입력 (ReplyRecycle)
+          ReplyRecycle(
+            teamMembers: vm.teamMembers,
+            replyingTo: vm.getAuthorUser(for: feedback.authorId),
+            onSubmit: { content, taggedIds in
+              Task {
+                await vm.feedbackVM.addReply(
+                  to: feedback.feedbackId.uuidString,
+                  authorId: userId,
+                  content: content,
+                  taggedUserIds: taggedIds
+                )
+                self.showReplyInputView = false
+              }
+            },
+            refresh: {
+              dismissKeyboard()
+              self.showReplyInputView = false
+            }
+          )
+        } else if showFeedbackInput {
+          /// FeedbackInPutView 여기
+          FeedbackInPutView(
+            teamMembers: vm.teamMembers,
+            feedbackType: feedbackType,
+            currentTime: pointTime,
+            startTime: intervalTime,
+            onSubmit: { content, taggedUserId in
+              Task {
+                // MARK: - 구간 피드백
+                if feedbackType == .point {
+                  await vm.feedbackVM.createPointFeedback(
+                    videoId: videoId,
+                    authorId: userId,
+                    content: content,
+                    taggedUserIds: taggedUserId,
+                    atTime: pointTime,
+                    image: self.editedOverlayImage
+                  )
+                } else { // 시점 피드백
+                  await vm.feedbackVM.createIntervalFeedback(
+                    videoId: videoId,
+                    authorId: userId,
+                    content: content,
+                    taggedUserIds: taggedUserId,
+                    startTime: vm.feedbackVM.intervalStartTime ?? 0,
+                    endTime: vm.videoVM.currentTime,
+                    image: self.editedOverlayImage
+                  )
+                }
+                showFeedbackInput = false
+                
+                // 피드백 제출 후 스크롤 최상단 이동
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                  withAnimation {
+                    scrollProxy?.scrollTo("topFeedback", anchor: .top)
+                  }
+                }
+              }
+            },
+            refresh: {
+              self.showFeedbackInput = false
+              dismissKeyboard()
+            },
+            timeSeek: { vm.videoVM.seekToTime(to: self.pointTime) },
+            drawingButtonTapped: { captureCurrentFrame() },
+            feedbackDrawingImage: $editedOverlayImage,
+            imageNamespace: drawingImageNamespace,
+            showImageFull: $showDrawingImageFull
+          )
+        }
+      }
+    }
+  }
+
+  /// 현재 플레이어 시점의 프레임을 이미지로 캡처 (copyCGImage 대체)
+  private func captureCurrentFrame() {
+    guard let player = vm.videoVM.player,
+          let asset  = player.currentItem?.asset else { return }
+    
+    let time = player.currentTime()
+    
+    let generator = AVAssetImageGenerator(asset: asset)
+    generator.appliesPreferredTrackTransform = true
+    generator.requestedTimeToleranceBefore = .zero
+    generator.requestedTimeToleranceAfter  = .zero
+    generator.dynamicRangePolicy = .forceSDR
+    
+    generator.generateCGImageAsynchronously(for: time) { cgImage, actualTime, error in
+      guard let cgImage = cgImage, error == nil else {
+        // print("error: \(error ?? NSError()")
+        print("적절한 에러 처리 추가하기")
+        return
+      }
+      let image = UIImage(cgImage: cgImage)
+      DispatchQueue.main.async {
+        self.capturedImage = image
+        self.showFeedbackPaperDrawingView = true
+        print("이미지 캡처 성공 @ \(CMTimeGetSeconds(actualTime))s")
       }
     }
   }

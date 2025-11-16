@@ -13,37 +13,24 @@ struct VideoView: View {
   @EnvironmentObject private var router: MainRouter
   
   @State private var vm: VideoDetailViewModel = .init()
-  
-  @State private var showReplyModal: Bool = false
+
   @State private var showFeedbackInput: Bool = false
   @State private var feedbackType: FeedbackType = .point
   @State private var feedbackFilter: FeedbackFilter = .all
-  
+
   // MARK: 슬라이더 관련
   @State private var isDragging: Bool = false
   @State private var sliderValue: Double = 0
-  
+
   // MARK: 피드백 시점 관련
   @State private var pointTime: Double = 0
   @State private var intervalTime: Double = 0
-  
-  // MARK: 답글 관련
-//  @State private var selectedFeedback: Feedback? = nil
-  
+
   // MARK: 글래스 이팩트 버튼
   @Namespace private var buttonNamespace
   @State private var showIntervalButton: Bool = false
   @State private var buttonSpacing: CGFloat = 4
-  
-  // MARK: 가로모드 관련
-//  @State private var isLandscape: Bool = false // 디바이스 가로모드 감지
-//  @State private var forceShowLandscape: Bool = false // 전체 화면 버튼으로 가는 가로모드
-  @State private var showFeedbackPanel: Bool = false
-  
-  // MARK: 배속 좆러
-  @State private var showSpeedSheet: Bool = false
-//  @State private var showSpeedModal: Bool = false
-  
+
   // MARK: 스크롤 관련
   @State private var scrollProxy: ScrollViewProxy? = nil
   
@@ -96,11 +83,21 @@ struct VideoView: View {
             isDragging: $isDragging,
             sliderValue: $sliderValue,
             feedbackFilter: $feedbackFilter,
+            scrollProxy: $scrollProxy,
             pointTime: $pointTime,
             intervalTime: $intervalTime,
             filteredFeedback: filteredFeedbacks,
             userId: userId,
             proxy: proxy,
+            videoId: videoId,
+            showFeedbackPaperDrawingView: $showFeedbackPaperDrawingView,
+            capturedImage: $capturedImage,
+            editedOverlayImage: $editedOverlayImage,
+            drawingImageNamespace: drawingImageNamespace,
+            showDrawingImageFull: $showDrawingImageFull,
+            feedbackImageNamespace: feedbackImageNamespace,
+            selectedFeedbackImageURL: $selectedFeedbackImageURL,
+            showFeedbackImageFull: $showFeedbackImageFull
           )
         } else {
           ZStack {
@@ -111,13 +108,23 @@ struct VideoView: View {
                 isDragging: $isDragging,
                 sliderValue: $sliderValue,
                 feedbackFilter: $feedbackFilter,
+                scrollProxy: $scrollProxy,
                 pointTime: $pointTime,
                 intervalTime: $intervalTime,
                 showFeedbackInput: $showFeedbackInput,
                 filteredFeedback: filteredFeedbacks,
                 userId: userId,
                 proxy: proxy,
-                videoTitle: videoTitle
+                videoTitle: videoTitle,
+                videoId: videoId,
+                showFeedbackPaperDrawingView: $showFeedbackPaperDrawingView,
+                capturedImage: $capturedImage,
+                editedOverlayImage: $editedOverlayImage,
+                drawingImageNamespace: drawingImageNamespace,
+                showDrawingImageFull: $showDrawingImageFull,
+                feedbackImageNamespace: feedbackImageNamespace,
+                selectedFeedbackImageURL: $selectedFeedbackImageURL,
+                showFeedbackImageFull: $showFeedbackImageFull
               )
             }
           }
@@ -163,94 +170,94 @@ struct VideoView: View {
       }
       .toolbar(.hidden, for: .tabBar)
     }
-    .safeAreaInset(edge: .bottom) {
-      if vm.forceShowLandscape || isImageOverlayPresented {
-        EmptyView()
-      } else {
-        Group {
-          if showFeedbackInput {
-            /// FeedbackInPutView 여기
-            FeedbackInPutView(
-              teamMembers: vm.teamMembers,
-              feedbackType: feedbackType,
-              currentTime: pointTime,
-              startTime: intervalTime,
-              onSubmit: { content, taggedUserId in
-                Task {
-                  // MARK: - 구간 피드백
-                  if feedbackType == .point {
-                    await vm.feedbackVM.createPointFeedback(
-                      videoId: videoId,
-                      authorId: userId,
-                      content: content,
-                      taggedUserIds: taggedUserId,
-                      atTime: pointTime,
-                      image: self.editedOverlayImage
-                    )
-                  } else { // 시점 피드백
-                    await vm.feedbackVM.createIntervalFeedback(
-                      videoId: videoId,
-                      authorId: userId,
-                      content: content,
-                      taggedUserIds: taggedUserId,
-                      startTime: vm.feedbackVM.intervalStartTime ?? 0,
-                      endTime: vm.videoVM.currentTime,
-                      image: self.editedOverlayImage
-                    )
-                  }
-                  showFeedbackInput = false
-                  
-                  // 피드백 제출 후 스크롤 최상단 이동
-                  DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    withAnimation {
-                      scrollProxy?.scrollTo("topFeedback", anchor: .top)
-                    }
-                  }
-                }
-              },
-              refresh: {
-                self.showFeedbackInput = false
-                dismissKeyboard()
-              },
-              timeSeek: { vm.videoVM.seekToTime(to: self.pointTime) },
-              drawingButtonTapped: { captureCurrentFrame() },
-              feedbackDrawingImage: $editedOverlayImage,
-              imageNamespace: drawingImageNamespace,
-              showImageFull: $showDrawingImageFull
-            )
-          } else {
-            FeedbackButton(
-              pointAction: {
-                self.feedbackType = .point
-                self.pointTime = vm.videoVM.currentTime
-                self.showFeedbackInput = true // 텍스트 필드로 변하는 시점
-                if vm.videoVM.isPlaying {
-                  vm.videoVM.togglePlayPause()
-                }
-              },
-              intervalAction: {
-                if vm.feedbackVM.isRecordingInterval {
-                  feedbackType = .interval
-                  self.intervalTime = vm.videoVM.currentTime
-                  showFeedbackInput = true
-                  if vm.videoVM.isPlaying {
-                    vm.videoVM.togglePlayPause()
-                  }
-                } else {
-                  feedbackType = .interval
-                  self.pointTime = vm.videoVM.currentTime
-                  _ = vm.feedbackVM.handleIntervalButtonType(currentTime: vm.videoVM.currentTime)
-                }
-              },
-              isRecordingInterval: vm.feedbackVM.isRecordingInterval,
-              startTime: pointTime.formattedTime(),
-              currentTime: vm.videoVM.currentTime.formattedTime(),
-              feedbackType: $feedbackType
-            )
-          }
-        }
-      }
-    }
+//    .safeAreaInset(edge: .bottom) {
+//      if vm.forceShowLandscape || isImageOverlayPresented {
+//        EmptyView()
+//      } else {
+//        Group {
+//          if showFeedbackInput {
+//            /// FeedbackInPutView 여기
+//            FeedbackInPutView(
+//              teamMembers: vm.teamMembers,
+//              feedbackType: feedbackType,
+//              currentTime: pointTime,
+//              startTime: intervalTime,
+//              onSubmit: { content, taggedUserId in
+//                Task {
+//                  // MARK: - 구간 피드백
+//                  if feedbackType == .point {
+//                    await vm.feedbackVM.createPointFeedback(
+//                      videoId: videoId,
+//                      authorId: userId,
+//                      content: content,
+//                      taggedUserIds: taggedUserId,
+//                      atTime: pointTime,
+//                      image: self.editedOverlayImage
+//                    )
+//                  } else { // 시점 피드백
+//                    await vm.feedbackVM.createIntervalFeedback(
+//                      videoId: videoId,
+//                      authorId: userId,
+//                      content: content,
+//                      taggedUserIds: taggedUserId,
+//                      startTime: vm.feedbackVM.intervalStartTime ?? 0,
+//                      endTime: vm.videoVM.currentTime,
+//                      image: self.editedOverlayImage
+//                    )
+//                  }
+//                  showFeedbackInput = false
+//                  
+//                  // 피드백 제출 후 스크롤 최상단 이동
+//                  DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+//                    withAnimation {
+//                      scrollProxy?.scrollTo("topFeedback", anchor: .top)
+//                    }
+//                  }
+//                }
+//              },
+//              refresh: {
+//                self.showFeedbackInput = false
+//                dismissKeyboard()
+//              },
+//              timeSeek: { vm.videoVM.seekToTime(to: self.pointTime) },
+//              drawingButtonTapped: { captureCurrentFrame() },
+//              feedbackDrawingImage: $editedOverlayImage,
+//              imageNamespace: drawingImageNamespace,
+//              showImageFull: $showDrawingImageFull
+//            )
+//          } else {
+//            FeedbackButton(
+//              pointAction: {
+//                self.feedbackType = .point
+//                self.pointTime = vm.videoVM.currentTime
+//                self.showFeedbackInput = true // 텍스트 필드로 변하는 시점
+//                if vm.videoVM.isPlaying {
+//                  vm.videoVM.togglePlayPause()
+//                }
+//              },
+//              intervalAction: {
+//                if vm.feedbackVM.isRecordingInterval {
+//                  feedbackType = .interval
+//                  self.intervalTime = vm.videoVM.currentTime
+//                  showFeedbackInput = true
+//                  if vm.videoVM.isPlaying {
+//                    vm.videoVM.togglePlayPause()
+//                  }
+//                } else {
+//                  feedbackType = .interval
+//                  self.pointTime = vm.videoVM.currentTime
+//                  _ = vm.feedbackVM.handleIntervalButtonType(currentTime: vm.videoVM.currentTime)
+//                }
+//              },
+//              isRecordingInterval: vm.feedbackVM.isRecordingInterval,
+//              startTime: pointTime.formattedTime(),
+//              currentTime: vm.videoVM.currentTime.formattedTime(),
+//              feedbackType: $feedbackType
+//            )
+//          }
+//        }
+//      }
+//    }
     .onChange(of: isImageOverlayPresented) { dismissKeyboard() } // 오버레이(이미지 확대)로 교체시 키보드 내리기
     // 드로잉 이미지 확대 시, 툴 바 숨기기 처리
     .toolbar(
@@ -320,33 +327,7 @@ struct VideoView: View {
       }
     }
   }
-  /// 현재 플레이어 시점의 프레임을 이미지로 캡처 (copyCGImage 대체)
-  private func captureCurrentFrame() {
-    guard let player = vm.videoVM.player,
-          let asset  = player.currentItem?.asset else { return }
-    
-    let time = player.currentTime()
-    
-    let generator = AVAssetImageGenerator(asset: asset)
-    generator.appliesPreferredTrackTransform = true
-    generator.requestedTimeToleranceBefore = .zero
-    generator.requestedTimeToleranceAfter  = .zero
-    generator.dynamicRangePolicy = .forceSDR
-    
-    generator.generateCGImageAsynchronously(for: time) { cgImage, actualTime, error in
-      guard let cgImage = cgImage, error == nil else {
-        // print("error: \(error ?? NSError()")
-        print("적절한 에러 처리 추가하기")
-        return
-      }
-      let image = UIImage(cgImage: cgImage)
-      DispatchQueue.main.async {
-        self.capturedImage = image
-        self.showFeedbackPaperDrawingView = true
-        print("이미지 캡처 성공 @ \(CMTimeGetSeconds(actualTime))s")
-      }
-    }
-  }
+
 }
 
 #Preview {

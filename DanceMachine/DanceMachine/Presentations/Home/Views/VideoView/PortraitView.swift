@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AVFoundation
 
 struct PortraitView: View {
   @Bindable var vm: VideoDetailViewModel
@@ -14,6 +15,7 @@ struct PortraitView: View {
   @Binding var sliderValue: Double
   
   @Binding var feedbackFilter: FeedbackFilter
+  @Binding var scrollProxy: ScrollViewProxy?
   
   @Binding var pointTime: Double
   @Binding var intervalTime: Double
@@ -22,10 +24,33 @@ struct PortraitView: View {
   
   @State private var showSpeedSheet: Bool = false
   
+  @State private var feedbackType: FeedbackType = .point
+  
   let filteredFeedback: [Feedback]
   let userId: String
   let proxy: GeometryProxy
   let videoTitle: String
+  let videoId: String
+  
+  /// =================================================
+  /// 드로잉 관련
+  // MARK: 이미지 캡쳐 결과 //
+  @Binding var showFeedbackPaperDrawingView: Bool
+  @Binding var capturedImage: UIImage?
+  @Binding var editedOverlayImage: UIImage?
+  
+  let drawingImageNamespace: Namespace.ID
+  @Binding var showDrawingImageFull: Bool
+
+  let feedbackImageNamespace: Namespace.ID
+  @Binding var selectedFeedbackImageURL: String?
+  @Binding var showFeedbackImageFull: Bool
+  
+  /// 이미지 확대 변수
+  private var isImageOverlayPresented: Bool {
+    showDrawingImageFull || showFeedbackImageFull
+  }
+  /// ==================================================
   
   var body: some View {
     VStack(spacing: 0) {
@@ -105,12 +130,23 @@ struct PortraitView: View {
               sliderValue = newValue
             }
           }
-  //        .frame(maxWidth: .infinity, maxHeight: .infinity)
           .transition(.opacity)
           .zIndex(10)
         }
       }
-        .frame(height: proxy.size.width * 9 / 16)
+      .frame(height: proxy.size.width * 9 / 16)
+      .overlay {
+        if vm.videoVM.isLoading {
+          ZStack {
+            Color.backgroundElevated
+            if vm.videoVM.isDownloading {
+              downloadProgress(progress: vm.videoVM.loadingProgress)
+            } else {
+              VideoLottieView()
+            }
+          }
+        }
+      }
       
       VStack(spacing: 0) {
         FeedbackSection(feedbackFilter: $feedbackFilter)
@@ -121,8 +157,12 @@ struct PortraitView: View {
           vm: vm,
           pointTime: $pointTime,
           intervalTime: $intervalTime,
+          scrollProxy: $scrollProxy,
           filteredFeedbacks: filteredFeedback,
-          userId: userId
+          userId: userId,
+          imageNamespace: drawingImageNamespace,
+          selectedFeedbackImageURL: $selectedFeedbackImageURL,
+          showFeedbackImageFull: $showFeedbackImageFull
         )
       }
       .ignoresSafeArea(.keyboard)
@@ -134,10 +174,126 @@ struct PortraitView: View {
         }
       }
     }
+    .safeAreaInset(edge: .bottom) {
+      if vm.forceShowLandscape || isImageOverlayPresented {
+        EmptyView()
+      } else {
+        Group {
+          if showFeedbackInput {
+            /// FeedbackInPutView 여기
+            FeedbackInPutView(
+              teamMembers: vm.teamMembers,
+              feedbackType: feedbackType,
+              currentTime: pointTime,
+              startTime: intervalTime,
+              onSubmit: { content, taggedUserId in
+                Task {
+                  // MARK: - 구간 피드백
+                  if feedbackType == .point {
+                    await vm.feedbackVM.createPointFeedback(
+                      videoId: videoId,
+                      authorId: userId,
+                      content: content,
+                      taggedUserIds: taggedUserId,
+                      atTime: pointTime,
+                      image: self.editedOverlayImage
+                    )
+                  } else { // 시점 피드백
+                    await vm.feedbackVM.createIntervalFeedback(
+                      videoId: videoId,
+                      authorId: userId,
+                      content: content,
+                      taggedUserIds: taggedUserId,
+                      startTime: vm.feedbackVM.intervalStartTime ?? 0,
+                      endTime: vm.videoVM.currentTime,
+                      image: self.editedOverlayImage
+                    )
+                  }
+                  showFeedbackInput = false
+                  
+                  // 피드백 제출 후 스크롤 최상단 이동
+                  DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    withAnimation {
+                      scrollProxy?.scrollTo("topFeedback", anchor: .top)
+                    }
+                  }
+                }
+              },
+              refresh: {
+                self.showFeedbackInput = false
+                dismissKeyboard()
+              },
+              timeSeek: { vm.videoVM.seekToTime(to: self.pointTime) },
+              drawingButtonTapped: { captureCurrentFrame() },
+              feedbackDrawingImage: $editedOverlayImage,
+              imageNamespace: drawingImageNamespace,
+              showImageFull: $showDrawingImageFull
+            )
+          } else {
+            FeedbackButton(
+              pointAction: {
+                self.feedbackType = .point
+                self.pointTime = vm.videoVM.currentTime
+                self.showFeedbackInput = true // 텍스트 필드로 변하는 시점
+                if vm.videoVM.isPlaying {
+                  vm.videoVM.togglePlayPause()
+                }
+              },
+              intervalAction: {
+                if vm.feedbackVM.isRecordingInterval {
+                  feedbackType = .interval
+                  self.intervalTime = vm.videoVM.currentTime
+                  showFeedbackInput = true
+                  if vm.videoVM.isPlaying {
+                    vm.videoVM.togglePlayPause()
+                  }
+                } else {
+                  feedbackType = .interval
+                  self.pointTime = vm.videoVM.currentTime
+                  _ = vm.feedbackVM.handleIntervalButtonType(currentTime: vm.videoVM.currentTime)
+                }
+              },
+              isRecordingInterval: vm.feedbackVM.isRecordingInterval,
+              startTime: pointTime.formattedTime(),
+              currentTime: vm.videoVM.currentTime.formattedTime(),
+              feedbackType: $feedbackType
+            )
+          }
+        }
+      }
+    }
     .toolbarTitleDisplayMode(.inline)
     .toolbar {
       ToolbarLeadingBackButton(icon: .chevron)
       ToolbarCenterTitle(text: videoTitle)
+    }
+  }
+  
+  /// 현재 플레이어 시점의 프레임을 이미지로 캡처 (copyCGImage 대체)
+  private func captureCurrentFrame() {
+    guard let player = vm.videoVM.player,
+          let asset  = player.currentItem?.asset else { return }
+    
+    let time = player.currentTime()
+    
+    let generator = AVAssetImageGenerator(asset: asset)
+    generator.appliesPreferredTrackTransform = true
+    generator.requestedTimeToleranceBefore = .zero
+    generator.requestedTimeToleranceAfter  = .zero
+    generator.dynamicRangePolicy = .forceSDR
+    
+    generator.generateCGImageAsynchronously(for: time) { cgImage, actualTime, error in
+      guard let cgImage = cgImage, error == nil else {
+        // print("error: \(error ?? NSError()")
+        print("적절한 에러 처리 추가하기")
+        return
+      }
+      let image = UIImage(cgImage: cgImage)
+      DispatchQueue.main.async {
+        self.capturedImage = image
+        self.showFeedbackPaperDrawingView = true
+        print("이미지 캡처 성공 @ \(CMTimeGetSeconds(actualTime))s")
+      }
     }
   }
 }

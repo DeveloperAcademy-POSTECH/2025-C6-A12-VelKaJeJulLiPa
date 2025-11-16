@@ -9,21 +9,24 @@ import SwiftUI
 
 struct FeedbackListView: View {
   @Bindable var vm: VideoDetailViewModel
-  
+
   @Binding var pointTime: Double
   @Binding var intervalTime: Double
-  
-  @State private var scrollProxy: ScrollViewProxy? = nil
-  
+  @Binding var scrollProxy: ScrollViewProxy?
+
   @State private var selectedFeedback: Feedback? = nil
   @State private var reportTargetFeedback: Feedback? = nil
-  
-  @Namespace private var feedbackImageNamespace
-  @State private var selectedFeedbackImageURL: String? = nil
-  @State private var showFeedbackImageFull: Bool = false
-  
+
   let filteredFeedbacks: [Feedback]
   let userId: String
+
+  // 가로모드 네비게이션용 콜백
+  var onFeedbackNavigate: ((Feedback) -> Void)? = nil
+
+  // 이미지 전체 화면 관련
+  let imageNamespace: Namespace.ID
+  @Binding var selectedFeedbackImageURL: String?
+  @Binding var showFeedbackImageFull: Bool
   
   var body: some View {
     ScrollViewReader { proxy in
@@ -39,32 +42,58 @@ struct FeedbackListView: View {
             emptyView
           } else {
             ForEach(filteredFeedbacks, id: \.feedbackId) { f in
-              FeedbackCard(
-                feedback: f,
-                authorUser: vm.getAuthorUser(for: f.authorId),
-                taggedUsers:
-                  vm.getTaggedUsers(for: f.taggedUserIds),
-                replyCount: vm.feedbackVM.reply[f.feedbackId.uuidString]?.count ?? 0,
-                action: { self.selectedFeedback = f },
-                showReplySheet: { self.selectedFeedback = f },
-                currentTime: pointTime,
-                startTime: intervalTime,
-                timeSeek: { vm.videoVM.seekToTime(to: f.startTime ?? self.pointTime ) },
-                currentUserId: userId,
-                onDelete: { Task { await vm.feedbackVM.deleteFeedback(f) } },
-                onReport: {
-                  if !vm.forceShowLandscape { // 가로모드 시트 x
-                    self.reportTargetFeedback = f
+              // 가로모드 네비게이션 또는 세로모드 시트 처리
+              if let navigate = onFeedbackNavigate {
+                // 가로모드: 콜백으로 상태 변경
+                FeedbackCard(
+                  feedback: f,
+                  authorUser: vm.getAuthorUser(for: f.authorId),
+                  taggedUsers: vm.getTaggedUsers(for: f.taggedUserIds),
+                  replyCount: vm.feedbackVM.reply[f.feedbackId.uuidString]?.count ?? 0,
+                  action: { navigate(f) },
+                  showReplySheet: { navigate(f) },
+                  currentTime: pointTime,
+                  startTime: intervalTime,
+                  timeSeek: { vm.videoVM.seekToTime(to: f.startTime ?? self.pointTime ) },
+                  currentUserId: userId,
+                  onDelete: { Task { await vm.feedbackVM.deleteFeedback(f) } },
+                  onReport: { }, // 가로모드에서는 신고 비활성화
+                  imageNamespace: imageNamespace,
+                  onImageTap: { url in
+                    self.selectedFeedbackImageURL = url
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                      self.showFeedbackImageFull = true
+                    }
                   }
-                },
-                imageNamespace: feedbackImageNamespace,
-                onImageTap: { url in
-                  self.selectedFeedbackImageURL = url
-                  withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                    self.showFeedbackImageFull = true
+                )
+              } else {
+                // 세로모드: 기존 시트 방식
+                FeedbackCard(
+                  feedback: f,
+                  authorUser: vm.getAuthorUser(for: f.authorId),
+                  taggedUsers: vm.getTaggedUsers(for: f.taggedUserIds),
+                  replyCount: vm.feedbackVM.reply[f.feedbackId.uuidString]?.count ?? 0,
+                  action: { self.selectedFeedback = f },
+                  showReplySheet: { self.selectedFeedback = f },
+                  currentTime: pointTime,
+                  startTime: intervalTime,
+                  timeSeek: { vm.videoVM.seekToTime(to: f.startTime ?? self.pointTime ) },
+                  currentUserId: userId,
+                  onDelete: { Task { await vm.feedbackVM.deleteFeedback(f) } },
+                  onReport: {
+                    if !vm.forceShowLandscape { // 가로모드 시트 x
+                      self.reportTargetFeedback = f
+                    }
+                  },
+                  imageNamespace: imageNamespace,
+                  onImageTap: { url in
+                    self.selectedFeedbackImageURL = url
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                      self.showFeedbackImageFull = true
+                    }
                   }
-                }
-              )
+                )
+              }
             }
           }
           
@@ -73,44 +102,46 @@ struct FeedbackListView: View {
           self.scrollProxy = proxy
         }
         .sheet(item: $selectedFeedback) { feedback in
-          ReplySheet(
-            reply: vm.feedbackVM.reply[feedback.feedbackId.uuidString] ?? [],
-            feedback: feedback,
-            taggedUsers: vm.getTaggedUsers(for: feedback.taggedUserIds),
-            teamMembers: vm.teamMembers,
-            replyCount: vm.feedbackVM.reply[feedback.feedbackId.uuidString]?.count ?? 0,
-            currentTime: pointTime,
-            startTime: intervalTime,
-            timeSeek: { vm.videoVM.seekToTime(to: self.pointTime) },
-            getTaggedUsers: { ids in vm.getTaggedUsers(for: ids) },
-            getAuthorUser: { ids in vm.getAuthorUser(for: ids) },
-            onReplySubmit: {content, taggedIds in
-              Task {
-                await vm.feedbackVM.addReply(
-                  to: feedback.feedbackId.uuidString,
-                  authorId: userId,
-                  content: content,
-                  taggedUserIds: taggedIds
-                )
-              }
-            },
-            currentUserId: userId,
-            onDelete: { replyId, feedbackId in
-              await vm.feedbackVM.deleteReply(
-                replyId: replyId, from: feedbackId)
-            },
-            onFeedbackDelete: {
-              Task { await vm.feedbackVM.deleteFeedback(feedback) }
-            },
-            imageNamespace: feedbackImageNamespace,
-            onImageTap: { url in
-              self.selectedFeedbackImageURL = url
-              withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                self.showFeedbackImageFull = true
-              }
-            },
-            onDismiss: nil
-          )
+          NavigationStack {
+            ReplySheet(
+              reply: vm.feedbackVM.reply[feedback.feedbackId.uuidString] ?? [],
+              feedback: feedback,
+              taggedUsers: vm.getTaggedUsers(for: feedback.taggedUserIds),
+              teamMembers: vm.teamMembers,
+              replyCount: vm.feedbackVM.reply[feedback.feedbackId.uuidString]?.count ?? 0,
+              currentTime: pointTime,
+              startTime: intervalTime,
+              timeSeek: { vm.videoVM.seekToTime(to: self.pointTime) },
+              getTaggedUsers: { ids in vm.getTaggedUsers(for: ids) },
+              getAuthorUser: { ids in vm.getAuthorUser(for: ids) },
+              onReplySubmit: {content, taggedIds in
+                Task {
+                  await vm.feedbackVM.addReply(
+                    to: feedback.feedbackId.uuidString,
+                    authorId: userId,
+                    content: content,
+                    taggedUserIds: taggedIds
+                  )
+                }
+              },
+              currentUserId: userId,
+              onDelete: { replyId, feedbackId in
+                await vm.feedbackVM.deleteReply(
+                  replyId: replyId, from: feedbackId)
+              },
+              onFeedbackDelete: {
+                Task { await vm.feedbackVM.deleteFeedback(feedback) }
+              },
+              imageNamespace: imageNamespace,
+              onImageTap: { url in
+                self.selectedFeedbackImageURL = url
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                  self.showFeedbackImageFull = true
+                }
+              },
+              onDismiss: nil
+            )
+          }
         }
         .sheet(item: $reportTargetFeedback) { feedback in
           NavigationStack {
