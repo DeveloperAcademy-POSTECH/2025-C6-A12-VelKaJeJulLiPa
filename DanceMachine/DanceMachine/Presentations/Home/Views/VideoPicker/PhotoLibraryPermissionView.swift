@@ -9,49 +9,62 @@ import SwiftUI
 
 struct PhotoLibraryPermissionView: View {
   let onOpenSettigns: () -> Void
+  let action: () -> Void
   
   var body: some View {
-    VStack(spacing: 24) {
-      textView
-      button
+    ZStack {
+      Color.black.opacity(0.7)
+        .ignoresSafeArea()
+        .onTapGesture {
+          withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+            action()
+          }
+        }
+      VStack(spacing: 24) {
+        textView
+        button
+      }
+      .frame(maxWidth: .infinity)
+      .padding(.vertical, 20)
+      .background {
+        RoundedRectangle(cornerRadius: 38)
+          .fill(.backgroundElevated)
+      }
+      .padding(.horizontal, 44)
     }
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .background(Color.white)
   }
   
   private var textView: some View {
-    VStack {
-      Text("사진에 접근할 수 있도록 허가해 주세요ㅎㅎ")
-        .font(.system(size: 20))
-        .foregroundStyle(.black)
+    VStack(spacing: 16) {
+      Text("갤러리 접근 권한 요청")
+        .font(.heading1SemiBold)
+        .foregroundStyle(.labelStrong)
         .multilineTextAlignment(.center)
       
-      Text("엑세스를 허용하면 DirAct에서 회원님의\n라이브러리에 있는 동영상을 공유할 수 있어요 ㅇㅈ?")
-        .font(.system(size: 14))
-        .foregroundStyle(.black)
+      Text("회원님의 라이브러리 영상 파일을\n불러오기 위한 접근 권한이 필요합니다.")
+        .font(.headline2Medium)
+        .foregroundStyle(.labelStrong)
         .multilineTextAlignment(.center)
-        .lineSpacing(4)
+        .lineSpacing(2)
     }
-    .padding(.horizontal, 32)
   }
   
   private var button: some View {
     Button {
       onOpenSettigns()
     } label: {
-      Text("라이브러리 엑세스 허용")
-        .font(.system(size: 16))
-        .foregroundStyle(.red)
+      Text("접근 허용")
+        .font(.headline2Medium)
+        .foregroundStyle(.labelStrong)
         .frame(maxWidth: .infinity)
-        .frame(height: 50)
-        .background(Color.blue)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .frame(height: 45)
+        .background(.primitiveStrong)
+        .clipShape(RoundedRectangle(cornerRadius: 20))
     }
-    .padding(.horizontal, 32)
-    .padding(.top, 16)
+    .padding(.horizontal, 16)
   }
 }
 
 #Preview {
-  PhotoLibraryPermissionView(onOpenSettigns: {})
+  PhotoLibraryPermissionView(onOpenSettigns: {}, action: {})
 }

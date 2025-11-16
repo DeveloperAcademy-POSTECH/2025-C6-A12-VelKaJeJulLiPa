@@ -84,6 +84,5 @@ struct AccountSettingView: View {
   NavigationStack {
     AccountSettingView()
       .environmentObject(MainRouter())
-      .environment(TabRouter())
   }
 }

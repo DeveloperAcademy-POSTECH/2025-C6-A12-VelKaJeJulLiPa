@@ -11,32 +11,29 @@ import AVKit
 
 struct VideoPickerView: View {
   @Environment(\.dismiss) private var dismiss
-
+  
   @Bindable var pickerViewModel: VideoPickerViewModel
-
+  
   @State private var showEmptyTitleAlert: Bool = false
   @State private var showEmptyVideoAlert: Bool = false
   @State private var showToast: Bool = false
-
+  
   @FocusState private var isFocused: Bool
-
+  
   let tracksId: String
   let sectionId: String
   let trackName: String
-
+  
   private var vm: VideoPickerViewModel { pickerViewModel }
   
   var body: some View {
     NavigationStack {
       ZStack {
-        // 권한이 없을 때 권한 요청 화면 표시
-        if vm.photoLibraryStatus == .denied || vm.photoLibraryStatus == .restricted {
-          PhotoLibraryPermissionView {
-            vm.openSettings()
-          }
-        } else {
-          // 권한이 있을 때 기존 UI 표시
-          mainContent
+        mainContent
+        
+        // iCloud 다운로드 오버레이
+        if vm.isDownloadingFromCloud {
+          iCloudOverlay
         }
       }
       .toast(
@@ -111,6 +108,36 @@ struct VideoPickerView: View {
           }
         }
       }
+    }
+  }
+  
+  private var iCloudOverlay: some View {
+    ZStack {
+      Color.black.opacity(0.7)
+        .ignoresSafeArea()
+      
+      VStack(spacing: .zero) {
+        ProgressView(value: vm.downloadProgress)
+          .progressViewStyle(.linear)
+          .tint(.secondaryNormal)
+          .frame(maxWidth: .infinity)
+          .padding(.horizontal, 16)
+        Spacer().frame(height: 18)
+        Text("iCloud로부터 미디어 다운받는 중")
+          .font(.headline2Medium)
+          .foregroundColor(.labelStrong)
+        Spacer().frame(height: 6)
+        Text("\(Int(vm.downloadProgress * 100))%")
+          .font(.headline2Medium)
+          .foregroundColor(.labelStrong)
+      }
+      .frame(maxWidth: .infinity)
+      .padding(.vertical, 20)
+      .background(
+        RoundedRectangle(cornerRadius: 20)
+          .fill(Color.fillStrong)
+      )
+      .padding(.horizontal, 64)
     }
   }
   
@@ -190,8 +217,11 @@ struct VideoPickerView: View {
         self.showToast = true
         return
       }
-      vm.exportVideo(tracksId: tracksId, sectionId: sectionId)
-      dismiss()
+      self.isFocused = false
+      // iCloud 다운로드 완료 후 피커 닫기
+      vm.exportVideo(tracksId: tracksId, sectionId: sectionId) {
+        dismiss()
+      }
     } label: {
       Image(systemName: "arrow.up")
         .foregroundStyle(

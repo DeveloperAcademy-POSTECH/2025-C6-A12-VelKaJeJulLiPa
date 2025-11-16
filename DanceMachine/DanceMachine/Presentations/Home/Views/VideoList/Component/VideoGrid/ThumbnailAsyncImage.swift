@@ -23,13 +23,13 @@ struct ThumbnailAsyncImage: View {
         Image(uiImage: cached)
           .resizable()
           .aspectRatio(contentMode: .fill)
-          .clipShape(RoundedRectangle(cornerRadius: 10))
+          .clipShape(RoundedCorner(radius: 10, corners: [.topLeft, .topRight]))
       } else if let url = thumbnailURL, let url = URL(string: url) {
         AsyncImage(url: url) { i in
           i
             .resizable()
             .aspectRatio(contentMode: .fill)
-            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .clipShape(RoundedCorner(radius: 10, corners: [.topLeft, .topRight]))
             .onAppear {
               Task {
                 if let _ = await loadUIImage(from: url),
@@ -60,7 +60,8 @@ struct ThumbnailAsyncImage: View {
 
   private var thumbnailSkeletonView: some View {
     SkeletonView(
-      RoundedRectangle(cornerRadius: 10)
+      RoundedCorner(radius: 10, corners: [.topLeft, .topRight]),
+      Color.fillAssitive
     )
   }
   

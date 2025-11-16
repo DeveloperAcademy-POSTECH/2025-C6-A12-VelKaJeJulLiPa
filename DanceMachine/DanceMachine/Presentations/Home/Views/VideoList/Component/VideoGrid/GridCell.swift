@@ -33,9 +33,7 @@ struct GridCell: View {
     VStack(alignment: .leading) {
       thumbnail
       content
-      Spacer()
     }
-    .frame(width: size, height: size * 1.15)
     .contentShape(Rectangle())
     .background(
       RoundedRectangle(cornerRadius: 12)
@@ -62,6 +60,7 @@ struct GridCell: View {
   
   private var content: some View {
     VStack(alignment: .leading) {
+      Spacer().frame(height: 8)
       Text(title)
         .font(.headline2Medium)
         .foregroundStyle(.labelStrong)
@@ -73,10 +72,8 @@ struct GridCell: View {
       Text("\(uploadDate.formattedDate())")
         .font(.caption1Medium)
         .foregroundStyle(.labelAssitive)
-      Spacer().frame(height: 8)
+      Spacer().frame(height: 16)
     }
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .padding(.top, 8)
     .padding(.horizontal, 8)
   }
   
@@ -87,7 +84,7 @@ struct GridCell: View {
           thumbnailURL: url,
           videoId: videoId,
           size: size,
-          height: size / 1.5
+          height: size / 1.79
         )
       }
     }
