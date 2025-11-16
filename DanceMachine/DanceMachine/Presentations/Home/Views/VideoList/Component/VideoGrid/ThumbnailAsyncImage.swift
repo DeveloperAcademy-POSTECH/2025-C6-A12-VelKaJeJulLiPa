@@ -37,7 +37,8 @@ struct ThumbnailAsyncImage: View {
 
   private var thumbnailSkeletonView: some View {
     SkeletonView(
-      RoundedRectangle(cornerRadius: 10)
+      RoundedCorner(radius: 10, corners: [.topLeft, .topRight]),
+      Color.fillAssitive
     )
   }
   

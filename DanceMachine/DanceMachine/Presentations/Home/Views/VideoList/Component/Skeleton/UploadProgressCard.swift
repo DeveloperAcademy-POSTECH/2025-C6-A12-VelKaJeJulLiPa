@@ -22,6 +22,10 @@ struct UploadProgressCard: View {
       thumbnail
         .overlay(alignment: .center) {
           switch progressManager.uploadState {
+          case .compressing(let progress):
+            compressingView(progress: progress)
+          case .fileToLarge( _):
+            fileTooLargeView
           case .uploading(let progress):
             uploadingView(progress: progress)
           case .failed(let message):
@@ -31,6 +35,10 @@ struct UploadProgressCard: View {
           }
         }
       switch progressManager.uploadState {
+      case .compressing( _):
+        content
+      case .fileToLarge(let message):
+        fileTooLargeMessage(message: message)
       case .uploading( _):
         content
       case .failed(let message):
@@ -38,21 +46,12 @@ struct UploadProgressCard: View {
       case .idle:
         content
       }
-//      content
-//      if case .failed(let message) = progressManager.uploadState {
-//        failedMessage(message: message)
-//      }
-      Spacer()
     }
-    .frame(
-      width: cardSize,
-      height: cardSize * 1.22
-    )
     .background(
-      RoundedRectangle(cornerRadius: 10)
+      RoundedRectangle(cornerRadius: 12)
         .fill(Color.fillAssitive)
     )
-    .clipShape(RoundedRectangle(cornerRadius: 10))
+    .clipShape(RoundedRectangle(cornerRadius: 12))
   }
   
   
@@ -61,26 +60,24 @@ struct UploadProgressCard: View {
       topSkeletonView
         .frame(
           width: cardSize,
-          height: cardSize / 1.5
+          height: cardSize / 1.79
         )
     }
   }
   
   private var content: some View {
-    VStack(alignment: .leading) {
-      
+    VStack(alignment: .leading, spacing: 0) {
+      Spacer().frame(height: 8)
       bottomSkeletonView
         .frame(width: cardSize * 0.7, height: 20)
-//      Spacer().frame(width: 8)
+      Spacer().frame(height: 8)
       bottomSkeletonView
         .frame(width: cardSize * 0.3, height: 16)
-//      Spacer().frame(width: 4)
+      Spacer().frame(height: 4)
       bottomSkeletonView
         .frame(width: cardSize * 0.5, height: 15)
-//      Spacer()
+      Spacer().frame(height: 16)
     }
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .padding(.top, 8)
     .padding(.horizontal, 8)
   }
   
@@ -97,6 +94,81 @@ struct UploadProgressCard: View {
       Color.fillNormal
     )
   }
+  
+  // MARK: fileTooLarge
+  private var fileTooLargeView: some View {
+    VStack {
+      ZStack {
+        Circle()
+          .stroke(Color.fillAssitive, lineWidth: 5)
+          .frame(width: cardSize / 3, height: cardSize / 3)
+        Button {
+          Task { await onCancel() }
+        } label: {
+          Image(systemName: "xmark")
+            .font(.system(size: 30, weight: .semibold))
+            .foregroundStyle(Color.secondaryNormal)
+        }
+      }
+    }
+  }
+  
+  private func fileTooLargeMessage(message: String) -> some View {
+    VStack(alignment: .leading) {
+      Spacer().frame(height: 8)
+      HStack {
+        Image(systemName: "exclamationmark.circle")
+          .foregroundStyle(.accentRedNormal)
+        Text("용량 초과")
+          .font(.headline2Medium)
+          .foregroundStyle(.accentRedNormal)
+      }
+      Spacer().frame(height: 8)
+      Text(message)
+        .font(.caption1Medium)
+        .foregroundStyle(Color.labelNormal)
+        .multilineTextAlignment(.leading)
+      Spacer().frame(height: 16)
+    }
+    .padding(.horizontal, 8)
+  }
+  
+  // MARK: - Compressing
+  private func compressingView(progress: Double) -> some View {
+    VStack {
+      ZStack {
+        Circle()
+          .stroke(
+            Color.fillAssitive,
+            lineWidth: 5
+          )
+          .frame(
+            width: cardSize / 3,
+            height: cardSize / 3
+          )
+        Circle()
+          .trim(from: 0, to: progress)
+          .stroke(
+            Color.secondaryNormal,
+            style: StrokeStyle(
+              lineWidth: 5,
+              lineCap: .round
+            )
+          )
+          .frame(width: cardSize / 3, height: cardSize / 3)
+          .rotationEffect(.degrees(90))
+
+        VStack(spacing: 2) {
+          Text("압축중")
+            .font(.caption1Medium)
+            .foregroundStyle(Color.secondaryNormal)
+//          Text("\(Int(progress * 100))%")
+//            .font(.caption1Medium)
+//            .foregroundStyle(Color.secondaryNormal)
+        }
+      }
+    }
+  }
 
   // MARK: - Uploading
   private func uploadingView(progress: Double) -> some View {
@@ -108,8 +180,8 @@ struct UploadProgressCard: View {
             lineWidth: 5
           )
           .frame(
-            width: cardSize / 2.5,
-            height: cardSize / 2.5
+            width: cardSize / 3,
+            height: cardSize / 3
           )
         Circle()
           .trim(from: 0, to: progress)
@@ -120,7 +192,7 @@ struct UploadProgressCard: View {
               lineCap: .round
             )
           )
-          .frame(width: cardSize / 2.5, height: cardSize / 2.5)
+          .frame(width: cardSize / 3, height: cardSize / 3)
           .rotationEffect(.degrees(90))
 
         VStack(spacing: 2) {
@@ -128,7 +200,7 @@ struct UploadProgressCard: View {
             .font(.system(size: 20))
             .foregroundStyle(Color.secondaryNormal)
           Text("\(Int(progress * 100))%")
-            .font(.system(size: 14))
+            .font(.caption1Medium)
             .foregroundStyle(Color.secondaryNormal)
         }
       }
@@ -157,35 +229,38 @@ struct UploadProgressCard: View {
   
   private func failedMessage(message: String) -> some View {
     // 에러 메시지
-    VStack(alignment: .leading, spacing: 4) {
-      Spacer().frame(height: 4)
-      Text("업로드 실패")
-//        .font(.system(size: cardSize * 0.08, weight: .semibold))
-        .font(.headline2Medium)
-        .foregroundStyle(Color.accentRedStrong)
-      Spacer().frame(height: 4)
+    VStack(alignment: .leading) {
+      Spacer().frame(height: 8)
+      HStack {
+        Image(systemName: "exclamationmark.circle")
+          .foregroundStyle(.accentRedNormal)
+        Text("업로드 실패")
+          .font(.headline2Medium)
+          .foregroundStyle(.accentRedNormal)
+      }
+      Spacer().frame(height: 8)
       Text(message)
-//        .font(.system(size: cardSize * 0.06))
         .font(.caption1Medium)
         .foregroundStyle(Color.labelNormal)
         .multilineTextAlignment(.leading)
+      Spacer().frame(height: 4)
       // 취소 버튼
       Button {
         Task { await onCancel() }
       } label: {
         Text("취소")
-//          .font(.system(size: cardSize * 0.07, weight: .medium))
           .font(.caption1Medium)
-          .foregroundStyle(Color.accentRedStrong)
+          .foregroundStyle(.accentRedNormal)
       }
+      Spacer().frame(height: 16)
     }
     .padding(.horizontal, 8)
   }
 }
 
-#Preview("Idle") {
+#Preview("fileToLarge") {
   @Previewable @State var vm = VideoProgressManager.shared
-  vm.uploadState = .idle
+  vm.uploadState = .fileToLarge(message: "더 짧거나 낮은 화질의 영상을\n선택해주세요.")
   return UploadProgressCard(
     cardSize: 172,
     progressManager: vm,
@@ -193,6 +268,28 @@ struct UploadProgressCard: View {
     onCancel: {}
   )
 }
+
+#Preview("Compressing") {
+  @Previewable @State var vm = VideoProgressManager.shared
+  vm.uploadState = .compressing(progress: 0.65)
+  return UploadProgressCard(
+    cardSize: 172,
+    progressManager: vm,
+    onRetry: {},
+    onCancel: {}
+  )
+}
+
+//#Preview("Idle") {
+//  @Previewable @State var vm = VideoProgressManager.shared
+//  vm.uploadState = .idle
+//  return UploadProgressCard(
+//    cardSize: 172,
+//    progressManager: vm,
+//    onRetry: {},
+//    onCancel: {}
+//  )
+//}
 
 #Preview("Uploading") {
   @Previewable @State var vm = VideoProgressManager.shared
@@ -207,7 +304,7 @@ struct UploadProgressCard: View {
 
 #Preview("Failed") {
   @Previewable @State var vm = VideoProgressManager.shared
-  vm.uploadState = .failed(message: "네트워크 연결을 확인하고\n다시 시도해주세요.")
+  vm.uploadState = .failed(message: "네트워크 상태를 확인해주세요.")
   return UploadProgressCard(
     cardSize: 172,
     progressManager: vm,
