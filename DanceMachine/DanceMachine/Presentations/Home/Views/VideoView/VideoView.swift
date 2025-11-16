@@ -301,6 +301,16 @@ struct VideoView: View {
         showCreateReportSuccessToast = true
       }
     }
+    // MARK: 사용자가 영상 화면을 보고 있는데, 푸시 알림으로 화면 접근하려 할 때 영상 정보 업데이트
+    .onReceive(NotificationCenter.default.publisher(for: .refreshVideoView)) { notification in
+        guard let videoId = notification.userInfo?["videoId"] as? String,
+              let videoURL = notification.userInfo?["videoURL"] as? String,
+              let teamspaceId = notification.userInfo?["teamspaceId"] as? String else { return }
+
+        Task {
+            await vm.loadAllData(videoId: videoId, videoURL: videoURL, teamspaceId: teamspaceId)
+        }
+    }
   }
   // MARK: 세로모드 레이아웃
   private func portraitView(proxy: GeometryProxy) -> some View {
