@@ -31,6 +31,18 @@ struct VideoView: View {
   @State private var showIntervalButton: Bool = false
   @State private var buttonSpacing: CGFloat = 4
 
+  
+  // MARK: 가로모드 관련
+  @State private var isLandscape: Bool = false // 디바이스 가로모드 감지
+  @State private var forceShowLandscape: Bool = false // 전체 화면 버튼으로 가는 가로모드
+  @State private var showFeedbackPanel: Bool = false
+
+  // MARK: 스와이프 제스처 관련
+  @State private var dragOffset: CGFloat = 0
+  
+  // MARK: 배속 좆러
+  @State private var showSpeedSheet: Bool = false
+  
   // MARK: 스크롤 관련
   @State private var scrollProxy: ScrollViewProxy? = nil
   
@@ -352,7 +364,30 @@ struct VideoView: View {
     VStack(spacing: 0) {
       videoView
         .frame(height: proxy.size.width * 9 / 16)
-      
+        .offset(y: dragOffset * 0.5) // 드래그 방향으로 영상 이동 (50% 감쇠)
+        .gesture(
+          DragGesture()
+            .onChanged { value in
+              // 위로 드래그할 때만 반응 (음수 값)
+              if value.translation.height < 0 {
+                dragOffset = value.translation.height
+              }
+            }
+            .onEnded { value in
+              // 위로 80 이상 드래그하면 전체화면으로 전환
+              if value.translation.height < -80 {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                  forceShowLandscape = true
+                  enterLandscapeMode()
+                }
+              }
+              // 드래그 취소 시 원위치로
+              withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                dragOffset = 0
+              }
+            }
+        )
+
       VStack(spacing: 0) {
         feedbackSection.padding(.vertical, 8)
         Divider()
@@ -378,9 +413,9 @@ struct VideoView: View {
   private func landscapeView(proxy: GeometryProxy) -> some View {
     ZStack {
       Color.black.ignoresSafeArea()
-      
+
       HStack(spacing: 0) {
-        
+
         // MARK: 왼쪽 - 비디오 영역
         ZStack {
           // 1) 비디오 레이어
@@ -410,12 +445,37 @@ struct VideoView: View {
               proxy.size.height * 16.0 / 9.0
             )
           )
+          .gesture(
+            DragGesture(minimumDistance: 30)
+              .onChanged { value in
+                // 아래로 드래그할 때만 반응 (양수 값)
+                if value.translation.height > 0 {
+                  dragOffset = value.translation.height
+                }
+              }
+              .onEnded { value in
+                // 아래로 80 이상 드래그하면 세로모드로 전환
+                if value.translation.height > 80 {
+                  withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    forceShowLandscape = false
+                    exitLandscapeMode()
+                  }
+                }
+                // 드래그 취소 시 원위치로
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                  dragOffset = 0
+                }
+              }
+          )
 
           // 더블탭 Seek 인디케이터
           HStack(spacing: 0) {
             // 왼쪽 (뒤로가기)
             if vm.videoVM.showLeftSeekIndicator {
-              DoubleTapSeekIndicator(isForward: false, tapCount: vm.videoVM.leftSeekCount)
+              DoubleTapSeekIndicator(
+                isForward: false,
+                tapCount: vm.videoVM.leftSeekCount
+              )
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.leading, 80)
             }
@@ -424,7 +484,10 @@ struct VideoView: View {
 
             // 오른쪽 (앞으로가기)
             if vm.videoVM.showRightSeekIndicator {
-              DoubleTapSeekIndicator(isForward: true, tapCount: vm.videoVM.rightSeekCount)
+              DoubleTapSeekIndicator(
+                isForward: true,
+                tapCount: vm.videoVM.rightSeekCount
+              )
                 .frame(maxWidth: .infinity, alignment: .trailing)
                 .padding(.trailing, 80)
             }
@@ -526,7 +589,8 @@ struct VideoView: View {
             )
           }
         }
-        
+        .offset(y: dragOffset * 0.5) // 드래그 방향으로 영상 이동 (50% 감쇠)
+
         // MARK: 오른쪽 - 피드백 패널
         if showFeedbackPanel {
           VStack(spacing: 0) {
@@ -581,7 +645,10 @@ struct VideoView: View {
       HStack(spacing: 0) {
         // 왼쪽 (뒤로가기)
         if vm.videoVM.showLeftSeekIndicator {
-          DoubleTapSeekIndicator(isForward: false, tapCount: vm.videoVM.leftSeekCount)
+          DoubleTapSeekIndicator(
+            isForward: false,
+            tapCount: vm.videoVM.leftSeekCount
+          )
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.leading, 60)
         }
@@ -590,7 +657,10 @@ struct VideoView: View {
 
         // 오른쪽 (앞으로가기)
         if vm.videoVM.showRightSeekIndicator {
-          DoubleTapSeekIndicator(isForward: true, tapCount: vm.videoVM.rightSeekCount)
+          DoubleTapSeekIndicator(
+            isForward: true,
+            tapCount: vm.videoVM.rightSeekCount
+          )
             .frame(maxWidth: .infinity, alignment: .trailing)
             .padding(.trailing, 60)
         }
