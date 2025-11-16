@@ -17,11 +17,12 @@ final class VideoViewModel {
   
   var isPlaying: Bool = false
   var showControls: Bool = false
-  
+
   // 영상 관련
   var timeObserver: Any?
   var currentTime: Double = .zero // 현재 영상 길이
   var duration: Double = .zero // 전체 영상 길이
+  var hasFinished: Bool = false // 동영상 끝났는지 여부
   
   // 탭 제스처 관련
   var lastTapTime: Date = Date()
@@ -107,10 +108,19 @@ extension VideoViewModel {
     
     await MainActor.run {
       timeObserver = player?.addPeriodicTimeObserver(
-        forInterval: CMTime(seconds: 0.5, preferredTimescale: 600),
+        forInterval: CMTime(seconds: 0.1, preferredTimescale: 6000),
         queue: DispatchQueue.main,
         using: { [weak self] time in
-          self?.currentTime = time.seconds
+          guard let self = self else { return }
+          self.currentTime = time.seconds
+
+          // 동영상이 끝났는지 확인 (duration의 0.1초 이내)
+          if self.duration > 0 && abs(self.currentTime - self.duration) < 0.1 {
+            self.hasFinished = true
+            self.isPlaying = false
+            self.showControls = true // 컨트롤 자동으로 표시
+            self.autoHideControlsTask?.cancel() // 자동 숨김 타이머 취소
+          }
         }
       )
     }
@@ -165,6 +175,12 @@ extension VideoViewModel {
       autoHideControlsTask?.cancel()
       isPlaying = false
     } else {
+      // 동영상이 끝났으면 처음부터 재생
+      if hasFinished {
+        seekToTime(to: 0)
+        hasFinished = false
+      }
+
       player?.play()
       player?.rate = playbackSpeed
       isPlaying = true
@@ -203,6 +219,13 @@ extension VideoViewModel {
     if timeTap < doubleTap {
       // 더블탭: 싱글탭 Task 취소하고 3초 뒤로 이동
       singleTapTask?.cancel()
+
+      // 비디오 시작 부분(0초)이면 더블탭 무시
+      if currentTime <= 0 {
+        lastTapTime = now
+        return
+      }
+
       seekToTime(to: currentTime - 3)
       tapCount += 1
 
@@ -244,6 +267,13 @@ extension VideoViewModel {
     if timeTap < doubleTap {
       // 더블탭: 싱글탭 Task 취소하고 3초 앞으로 이동
       singleTapTask?.cancel()
+
+      // 비디오 끝 부분이면 더블탭 무시
+      if currentTime >= duration {
+        lastTapTime = now
+        return
+      }
+
       seekToTime(to: currentTime + 3)
       tapCount += 1
 
@@ -308,7 +338,7 @@ extension VideoViewModel {
       }
     }
 
-    // 0.8초 후 애니메이션 숨기기
+    // 0.8초 후 인디케이터 숨기기
     seekIndicatorTask = Task {
       try? await Task.sleep(for: .seconds(0.8))
       if !Task.isCancelled {
