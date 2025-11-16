@@ -170,6 +170,16 @@ struct VideoView: View {
       }
       .toolbar(.hidden, for: .tabBar)
     }
+    .disabled(vm.feedbackVM.isUploading)
+    .overlay(alignment: .center, content: {
+      if vm.feedbackVM.isUploading {
+        ZStack {
+          Color.black.opacity(0.5)
+            .ignoresSafeArea()
+          VideoLottieView()
+        }
+      }
+    })
 //    .safeAreaInset(edge: .bottom) {
 //      if vm.forceShowLandscape || isImageOverlayPresented {
 //        EmptyView()
