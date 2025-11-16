@@ -27,7 +27,7 @@ struct CustomTextField: View {
         .autocorrectionDisabled(false)
         .padding(.leading, 16)
         .padding(.vertical, 12)
-        .padding(.trailing, 30)
+        .padding(.trailing, 40)
         .background(
           RoundedRectangle(cornerRadius: 20)
             .fill(Color.fillStrong)
