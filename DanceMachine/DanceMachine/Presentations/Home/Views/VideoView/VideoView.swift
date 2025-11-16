@@ -520,7 +520,8 @@ struct VideoView: View {
               centerAction: {
                 vm.videoVM.togglePlayPause()
               },
-              isPlaying: $vm.videoVM.isPlaying
+              isPlaying: $vm.videoVM.isPlaying,
+              hasFinished: vm.videoVM.hasFinished
             )
             .frame(
               width: max(
@@ -688,7 +689,8 @@ struct VideoView: View {
           centerAction: {
             vm.videoVM.togglePlayPause()
           },
-          isPlaying: $vm.videoVM.isPlaying
+          isPlaying: $vm.videoVM.isPlaying,
+          hasFinished: vm.videoVM.hasFinished
         )
         .padding(.bottom, 20)
         .transition(.opacity)
