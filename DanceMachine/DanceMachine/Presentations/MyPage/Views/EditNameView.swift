@@ -12,6 +12,7 @@ struct EditNameView: View {
   
   @State private var viewModel = EditNameViewModel()
   @State private var editedName = ""
+  @State private var isInvalid : Bool = false
   @State private var showToastMessage: Bool = false
   @State private var isAlertPresented: Bool = false
   @FocusState private var isFocused: Bool
@@ -26,7 +27,7 @@ struct EditNameView: View {
   
   var displayText: String { editedName.isEmpty ? placeholder : editedName }
   var underlineColor: Color {
-    displayText.count >= maxLength ? Color.accentRedNormal : isFocused ? Color.secondaryNormal : Color.labelNormal
+    isInvalid ? Color.accentRedNormal : isFocused ? Color.secondaryNormal : Color.labelNormal
   }
   var underlineWidth: CGFloat {
     let textCount = displayText.count
@@ -68,16 +69,25 @@ struct EditNameView: View {
         .onChange(of: editedName) { oldValue, newValue in
           var updated = newValue
           
-          if updated.first == " " {
-            updated = String(updated.drop(while: { $0 == " " }))
+          // 1) 앞 공백 제거
+          while updated.first == " " {
+            updated.removeFirst()
           }
           
+          // 2) 길이 초과 처리
           if updated.count > maxLength {
             updated = String(updated.prefix(maxLength))
-            showToastMessage = true
-            HapticManager.shared.trigger(.medium)
+            
+            Task { @MainActor in
+              isInvalid = true
+              showToastMessage = true
+              HapticManager.shared.trigger(.medium)
+            }
+          } else {
+            isInvalid = false
           }
           
+          // 3) 최종 업데이트
           if updated != editedName {
             editedName = updated
           }
@@ -124,7 +134,8 @@ struct EditNameView: View {
       title: "변경하기",
       color: Color.secondaryNormal,
       height: 47,
-      isEnabled: isButtonEnabled
+      isEnabled: isButtonEnabled,
+      isLoading: viewModel.isLoading
     ) {
       Task {
         try await self.viewModel.updateMyNameAndReload(
@@ -132,6 +143,10 @@ struct EditNameView: View {
           newName: editedName
         )
         dismissKeyboard()
+        
+        // 자연스러운 UI 경험을 위한 일시정지
+        try? await Task.sleep(nanoseconds: 150_000_000)
+        
         await MainActor.run { router.pop() }
       }
     }
