@@ -15,19 +15,12 @@ struct SectionChipIcon: View {
     Button {
       action()
     } label: {
-      Image(systemName: "folder.fill.badge.gearshape")
-        .font(.system(size: 20))
+      Image(.partEdit)
         .foregroundStyle(.primitiveStrong)
-        .padding(.horizontal, 10)
-        .padding(.vertical, 7)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 5)
         .sectionIcon()
-//        .background(
-//          Capsule()
-//            .fill(Color.black)
-//        )
-//        .clearGlassButtonIfAvailable()
     }
-//    .glassEffect(.clear.tint(Color.purple.opacity(0.5)).interactive(), in: Capsule())
   }
 }
 
@@ -47,13 +40,7 @@ struct CustomSectionChip: View {
         .padding(.horizontal, 10)
         .padding(.vertical, 7)
         .sectionChip(isSelected: vm.selectedSection?.sectionId == id)
-//        .background(
-//          Capsule()
-//            .fill(vm.selectedSection?.sectionId == id ? .secondaryNormal : Color.black)
-//        )
-//        .clearGlassButtonIfAvailable()
     }
-//    .glassEffect(.clear.tint(Color.purple.opacity(0.5)).interactive(), in: Capsule())
   }
 }
 
