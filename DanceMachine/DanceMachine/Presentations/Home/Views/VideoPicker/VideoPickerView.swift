@@ -179,7 +179,9 @@ struct VideoPickerView: View {
           vm.selectedAsset == nil ? "업로드할 동영상을 선택하세요." : "동영상 제목을 입력해주세요.",
           text: $pickerViewModel.videoTitle
         )
-        .padding()
+        .padding(.leading, 16)
+        .padding(.vertical, 16)
+        .padding(.trailing, isFocused ? 100 : 16) // 포커스 시 글자수(~50pt) + X버튼(44pt) 공간 확보
         .textFieldStyle(.plain)
         .font(.headline2Medium)
         .foregroundStyle(Color.labelStrong)
