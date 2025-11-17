@@ -58,8 +58,7 @@ extension SectionEditViewModel {
     section: Section
   ) async {
     guard !editText.isEmpty else { return }
-    guard editText != "일반" else { return }
-    
+
     var updatedSection = section
     updatedSection.sectionTitle = self.editText
     
