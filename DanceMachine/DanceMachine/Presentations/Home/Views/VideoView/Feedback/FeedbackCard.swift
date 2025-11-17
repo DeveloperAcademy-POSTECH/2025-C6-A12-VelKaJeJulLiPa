@@ -54,26 +54,13 @@ struct FeedbackCard: View {
                 .foregroundStyle(.labelNormal)
             }
           }
-          Spacer()
-          replyButton
         }
+        Spacer()
+        replyButton
       }
-      .padding(.horizontal, 16)
-      .padding(.vertical, 16)
-      
-      Menu {
-        contextRow
-      } label: {
-        Image(systemName: "ellipsis")
-          .font(.system(size: 14))
-          .foregroundStyle(.labelNormal)
-      }
-      .frame(width: 22, height: 22)
-      .contentShape(Rectangle())
-      .padding(.horizontal, 16)
-      .padding(.top, 8)
-      .tint(Color.accentRedStrong) // FIXME: 메뉴 버튼 스타일 수정
     }
+    .padding(.horizontal, 16)
+    .padding(.vertical, 16)
     .background {
       VStack {
         Spacer()
@@ -111,6 +98,20 @@ struct FeedbackCard: View {
         .foregroundStyle(.labelAssitive)
       }
       Spacer()
+    }
+    .overlay(alignment: .trailing) {
+      Menu {
+        contextRow
+      } label: {
+        Image(systemName: "ellipsis")
+          .font(.system(size: 14))
+          .foregroundStyle(.labelNormal)
+          .frame(width: 22, height: 22)
+      }
+      .frame(width: 44, height: 44)
+      .contentShape(Rectangle())
+      .offset(x: 11)  // 터치 영역 확장으로 인한 오른쪽 offset
+      .tint(Color.accentRedStrong) // FIXME: 메뉴 버튼 스타일 수정
     }
   }
   
