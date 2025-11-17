@@ -30,6 +30,9 @@ struct LandscapeView: View {
   @Binding var pointTime: Double
   @Binding var intervalTime: Double
   
+  @Binding var dragOffset: CGFloat
+  @Binding var forceShowLandscape: Bool
+  
   let filteredFeedback: [Feedback]
   let userId: String
   let proxy: GeometryProxy
@@ -73,6 +76,12 @@ struct LandscapeView: View {
           GeometryReader { tapProxy in
             Color.clear
               .contentShape(Rectangle())
+              .frame(
+                width: max(
+                  proxy.size.width,
+                  proxy.size.height * 16.0 / 9.0
+                )
+              )
               .onTapGesture { location in
                 let tapWidth = tapProxy.size.width
                 if location.x < tapWidth / 3 {
@@ -84,6 +93,61 @@ struct LandscapeView: View {
                 }
               }
           }
+          .gesture(
+            DragGesture(minimumDistance: 30)
+              .onChanged { value in
+                // 아래로 드래그할 때만 반응 (양수 값)
+                if value.translation.height > 0 {
+                  dragOffset = value.translation.height
+                }
+              }
+              .onEnded { value in
+                // 아래로 80 이상 드래그하면 세로모드로 전환
+                if value.translation.height > 80 {
+                  withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    forceShowLandscape = false
+                    vm.exitLandscapeMode()
+                  }
+                }
+                // 드래그 취소 시 원위치로
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                  dragOffset = 0
+                }
+              }
+          )
+          
+          HStack(spacing: 0) {
+            // 왼쪽 (뒤로가기)
+            if vm.videoVM.showLeftSeekIndicator {
+              DoubleTapSeekIndicator(
+                isForward: false,
+                tapCount: vm.videoVM.leftSeekCount
+              )
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.leading, 80)
+            }
+
+            Spacer()
+
+            // 오른쪽 (앞으로가기)
+            if vm.videoVM.showRightSeekIndicator {
+              DoubleTapSeekIndicator(
+                isForward: true,
+                tapCount: vm.videoVM.rightSeekCount
+              )
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .padding(.trailing, 80)
+            }
+          }
+          .allowsHitTesting(false)
+          .frame(
+            width: max(
+              proxy.size.width,
+              proxy.size.height * 16.0 / 9.0
+            )
+          )
+          
+          
         }
         .overlay {
           // 컨트롤
@@ -147,6 +211,7 @@ struct LandscapeView: View {
           }
         }
         .frame(width: showFeedbackPanel ? proxy.size.width * 0.6 : nil)
+        .offset(y: dragOffset * 0.5)
         .clipped()
         
         // MARK: 피드백 패널

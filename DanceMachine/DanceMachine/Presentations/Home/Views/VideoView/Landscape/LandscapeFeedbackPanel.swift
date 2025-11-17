@@ -59,6 +59,7 @@ struct LandscapeFeedbackPanel: View {
         scrollProxy: $scrollProxy,
         filteredFeedbacks: filteredFeedback,
         userId: userId,
+        videoId: videoId,
         onFeedbackNavigate: { feedback in
           onFeedbackSelect(feedback)
         },

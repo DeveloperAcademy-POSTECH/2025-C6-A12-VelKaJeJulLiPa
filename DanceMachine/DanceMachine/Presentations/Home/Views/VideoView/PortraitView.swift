@@ -22,6 +22,9 @@ struct PortraitView: View {
   
   @Binding var showFeedbackInput: Bool
   
+  @Binding var dragOffset: CGFloat
+  @Binding var forceShowLandscape: Bool
+  
   @State private var showSpeedSheet: Bool = false
   
   @State private var feedbackType: FeedbackType = .point
@@ -79,6 +82,33 @@ struct PortraitView: View {
             }
         }
         
+        // 더블탭 Seek 인디케이터
+        HStack(spacing: 0) {
+          // 왼쪽 (뒤로가기)
+          if vm.videoVM.showLeftSeekIndicator {
+            DoubleTapSeekIndicator(
+              isForward: false,
+              tapCount: vm.videoVM.leftSeekCount
+            )
+              .frame(maxWidth: .infinity, alignment: .leading)
+              .padding(.leading, 60)
+          }
+
+          Spacer()
+
+          // 오른쪽 (앞으로가기)
+          if vm.videoVM.showRightSeekIndicator {
+            DoubleTapSeekIndicator(
+              isForward: true,
+              tapCount: vm.videoVM.rightSeekCount
+            )
+              .frame(maxWidth: .infinity, alignment: .trailing)
+              .padding(.trailing, 60)
+          }
+        }
+        .allowsHitTesting(false)
+
+        
         if vm.videoVM.showControls {
           VideoControlOverlay(
             isDragging: $isDragging,
@@ -135,6 +165,29 @@ struct PortraitView: View {
         }
       }
       .frame(height: proxy.size.width * 9 / 16)
+      .offset(y: dragOffset * 0.5) // 드래그 방향으로 영상 이동 (50% 감쇠)
+      .gesture(
+        DragGesture()
+          .onChanged { value in
+            // 위로 드래그할 때만 반응 (음수 값)
+            if value.translation.height < 0 {
+              dragOffset = value.translation.height
+            }
+          }
+          .onEnded { value in
+            // 위로 80 이상 드래그하면 전체화면으로 전환
+            if value.translation.height < -80 {
+              withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                forceShowLandscape = true
+                vm.enterLandscapeMode()
+              }
+            }
+            // 드래그 취소 시 원위치로
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+              dragOffset = 0
+            }
+          }
+      )
       .overlay {
         if vm.videoVM.isLoading {
           ZStack {
@@ -160,6 +213,7 @@ struct PortraitView: View {
           scrollProxy: $scrollProxy,
           filteredFeedbacks: filteredFeedback,
           userId: userId,
+          videoId: videoId,
           imageNamespace: drawingImageNamespace,
           selectedFeedbackImageURL: $selectedFeedbackImageURL,
           showFeedbackImageFull: $showFeedbackImageFull

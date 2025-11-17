@@ -195,6 +195,7 @@ struct VideoListView: View {
           )
           .padding(.horizontal, horizontalPadding)
         }
+        .scrollDisabled(vm.isLoading)
         .onScrollGeometryChange(for: CGFloat.self) { geometry in
           geometry.contentOffset.y
         } action: { oldValue, newValue in
