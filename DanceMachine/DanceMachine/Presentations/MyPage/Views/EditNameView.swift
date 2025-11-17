@@ -18,7 +18,7 @@ struct EditNameView: View {
   @FocusState private var isFocused: Bool
   private var isButtonEnabled: Bool {
     editedName
-      .trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || editedName == viewModel.myName ? false : true
+      .trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || editedName == viewModel.myName || viewModel.isLoading ? false : true
   }
   
   let placeholder = "이름을 입력하세요"
