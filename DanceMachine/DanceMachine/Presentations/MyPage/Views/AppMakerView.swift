@@ -12,8 +12,11 @@ struct AppMakerView: View {
     ZStack {
       Color.backgroundNormal.ignoresSafeArea()
       ScrollView {
-        ForEach(TeamMember.allCases, id: \.self) { member in
-          TeamMemberRow(member: member)
+        VStack(spacing: 0) {
+          ForEach(TeamMember.allCases, id: \.self) { member in
+            TeamMemberRow(member: member)
+            Divider()
+          }
         }
       }
     }
