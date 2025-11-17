@@ -76,12 +76,6 @@ struct LandscapeView: View {
           GeometryReader { tapProxy in
             Color.clear
               .contentShape(Rectangle())
-              .frame(
-                width: max(
-                  proxy.size.width,
-                  proxy.size.height * 16.0 / 9.0
-                )
-              )
               .onTapGesture { location in
                 let tapWidth = tapProxy.size.width
                 if location.x < tapWidth / 3 {
@@ -140,12 +134,6 @@ struct LandscapeView: View {
             }
           }
           .allowsHitTesting(false)
-          .frame(
-            width: max(
-              proxy.size.width,
-              proxy.size.height * 16.0 / 9.0
-            )
-          )
         }
         .frame(width: showFeedbackPanel ? proxy.size.width * 0.6 : nil)
         .offset(y: showFeedbackPanel ? 0 : dragOffset * 0.5)
