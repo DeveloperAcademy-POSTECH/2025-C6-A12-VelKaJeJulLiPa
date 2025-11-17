@@ -13,7 +13,7 @@ struct EditNameView: View {
   @State private var viewModel = EditNameViewModel()
   @State private var editedName = ""
   @State private var isInvalid : Bool = false
-  @State private var showToastMessage: Bool = false
+  @State private var showInputLimittMessage: Bool = false
   @State private var isAlertPresented: Bool = false
   @FocusState private var isFocused: Bool
   private var isButtonEnabled: Bool {
@@ -80,7 +80,7 @@ struct EditNameView: View {
             
             Task { @MainActor in
               isInvalid = true
-              showToastMessage = true
+              showInputLimittMessage = true
               HapticManager.shared.trigger(.medium)
             }
           } else {
@@ -102,7 +102,7 @@ struct EditNameView: View {
       editedName = viewModel.myName
     }
     .toast(
-      isPresented: $showToastMessage,
+      isPresented: $showInputLimittMessage,
       duration: 2,
       position: .bottom,
       bottomPadding: 16 + 47 + 16 // 아래 빈공간 + 버튼 크기 + 윗 빈공간
@@ -113,7 +113,15 @@ struct EditNameView: View {
       isPresented: $isAlertPresented,
       onConfirm: { router.pop() }
     )
-    .toolbar {
+    .toast(
+      isPresented: $viewModel.showErrorMessage,
+      duration: 3,
+      position: .bottom,
+      bottomPadding: 16 + 47 + 16,
+      content: {
+        ToastView(text: "문제가 발생했습니다.", icon: .warning)
+      }
+    )    .toolbar {
       ToolbarLeadingBackButton(icon: .chevron) {
         if editedName != viewModel.myName {
           dismissKeyboard()
@@ -138,15 +146,15 @@ struct EditNameView: View {
       isLoading: viewModel.isLoading
     ) {
       Task {
-        try await self.viewModel.updateMyNameAndReload(
+        let success = await self.viewModel.updateMyNameAndReload(
           userId: FirebaseAuthManager.shared.userInfo?.userId ?? "",
           newName: editedName
         )
+        
+        guard success else { return }
+        
         dismissKeyboard()
-        
-        // 자연스러운 UI 경험을 위한 일시정지
         try? await Task.sleep(nanoseconds: 150_000_000)
-        
         await MainActor.run { router.pop() }
       }
     }
@@ -158,3 +166,5 @@ struct EditNameView: View {
     EditNameView()
   }
 }
+
+// viewModel.showErrorMessage = true
