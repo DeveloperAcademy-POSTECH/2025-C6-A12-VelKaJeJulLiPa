@@ -30,7 +30,7 @@ extension Font {
   
   /// Pretendard 기본 생성 함수
   static func pretendard(_ weight: Pretendard, size: CGFloat) -> Font {
-    .custom(weight.value, size: size)
+    .custom(weight.value, fixedSize: size)
   }
 }
 
