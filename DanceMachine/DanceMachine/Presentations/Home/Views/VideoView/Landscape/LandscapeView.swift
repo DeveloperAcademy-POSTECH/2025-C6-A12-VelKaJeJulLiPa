@@ -146,9 +146,10 @@ struct LandscapeView: View {
               proxy.size.height * 16.0 / 9.0
             )
           )
-          
-          
         }
+        .frame(width: showFeedbackPanel ? proxy.size.width * 0.6 : nil)
+        .offset(y: showFeedbackPanel ? 0 : dragOffset * 0.5)
+        .clipped()
         .overlay {
           // 컨트롤
           if vm.videoVM.showControls {
@@ -210,9 +211,6 @@ struct LandscapeView: View {
             .transition(.opacity)
           }
         }
-        .frame(width: showFeedbackPanel ? proxy.size.width * 0.6 : nil)
-        .offset(y: dragOffset * 0.5)
-        .clipped()
         
         // MARK: 피드백 패널
         if showFeedbackPanel {
