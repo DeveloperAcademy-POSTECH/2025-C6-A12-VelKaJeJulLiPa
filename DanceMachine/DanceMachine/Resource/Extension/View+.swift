@@ -171,34 +171,30 @@ extension View {
   func feedbackPointButton() -> some View {
     if #available(iOS 26.0, *) {
       self
-        .glassEffect(.clear.tint(.secondaryNormal).interactive(), in: RoundedRectangle(cornerRadius: 1000))
+        .glassEffect(.clear.tint(.primitiveStrong).interactive(), in: RoundedRectangle(cornerRadius: 1000))
     } else {
       self
         .background {
           RoundedRectangle(cornerRadius: 1000)
-            .fill(Color.blue)
-            .overlay(.ultraThinMaterial)
+            .fill(Color.primitiveStrong)
         }
         .clipShape(RoundedRectangle(cornerRadius: 1000))
     }
   }
   
   @ViewBuilder
-  func feedbackIntervalButton(isRecording: Bool) -> some View {
+  func feedbackIntervalButton() -> some View {
     if #available(iOS 26.0, *) {
       self
         .glassEffect(
-          .clear.tint(
-            (isRecording ? Color.secondaryStrong : Color.secondaryNormal).opacity(0.7)
-          ).interactive(),
+          .clear.tint(.secondaryAssitive).interactive(),
           in: RoundedRectangle(cornerRadius: 1000)
         )
     } else {
       self
         .background {
           RoundedRectangle(cornerRadius: 1000)
-            .fill(isRecording ? Color.purple : Color.blue)
-            .overlay(.ultraThinMaterial)
+            .fill(.secondaryAssitive)
         }
         .clipShape(RoundedRectangle(cornerRadius: 1000))
     }

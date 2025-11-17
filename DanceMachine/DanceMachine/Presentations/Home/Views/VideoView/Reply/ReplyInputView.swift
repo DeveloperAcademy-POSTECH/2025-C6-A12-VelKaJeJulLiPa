@@ -30,7 +30,9 @@ struct ReplyRecycle: View {
   
   var body: some View {
     VStack(spacing: 16) {
-      replyTo
+      if replyingTo != nil {
+        replyTo
+      }
       if !mM.taggedUsers.isEmpty {
         taggedView
       }

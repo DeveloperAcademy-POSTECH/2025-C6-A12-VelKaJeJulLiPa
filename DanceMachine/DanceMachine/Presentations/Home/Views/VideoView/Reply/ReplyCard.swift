@@ -52,9 +52,6 @@ struct ReplyCard: View {
       .padding(.top, 10)
     }
     .contentShape(Rectangle())
-    .onTapGesture {
-      replyAction()
-    }
     .onLongPressGesture(perform: {
       showMenu.toggle()
     })

@@ -44,7 +44,9 @@ struct FeedbackInPutView: View {
   var body: some View {
     VStack(spacing: 16) {
       topRow
-      feedbackImageView.frame(maxWidth: .infinity, alignment: .leading)
+      if feedbackDrawingImage != nil {
+        feedbackImageView.frame(maxWidth: .infinity, alignment: .leading)
+      }
       if !mM.taggedUsers.isEmpty {
         taggedView
       }

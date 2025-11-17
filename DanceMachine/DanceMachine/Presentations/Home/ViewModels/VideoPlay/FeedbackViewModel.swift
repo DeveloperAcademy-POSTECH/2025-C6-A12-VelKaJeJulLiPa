@@ -13,6 +13,8 @@ final class FeedbackViewModel {
   private let store = FirestoreManager.shared
   private let storage = FireStorageManager.shared
   
+  var isUploading: Bool = false
+  
   var isLoading: Bool = false
   var errorMsg: String? = nil
   
@@ -87,6 +89,7 @@ extension FeedbackViewModel {
     image: UIImage?
   ) async {
     await MainActor.run {
+      self.isUploading = true
       self.errorMsg = nil
     }
     
@@ -124,6 +127,7 @@ extension FeedbackViewModel {
       
       await MainActor.run {
         self.feedbacks.insert(feedback, at: 0)
+        self.isUploading = false
       }
       
     } catch {
@@ -144,6 +148,7 @@ extension FeedbackViewModel {
     image: UIImage?
   ) async {
     await MainActor.run {
+      self.isUploading = true
       self.errorMsg = nil
     }
     
@@ -182,6 +187,7 @@ extension FeedbackViewModel {
 
         self.isRecordingInterval = false
         self.intervalStartTime = nil
+        self.isUploading = false
       }
     } catch {
       await MainActor.run {

@@ -36,12 +36,13 @@ struct FeedbackCard: View {
   
   var body: some View {
     ZStack(alignment: .topTrailing) {
-      VStack(alignment: .leading, spacing: 8) {
+      VStack(alignment: .leading) {
         authorName
-        Spacer().frame(height: 2)
+        Spacer().frame(height: 16)
         timeStamp
-        Spacer().frame(height: 2)
+        Spacer().frame(height: 8)
         content
+        Spacer().frame(height: 16)
         feedbackImageView
         HStack {
           if showBottomReplyButton {
@@ -78,7 +79,7 @@ struct FeedbackCard: View {
         Spacer()
         Rectangle()
           .frame(height: 0.5)
-          .foregroundStyle(.labelAssitive)
+          .foregroundStyle(.strokeNormal)
       }
     }
     .contentShape(Rectangle())
@@ -116,12 +117,12 @@ struct FeedbackCard: View {
   private var timeStamp: some View {
     HStack {
       if let endTime = feedback.endTime {
-        TimestampButton(
+        TimestampInput(
           text: "\(feedback.startTime?.formattedTime() ?? "00:00") ~ \(endTime.formattedTime())",
           timeSeek: { timeSeek() }
         )
       } else {
-        TimestampButton(
+        TimestampInput(
           text: "\(feedback.startTime?.formattedTime() ?? "00:00")",
           timeSeek: { timeSeek() }
         )
