@@ -27,7 +27,7 @@ struct DanceMachineApp: App {
       await ListDataCacheManager.shared.cleanupOldCache()
       await VideoCacheManager.shared.cleanupOldCache()
     }
-  }
+    
     let tabBarAppearance = UITabBarAppearance()
     let itemAppearance = tabBarAppearance.stackedLayoutAppearance
     
