@@ -195,6 +195,17 @@ struct LandscapeView: View {
                 sliderValue = newValue
               }
             }
+            .onChange(of: isDragging) { _, newValue in
+              if newValue {
+                // 드래그 시작 시 자동 숨김 타이머 취소
+                vm.videoVM.autoHideControlsTask?.cancel()
+              } else {
+                // 드래그 종료 시 자동 숨김 타이머 재시작
+                if vm.videoVM.isPlaying {
+                  vm.videoVM.startAutoHideControls()
+                }
+              }
+            }
             .padding(.horizontal, showFeedbackPanel ? 0 : 44)
             .transition(.opacity)
           }
