@@ -54,9 +54,9 @@ struct FeedbackCard: View {
                 .foregroundStyle(.labelNormal)
             }
           }
+          Spacer()
+          replyButton
         }
-        Spacer()
-        replyButton
       }
     }
     .padding(.horizontal, 16)
