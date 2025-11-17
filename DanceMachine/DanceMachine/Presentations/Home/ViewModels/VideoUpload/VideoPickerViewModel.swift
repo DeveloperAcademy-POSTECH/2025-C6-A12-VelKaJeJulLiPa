@@ -297,13 +297,7 @@ extension VideoPickerViewModel {
       }
       try await group.waitForAll()
     }
-    // 썸네일 캐싱
-    if let thumb = thumbnailImage {
-      await dataCacheManager.cacheThumbnailForImage(
-        thumb,
-        videoId: videoId
-      )
-    }
+    
     return (video, track)
   }
   private func createTrack(
@@ -546,7 +540,7 @@ extension VideoPickerViewModel {
   // MARK: - 임시 파일
 
   private func copyToTemp(_ asset: AVURLAsset, videoId: String) async throws -> URL {
-    let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("\(videoId).mov")
+    let tempURL = FileManager.default.temporaryDirectory.appending(path: "\(videoId).mov", directoryHint: .notDirectory)
     if FileManager.default.fileExists(atPath: tempURL.path) {
       try? FileManager.default.removeItem(at: tempURL)
     }

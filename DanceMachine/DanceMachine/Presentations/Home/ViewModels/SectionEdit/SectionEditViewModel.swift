@@ -11,7 +11,7 @@ import Foundation
 final class SectionEditViewModel {
   private let store = FirestoreManager.shared
   private let storage = FireStorageManager.shared
-  private let dataCacheManager = VideoDataCacheManager.shared
+  private let dataCacheManager = ListDataCacheManager.shared
   
   var sections: [Section]
   var editingSectionid: String? = nil

@@ -23,6 +23,11 @@ struct DanceMachineApp: App {
   @StateObject private var inviteRouter = InviteRouter()
   
   init() {
+    Task {
+      await ListDataCacheManager.shared.cleanupOldCache()
+      await VideoCacheManager.shared.cleanupOldCache()
+    }
+  }
     let tabBarAppearance = UITabBarAppearance()
     let itemAppearance = tabBarAppearance.stackedLayoutAppearance
     
@@ -88,6 +93,12 @@ struct DanceMachineApp: App {
                           print("❌ 알림 읽음 처리 실패:", error.localizedDescription)
                         }
                       }
+                    }
+                  }
+                  if newPhase == .background {
+                    Task {
+                      await ListDataCacheManager.shared.cleanupOldCache()
+                      await VideoCacheManager.shared.cleanupOldCache()
                     }
                   }
                 }
