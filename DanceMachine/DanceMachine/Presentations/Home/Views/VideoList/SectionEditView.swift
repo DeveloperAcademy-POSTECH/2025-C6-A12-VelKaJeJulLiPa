@@ -12,11 +12,13 @@ struct SectionEditView: View {
   @State private var vm: SectionEditViewModel
   @State private var showToast: Bool = false
   @State private var showExitAlert: Bool = false
+  @State private var showDeleteAlert: Bool = false
+  @State private var sectionToDelete: Section? = nil
 
   let tracksId: String
   let trackName: String
   let sectionId: String
-  
+
   init(
     sections: [Section],
     tracksId: String,
@@ -29,30 +31,33 @@ struct SectionEditView: View {
     self.sectionId = sectionId
   }
   
+  var filteredSection: [Section] {
+    vm.sections.filter { $0.sectionId != sectionId }
+  }
   
   var body: some View {
-    VStack {
-      text
-      Spacer().frame(height: 15)
-      listView
+    VStack(spacing: 0) {
+      if filteredSection.isEmpty {
+        emptyView
+      } else {
+        listView.padding(.top, 16)
+      }
     }
     .onReceive(NotificationCenter.default.publisher(for: .showEditWarningToast, object: nil), perform: { _ in
       self.showToast = true
     })
-    .padding(.top, 16)
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .toolbar(.hidden, for: .tabBar)
     .padding(.horizontal, 16)
     .background(.backgroundNormal)
+    .safeAreaInset(edge: .top, content: {
+      text.padding(.horizontal, 16)
+    })
     .safeAreaInset(edge: .bottom) {
-      Group {
-        if vm.editingSectionid == nil {
-          addButton
-        } else {
-          confirmButton
-        }
+      if !filteredSection.isEmpty {
+        confirmButton
+          .padding(.horizontal, 16)
       }
-      .padding(.horizontal, 16)
     }
     .toolbarTitleDisplayMode(.inline)
     .toolbar {
@@ -86,6 +91,46 @@ struct SectionEditView: View {
         isPresented: $showExitAlert,
         onConfirm: { router.pop() }
       )
+      .alert(
+        "\(sectionToDelete?.sectionTitle ?? "파트")을/를 삭제하시겠어요?",
+        isPresented: $showDeleteAlert
+      ) {
+        Button("취소", role: .cancel) {
+          sectionToDelete = nil
+        }
+        Button("삭제", role: .destructive) {
+          if let section = sectionToDelete {
+            Task {
+              await vm.deleteSection(tracksId: tracksId, section: section)
+              sectionToDelete = nil
+            }
+          }
+        }
+      } message: {
+        Text("삭제하면 복구할 수 없습니다.")
+      }
+  }
+  
+  private var emptyView: some View {
+    GeometryReader { geometry in
+      VStack {
+        Button {
+          vm.addNewSection()
+        } label: {
+          VStack(spacing: 24) {
+            Image(.sectionAdd)
+            Text("파트를 추가해보세요.")
+              .font(.headline2Medium)
+              .foregroundStyle(.secondaryAssitive)
+          }
+        }
+      }
+      .frame(maxWidth: .infinity)
+      .position(
+        x: geometry.size.width / 2,
+        y: geometry.size.height / 2 - 32
+      )
+    }
   }
   
   private var text: some View {
@@ -94,23 +139,30 @@ struct SectionEditView: View {
         .font(.headline2Medium)
         .foregroundStyle(.labelAssitive)
       Spacer()
+      Button {
+        vm.addNewSection()
+      } label: {
+        HStack(spacing: 4) {
+          Image(systemName: "plus")
+            .font(.headline2SemiBold)
+            .foregroundStyle(.secondaryNormal)
+          Text("추가")
+            .font(.headline2SemiBold)
+            .foregroundStyle(.secondaryNormal)
+        }
+      }
     }
+    .padding(.top, 32)
   }
   
   private var listView: some View {
-    ScrollView {
-      ForEach(vm.sections, id: \.sectionId) { section in
+    List {
+      ForEach(filteredSection, id: \.sectionId) { section in
         SectionEditRow(
           tracksId: tracksId,
           section: section,
           isEditing: vm.editingSectionid == section.sectionId,
           onEditStart: { vm.startEdit(section: section) },
-          sheetAction: {
-            Task {
-              await vm.deleteSection(tracksId: tracksId, section: section)
-              SectionUpdateManager.shared.onSectionDeleted?(section.sectionId)
-            }
-          },
           onDeleteIfEmpty: {
             Task {
               await vm.deleteSection(tracksId: tracksId, section: section)
@@ -120,25 +172,34 @@ struct SectionEditView: View {
           editText: $vm.editText,
           showToast: $showToast
         )
-        .disabled(section.sectionId == sectionId)
-        .opacity(section.sectionId == sectionId ? 0.5 : 1.0)
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
+        .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+        .buttonStyle(.plain)
+        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+          Button(role: .destructive) {
+            sectionToDelete = section
+            showDeleteAlert = true
+          } label: {
+            Label("삭제", systemImage: "trash")
+          }
+
+          Button {
+            vm.startEdit(section: section)
+          } label: {
+            Label("수정", systemImage: "pencil")
+          }
+          .tint(Color.fillAssitive)
+        }
       }
     }
-  }
-  // 평상시 버튼
-  private var addButton: some View {
-    ActionButton(
-      title: "파트 추가하기",
-      color: .secondaryStrong,
-      height: 47,
-      action: { vm.addNewSection() }
-    )
-    .padding(.bottom, 8)
+    .listStyle(.plain)
+    .scrollContentBackground(.hidden)
   }
   
   private var confirmButton: some View {
-    RoundedRectangle(cornerRadius: 5)
-      .fill((!vm.editText.isEmpty && vm.editText != "일반") ? .secondaryStrong : .fillAssitive)
+    RoundedRectangle(cornerRadius: 15)
+      .fill(!vm.editText.isEmpty ? .secondaryStrong : .fillAssitive)
       .frame(maxWidth: .infinity)
       .frame(height: 47)
       .overlay {
@@ -147,7 +208,7 @@ struct SectionEditView: View {
           .foregroundStyle(vm.editText.isEmpty ? .labelAssitive : .labelStrong)
       }
       .onTapGesture {
-        if !vm.editText.isEmpty && vm.editText != "일반" {
+        if !vm.editText.isEmpty {
           if let sectionId = vm.editingSectionid,
              let section = vm.sections.first(where: { $0.sectionId == sectionId }) {
             Task {
