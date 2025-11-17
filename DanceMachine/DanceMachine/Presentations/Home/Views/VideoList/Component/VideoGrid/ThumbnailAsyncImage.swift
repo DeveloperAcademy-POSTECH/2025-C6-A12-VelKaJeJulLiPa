@@ -44,14 +44,15 @@ struct ThumbnailAsyncImage: View {
   
   private var defaultImageView: some View {
     Rectangle()
+      .fill(.fillNormal)
       .aspectRatio(contentMode: .fill)
       .frame(width: size, height: height)
       .clipped()
       .clipShape(RoundedCorner(radius: 10, corners: [.topLeft, .topRight]))
       .overlay {
-        Image(systemName: "photo")
-          .font(.title3)
-          .foregroundStyle(.gray)
+        Image(systemName: "photo.trianglebadge.exclamationmark")
+          .font(.system(size: 35))
+          .foregroundStyle(.fillAssitive)
       }
   }
 }
