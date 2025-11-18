@@ -46,7 +46,7 @@ struct ReplyRecycle: View {
       }
       CustomTextField(
         content: $content,
-        placeHolder: mM.taggedUsers.isEmpty ? "@팀원 태그" : "답글을 입력해주세요.",
+        placeHolder: "팀원을 태그하고 피드백을 입력하세요.",
         submitAction: {
           var taggedIds = Set(mM.taggedUsers.map { $0.userId })
           if let replyToId = replyingTo?.userId {

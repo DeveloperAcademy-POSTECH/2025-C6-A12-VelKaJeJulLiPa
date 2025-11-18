@@ -140,7 +140,7 @@ struct LandscapeReplyView: View {
       teamMembers: teamMembers,
       filteredMembers: filteredMembers,
       showMentionPicker: mM.showPicker,
-      placeholder: mM.taggedUsers.isEmpty ? "@팀원 태그" : "답글을 입력해주세요.",
+      placeholder: "팀원을 태그하고 피드백을 입력하세요.",
       onSubmit: {
         onReplySubmit(content, mM.taggedUsers.map { $0.userId })
         self.content = ""
