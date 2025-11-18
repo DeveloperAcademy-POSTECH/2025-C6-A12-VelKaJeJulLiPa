@@ -34,7 +34,14 @@ struct ReplyRecycle: View {
         replyTo
       }
       if !mM.taggedUsers.isEmpty {
-        taggedView
+        TaggedUsersView(
+          taggedUsers: mM.taggedUsers,
+          teamMembers: teamMembers,
+          onRemove: { userId in
+            mM.taggedUsers.removeAll { $0.userId == userId }
+          },
+          onRemoveAll: { mM.taggedUsers.removeAll() }
+        )
       }
       CustomTextField(
         content: $content,
@@ -96,54 +103,6 @@ struct ReplyRecycle: View {
       Image(systemName: "xmark")
         .font(.system(size: 17))
         .foregroundStyle(.labelNormal)
-    }
-  }
-  // MARK: 태그된 사용자 표시
-  private var taggedView: some View {
-    let isAllTagged = !teamMembers.isEmpty && mM.taggedUsers.count == teamMembers.count
-
-    return ScrollView(.horizontal, showsIndicators: false) {
-      HStack(spacing: 4) {
-        if isAllTagged {
-          // @All 태그 표시
-          HStack(spacing: 0) {
-            Text("@")
-              .font(.headline2Medium)
-              .foregroundStyle(.accentBlueStrong)
-            Text("All")
-              .font(.headline2Medium)
-              .foregroundStyle(.accentBlueStrong)
-            Button {
-              mM.taggedUsers.removeAll()
-            } label: {
-              Image(systemName: "xmark.circle.fill")
-                .font(.system(size: 16))
-                .foregroundStyle(Color.labelAssitive)
-            }
-          }
-          .animation(nil, value: mM.taggedUsers)
-        } else {
-          // 개별 태그 표시
-          ForEach(mM.taggedUsers, id: \.userId) { user in
-            HStack(spacing: 0) {
-              Text("@")
-                .font(.headline2Medium)
-                .foregroundStyle(.accentBlueStrong)
-              Text(user.name)
-                .font(.headline2Medium)
-                .foregroundStyle(.accentBlueStrong)
-              Button {
-                mM.taggedUsers.removeAll { $0.userId == user.userId }
-              } label: {
-                Image(systemName: "xmark.circle.fill")
-                  .font(.system(size: 16))
-                  .foregroundStyle(Color.labelAssitive)
-              }
-            }
-            .animation(nil, value: mM.taggedUsers)
-          }
-        }
-      }
     }
   }
 }

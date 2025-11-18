@@ -22,7 +22,7 @@ struct TaggedUsersView: View {
       HStack(spacing: 4) {
         if isAllTagged {
           // @All 태그 표시
-          HStack(spacing: 4) {
+          HStack(spacing: 0) {
             Text("@")
               .font(.headline2Medium)
               .foregroundStyle(.accentBlueStrong)
@@ -41,7 +41,7 @@ struct TaggedUsersView: View {
         } else {
           // 개별 태그 표시
           ForEach(taggedUsers, id: \.userId) { user in
-            HStack(spacing: 3) {
+            HStack(spacing: 0) {
               Text("@")
                 .font(.headline2Medium)
                 .foregroundStyle(.accentBlueStrong)
@@ -61,6 +61,5 @@ struct TaggedUsersView: View {
         }
       }
     }
-    .padding(.vertical, 8)
   }
 }

@@ -41,10 +41,11 @@ final class VideoViewModel {
   var loadingProgress: Double = 0.0
   var isLoading: Bool = false
   var isDownloading: Bool = false
-  
+  var showDownloadError: Bool = false
+
   // 배속 변수
   var playbackSpeed: Float = 1.0
-  
+
   var notiFalseAlert: Bool = false
 }
 
@@ -66,17 +67,19 @@ extension VideoViewModel {
     
     do {
       if let cachedURL = await cacheManager.getCachedVideoURL(for: videoId) {
-        print("캐시에서 비디오 로드0")
+        print("캐시에서 비디오 로드")
         await setupPlayerWithURL(cachedURL)
         await MainActor.run {
           self.isLoading = false
+          self.showDownloadError = false
         }
         return
       }
-      
+
       print("네트워크에서 다운로드 시작")
       await MainActor.run {
         self.isDownloading = true
+        self.showDownloadError = false
       }
       let cachedURL = try await cacheManager.downloadAndCacheVideo(
         from: videoURL,
@@ -85,19 +88,37 @@ extension VideoViewModel {
             self?.loadingProgress = progress
           }
         }
-      
+
       await setupPlayerWithURL(cachedURL)
-      
+
       await MainActor.run {
         self.isLoading = false
         self.isDownloading = false
+        self.showDownloadError = false
       }
-      
+
     } catch {
       print("비디오 로드 실패: \(error)")
-      throw error
+      await MainActor.run {
+        self.isLoading = false
+        self.isDownloading = false
+        self.showDownloadError = true
+      }
     }
   }
+
+  // MARK: 다운로드 재시도
+  func retryDownload(from videoURL: String, videoId: String) async {
+    await MainActor.run {
+      self.showDownloadError = false
+    }
+    do {
+      try await setupPlayer(from: videoURL, videoId: videoId)
+    } catch {
+      print("재시도 실패: \(error)")
+    }
+  }
+
   // MARK: URL로 플레이어 설정
   private func setupPlayerWithURL(_ url: URL) async {
     let playerItem = AVPlayerItem(url: url)

@@ -133,6 +133,7 @@ struct VideoView: View {
                 proxy: proxy,
                 videoTitle: videoTitle,
                 videoId: videoId,
+                videoURL: videoURL,
                 showFeedbackPaperDrawingView: $showFeedbackPaperDrawingView,
                 capturedImage: $capturedImage,
                 editedOverlayImage: $editedOverlayImage,

@@ -34,6 +34,7 @@ struct PortraitView: View {
   let proxy: GeometryProxy
   let videoTitle: String
   let videoId: String
+  let videoURL: String
   
   /// =================================================
   /// 드로잉 관련
@@ -200,7 +201,21 @@ struct PortraitView: View {
           }
       )
       .overlay {
-        if vm.videoVM.isLoading {
+        if vm.videoVM.showDownloadError {
+          ErrorStateView(
+            message: "동영상 불러오기를 실패했습니다.\n네트워크를 확인해주세요.",
+            isAnimating: true,
+            onRetry: {
+              Task {
+                await vm.videoVM.retryDownload(
+                  from: videoURL,
+                  videoId: videoId
+                )
+              }
+            }
+          )
+          .background(Color.backgroundElevated)
+        } else if vm.videoVM.isLoading {
           ZStack {
             Color.backgroundElevated
             if vm.videoVM.isDownloading {
