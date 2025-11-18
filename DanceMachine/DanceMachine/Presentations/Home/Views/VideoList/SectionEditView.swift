@@ -14,11 +14,13 @@ struct SectionEditView: View {
   @State private var showExitAlert: Bool = false
   @State private var showDeleteAlert: Bool = false
   @State private var sectionToDelete: Section? = nil
-
+  
+  @State private var showCRUDToast: Bool = false
+  
   let tracksId: String
   let trackName: String
   let sectionId: String
-
+  
   init(
     sections: [Section],
     tracksId: String,
@@ -58,7 +60,7 @@ struct SectionEditView: View {
     })
     .safeAreaInset(edge: .bottom) {
       if !filteredSection.isEmpty {
-        confirmButton
+        bottomButton
           .padding(.horizontal, 16)
       }
     }
@@ -94,6 +96,15 @@ struct SectionEditView: View {
         isPresented: $showExitAlert,
         onConfirm: { router.pop() }
       )
+      .toast(
+        isPresented: $showCRUDToast,
+        duration: 2,
+        position: .bottom,
+        bottomPadding: 63,
+        content: {
+          ToastView(text: vm.errorMsg, icon: .warning)
+        }
+      )
       .alert(
         "\(sectionToDelete?.sectionTitle ?? "파트")을/를 삭제하시겠어요?",
         isPresented: $showDeleteAlert
@@ -104,8 +115,13 @@ struct SectionEditView: View {
         Button("삭제", role: .destructive) {
           if let section = sectionToDelete {
             Task {
-              await vm.deleteSection(tracksId: tracksId, section: section)
-              sectionToDelete = nil
+              do {
+                try await vm.deleteSection(tracksId: tracksId, section: section)
+                sectionToDelete = nil
+              } catch {
+                // ViewModel에서 이미 isLoading = false 처리됨
+                // 에러 메시지는 notification으로 전달됨
+              }
             }
           }
         }
@@ -168,8 +184,8 @@ struct SectionEditView: View {
           onEditStart: { vm.startEdit(section: section) },
           onDeleteIfEmpty: {
             Task {
-              await vm.deleteSection(tracksId: tracksId, section: section)
-              vm.editingSectionid = nil
+              try await vm.deleteSection(tracksId: tracksId, section: section)
+                vm.editingSectionid = nil
             }
           },
           editText: $vm.editText,
@@ -186,7 +202,7 @@ struct SectionEditView: View {
           } label: {
             Label("삭제", systemImage: "trash")
           }
-
+          
           Button {
             vm.startEdit(section: section)
           } label: {
@@ -200,27 +216,22 @@ struct SectionEditView: View {
     .scrollContentBackground(.hidden)
   }
   
-  private var confirmButton: some View {
-    RoundedRectangle(cornerRadius: 15)
-      .fill(!vm.editText.isEmpty ? .secondaryStrong : .fillAssitive)
-      .frame(maxWidth: .infinity)
-      .frame(height: 47)
-      .overlay {
-        Text("확인")
-          .font(.headline2Medium)
-          .foregroundStyle(vm.editText.isEmpty ? .labelAssitive : .labelStrong)
-      }
-      .onTapGesture {
-        if !vm.editText.isEmpty {
-          if let sectionId = vm.editingSectionid,
-             let section = vm.sections.first(where: { $0.sectionId == sectionId }) {
-            Task {
-              await vm.updateSection(tracksId: tracksId, section: section)
-            }
-          }
+  private var bottomButton: some View {
+    ActionButton(
+      title: "확인",
+      color: vm.editText.isEmpty || vm.isLoading ? .fillAssitive : .secondaryStrong,
+      height: 47,
+      isEnabled: !vm.editText.isEmpty || vm.isLoading,
+      isLoading: vm.isLoading
+    ) {
+      if let sectionId = vm.editingSectionid,
+         let section = vm.sections.first(where: { $0.sectionId == sectionId }) {
+        Task {
+          await vm.updateSection(tracksId: tracksId, section: section)
         }
       }
-      .padding(.bottom, 8)
+    }
+    .padding(.bottom, 8)
   }
 }
 
