@@ -191,7 +191,7 @@ struct ReplySheet: View {
       ToolbarLeadingBackButton(icon: .xmark)
       ToolbarCenterTitle(text: "댓글")
     }
-    .background(Color.fillNormal)
+    .background(Color.backgroundNormal)
   }
   
   private var replyList: some View {
