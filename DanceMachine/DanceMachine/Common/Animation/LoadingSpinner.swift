@@ -12,6 +12,9 @@ struct LoadingSpinner: View {
     var body: some View {
       LottieView(animation: .named("spinnerPurple"))
         .playing(loopMode: .loop)
+        .onAppear {
+          print("Loding 중 Spinner 실행")
+        }
     }
 }
 
