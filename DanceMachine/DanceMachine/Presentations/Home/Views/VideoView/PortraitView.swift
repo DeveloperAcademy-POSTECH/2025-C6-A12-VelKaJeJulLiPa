@@ -200,21 +200,16 @@ struct PortraitView: View {
             }
           }
       )
-      .overlay {
+      .overlay(alignment: .center) {
         if vm.videoVM.showDownloadError {
-          ErrorStateView(
-            message: "동영상 불러오기를 실패했습니다.\n네트워크를 확인해주세요.",
-            isAnimating: true,
-            onRetry: {
-              Task {
-                await vm.videoVM.retryDownload(
-                  from: videoURL,
-                  videoId: videoId
-                )
-              }
+          VideoDownloadError {
+            Task {
+              await vm.videoVM.retryDownload(
+                from: videoURL,
+                videoId: videoId
+              )
             }
-          )
-          .background(Color.backgroundElevated)
+          }
         } else if vm.videoVM.isLoading {
           ZStack {
             Color.backgroundElevated
