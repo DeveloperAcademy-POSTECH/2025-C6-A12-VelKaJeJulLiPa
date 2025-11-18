@@ -13,11 +13,22 @@ struct ToastView: View {
   var icon: ToastIcon
   
   var body: some View {
-    HStack {
-      
-      Image(systemName: icon.icon)
-        .foregroundStyle(icon.iconColor)
-      
+    HStack(spacing: 8) {
+
+      Group {
+        if icon == .warning {
+          Image(systemName: icon.icon)
+            .font(.system(size: 19))
+            .foregroundStyle(icon.iconColor)
+            .symbolEffect(.wiggle, options: .repeating)
+        } else {
+            Image(systemName: icon.icon)
+              .font(.system(size: 19))
+              .foregroundStyle(icon.iconColor)
+              .symbolEffect(.bounce.up.byLayer, options: .repeat(2))
+        }
+      }
+
       Text(text)
         .font(.headline2Medium)
         .foregroundStyle(.labelStrong)
@@ -32,6 +43,11 @@ struct ToastView: View {
       RoundedRectangle(cornerRadius: 10)
         .fill(Color.fillAssitive)
     )
+    .onAppear {
+      // 햅틱 피드백
+      let generator = UINotificationFeedbackGenerator()
+      generator.notificationOccurred(icon == .warning ? .warning : .success)
+    }
   }
 }
 
