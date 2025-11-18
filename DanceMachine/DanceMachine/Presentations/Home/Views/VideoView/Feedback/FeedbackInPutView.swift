@@ -40,6 +40,8 @@ struct FeedbackInPutView: View {
     }
   }
   
+  @State private var viewHeight: CGFloat = 0
+
   var body: some View {
     VStack(spacing: 16) {
       topRow
@@ -73,6 +75,16 @@ struct FeedbackInPutView: View {
     }
     .padding([.vertical, .horizontal], 16)
     .background(
+      GeometryReader { geometry in
+        Color.clear.onAppear {
+          viewHeight = geometry.size.height
+        }
+        .onChange(of: geometry.size.height) { _, newHeight in
+          viewHeight = newHeight
+        }
+      }
+    )
+    .background(
       RoundedRectangle(cornerRadius: 20)
         .fill(Color.backgroundElevated)
     )
@@ -91,7 +103,7 @@ struct FeedbackInPutView: View {
           },
           taggedUsers: mM.taggedUsers
         )
-        .padding(.bottom, 65)
+        .padding(.bottom, viewHeight + 5)
       }
     }
     .animation(.easeInOut(duration: 0.2), value: mM.showPicker)
@@ -160,45 +172,53 @@ struct FeedbackInPutView: View {
   }
 }
 
-//#Preview {
-//  @Previewable @State var taggedUsers: [User] = .init(
-//    [User(
-//      userId: "1",
-//      email: "",
-//      name: "서영",
-//      loginType: LoginType.apple,
-//      fcmToken: "",
-//      termsAgreed: true,
-//      privacyAgreed: true
-//    ),
-//     User(
-//      userId: "2",
-//      email: "",
-//      name: "카단",
-//      loginType: LoginType.apple,
-//      fcmToken: "",
-//      termsAgreed: true,
-//      privacyAgreed: true
-//     ),
-//     User(
-//      userId: "3",
-//      email: "",
-//      name: "벨코",
-//      loginType: LoginType.apple,
-//      fcmToken: "",
-//      termsAgreed: true,
-//      privacyAgreed: true
-//     )]
-//  )
-//  FeedbackInPutView(
-//    teamMembers: taggedUsers,
-//    feedbackType: .interval,
-//    currentTime: 5.111111,
-//    startTime: 0.2,
-//    onSubmit: {_, _ in },
-//    refresh: {},
-//    timeSeek: {},
-//    drawingButtonTapped: {},
-//    feedbackDrawingImage: .constant(nil)
-//  )
-//}
+#Preview {
+    @Previewable @State var feedbackDrawingImage: UIImage? = nil
+    @Previewable @State var showImageFull: Bool = false
+    @Previewable @State var taggedUsers: [User] = [
+        User(
+          userId: "1",
+          email: "",
+          name: "서영",
+          loginType: .apple,
+          fcmToken: "",
+          termsAgreed: true,
+          privacyAgreed: true
+        ),
+        User(
+          userId: "2",
+          email: "",
+          name: "카단",
+          loginType: .apple,
+          fcmToken: "",
+          termsAgreed: true,
+          privacyAgreed: true
+        ),
+        User(
+          userId: "3",
+          email: "",
+          name: "벨코",
+          loginType: .apple,
+          fcmToken: "",
+          termsAgreed: true,
+          privacyAgreed: true
+        )
+    ]
+
+   @Namespace var imageNamespace
+
+    FeedbackInPutView(
+        teamMembers: taggedUsers,
+        feedbackType: .interval,
+        currentTime: 5.111111,
+        startTime: 0.2,
+        onSubmit: { _, _ in },
+        refresh: {},
+        timeSeek: {},
+        drawingButtonTapped: {},
+        feedbackDrawingImage: $feedbackDrawingImage,
+        imageNamespace: imageNamespace,
+        showImageFull: $showImageFull
+    )
+    .environmentObject(MainRouter())   // 필요하면 유지
+}

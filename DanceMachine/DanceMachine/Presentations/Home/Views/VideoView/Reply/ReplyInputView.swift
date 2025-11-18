@@ -17,8 +17,9 @@ struct ReplyRecycle: View {
   
   @State private var content: String = ""
   @State private var mentionQuery: String = ""
-  
-  
+  @State private var viewHeight: CGFloat = 0
+
+
   private var filteredMembers: [User] {
     if mM.mentionQuery.isEmpty {
       return teamMembers
@@ -27,7 +28,7 @@ struct ReplyRecycle: View {
       $0.name.lowercased().contains(mM.mentionQuery.lowercased())
     }
   }
-  
+
   var body: some View {
     VStack(spacing: 16) {
       if replyingTo != nil {
@@ -63,6 +64,16 @@ struct ReplyRecycle: View {
     }
     .padding([.vertical, .horizontal], 16)
     .background(
+      GeometryReader { geometry in
+        Color.clear.onAppear {
+          viewHeight = geometry.size.height
+        }
+        .onChange(of: geometry.size.height) { _, newHeight in
+          viewHeight = newHeight
+        }
+      }
+    )
+    .background(
       RoundedRectangle(cornerRadius: 20)
         .fill(Color.backgroundElevated)
     )
@@ -81,7 +92,7 @@ struct ReplyRecycle: View {
           },
           taggedUsers: mM.taggedUsers
         )
-        .padding(.bottom, 65)
+        .padding(.bottom, viewHeight + 5)
       }
     }
   }
