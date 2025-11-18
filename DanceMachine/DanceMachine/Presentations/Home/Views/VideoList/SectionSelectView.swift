@@ -66,10 +66,6 @@ struct SectionSelectView: View {
       isPresented: $showExitAlert,
       onConfirm: { dismiss() }
     )
-//    .alert(vm.errorMsg ?? "알 수 없는 오류가 발생했습니다.",
-//           isPresented: $vm.showAlert) {
-//      Button("확인") { dismiss() }
-//    }
   }
   
   private var confirmButton: some View {

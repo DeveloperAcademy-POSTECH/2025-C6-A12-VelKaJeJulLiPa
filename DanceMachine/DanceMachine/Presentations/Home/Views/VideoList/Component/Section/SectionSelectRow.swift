@@ -13,7 +13,8 @@ struct SectionSelectRow: View {
   
   var body: some View {
     RoundedRectangle(cornerRadius: 10)
-      .fill(isSelected ? .fillAssitive : Color.clear)
+      .fill(isSelected ? .fillAssitive : .fillSubtle)
+      .strokeBorder(isSelected ? Color.secondaryNormal : Color.clear, lineWidth: 1)
       .frame(maxWidth: .infinity)
       .frame(height: 43)
       .overlay {
@@ -30,7 +31,7 @@ struct SectionSelectRow: View {
       Spacer()
       if isSelected {
         Image(systemName: "checkmark.circle.fill")
-          .foregroundStyle(.secondaryAssitive)
+          .foregroundStyle(.secondaryNormal)
       }
     }
     .padding(.horizontal, 16)
