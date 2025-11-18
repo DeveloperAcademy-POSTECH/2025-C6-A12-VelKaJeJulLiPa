@@ -68,7 +68,7 @@ struct InboxView: View {
                       )
                     }
                   }
-                  // 가져온 알림 중에 마지막 알림일 떄, 다음 알림 목록 정보 로드 트리거
+                // 가져온 알림 중에 마지막 알림일 떄, 다음 알림 목록 정보 로드 트리거
                   .task(id: notification.notificationId) {
                     if notification == viewModel.inboxNotifications.last {
                       await viewModel.loadNotifications()
@@ -77,15 +77,15 @@ struct InboxView: View {
               }
             }
           }
+          .overlay(alignment: .bottom) {
+            if viewModel.isPaginationLoading {
+              LoadingSpinner()
+                .frame(width: 28, height: 28)
+                .padding(.bottom, 19)
+            }
+          }
           .refreshable {
             await viewModel.refresh()
-          }
-          
-          if !viewModel.isRefreshing && viewModel.isLoading {
-            LoadingSpinner()
-              .frame(maxWidth: 28, maxHeight: 28, alignment: .center)
-              .padding(.top, 7)
-              .padding(.bottom, 19)
           }
         }
       }
