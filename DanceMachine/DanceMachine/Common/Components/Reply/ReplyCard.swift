@@ -78,18 +78,27 @@ struct ReplyCard: View {
   }
   
   private var taggedUserRow: some View {
-    HStack {
-      if !taggedUsers.isEmpty {
-        ForEach(taggedUsers, id: \.userId) { user in
-          Text("@\(user.name)")
-            .font(.body1Medium)
-            .foregroundStyle(.accentBlueStrong)
-        }
+    Text(buildAttributedString())
+      .font(.body1Medium)
+      .frame(maxWidth: .infinity, alignment: .leading)
+  }
+
+  private func buildAttributedString() -> AttributedString {
+    var result = AttributedString()
+
+    if !taggedUsers.isEmpty {
+      for user in taggedUsers {
+        var tag = AttributedString("@\(user.name) ")
+        tag.foregroundColor = .accentBlueStrong
+        result.append(tag)
       }
-      Text(reply.content)
-        .font(.body1Medium)
-        .foregroundStyle(.labelStrong)
     }
+
+    var content = AttributedString(reply.content)
+    content.foregroundColor = .labelStrong
+    result.append(content)
+
+    return result
   }
   
   private var replyButton: some View {
@@ -128,7 +137,7 @@ struct ReplyCard: View {
       replyId: "",
       feedbackId: "",
       authorId: "222",
-      content: "ㅇㅋㅇㅋ",
+      content: "안녕하세용안녕하세요안녕ddd",
       taggedUserIds: ["dddd"]
     ),
     authorUser: User(
