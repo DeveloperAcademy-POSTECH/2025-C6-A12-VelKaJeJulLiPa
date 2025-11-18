@@ -18,6 +18,7 @@ struct ActionButton: View {
   let color: Color
   let height: CGFloat
   var isEnabled: Bool = true
+  var isLoading: Bool = false
   let action: () -> Void
   
   init(
@@ -25,12 +26,14 @@ struct ActionButton: View {
     color: Color,
     height: CGFloat,
     isEnabled: Bool = true,
+    isLoading: Bool = false,
     action: @escaping () -> Void
   ) {
     self.title = title
     self.color = color
     self.height = height
     self.isEnabled = isEnabled
+    self.isLoading = isLoading
     self.action = action
   }
   
@@ -41,13 +44,18 @@ struct ActionButton: View {
       RoundedRectangle(cornerRadius: 15)
         .fill(isEnabled ? color : .fillAssitive)
         .overlay {
-          Text(title)
-            .font(.headline2Medium)
-            .foregroundStyle(isEnabled ? .labelStrong : .labelAssitive)
+          if isLoading {
+            LoadingSpinner()
+              .frame(width: 28, height: 28)
+          } else {
+            Text(title)
+              .font(.headline2Medium)
+              .foregroundStyle(isEnabled ? .labelStrong : .labelAssitive)
+          }
         }
+        .frame(maxWidth: .infinity)
+        .frame(height: height)
     }
-    .frame(maxWidth: .infinity)
-    .frame(height: height)
     .disabled(!isEnabled)
   }
 }
@@ -56,11 +64,19 @@ struct ActionButton: View {
   VStack {
     ActionButton(
       title: "메인 액션",
-      color: Color.blue,
-      height: 47
-    ) {
+      color: Color.secondaryNormal,
+      height: 47,
+      isEnabled: true,
+      isLoading: false
+    ) { }
       
-    }
+    ActionButton(
+      title: "메인 액션",
+      color: Color.fillAssitive,
+      height: 47,
+      isEnabled: false,
+      isLoading: true
+    ) { }
   }
   .padding(.horizontal, 16)
 }

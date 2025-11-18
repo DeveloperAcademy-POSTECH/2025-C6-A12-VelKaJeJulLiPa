@@ -11,17 +11,15 @@ struct TeamMemberRow: View {
   let member: TeamMember
   
   var body: some View {
-    HStack(alignment: .center, spacing: 40) { //FIXME: spacing 간격 수정
+    HStack(alignment: .center, spacing: 53) {
       Image(member.imageName)
-        .resizable()
-        .scaledToFill()
-        .frame(width: 100, height: 100) //FIXME: 이미지 크기 수정
-        .background(member.backgroundColor) //FIXME: 이미지 배경색 확인
+        .frame(width: 85, height: 85)
+        .background(Color.secondaryAssitive)
         .clipShape(Circle())
       
-      VStack(alignment: .leading, spacing: 8) { //FIXME: spacing 간격 수정
+      VStack(alignment: .leading, spacing: 7) {
         // 이름
-        Text("\(member.nameKor) / \(member.nameEng)")
+        Text("\(member.nameKor)/\(member.nameEng)")
           .font(.heading1SemiBold)
           .foregroundStyle(.secondaryNormal)
         
@@ -29,13 +27,13 @@ struct TeamMemberRow: View {
         Text(member.role)
           .font(.heading1SemiBold)
           .foregroundStyle(.labelNormal)
-        
+          .fixedSize(horizontal: true, vertical: false)
       }
-      
       Spacer()
     }
-    .padding(.vertical, 16) //FIMXE: 패딩 수정
-    .padding(.horizontal, 26) //FIMXE: 패딩 수정
+    .padding(.top, 16)
+    .padding(.bottom, 22)
+    .padding(.horizontal, 26)
   }
 }
 
@@ -44,10 +42,12 @@ struct TeamMemberRow: View {
   ZStack {
     Color.backgroundNormal.ignoresSafeArea()
     VStack(spacing: 0) {
+      TeamMemberRow(member: .velko)
+      TeamMemberRow(member: .kadan)
       TeamMemberRow(member: .paidion)
+      TeamMemberRow(member: .jacob)
       TeamMemberRow(member: .julianne)
       TeamMemberRow(member: .libby)
     }
   }
-  
 }

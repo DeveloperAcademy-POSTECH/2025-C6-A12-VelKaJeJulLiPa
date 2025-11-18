@@ -12,12 +12,13 @@ struct EditNameView: View {
   
   @State private var viewModel = EditNameViewModel()
   @State private var editedName = ""
-  @State private var showToastMessage: Bool = false
+  @State private var isInvalid : Bool = false
+  @State private var showInputLimittMessage: Bool = false
   @State private var isAlertPresented: Bool = false
   @FocusState private var isFocused: Bool
   private var isButtonEnabled: Bool {
     editedName
-      .trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || editedName == viewModel.myName ? false : true
+      .trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || editedName == viewModel.myName || viewModel.isLoading ? false : true
   }
   
   let placeholder = "이름을 입력하세요"
@@ -26,7 +27,7 @@ struct EditNameView: View {
   
   var displayText: String { editedName.isEmpty ? placeholder : editedName }
   var underlineColor: Color {
-    displayText.count >= maxLength ? Color.accentRedNormal : isFocused ? Color.secondaryNormal : Color.labelNormal
+    isInvalid ? Color.accentRedNormal : isFocused ? Color.secondaryNormal : Color.labelNormal
   }
   var underlineWidth: CGFloat {
     let textCount = displayText.count
@@ -68,16 +69,25 @@ struct EditNameView: View {
         .onChange(of: editedName) { oldValue, newValue in
           var updated = newValue
           
-          if updated.first == " " {
-            updated = String(updated.drop(while: { $0 == " " }))
+          // 1) 앞 공백 제거
+          while updated.first == " " {
+            updated.removeFirst()
           }
           
+          // 2) 길이 초과 처리
           if updated.count > maxLength {
             updated = String(updated.prefix(maxLength))
-            showToastMessage = true
-            HapticManager.shared.trigger(.medium)
+            
+            Task { @MainActor in
+              isInvalid = true
+              showInputLimittMessage = true
+              HapticManager.shared.trigger(.medium)
+            }
+          } else {
+            isInvalid = false
           }
           
+          // 3) 최종 업데이트
           if updated != editedName {
             editedName = updated
           }
@@ -92,7 +102,7 @@ struct EditNameView: View {
       editedName = viewModel.myName
     }
     .toast(
-      isPresented: $showToastMessage,
+      isPresented: $showInputLimittMessage,
       duration: 2,
       position: .bottom,
       bottomPadding: 16 + 47 + 16 // 아래 빈공간 + 버튼 크기 + 윗 빈공간
@@ -103,7 +113,15 @@ struct EditNameView: View {
       isPresented: $isAlertPresented,
       onConfirm: { router.pop() }
     )
-    .toolbar {
+    .toast(
+      isPresented: $viewModel.showErrorMessage,
+      duration: 3,
+      position: .bottom,
+      bottomPadding: 16 + 47 + 16,
+      content: {
+        ToastView(text: "문제가 발생했습니다.", icon: .warning)
+      }
+    )    .toolbar {
       ToolbarLeadingBackButton(icon: .chevron) {
         if editedName != viewModel.myName {
           dismissKeyboard()
@@ -124,14 +142,19 @@ struct EditNameView: View {
       title: "변경하기",
       color: Color.secondaryNormal,
       height: 47,
-      isEnabled: isButtonEnabled
+      isEnabled: isButtonEnabled,
+      isLoading: viewModel.isLoading
     ) {
       Task {
-        try await self.viewModel.updateMyNameAndReload(
+        let success = await self.viewModel.updateMyNameAndReload(
           userId: FirebaseAuthManager.shared.userInfo?.userId ?? "",
           newName: editedName
         )
+        
+        guard success else { return }
+        
         dismissKeyboard()
+        try? await Task.sleep(nanoseconds: 150_000_000)
         await MainActor.run { router.pop() }
       }
     }
@@ -143,3 +166,5 @@ struct EditNameView: View {
     EditNameView()
   }
 }
+
+// viewModel.showErrorMessage = true
