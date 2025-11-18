@@ -8,70 +8,78 @@
 import SwiftUI
 
 struct TeamspaceTitleView: View {
-  
   @EnvironmentObject private var router: MainRouter
+  
   @Bindable var viewModel: HomeViewModel
   
-  @Binding var teamspaceState: TeamspaceState
-  
-  @Binding var presentingCreateTeamspaceSheet: Bool
+  fileprivate struct Layout {
+    enum EmptyTeamspaceViewLayout {
+      static let hstackSpacing: CGFloat = 8
+      static let titleText: String = "팀 스페이스를 생성하세요"
+      static let imageName: String = "chevron.right"
+      static let imageFontSize: CGFloat = 15
+    }
+    
+    enum NonEmptyTeamspaceViewLayout {
+      static let hstackSpacing: CGFloat = 8
+      static let titleText: String = "팀 스페이스를 생성하세요"
+      static let teamspaceEmptyTitleText: String = ""
+      static let imageName: String = "chevron.right"
+      static let imageFontSize: CGFloat = 17
+    }
+  }
   
   var body: some View {
     Group {
-      switch teamspaceState {
+      switch viewModel.state.teamspaceState {
       case .empty:
         emptyTeamspaceView
+          .frame(maxWidth: .infinity, alignment: .leading)
       case .nonEmpty:
         nonEmptyTeamspaceView
+          .frame(maxWidth: .infinity, alignment: .leading)
       }
     }
   }
   
+  // MARK: - 팀 스페이스가 없을 때 보이는 뷰
   private var emptyTeamspaceView: some View {
-    HStack {
-      Button {
-        self.presentingCreateTeamspaceSheet = true
-      } label: {
-        HStack {
-          HStack(spacing: 8) {
-            Text("팀 스페이스를 생성해주세요")
-              .font(.heading1Medium)
-              .foregroundStyle(Color.labelStrong)
-            
-            Image(systemName: "chevron.right")
-              .font(.heading1Medium)
-              .foregroundStyle(Color.labelStrong)
-          }
+    Button {
+      //      self.presentingCreateTeamspaceSheet = true
+      // TODO: 기존 시트에서 네비게이션 팀 스페이스 만들기로 전환 형식으로 변경해야 함.
+      // TODO: 팀 스페이스 생성하세요 할때 잘 작동되는지도 확인
+    } label: {
+      HStack {
+        HStack(spacing: Layout.EmptyTeamspaceViewLayout.hstackSpacing) {
+          Text(Layout.EmptyTeamspaceViewLayout.titleText)
+            .font(.heading1Medium)
+            .foregroundStyle(Color.labelStrong)
+          
+          Image(systemName: Layout.EmptyTeamspaceViewLayout.imageName)
+            .font(.system(size: Layout.EmptyTeamspaceViewLayout.imageFontSize, weight: .semibold))
+            .foregroundStyle(Color.labelStrong)
         }
       }
-      Spacer()
     }
   }
   
+  // MARK: - 팀 스페이스 선택 뷰
   private var nonEmptyTeamspaceView: some View {
     HStack(spacing: 8) {
-      Button {
-        print("router.push(to: .teamspace(.list))")
-        router.push(to: .teamspace(.list))
-      } label: {
-        Text(viewModel.currentTeamspaceName)
-          .font(.headline1Medium)
-          .foregroundStyle(Color.labelStrong)
-      }
-      .clearGlassButtonIfAvailable()
+      Text(viewModel.currentTeamspace?.teamspaceName ?? Layout.NonEmptyTeamspaceViewLayout.teamspaceEmptyTitleText)
+        .font(.heading1SemiBold)
+        .foregroundStyle(Color.labelStrong)
+      
+      Spacer()
       
       Button {
         router.push(to: .teamspace(.setting))
       } label: {
-        Image(systemName: "person.2.badge.gearshape.fill")
+        Image(systemName: Layout.NonEmptyTeamspaceViewLayout.imageName)
+          .font(.system(size: Layout.NonEmptyTeamspaceViewLayout.imageFontSize, weight: .medium))
           .foregroundStyle(Color.labelStrong)
-//        Text("편집")
-//          .font(.headline1Medium)
-//          .foregroundStyle(Color.labelStrong)
       }
       .clearGlassButtonIfAvailable()
-      
-      Spacer()
     }
   }
 }
