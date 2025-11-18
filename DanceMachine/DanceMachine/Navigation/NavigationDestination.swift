@@ -46,7 +46,6 @@ enum ProjectRoute: Hashable {
 }
 
 enum TeamspaceRoute: Hashable {
-  case list
   case create
   case setting
 }
