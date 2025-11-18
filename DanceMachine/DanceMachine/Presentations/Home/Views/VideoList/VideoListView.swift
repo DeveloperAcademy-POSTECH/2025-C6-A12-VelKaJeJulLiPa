@@ -87,7 +87,7 @@ struct VideoListView: View {
       isPresented: $showDeleteToast,
       duration: 2,
       position: .bottom,
-      bottomPadding: 63,
+      bottomPadding: 16,
       content: {
         ToastView(
           text: "동영상이 삭제되었습니다.",
@@ -99,7 +99,7 @@ struct VideoListView: View {
       isPresented: $showEditToast,
       duration: 2,
       position: .bottom,
-      bottomPadding: 63,
+      bottomPadding: 16,
       content: {
         ToastView(text: "영상이 이동되었습니다.", icon: .check)
       }
@@ -108,7 +108,7 @@ struct VideoListView: View {
       isPresented: $showEditVideoTitleToast,
       duration: 2,
       position: .bottom,
-      bottomPadding: 63,
+      bottomPadding: 16,
       content: {
         ToastView(text: "영상 이름이 수정되었습니다.", icon: .check)
       }
@@ -153,19 +153,27 @@ struct VideoListView: View {
   
   private var emptyView: some View {
     GeometryReader { geometry in
-      VStack(spacing: 24) {
-        Image(systemName: "movieclapper.fill")
-          .font(.system(size: 75))
-          .foregroundStyle(.labelAssitive)
-        Text("비디오가 없습니다.")
-          .font(.headline2Medium)
-          .foregroundStyle(.labelAssitive)
+      ScrollView {
+        VStack(spacing: 24) {
+          Image(systemName: "movieclapper.fill")
+            .font(.system(size: 75))
+            .foregroundStyle(.labelAssitive)
+          Text("비디오가 없습니다.")
+            .font(.headline2Medium)
+            .foregroundStyle(.labelAssitive)
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: geometry.size.height)
+        .position(
+          x: geometry.size.width / 2,
+          y: geometry.size.height / 2 - 40
+        )
       }
-      .frame(maxWidth: .infinity)
-      .position(
-        x: geometry.size.width / 2,
-        y: geometry.size.height / 2 - 40
-      )
+      .refreshable {
+        isRefreshing = true
+        await vm.forceRefreshFromServer(tracksId: tracksId)
+        isRefreshing = false
+      }
     }
   }
   // MARK: 영상 그리드 뷰
