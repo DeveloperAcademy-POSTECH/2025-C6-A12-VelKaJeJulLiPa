@@ -38,8 +38,6 @@ struct MainNavigationRoutingView: View {
         }
       case .teamspace(let route):
         switch route {
-        case .list:
-          TeamspaceListView().toolbar(.hidden, for: .tabBar)
         case .create:
           CreateTeamspaceView().toolbar(.hidden, for: .tabBar)
         case .setting:
