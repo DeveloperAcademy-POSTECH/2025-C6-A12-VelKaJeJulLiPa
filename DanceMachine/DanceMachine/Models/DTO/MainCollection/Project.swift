@@ -11,7 +11,7 @@ struct Project: Codable, Equatable {
   let projectId: UUID
   let teamspaceId: String
   let creatorId: String
-  let projectName: String
+  var projectName: String
   var updatedAt: Date?
   
   init(
