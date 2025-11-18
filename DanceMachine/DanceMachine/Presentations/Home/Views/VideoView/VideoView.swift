@@ -248,13 +248,10 @@ struct VideoView: View {
       }
     )
     .alert(
-      "영상 정보가 없어용~",
+      "존재하지 않는 영상입니다.",
       isPresented: $vm.videoVM.notiFalseAlert,
       actions: {
-        Button("나가기", role: .destructive) { router.pop() }
-      },
-      message: {
-        Text("ㅅㄱ")
+        Button("확인", role: .destructive) { router.pop() }
       }
     )
     // MARK: 신고 완료 토스트 리시버
