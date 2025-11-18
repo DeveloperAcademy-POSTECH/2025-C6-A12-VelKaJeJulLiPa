@@ -70,7 +70,10 @@ extension SectionEditViewModel {
     updatedSection.sectionTitle = self.editText
     
     do {
-      
+      // 테스트용: 네트워크 에러 시뮬레이션 (테스트 후 삭제할 것)
+//       throw NSError(domain: NSURLErrorDomain, code: NSURLErrorNotConnectedToInternet)
+//      throw SectionEditError.createError
+
       try await self.createSection(
         tracksId: tracksId,
         section: section,
