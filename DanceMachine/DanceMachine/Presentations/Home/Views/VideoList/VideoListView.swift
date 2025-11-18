@@ -14,7 +14,7 @@ struct VideoListView: View {
   @State var vm: VideoListViewModel
 
   @State private var isScrollDown: Bool = false
-  @State private var isRefreshing: Bool = false
+//  @State private var isRefreshing: Bool = false
 
   @State private var showDeleteToast: Bool = false
   @State private var showEditToast: Bool = false
@@ -40,16 +40,40 @@ struct VideoListView: View {
   let trackName: String
   
   var body: some View {
-    VStack(spacing: 0) {
-      if vm.filteredVideos.isEmpty && vm.isLoading != true && !pickerViewModel.isUploading {
-        emptyView
-      } else {
-        listView
+    GeometryReader { geometry in
+      ScrollView {
+        if vm.showErrorView {
+          errorView(g: geometry)
+        } else if vm.filteredVideos.isEmpty && vm.isLoading != true && !pickerViewModel.isUploading {
+          emptyContent(g: geometry)
+        } else {
+          VideoListContent(
+            geometry: geometry,
+            tracksId: tracksId,
+            videos: vm.filteredVideos,
+            track: vm.track,
+            section: vm.section,
+            pickerViewModel: pickerViewModel,
+            vm: $vm
+          )
+        }
       }
+      .scrollDisabled(vm.isLoading && !vm.isRefreshing)
+      .refreshable {
+        await vm.refresh(tracksId: tracksId)
+      }
+      .background(.backgroundNormal)
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(.backgroundNormal)
-    .safeAreaInset(edge: .top) { sectionView }
+    .safeAreaInset(edge: .top) {
+      SectionContent(
+        vm: $vm,
+        tracksId: tracksId,
+        trackName: trackName,
+        sectionId: sectionId
+      )
+    }
     .navigationBarTitleDisplayMode(.inline)
     .toolbar(.hidden, for: .tabBar)
     .toolbar {
@@ -151,120 +175,39 @@ struct VideoListView: View {
     }
   }
   
-  private var emptyView: some View {
-    GeometryReader { geometry in
-      ScrollView {
-        VStack(spacing: 24) {
-          Image(systemName: "movieclapper.fill")
-            .font(.system(size: 75))
-            .foregroundStyle(.labelAssitive)
-          Text("비디오가 없습니다.")
-            .font(.headline2Medium)
-            .foregroundStyle(.labelAssitive)
-        }
-        .frame(maxWidth: .infinity)
-        .frame(height: geometry.size.height)
-        .position(
-          x: geometry.size.width / 2,
-          y: geometry.size.height / 2 - 40
-        )
-      }
-      .refreshable {
-        isRefreshing = true
-        await vm.forceRefreshFromServer(tracksId: tracksId)
-        isRefreshing = false
-      }
-    }
-  }
-  // MARK: 영상 그리드 뷰
-  private var listView: some View {
-    GeometryReader { g in
-      let horizontalPadding: CGFloat = 16
-      let spacing: CGFloat = 16
-      let columns = 2
-      
-      let totalSpacing = spacing * CGFloat(columns - 1)
-      let availableWidth = g.size.width - (horizontalPadding * 2) - totalSpacing
-      let itemSize = availableWidth / CGFloat(columns)
-      
-      ScrollView {
-        VideoGrid(
-          size: itemSize,
-          columns: columns,
-          spacing: spacing,
-          tracksId: tracksId,
-          videos: vm.filteredVideos,
-          track: vm.track,
-          section: vm.section,
-          pickerViewModel: pickerViewModel,
-          vm: $vm
-        )
-        .padding(.horizontal, horizontalPadding)
-      }
-      .scrollDisabled(vm.isLoading && !isRefreshing)
-      .onScrollGeometryChange(for: CGFloat.self) { geometry in
-        geometry.contentOffset.y
-      } action: { oldValue, newValue in
-        withAnimation(.spring()) {
-          isScrollDown = newValue > 50
+  private func errorView(g: GeometryProxy) -> some View {
+    ErrorStateView(
+      message: "동영상 불러오기를 실패했습니다.\n네트워크를 확인해주세요.",
+      isAnimating: true,
+      onRetry: {
+        Task {
+          await vm.refresh(tracksId: tracksId)
         }
       }
-      .refreshable {
-        isRefreshing = true
-        await vm.forceRefreshFromServer(tracksId: tracksId)
-        isRefreshing = false
-      }
-      .background(.backgroundNormal)
-    }
+    )
+    .frame(width: g.size.width, height: g.size.height)
+    .position(
+      x: g.size.width / 2,
+      y: g.size.height / 2 - 40
+    )
   }
   
-  
-  // MARK: 섹션 칩 뷰
-  private var sectionView: some View {
-    ScrollView(.horizontal, showsIndicators: false) {
-      //      GlassEffectContainer {
-      HStack {
-        SectionChipIcon(
-          vm: $vm,
-          action: {
-            router.push(
-              to: .video(
-                .section(
-                  section: vm.section,
-                  tracksId: tracksId,
-                  trackName: trackName,
-                  sectionId: sectionId
-                )
-              )
-            )
-          }
-        )
-        if vm.isLoading {
-          ForEach(0..<5, id: \.self) { _ in
-            SkeletonChipVIew()
-          }
-        } else {
-          ForEach(vm.section, id: \.sectionId) { section in
-            CustomSectionChip(
-              vm: $vm,
-              action: { vm.selectedSection = section },
-              title: section.sectionTitle,
-              id: section.sectionId
-            )
-          }
-        }
-      }
-      .padding(.horizontal, 16)
-      .padding(.top, 24)
-      .padding(.bottom, 16)
+  private func emptyContent(g: GeometryProxy) -> some View {
+    VStack(spacing: 24) {
+      Image(systemName: "movieclapper.fill")
+        .font(.system(size: 75))
+        .foregroundStyle(.labelAssitive)
+      Text("비디오가 없습니다.")
+        .font(.headline2Medium)
+        .foregroundStyle(.labelAssitive)
     }
-//    .environment(\.colorScheme, .light)
-    .scrollDisabled(vm.isLoading)
+    .frame(width: g.size.width, height: g.size.height)
+    .position(
+      x: g.size.width / 2,
+      y: g.size.height / 2 - 40
+    )
   }
 }
-
-
-
 
 #Preview {
   @Previewable @State var vm: VideoListViewModel = .preview
@@ -272,11 +215,4 @@ struct VideoListView: View {
     VideoListView(vm: vm, tracksId: "", sectionId: "", trackName: "벨코의 리치맨")
   }
   .environmentObject(MainRouter())
-}
-
-struct ScrollOffsetPreferenceKey: PreferenceKey {
-  static var defaultValue: CGFloat = 0
-  static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-    value = nextValue()
-  }
 }
