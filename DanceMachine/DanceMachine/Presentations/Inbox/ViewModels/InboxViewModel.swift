@@ -17,7 +17,7 @@ final class InboxViewModel: ObservableObject {
   @Published var isLoading = false
   @Published var isRefreshing = false
   @Published var isPaginationLoading = false
-  @Published var showErrorMessage = false
+  @Published var showError = false
   
   private var lastDocument: DocumentSnapshot? = nil
   private var canLoadMore = true
@@ -58,9 +58,9 @@ final class InboxViewModel: ObservableObject {
       try await appendInboxNotifications(from: fetched, reset: reset)
       try await NotificationManager.shared.refreshBadge(for: userId)
       
-      showErrorMessage = false
+      showError = false
     } catch {
-      showErrorMessage = true
+      showError = true
       print("❌ Failed to load notifications: \(error)")
     }
   }
