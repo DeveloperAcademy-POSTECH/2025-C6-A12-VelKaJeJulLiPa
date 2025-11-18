@@ -109,7 +109,7 @@ struct VideoTitleEditView: View {
           newTitle: videoTitle,
           tracksId: tracksId
         )
-        NotificationCenter.post(.showEditVideoTitleToast, object: nil)
+        NotificationCenter.post(.video(.videoTitleEdit))
         await MainActor.run { dismiss() }
       }
     }

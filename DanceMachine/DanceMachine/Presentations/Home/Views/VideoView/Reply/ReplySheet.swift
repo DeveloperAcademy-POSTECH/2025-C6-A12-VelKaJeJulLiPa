@@ -154,7 +154,7 @@ struct ReplySheet: View {
       }
     )
     // MARK: 신고 완료 토스트 리시버
-    .onReceive(NotificationCenter.default.publisher(for: .showCreateReportSuccessToast)) { notification in
+    .onReceive(NotificationCenter.publisher(for: .toast(.reportSuccess))) { notification in
       if let toastViewName = notification.userInfo?["toastViewName"] as? ReportToastReceiveViewType,
          toastViewName == ReportToastReceiveViewType.replySheet {
         showCreateReportSuccessToast = true

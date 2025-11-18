@@ -88,7 +88,7 @@ struct SectionSelectView: View {
             oldSectionId: sectionId
           )
           // 캐시에 업데이트되었으므로 뒤로 가면 자동 반영됨
-          NotificationCenter.post(.showEditToast, object: nil)
+          NotificationCenter.post(.video(.videoEdit))
           dismiss()
         }
       }

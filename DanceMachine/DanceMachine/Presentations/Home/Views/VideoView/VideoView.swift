@@ -258,14 +258,14 @@ struct VideoView: View {
       }
     )
     // MARK: 신고 완료 토스트 리시버
-    .onReceive(NotificationCenter.default.publisher(for: .showCreateReportSuccessToast)) { notification in
+    .onReceive(NotificationCenter.publisher(for: .toast(.reportSuccess))) { notification in
       if let toastViewName = notification.userInfo?["toastViewName"] as? ReportToastReceiveViewType,
          toastViewName == .videoView {
         showCreateReportSuccessToast = true
       }
     }
     // MARK: 사용자가 영상 화면을 보고 있는데, 푸시 알림으로 화면 접근하려 할 때 영상 정보 업데이트
-    .onReceive(NotificationCenter.default.publisher(for: .refreshVideoView)) { notification in
+    .onReceive(NotificationCenter.publisher(for: .video(.refreshView))) { notification in
         guard let videoId = notification.userInfo?["videoId"] as? String,
               let videoURL = notification.userInfo?["videoURL"] as? String,
               let teamspaceId = notification.userInfo?["teamspaceId"] as? String else { return }

@@ -322,7 +322,7 @@ extension VideoListViewModel {
       }
       
       // 제목 수정 완료 토스트 알림
-      NotificationCenter.default.post(name: .showEditVideoTitleToast, object: nil)
+      NotificationCenter.post(.video(.videoTitleEdit))
       print("비디오 제목 업데이트 성공: \(newTitle)")
     } catch {
       await MainActor.run {
@@ -386,7 +386,7 @@ extension VideoListViewModel {
       }
       
       // 삭제 완료 토스트 알림
-      NotificationCenter.default.post(name: .showDeleteToast, object: nil)
+      NotificationCenter.post(.video(.videoDelete))
     } catch {
       // 최소 로딩 시간 보장 (스켈레톤 뷰 1.5초)
       await TaskTimeUtility.waitForMinimumLoadingTime(

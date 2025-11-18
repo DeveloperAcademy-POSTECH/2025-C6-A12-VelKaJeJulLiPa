@@ -117,25 +117,25 @@ struct VideoListView: View {
       isPresented: $showCreateReportSuccessToast,
       duration: 3,
       position: .bottom,
-      bottomPadding: 63, // FIXME: 신고하기 - 하단 공백 조정 필요
+      bottomPadding: 16, // FIXME: 신고하기 - 하단 공백 조정 필요
       content: {
         ToastView(text: "신고가 접수되었습니다.\n조치사항은 이메일로 안내해드리겠습니다.", icon: .check)
       }
     )
     // MARK: 영상 삭제 토스트 리시버
-    .onReceive(NotificationCenter.default.publisher(for: .showDeleteToast)) { _ in
+    .onReceive(NotificationCenter.publisher(for: .video(.videoDelete))) { _ in
       self.showDeleteToast = true
     }
     // MARK: 영상 이름 수정 토스트 리시버
-    .onReceive(NotificationCenter.default.publisher(for: .showEditVideoTitleToast, object: nil)) { _ in
+    .onReceive(NotificationCenter.publisher(for: .video(.videoTitleEdit))) { _ in
       self.showEditVideoTitleToast = true
     }
     // MARK: 영상 섹션 이동 토스트 리시버
-    .onReceive(NotificationCenter.default.publisher(for: .showEditToast)) { _ in
+    .onReceive(NotificationCenter.publisher(for: .video(.videoEdit))) { _ in
       self.showEditToast = true
     }
     // MARK: 신고 완료 토스트 리시버
-    .onReceive(NotificationCenter.default.publisher(for: .showCreateReportSuccessToast)) { notification in
+    .onReceive(NotificationCenter.publisher(for: .toast(.reportSuccess))) { notification in
       if let toastViewName = notification.userInfo?["toastViewName"] as? ReportToastReceiveViewType,
          toastViewName == .videoListView {
         showCreateReportSuccessToast = true

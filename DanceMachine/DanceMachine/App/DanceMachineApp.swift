@@ -177,8 +177,8 @@ extension DanceMachineApp {
     
     if case .video(.play) = mainRouter.destination.last {
       // 네비게이션 이동 없이 VideoView 자체 데이터 갱신 이벤트 보내기
-      NotificationCenter.default.post(
-        name: .refreshVideoView,
+      NotificationCenter.post(
+        .video(.refreshView),
         object: nil,
         userInfo: [
           "videoId": videoId,

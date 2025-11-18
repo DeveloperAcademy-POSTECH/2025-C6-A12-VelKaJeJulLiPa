@@ -89,7 +89,7 @@ struct LandscapeReplyView: View {
         ToastView(text: "신고가 접수되었습니다.\n조치사항은 이메일로 안내해드리겠습니다.", icon: .check)
       }
     )
-    .onReceive(NotificationCenter.default.publisher(for: .showCreateReportSuccessToast)) { notification in
+    .onReceive(NotificationCenter.publisher(for: .toast(.reportSuccess))) { notification in
       if let toastViewName = notification.userInfo?["toastViewName"] as? ReportToastReceiveViewType,
          toastViewName == ReportToastReceiveViewType.replySheet {
         showCreateReportSuccessToast = true

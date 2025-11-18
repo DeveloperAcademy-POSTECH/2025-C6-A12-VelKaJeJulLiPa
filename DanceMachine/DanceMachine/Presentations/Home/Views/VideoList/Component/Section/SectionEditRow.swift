@@ -40,7 +40,7 @@ struct SectionEditRow: View {
           .onChange(of: editText) { oldValue, newValue in
             let updated = newValue.sanitized(limit: 10)
             if editText.count > 9 {
-              NotificationCenter.post(.showEditWarningToast, object: nil)
+              NotificationCenter.post(.section(.sectionEditWarning))
             }
             if updated != editText {
               editText = updated

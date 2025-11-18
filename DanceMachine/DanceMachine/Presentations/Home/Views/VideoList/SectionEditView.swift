@@ -43,9 +43,12 @@ struct SectionEditView: View {
         listView.padding(.top, 16)
       }
     }
-    .onReceive(NotificationCenter.default.publisher(for: .showEditWarningToast, object: nil), perform: { _ in
+    .onReceive(NotificationCenter.publisher(for: .section(.sectionEditWarning))) { _ in
       self.showToast = true
-    })
+    }
+    .onReceive(NotificationCenter.publisher(for: .section(.sectionCRUDFailed))) { _ in
+      self.showCRUDToast = true
+    }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .toolbar(.hidden, for: .tabBar)
     .padding(.horizontal, 16)
