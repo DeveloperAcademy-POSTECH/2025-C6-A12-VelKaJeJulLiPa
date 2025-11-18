@@ -15,10 +15,23 @@ struct InboxView: View {
     ZStack {
       Color.backgroundNormal.ignoresSafeArea()
       
-      VStack(spacing: 0) {
-        if viewModel.isLoading && viewModel.inboxNotifications.isEmpty {
-          LoadingSpinner()
-            .frame(maxWidth: 28, maxHeight: 28, alignment: .center)
+      VStack {
+        if viewModel.showErrorMessage {
+          VStack(spacing: 16, ) {
+            Text("알림 불러오기를 실패했습니다.\n네트워크를 확인해주세요")
+              .multilineTextAlignment(.center)
+            Image(systemName: "arrow.trianglehead.clockwise")
+              .symbolEffect(.rotate.wholeSymbol, options: .nonRepeating, value: viewModel.isRefreshing)
+              .onTapGesture {
+                Task { await viewModel.refresh() }
+              }
+          }
+        } else if viewModel.isLoading && viewModel.inboxNotifications.isEmpty {
+          ScrollView{
+            ForEach(0..<4, id: \.self) { _ in
+              SkeletonInboxNotificationRow()
+            }
+          }
         } else if viewModel.inboxNotifications.isEmpty {
           GeometryReader { geometry in
             ScrollView {
