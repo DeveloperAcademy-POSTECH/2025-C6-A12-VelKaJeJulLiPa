@@ -31,6 +31,17 @@ final class VideoPickerViewModel {
   var showSuccessAlert: Bool = false
 
   var photoLibraryStatus: PHAuthorizationStatus = .notDetermined
+  
+  // 비디오 필터 (좋아요 필터 기능)
+  var selectedFilter: VideoType = .all
+  var filteredVideo: [PHAsset] {
+    switch selectedFilter {
+    case .all:
+      return videos
+    case .favorites:
+      return videos.filter { $0.isFavorite }
+    }
+  }
 
   // iCloud 다운로드 상태
   var isDownloadingFromCloud: Bool = false

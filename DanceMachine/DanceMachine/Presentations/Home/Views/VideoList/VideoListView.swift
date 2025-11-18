@@ -12,16 +12,17 @@ struct VideoListView: View {
   @EnvironmentObject private var router: MainRouter
   
   @State var vm: VideoListViewModel
-  
+
   @State private var isScrollDown: Bool = false
-  
+  @State private var isRefreshing: Bool = false
+
   @State private var showDeleteToast: Bool = false
   @State private var showEditToast: Bool = false
   @State private var showEditVideoTitleToast: Bool = false
   @State private var showCreateReportSuccessToast: Bool = false
-
+  
   @State private var pickerViewModel = VideoPickerViewModel()
-
+  
   init(
     vm: VideoListViewModel = .init(),
     tracksId: String,
@@ -33,7 +34,7 @@ struct VideoListView: View {
     self.sectionId = sectionId
     self.trackName = trackName
   }
-  
+
   let tracksId: String
   let sectionId: String
   let trackName: String
@@ -149,109 +150,111 @@ struct VideoListView: View {
       }
     }
   }
-
-    private var emptyView: some View {
-      GeometryReader { geometry in
-        VStack {
-          Image(systemName: "movieclapper.fill")
-            .font(.system(size: 75))
-            .foregroundStyle(.labelAssitive)
-
-          Spacer().frame(height: 25)
-
-          Text("비디오가 없습니다.")
-            .font(.caption1Medium)
-            .foregroundStyle(.labelAssitive)
-        }
-        .frame(maxWidth: .infinity)
-        .position(
-          x: geometry.size.width / 2,
-          y: geometry.size.height / 2
+  
+  private var emptyView: some View {
+    GeometryReader { geometry in
+      VStack(spacing: 24) {
+        Image(systemName: "movieclapper.fill")
+          .font(.system(size: 75))
+          .foregroundStyle(.labelAssitive)
+        Text("비디오가 없습니다.")
+          .font(.headline2Medium)
+          .foregroundStyle(.labelAssitive)
+      }
+      .frame(maxWidth: .infinity)
+      .position(
+        x: geometry.size.width / 2,
+        y: geometry.size.height / 2 - 40
+      )
+    }
+  }
+  // MARK: 영상 그리드 뷰
+  private var listView: some View {
+    GeometryReader { g in
+      let horizontalPadding: CGFloat = 16
+      let spacing: CGFloat = 16
+      let columns = 2
+      
+      let totalSpacing = spacing * CGFloat(columns - 1)
+      let availableWidth = g.size.width - (horizontalPadding * 2) - totalSpacing
+      let itemSize = availableWidth / CGFloat(columns)
+      
+      ScrollView {
+        VideoGrid(
+          size: itemSize,
+          columns: columns,
+          spacing: spacing,
+          tracksId: tracksId,
+          videos: vm.filteredVideos,
+          track: vm.track,
+          section: vm.section,
+          pickerViewModel: pickerViewModel,
+          vm: $vm
         )
+        .padding(.horizontal, horizontalPadding)
       }
-    }
-    // MARK: 영상 그리드 뷰
-    private var listView: some View {
-      GeometryReader { g in
-        let horizontalPadding: CGFloat = 16
-        let spacing: CGFloat = 16
-        let columns = 2
-        
-        let totalSpacing = spacing * CGFloat(columns - 1)
-        let availableWidth = g.size.width - (horizontalPadding * 2) - totalSpacing
-        let itemSize = availableWidth / CGFloat(columns)
-        
-        ScrollView {
-          VideoGrid(
-            size: itemSize,
-            columns: columns,
-            spacing: spacing,
-            tracksId: tracksId,
-            videos: vm.filteredVideos,
-            track: vm.track,
-            section: vm.section,
-            pickerViewModel: pickerViewModel,
-            vm: $vm
-          )
-          .padding(.horizontal, horizontalPadding)
+      .scrollDisabled(vm.isLoading && !isRefreshing)
+      .onScrollGeometryChange(for: CGFloat.self) { geometry in
+        geometry.contentOffset.y
+      } action: { oldValue, newValue in
+        withAnimation(.spring()) {
+          isScrollDown = newValue > 50
         }
-        .onScrollGeometryChange(for: CGFloat.self) { geometry in
-          geometry.contentOffset.y
-        } action: { oldValue, newValue in
-          withAnimation(.spring()) {
-            isScrollDown = newValue > 50
-          }
-        }
-        .refreshable {
-          await vm.forceRefreshFromServer(tracksId: tracksId)
-        }
-        .background(.backgroundNormal)
       }
+      .refreshable {
+        isRefreshing = true
+        await vm.forceRefreshFromServer(tracksId: tracksId)
+        isRefreshing = false
+      }
+      .background(.backgroundNormal)
     }
-    
-    
-    // MARK: 섹션 칩 뷰
-    private var sectionView: some View {
-      ScrollView(.horizontal, showsIndicators: false) {
-        //      GlassEffectContainer {
-        HStack {
-          SectionChipIcon(
-            vm: $vm,
-            action: {
-              router.push(
-                to: .video(
-                  .section(
-                    section: vm.section,
-                    tracksId: tracksId,
-                    trackName: trackName,
-                    sectionId: sectionId
-                  )
+  }
+  
+  
+  // MARK: 섹션 칩 뷰
+  private var sectionView: some View {
+    ScrollView(.horizontal, showsIndicators: false) {
+      //      GlassEffectContainer {
+      HStack {
+        SectionChipIcon(
+          vm: $vm,
+          action: {
+            router.push(
+              to: .video(
+                .section(
+                  section: vm.section,
+                  tracksId: tracksId,
+                  trackName: trackName,
+                  sectionId: sectionId
                 )
               )
-            }
-          )
-          if vm.isLoading {
-            ForEach(0..<5, id: \.self) { _ in
-              SkeletonChipVIew()
-            }
-          } else {
-            ForEach(vm.section, id: \.sectionId) { section in
-              CustomSectionChip(
-                vm: $vm,
-                action: { vm.selectedSection = section },
-                title: section.sectionTitle,
-                id: section.sectionId
-              )
-            }
+            )
+          }
+        )
+        if vm.isLoading {
+          ForEach(0..<5, id: \.self) { _ in
+            SkeletonChipVIew()
+          }
+        } else {
+          ForEach(vm.section, id: \.sectionId) { section in
+            CustomSectionChip(
+              vm: $vm,
+              action: { vm.selectedSection = section },
+              title: section.sectionTitle,
+              id: section.sectionId
+            )
           }
         }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
-        }
-        .environment(\.colorScheme, .light)
       }
+      .padding(.horizontal, 16)
+      .padding(.top, 24)
+      .padding(.bottom, 16)
     }
-  
+//    .environment(\.colorScheme, .light)
+    .scrollDisabled(vm.isLoading)
+  }
+}
+
 
 
 

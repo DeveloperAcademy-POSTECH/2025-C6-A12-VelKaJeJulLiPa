@@ -64,6 +64,8 @@ struct GridCell: View {
       Text(title)
         .font(.headline2Medium)
         .foregroundStyle(.labelStrong)
+        .lineLimit(1)
+        .truncationMode(.tail)
       Spacer().frame(height: 8)
       Text("\(duration.formattedTime())")
         .font(.caption1Medium)
@@ -160,7 +162,7 @@ struct GridCell: View {
     size: 172,
     videoId: "",
     thumbnailURL: "https://picsum.photos/300",
-    title: "제목",
+    title: "2025-07-26 연습 영상",
     duration: 14.1414141414,
     uploadDate: Date(),
     currentUserId: "",

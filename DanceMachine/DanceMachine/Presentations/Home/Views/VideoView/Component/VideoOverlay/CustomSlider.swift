@@ -44,6 +44,7 @@ struct CustomSlider: View {
               width: isDragging ? 25 : 20,
               height: isDragging ? 25 : 20
             )
+            .contentShape(Circle())
             .offset(
               x: progressWidth(g.size.width) -
               (isDragging ? 10 : 5)
@@ -75,7 +76,8 @@ struct CustomSlider: View {
         }
         .animation(.easeIn(duration: 0.1), value: isDragging)
       }
-      .frame(height: 20)
+      .frame(height: 25)
+      .contentShape(Rectangle())
       HStack {
         Text(startTime)
           .font(.caption1Medium)

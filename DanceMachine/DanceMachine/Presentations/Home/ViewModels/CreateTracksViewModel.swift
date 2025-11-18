@@ -30,7 +30,7 @@ final class CreateTracksViewModel {
             // 서브컬렉션 section도 같이 생성
             let section: Section = .init(
                 sectionId: UUID().uuidString,
-                sectionTitle: "일반" // TODO: 디자이너와 이야기 해볼 것
+                sectionTitle: "기본 파트" // TODO: 디자이너와 이야기 해볼 것
             )
             
             try await FirestoreManager.shared.createToSubcollection(

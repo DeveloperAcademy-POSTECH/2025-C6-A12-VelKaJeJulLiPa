@@ -17,11 +17,12 @@ final class VideoViewModel {
   
   var isPlaying: Bool = false
   var showControls: Bool = false
-  
+
   // 영상 관련
   var timeObserver: Any?
   var currentTime: Double = .zero // 현재 영상 길이
   var duration: Double = .zero // 전체 영상 길이
+  var hasFinished: Bool = false // 동영상 끝났는지 여부
   
   // 탭 제스처 관련
   var lastTapTime: Date = Date()
@@ -29,6 +30,13 @@ final class VideoViewModel {
   var autoHideControlsTask: Task<Void, Never>?
   var singleTapTask: Task<Void, Never>?
   private let doubleTap: TimeInterval = 0.2
+
+  // 더블탭 애니메이션 관련
+  var showLeftSeekIndicator: Bool = false
+  var showRightSeekIndicator: Bool = false
+  var leftSeekCount: Int = 0
+  var rightSeekCount: Int = 0
+  var seekIndicatorTask: Task<Void, Never>?
   
   var loadingProgress: Double = 0.0
   var isLoading: Bool = false
@@ -93,17 +101,34 @@ extension VideoViewModel {
   // MARK: URL로 플레이어 설정
   private func setupPlayerWithURL(_ url: URL) async {
     let playerItem = AVPlayerItem(url: url)
-    
+
+    // Audio Session 설정 - 무음 모드
+    do {
+      try AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback)
+      try AVAudioSession.sharedInstance().setActive(true)
+    } catch {
+      print("Audio Session 설정 실패: \(error)")
+    }
+
     await MainActor.run {
       self.player = AVPlayer(playerItem: playerItem)
     }
     
     await MainActor.run {
       timeObserver = player?.addPeriodicTimeObserver(
-        forInterval: CMTime(seconds: 0.5, preferredTimescale: 600),
+        forInterval: CMTime(seconds: 0.1, preferredTimescale: 6000),
         queue: DispatchQueue.main,
         using: { [weak self] time in
-          self?.currentTime = time.seconds
+          guard let self = self else { return }
+          self.currentTime = time.seconds
+
+          // 동영상이 끝났는지 확인 (duration의 0.1초 이내)
+          if self.duration > 0 && abs(self.currentTime - self.duration) < 0.1 {
+            self.hasFinished = true
+            self.isPlaying = false
+            self.showControls = true // 컨트롤 자동으로 표시
+            self.autoHideControlsTask?.cancel() // 자동 숨김 타이머 취소
+          }
         }
       )
     }
@@ -158,6 +183,12 @@ extension VideoViewModel {
       autoHideControlsTask?.cancel()
       isPlaying = false
     } else {
+      // 동영상이 끝났으면 처음부터 재생
+      if hasFinished {
+        seekToTime(to: 0)
+        hasFinished = false
+      }
+
       player?.play()
       player?.rate = playbackSpeed
       isPlaying = true
@@ -194,15 +225,25 @@ extension VideoViewModel {
     let timeTap = now.timeIntervalSince(lastTapTime)
 
     if timeTap < doubleTap {
-      // 더블탭: 싱글탭 Task 취소하고 5초 뒤로 이동
+      // 더블탭: 싱글탭 Task 취소하고 3초 뒤로 이동
       singleTapTask?.cancel()
-      seekToTime(to: currentTime - 5)
+
+      // 비디오 시작 부분(0초)이면 더블탭 무시
+      if currentTime <= 0 {
+        lastTapTime = now
+        return
+      }
+
+      seekToTime(to: currentTime - 3)
       tapCount += 1
 
-      // 컨트롤이 켜져있고 재생 중이면 자동 숨김 타이머 시작
-      if showControls && isPlaying {
-        startAutoHideControls()
+      // 컨트롤 숨기기
+      withAnimation(.easeOut(duration: 0.2)) {
+        showControls = false
       }
+
+      // 더블탭 애니메이션 표시
+      showDoubleTapSeekIndicator(isForward: false)
     } else {
       // 싱글탭 대기: 0.5초 후 더블탭이 없으면 컨트롤 토글
       tapCount = 1
@@ -232,15 +273,25 @@ extension VideoViewModel {
     let timeTap = now.timeIntervalSince(lastTapTime)
 
     if timeTap < doubleTap {
-      // 더블탭: 싱글탭 Task 취소하고 5초 앞으로 이동
+      // 더블탭: 싱글탭 Task 취소하고 3초 앞으로 이동
       singleTapTask?.cancel()
-      seekToTime(to: currentTime + 5)
+
+      // 비디오 끝 부분이면 더블탭 무시
+      if currentTime >= duration {
+        lastTapTime = now
+        return
+      }
+
+      seekToTime(to: currentTime + 3)
       tapCount += 1
 
-      // 컨트롤이 켜져있고 재생 중이면 자동 숨김 타이머 시작
-      if showControls && isPlaying {
-        startAutoHideControls()
+      // 컨트롤 숨기기
+      withAnimation(.easeOut(duration: 0.2)) {
+        showControls = false
       }
+
+      // 더블탭 애니메이션 표시
+      showDoubleTapSeekIndicator(isForward: true)
     } else {
       // 싱글탭 대기: 0.5초 후 더블탭이 없으면 컨트롤 토글
       tapCount = 1
@@ -273,6 +324,42 @@ extension VideoViewModel {
     // 컨트롤을 켰고 재생 중이면 자동 숨김 타이머 시작
     if showControls && isPlaying {
       startAutoHideControls()
+    }
+  }
+
+  // MARK: 더블탭 애니메이션 표시
+  func showDoubleTapSeekIndicator(isForward: Bool) {
+    // 기존 타이머 취소
+    seekIndicatorTask?.cancel()
+
+    if isForward {
+      rightSeekCount += 1
+      withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+        showRightSeekIndicator = true
+        showLeftSeekIndicator = false
+      }
+    } else {
+      leftSeekCount += 1
+      withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+        showLeftSeekIndicator = true
+        showRightSeekIndicator = false
+      }
+    }
+
+    // 0.8초 후 인디케이터 숨기기
+    seekIndicatorTask = Task {
+      try? await Task.sleep(for: .seconds(0.8))
+      if !Task.isCancelled {
+        await MainActor.run {
+          withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+            self.showLeftSeekIndicator = false
+            self.showRightSeekIndicator = false
+          }
+          // 카운터 초기화
+          self.leftSeekCount = 0
+          self.rightSeekCount = 0
+        }
+      }
     }
   }
 }

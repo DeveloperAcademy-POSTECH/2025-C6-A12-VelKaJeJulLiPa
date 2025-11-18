@@ -11,9 +11,10 @@ struct OverlayController: View {
   let leftAction: () -> Void
   let rightAction: () -> Void
   let centerAction: () -> Void
-  
+
   @Binding var isPlaying: Bool
-  
+  var hasFinished: Bool = false
+
   var body: some View {
     VStack {
       HStack(spacing: 30) {
@@ -24,7 +25,7 @@ struct OverlayController: View {
     }
     .ignoresSafeArea()
   }
-  
+
   private var leftButton: some View {
     Button {
       leftAction()
@@ -36,13 +37,13 @@ struct OverlayController: View {
     .frame(width: 55, height: 55)
     .overlayController()
   }
-  
+
   private var centerButton: some View {
     Button {
       centerAction()
     } label: {
       Image(
-        systemName: isPlaying ? "pause.fill" : "play.fill"
+        systemName: hasFinished ? "arrow.clockwise" : (isPlaying ? "pause.fill" : "play.fill")
       )
       .font(.system(size: 44))
       .foregroundStyle(.labelStrong)
