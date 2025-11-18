@@ -7,8 +7,15 @@
 
 import Foundation
 
+struct CreateTeamspaceState {
+  var loading: Bool = false
+  var errorAlert: Bool = false
+}
+
 @Observable
 final class CreateTeamspaceViewModel {
+  
+  var createTeamspaceState = CreateTeamspaceState()
   
   /// 팀스페이스 생성 + 소유자 멤버 추가 + 사용자 userTeamspace 등록까지 한 번에
   /// - Parameters:
