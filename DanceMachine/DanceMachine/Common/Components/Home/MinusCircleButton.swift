@@ -7,19 +7,22 @@
 
 import SwiftUI
 
-struct MinusCircleButton: View {
+struct CheckCircleButton: View {
   
+  let isSelected: Bool
   let action: () -> Void
   
   var body: some View {
     Button {
       action()
     } label: {
-      Image(.minusCircle) // FIXME: - 이미지 수정 (임시)
+      Image(systemName: "checkmark.circle.fill")
         .resizable()
         .scaledToFit()
-        .frame(width: 24, height: 24)
-        .foregroundStyle(Color.accentRedNormal)
+        .frame(width: 23, height: 23)
+        .foregroundStyle(
+          isSelected ? Color.secondaryStrong : Color.fillAssitive 
+        )
     }
     .buttonStyle(.plain)
     .contentShape(Rectangle())
@@ -29,6 +32,6 @@ struct MinusCircleButton: View {
 #Preview {
   ZStack {
     Color.backgroundNormal.ignoresSafeArea()
-    MinusCircleButton() {}
+    CheckCircleButton(isSelected: true) {}
   }
 }
