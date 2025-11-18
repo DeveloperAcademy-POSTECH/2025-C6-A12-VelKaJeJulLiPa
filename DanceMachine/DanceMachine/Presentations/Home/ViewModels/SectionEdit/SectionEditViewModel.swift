@@ -16,6 +16,9 @@ final class SectionEditViewModel {
   var sections: [Section]
   var editingSectionid: String? = nil
   var editText: String = ""
+  
+  var isLoading: Bool = false
+  var errorMsg: String = ""
 
   var isNewSection: Bool = false // 수정모드와 추가모드 플래그
 
@@ -58,19 +61,20 @@ extension SectionEditViewModel {
     section: Section
   ) async {
     guard !editText.isEmpty else { return }
+    
+    await MainActor.run {
+      self.isLoading = true
+    }
 
     var updatedSection = section
     updatedSection.sectionTitle = self.editText
     
     do {
-      //
-      let strategy: WriteStrategy = self.isNewSection ? .create : .update
-      try await store.createToSubcollection(
-        updatedSection,
-        under: .tracks,
-        parentId: tracksId,
-        subCollection: .section,
-        strategy: strategy
+      
+      try await self.createSection(
+        tracksId: tracksId,
+        section: section,
+        updateSection: updatedSection
       )
       
       if isNewSection {
@@ -93,45 +97,34 @@ extension SectionEditViewModel {
         self.editText = ""
         self.editingSectionid = nil
         self.isNewSection = false
+        self.isLoading = false
       }
-    } catch { // TODO: 에러처리
-      print("섹션 수정 실패")
+    } catch let error as SectionEditError {
+      await MainActor.run {
+        self.errorMsg = error.userMsg
+        self.isLoading = false
+      }
+      NotificationCenter.post(.section(.sectionCRUDFailed))
+      print(error.debugMsg)
+    } catch {
+      await MainActor.run {
+        self.errorMsg = "네트워크 연결을 확인하고 다시 시도해 주세요."
+        self.isLoading = false
+      }
+      NotificationCenter.post(.section(.sectionCRUDFailed))
     }
   }
-  // MARK: 섹션 추가 메서드
-  func addSection(
-    tracksId: String,
-    title: String
-  ) async {
-    let newSection = Section(
-      sectionId: UUID().uuidString,
-      sectionTitle: title
-    )
-    
-    do {
-      try await store.createToSubcollection(
-        newSection,
-        under: .tracks,
-        parentId: tracksId,
-        subCollection: .section,
-        strategy: .create
-      )
-      
-      // 캐시 추가
-      await dataCacheManager.addSection(
-        newSection,
-        to: tracksId
-      )
-      
-    } catch { // TODO: 에러 처리
-      print("섹션 추가 실패: \(error)")
-    }
-  }
+
   // MARK: 섹션 삭제 메서드 (하위 track, video, storage 파일도 함께 삭제)
   func deleteSection(
     tracksId: String,
     section: Section
-  ) async {
+  ) async throws {
+    
+    await MainActor.run {
+      self.isLoading = true
+    }
+    
     do {
       // 1. 섹션에 속한 모든 track 가져오기
       let tracks: [Track] = try await store.fetchAllFromSubSubcollection(
@@ -199,9 +192,35 @@ extension SectionEditViewModel {
       
       await MainActor.run {
         sections.removeAll { $0.sectionId == section.sectionId }
+        self.isLoading = false
       }
-    } catch { // TODO: 에러 처리
-      print("섹션 삭제 실패: \(error)")
+    } catch {
+      await MainActor.run {
+        self.isLoading = false
+      }
+      throw SectionEditError.deleteError
+    }
+  }
+}
+
+private extension SectionEditViewModel {
+  func createSection(
+    tracksId: String,
+    section: Section,
+    updateSection: Section
+  ) async throws {
+    
+    do {
+      let strategy: WriteStrategy = self.isNewSection ? .create : .update
+      try await store.createToSubcollection(
+        updateSection,
+        under: .tracks,
+        parentId: tracksId,
+        subCollection: .section,
+        strategy: strategy
+      )
+    } catch {
+      throw isNewSection ? SectionEditError.createError : SectionEditError.updateError
     }
   }
 }
