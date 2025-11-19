@@ -20,6 +20,7 @@ struct CheckmarkButton: View {
         .fill(disable ? .clear : Color.accentBlueStrong)
         .frame(width: 44, height: 44)
     }
+    .disabled(disable)
     .overlay {
       Image(systemName: "checkmark")
         .resizable()
