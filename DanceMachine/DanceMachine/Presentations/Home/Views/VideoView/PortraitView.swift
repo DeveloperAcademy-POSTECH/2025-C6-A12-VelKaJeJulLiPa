@@ -227,18 +227,31 @@ struct PortraitView: View {
           .padding(.horizontal, 16)
           .padding(.vertical, 8)
         Divider()
-        FeedbackListView(
-          vm: vm,
-          pointTime: $pointTime,
-          intervalTime: $intervalTime,
-          scrollProxy: $scrollProxy,
-          filteredFeedbacks: filteredFeedback,
-          userId: userId,
-          videoId: videoId,
-          imageNamespace: drawingImageNamespace,
-          selectedFeedbackImageURL: $selectedFeedbackImageURL,
-          showFeedbackImageFull: $showFeedbackImageFull
-        )
+        if vm.feedbackVM.showErrorView {
+          ErrorStateView(
+            message: vm.feedbackVM.errorMsg ?? "Fatal Error 404",
+            isAnimating: true,
+            onRetry: {
+              Task {
+                await vm.feedbackVM.loadFeedbacks(for: videoId)
+              }
+            }
+          )
+          .frame(maxWidth: .infinity, maxHeight: .infinity )
+        } else {
+          FeedbackListView(
+            vm: vm,
+            pointTime: $pointTime,
+            intervalTime: $intervalTime,
+            scrollProxy: $scrollProxy,
+            filteredFeedbacks: filteredFeedback,
+            userId: userId,
+            videoId: videoId,
+            imageNamespace: drawingImageNamespace,
+            selectedFeedbackImageURL: $selectedFeedbackImageURL,
+            showFeedbackImageFull: $showFeedbackImageFull
+          )
+        }
       }
       .ignoresSafeArea(.keyboard)
       .contentShape(Rectangle())
