@@ -100,7 +100,7 @@ struct UploadProgressCard: View {
     VStack {
       ZStack {
         Circle()
-          .stroke(Color.fillAssitive, lineWidth: 5)
+          .stroke(Color.fillAssitive, lineWidth: 4)
           .frame(width: cardSize / 3, height: cardSize / 3)
         Button {
           Task { await onCancel() }
@@ -140,7 +140,7 @@ struct UploadProgressCard: View {
         Circle()
           .stroke(
             Color.fillAssitive,
-            lineWidth: 5
+            lineWidth: 4
           )
           .frame(
             width: cardSize / 3,
@@ -151,7 +151,7 @@ struct UploadProgressCard: View {
           .stroke(
             Color.secondaryNormal,
             style: StrokeStyle(
-              lineWidth: 5,
+              lineWidth: 4,
               lineCap: .round
             )
           )
@@ -159,12 +159,12 @@ struct UploadProgressCard: View {
           .rotationEffect(.degrees(90))
 
         VStack(spacing: 2) {
+          Image(systemName: "video.fill")
+            .font(.system(size: 16))
+            .foregroundStyle(.secondaryNormal)
           Text("압축중")
             .font(.caption1Medium)
             .foregroundStyle(Color.secondaryNormal)
-//          Text("\(Int(progress * 100))%")
-//            .font(.caption1Medium)
-//            .foregroundStyle(Color.secondaryNormal)
         }
       }
     }
@@ -177,7 +177,7 @@ struct UploadProgressCard: View {
         Circle()
           .stroke(
             Color.fillAssitive,
-            lineWidth: 5
+            lineWidth: 4
           )
           .frame(
             width: cardSize / 3,
@@ -188,7 +188,7 @@ struct UploadProgressCard: View {
           .stroke(
             Color.secondaryNormal,
             style: StrokeStyle(
-              lineWidth: 5,
+              lineWidth: 4,
               lineCap: .round
             )
           )
@@ -273,23 +273,12 @@ struct UploadProgressCard: View {
   @Previewable @State var vm = VideoProgressManager.shared
   vm.uploadState = .compressing(progress: 0.65)
   return UploadProgressCard(
-    cardSize: 172,
+    cardSize: 168,
     progressManager: vm,
     onRetry: {},
     onCancel: {}
   )
 }
-
-//#Preview("Idle") {
-//  @Previewable @State var vm = VideoProgressManager.shared
-//  vm.uploadState = .idle
-//  return UploadProgressCard(
-//    cardSize: 172,
-//    progressManager: vm,
-//    onRetry: {},
-//    onCancel: {}
-//  )
-//}
 
 #Preview("Uploading") {
   @Previewable @State var vm = VideoProgressManager.shared

@@ -12,10 +12,10 @@ struct VideoListView: View {
   @EnvironmentObject private var router: MainRouter
   
   @State var vm: VideoListViewModel
-
+  
   @State private var isScrollDown: Bool = false
-//  @State private var isRefreshing: Bool = false
-
+  //  @State private var isRefreshing: Bool = false
+  
   @State private var showDeleteToast: Bool = false
   @State private var showEditToast: Bool = false
   @State private var showEditVideoTitleToast: Bool = false
@@ -35,7 +35,7 @@ struct VideoListView: View {
     self.sectionId = sectionId
     self.trackName = trackName
   }
-
+  
   let tracksId: String
   let sectionId: String
   let trackName: String
@@ -196,14 +196,20 @@ struct VideoListView: View {
   }
   
   private func emptyContent(g: GeometryProxy) -> some View {
-    VStack(spacing: 24) {
-      Image(systemName: "movieclapper.fill")
-        .font(.system(size: 75))
-        .foregroundStyle(.labelAssitive)
-      Text("비디오가 없습니다.")
-        .font(.headline2Medium)
-        .foregroundStyle(.labelAssitive)
+    Button {
+      Task { await vm.requestPermissionAndFetch() }
+    } label: {
+      VStack(spacing: 24) {
+        Image(systemName: "video.fill.badge.plus")
+          .symbolRenderingMode(.hierarchical)
+          .font(.system(size: 75))
+          .foregroundStyle(.secondaryNormal)
+        Text("비디오를 추가해 보세요.")
+          .font(.headline2Medium)
+          .foregroundStyle(.secondaryAssitive)
+      }
     }
+    .buttonStyle(.plain)
     .frame(width: g.size.width, height: g.size.height)
     .position(
       x: g.size.width / 2,
