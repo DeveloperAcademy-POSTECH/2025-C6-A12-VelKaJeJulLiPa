@@ -7,11 +7,6 @@
 
 import Foundation
 
-struct CreateTeamspaceState {
-  var loading: Bool = false
-  var errorAlert: Bool = false
-}
-
 @Observable
 final class CreateTeamspaceViewModel {
   
@@ -49,6 +44,38 @@ final class CreateTeamspaceViewModel {
       print("error: \(error.localizedDescription)") // FIXME: - 에러 분기 처리 추가하기
     }
   }
+  
+  
+  /// 팀 스페이스 이름 입력값을 정제/검증하는 헬퍼
+   /// - Parameters:
+   ///   - oldValue: 기존 값
+   ///   - newValue: 새로 입력된 값
+   /// - Returns: 정제된 텍스트 + overText 플래그
+   func validateTeamspaceName(oldValue: String, newValue: String) -> TeamspaceNameValidationResult {
+     var updated = newValue
+     var overText = false
+     
+     // 1) 첫 글자 공백 막기
+     if let first = updated.first, first == " " {
+       updated = String(updated.drop(while: { $0 == " " }))
+     }
+     
+     // 2) 20자 초과 여부 체크
+     if updated.count > 20 {
+       // 기존 로직 유지
+       if updated.count == 21 {
+         overText = true
+       }
+       // 앞 20자만 유지
+       let limited = String(updated.prefix(20))
+       updated = limited
+     }
+     
+     return TeamspaceNameValidationResult(
+       text: updated,
+       overText: overText
+     )
+   }
 }
 
 
