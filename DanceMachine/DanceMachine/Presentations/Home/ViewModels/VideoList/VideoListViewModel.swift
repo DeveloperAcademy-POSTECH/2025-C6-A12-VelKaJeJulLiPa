@@ -25,6 +25,9 @@ final class VideoListViewModel {
   // 에러 뷰 관련
   var isRefreshing: Bool = false
   var showErrorView: Bool = false
+  var showDeleteErrorToast: Bool = false
+  var showVideoTitleEditErrorToast: Bool = false
+  
 
   var selectedSection: Section?
 
@@ -315,7 +318,6 @@ extension VideoListViewModel {
       )
       print("\(videoId)의 영상 제목 \(newTitle)로 변경 완료")
       
-      // TODO: 캐시도 업데이트 해야함. #37 브랜치 머지 된 이후
       await dataCacheManager.updateVideoTitle(
         videoId: video.videoId.uuidString,
         newTitle: newTitle,
@@ -328,6 +330,7 @@ extension VideoListViewModel {
           var updatedVideo = self.videos[index]
           updatedVideo.videoTitle = newTitle
           self.videos[index] = updatedVideo
+          self.errorMsg = "동영상 이름 수정을 실패했습니다."
         }
         self.isLoading = false
       }
@@ -338,7 +341,8 @@ extension VideoListViewModel {
     } catch {
       await MainActor.run {
         self.isLoading = false
-        self.errorMsg = "영상 제목 수정에 실패했습니다. 다시 시도해 주세요."
+        self.errorMsg = "동영상 이름 수정을 실패했습니다."
+        self.showVideoTitleEditErrorToast = true
       }
       print("영상 제목 수정 실패: \(error)")
     }
@@ -404,9 +408,10 @@ extension VideoListViewModel {
         startTime: startTime
       )
       
-      await MainActor.run { // TODO: 에러 처리
+      await MainActor.run {
         self.isLoading = false
-        self.errorMsg = "영상 삭제에 실패했습니다. 다시 시도해 주세요."
+        self.errorMsg = "동영상 삭제를 실패했습니다."
+        self.showDeleteErrorToast = true
       }
       print("영상 삭제 실패")
     }
