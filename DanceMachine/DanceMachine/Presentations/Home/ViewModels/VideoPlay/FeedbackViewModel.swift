@@ -274,7 +274,6 @@ extension FeedbackViewModel {
 extension FeedbackViewModel {
   // 피드백의 댓글 조회
   func loadReply(for feedbackId: String) async throws {
-    throw FeedbackError.fetchReplyFailed
     do {
       let fetchedReply: [Reply] = try await store.fetchAllFromSubcollection(
         under: .feedback,
@@ -289,9 +288,8 @@ extension FeedbackViewModel {
       }
       
     } catch {
-      throw FeedbackError.fetchReplyFailed
       self.showErrorView = true
-      print("댓글 조회 실패: \(error)")
+      throw FeedbackError.fetchReplyFailed
     }
   }
   // 댓글 작성

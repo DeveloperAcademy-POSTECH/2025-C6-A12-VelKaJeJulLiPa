@@ -109,7 +109,6 @@ extension VideoDetailViewModel {
   
   private func fetchMember(teamspaceId: String) async throws -> [Members] {
     do {
-      throw MemberError.fetchFailed
       let m: [Members] = try await store.fetchAllFromSubcollection(
         under: .teamspace,
         parentId: teamspaceId,
