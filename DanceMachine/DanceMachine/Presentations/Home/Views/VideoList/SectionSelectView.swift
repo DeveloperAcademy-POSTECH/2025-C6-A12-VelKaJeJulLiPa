@@ -83,9 +83,7 @@ struct SectionSelectView: View {
             tracksId: tracksId,
             oldSectionId: sectionId
           )
-          // 캐시에 업데이트되었으므로 뒤로 가면 자동 반영됨
-          NotificationCenter.post(.video(.videoEdit))
-          dismiss()
+          await MainActor.run { dismiss() }
         }
       }
     )
