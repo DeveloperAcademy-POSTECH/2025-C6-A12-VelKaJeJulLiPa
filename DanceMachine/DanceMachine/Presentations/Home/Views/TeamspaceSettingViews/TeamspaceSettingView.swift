@@ -63,8 +63,8 @@ struct TeamspaceSettingView: View {
       await viewModel.onAppear()
     }
     .onDisappear {
-      viewModel.teamspaceSettingPresentationState.selectedUserForRemoval = nil
       // 화면 사라질 때, 선택 유저 초기화
+      viewModel.teamspaceSettingPresentationState.selectedUserForRemoval = nil
     }
     .teamspaceModals(viewModel, router: rotuer) // 모달
   }

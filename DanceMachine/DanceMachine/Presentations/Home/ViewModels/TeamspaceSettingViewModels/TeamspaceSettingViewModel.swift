@@ -496,7 +496,7 @@ extension TeamspaceSettingViewModel {
   /// 현재 로그인 유저가 팀장(owner)인지 여부를 판별합니다.
   /// - 사용처:
   ///   - onAppear()
-  private func isTeamspaceOwner() -> Bool {
+  func isTeamspaceOwner() -> Bool {
     self.currentTeamspace?.ownerId == FirebaseAuthManager.shared.userInfo?.userId ?? ""
   }
 }
