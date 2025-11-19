@@ -82,6 +82,8 @@ extension View {
           Task {
             switch viewModel.dataState.teamspaceRole {
             case .viewer:
+              viewModel.dataState.loading = true
+              defer { viewModel.dataState.loading = false }
               try await viewModel.leaveTeamspace()
               await MainActor.run { router.pop() }
             case .owner:
