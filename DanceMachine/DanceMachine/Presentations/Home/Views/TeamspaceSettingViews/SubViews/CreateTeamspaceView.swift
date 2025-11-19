@@ -170,7 +170,7 @@ struct CreateTeamspaceView: View {
   
   // MARK: - 텍스트 필드 뷰
   @ViewBuilder
-  func textFieldView() -> some View {
+  private func textFieldView() -> some View {
     // 가운데 정렬 텍스트 필드 + 배경
     TextField("팀 이름", text: $teamspaceNameText)
       .font(.headline2Medium)
@@ -229,7 +229,7 @@ struct CreateTeamspaceView: View {
   
   // MARK: - 텍스트 필드 아이템 (글자수 라벨, x 버튼)
   @ViewBuilder
-  func textFieldItem() -> some View {
+  private func textFieldItem() -> some View {
     if self.overText == false {
       Text("\(teamspaceNameText.count)/20")
         .font(.headline2Medium)
@@ -274,7 +274,7 @@ struct CreateTeamspaceView: View {
   }
   
   // MARK: - 배경화면 색 분기처리 ( sheet / Navigation )
-  func backgroundColor(style presentationStyle: PresentationStyle) -> Color {
+  private func backgroundColor(style presentationStyle: PresentationStyle) -> Color {
     switch presentationStyle {
     case .sheet:
       Color.backgroundElevated
@@ -284,7 +284,7 @@ struct CreateTeamspaceView: View {
   }
   
   // MARK: - 텍스트 필드 색 분기처리 ( sheet / Navigation )
-  func textFieldBackgroundColor(style presentationStyle: PresentationStyle) -> Color {
+  private func textFieldBackgroundColor(style presentationStyle: PresentationStyle) -> Color {
     switch presentationStyle {
     case .sheet:
       Color.fillStrong
