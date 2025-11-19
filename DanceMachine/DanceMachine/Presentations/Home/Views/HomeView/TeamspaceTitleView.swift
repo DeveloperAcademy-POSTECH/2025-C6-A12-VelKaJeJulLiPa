@@ -24,7 +24,7 @@ struct TeamspaceTitleView: View {
       static let hstackSpacing: CGFloat = 8
       static let titleText: String = "팀 스페이스를 생성하세요"
       static let teamspaceEmptyTitleText: String = ""
-      static let imageName: String = "chevron.right"
+      static let imageName: String = "person.2.badge.gearshape.fill"
       static let imageFontSize: CGFloat = 17
     }
   }
@@ -54,10 +54,10 @@ struct TeamspaceTitleView: View {
             .foregroundStyle(Color.labelStrong)
           
           Image(systemName: Layout.EmptyTeamspaceViewLayout.imageName)
-            .font(.system(size: Layout.EmptyTeamspaceViewLayout.imageFontSize, weight: .semibold))
+            .font(.system(size: Layout.EmptyTeamspaceViewLayout.imageFontSize, weight: .medium))
             .foregroundStyle(Color.labelStrong)
         }
-        .padding(.vertical, 16)
+        .padding(.vertical, 6.5)
       }
     }
   }
@@ -66,20 +66,23 @@ struct TeamspaceTitleView: View {
   // MARK: - 팀 스페이스 선택 뷰
   private var nonEmptyTeamspaceView: some View {
     HStack(spacing: 8) {
-      Text(viewModel.currentTeamspace?.teamspaceName ?? Layout.NonEmptyTeamspaceViewLayout.teamspaceEmptyTitleText)
-        .font(.heading1SemiBold)
-        .foregroundStyle(Color.labelStrong)
-      
-      Spacer()
-      
-      Button {
-        router.push(to: .teamspace(.setting))
-      } label: {
-        Image(systemName: Layout.NonEmptyTeamspaceViewLayout.imageName)
-          .font(.system(size: Layout.NonEmptyTeamspaceViewLayout.imageFontSize, weight: .medium))
+      Group {
+        Text(viewModel.currentTeamspace?.teamspaceName ?? Layout.NonEmptyTeamspaceViewLayout.teamspaceEmptyTitleText)
+          .font(.heading1SemiBold)
           .foregroundStyle(Color.labelStrong)
+        
+        Spacer()
+        
+        Button {
+          router.push(to: .teamspace(.setting))
+        } label: {
+          Image(systemName: Layout.NonEmptyTeamspaceViewLayout.imageName)
+            .font(.system(size: Layout.NonEmptyTeamspaceViewLayout.imageFontSize, weight: .medium))
+            .foregroundStyle(Color.labelStrong)
+        }
+        .clearGlassButtonIfAvailable()
       }
-      .clearGlassButtonIfAvailable()
+      .padding(.vertical, 6.5)
     }
   }
 }
