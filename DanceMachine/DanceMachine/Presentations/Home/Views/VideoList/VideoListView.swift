@@ -20,6 +20,7 @@ struct VideoListView: View {
   @State private var showEditToast: Bool = false
   @State private var showEditVideoTitleToast: Bool = false
   @State private var showCreateReportSuccessToast: Bool = false
+  @State private var showVideoEditFailedToast: Bool = false
   
   @State private var pickerViewModel = VideoPickerViewModel()
   
@@ -108,63 +109,65 @@ struct VideoListView: View {
       )
     }
     .toast(
-      isPresented: $showDeleteToast,
+      isPresented: $vm.showVideoTitleEditErrorToast,
       duration: 2,
       position: .bottom,
       bottomPadding: 16,
       content: {
         ToastView(
-          text: "동영상이 삭제되었습니다.",
-          icon: .check
+          text: vm.errorMsg ?? "동영상 이름 수정을 실패했습니다.",
+          icon: .warning
         )
       }
     )
     .toast(
-      isPresented: $showEditToast,
+      isPresented: $vm.showDeleteErrorToast,
       duration: 2,
       position: .bottom,
       bottomPadding: 16,
       content: {
-        ToastView(text: "영상이 이동되었습니다.", icon: .check)
+        ToastView(
+          text: vm.errorMsg ?? "동영상 삭제를 실패했습니다.",
+          icon: .warning
+        )
       }
     )
-    .toast(
+    .notificationToast(
+      isPresented: $showVideoEditFailedToast,
+      text: "동영상 이동을 실패했습니다.",
+      icon: .warning,
+      for: .video(.videoEditFailed),
+      bottomPadding: 16
+    )
+    .notificationToast(
+      isPresented: $showDeleteToast,
+      text: "동영상이 삭제되었습니다.",
+      icon: .check,
+      for: .video(.videoDelete),
+      bottomPadding: 16
+    )
+    .notificationToast(
       isPresented: $showEditVideoTitleToast,
-      duration: 2,
-      position: .bottom,
-      bottomPadding: 16,
-      content: {
-        ToastView(text: "영상 이름이 수정되었습니다.", icon: .check)
-      }
+      text: "영상 이름이 수정되었습니다.",
+      icon: .check,
+      for: .video(.videoTitleEdit),
+      bottomPadding: 16
     )
-    .toast(
+    .notificationToast(
+      isPresented: $showEditToast,
+      text: "영상이 이동되었습니다.",
+      icon: .check,
+      for: .video(.videoEdit),
+      bottomPadding: 16
+    )
+    .notificationToast(
       isPresented: $showCreateReportSuccessToast,
-      duration: 3,
-      position: .bottom,
-      bottomPadding: 16, // FIXME: 신고하기 - 하단 공백 조정 필요
-      content: {
-        ToastView(text: "신고가 접수되었습니다.\n조치사항은 이메일로 안내해드리겠습니다.", icon: .check)
-      }
+      text: "신고가 접수되었습니다.\n조치사항은 이메일로 안내해드리겠습니다.",
+      icon: .check,
+      for: .toast(.reportSuccess),
+      bottomPadding: 16,
+      targetViewType: .videoListView
     )
-    // MARK: 영상 삭제 토스트 리시버
-    .onReceive(NotificationCenter.publisher(for: .video(.videoDelete))) { _ in
-      self.showDeleteToast = true
-    }
-    // MARK: 영상 이름 수정 토스트 리시버
-    .onReceive(NotificationCenter.publisher(for: .video(.videoTitleEdit))) { _ in
-      self.showEditVideoTitleToast = true
-    }
-    // MARK: 영상 섹션 이동 토스트 리시버
-    .onReceive(NotificationCenter.publisher(for: .video(.videoEdit))) { _ in
-      self.showEditToast = true
-    }
-    // MARK: 신고 완료 토스트 리시버
-    .onReceive(NotificationCenter.publisher(for: .toast(.reportSuccess))) { notification in
-      if let toastViewName = notification.userInfo?["toastViewName"] as? ReportToastReceiveViewType,
-         toastViewName == .videoListView {
-        showCreateReportSuccessToast = true
-      }
-    }
     .overlay(alignment: .center) {
       if vm.showPermissionModal {
         PhotoLibraryPermissionView(
