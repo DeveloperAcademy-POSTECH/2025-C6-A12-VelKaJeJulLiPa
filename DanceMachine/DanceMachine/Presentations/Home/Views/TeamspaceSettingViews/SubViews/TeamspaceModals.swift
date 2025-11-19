@@ -119,6 +119,8 @@ extension View {
         Button(TeamspaceModalsLayout.DeleteTeamspace.cancelTitle, role: .cancel) {}
         Button(TeamspaceModalsLayout.DeleteTeamspace.deleteTitle, role: .destructive) {
           Task {
+            viewModel.dataState.loading = true
+            defer { viewModel.dataState.loading = false }
             try await viewModel.removeTeamspaceAndDetachFromAllUsers()
             await MainActor.run { router.pop() }
           }
