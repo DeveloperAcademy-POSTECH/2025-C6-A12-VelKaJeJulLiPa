@@ -27,7 +27,8 @@ struct FeedbackPaperDrawingView: View {
   @State private var photoItem: PhotosPickerItem?
   
   /// 완료 시 만들어진 이미지를 넘겨줄 콜백 (필요 없으면 nil)
-  var onComplete: ((UIImage) -> Void)?
+  var onComplete: ((UIImage, Data?) -> Void)? // markup 데이터도 넣어줌
+  var initialMarkupData: Data? = nil // markup 데이터
   
   var body: some View {
     ZStack {
@@ -146,12 +147,15 @@ struct FeedbackPaperDrawingView: View {
         // 완료 버튼
         Button {
           Task { @MainActor in
-            
+            // markup 데이터 먼저 export
+            let markupData = try? await feedbackPaperDrawingData.exportMarkupData()
+
+            // 최종 이미지 export (배경 + 드로잉 합성)
             if let image = await feedbackPaperDrawingData.exportAsImage(
               scale: displayScale,
               backgroundColor: UIColor(Color.materialDimmer)
             ) {
-              onComplete?(image)
+              onComplete?(image, markupData) // 이미지 + markup 데이터를 콜백으로 전달
               dismiss()
             } else {
               print("이미지 캡쳐 실패")
@@ -188,7 +192,8 @@ struct FeedbackPaperDrawingView: View {
       FeedbackPaperDrawingEditView(
         size: proxy.size,
         image: self.image,
-        feedbackPaperDrawingData: feedbackPaperDrawingData
+        feedbackPaperDrawingData: feedbackPaperDrawingData,
+        initialMarkupData: initialMarkupData
       )
     }
   }
