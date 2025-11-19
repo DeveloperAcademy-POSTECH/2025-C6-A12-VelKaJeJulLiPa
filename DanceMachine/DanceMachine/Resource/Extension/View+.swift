@@ -223,4 +223,19 @@ extension View {
       .presentationDetents([.fraction(0.4)])
       .presentationCornerRadius(16)
   }
+  
+  /// 수정중일때, 스와이프 기능을 막는 로직입니다.
+  @ViewBuilder
+  func conditionalSwipeActions<Actions: View>(
+    enabled: Bool,
+    edge: HorizontalEdge = .trailing,
+    allowsFullSwipe: Bool = true,
+    @ViewBuilder actions: () -> Actions
+  ) -> some View {
+    if enabled {
+      self.swipeActions(edge: edge, allowsFullSwipe: allowsFullSwipe, content: actions)
+    } else {
+      self
+    }
+  }
 }
