@@ -14,24 +14,37 @@ struct FeedbackPaperDrawingEditView: View {
   var size: CGSize
   var image: UIImage?
   @State var feedbackPaperDrawingData: FeedbackPaperDrawingData
-  
+  var initialMarkupData: Data? // 편집 모드일 때 기존 마크업 데이터
+
   init(
     size: CGSize,
     image: UIImage?,
-    feedbackPaperDrawingData: FeedbackPaperDrawingData
+    feedbackPaperDrawingData: FeedbackPaperDrawingData,
+    initialMarkupData: Data? = nil
   ) {
     self.size = size
     self.image = image
     self._feedbackPaperDrawingData = .init(initialValue: feedbackPaperDrawingData)
+    self.initialMarkupData = initialMarkupData
   }
-  
+
   var body: some View {
     if let controller = feedbackPaperDrawingData.controller {
+      // 컨트롤러가 준비되면 PaperKit 뷰 표시
       PaperControllerView(controller: controller)
     } else {
+      // 컨트롤러 준비 중 로딩 표시
       ProgressView()
         .onAppear {
-          feedbackPaperDrawingData.initiakizeController(size, image: image)
+          // 분기 처리: 편집 모드 vs 새 드로잉
+          if let data = initialMarkupData,
+             let imageSize = image?.size {
+            // 편집 모드: 저장된 마크업 데이터 로드
+            try? feedbackPaperDrawingData.loadMarkupData(data, size: imageSize)
+          } else {
+            // 새 드로잉: 빈 캔버스 초기화
+            feedbackPaperDrawingData.initiakizeController(size, image: image)
+          }
         }
     }
   }
