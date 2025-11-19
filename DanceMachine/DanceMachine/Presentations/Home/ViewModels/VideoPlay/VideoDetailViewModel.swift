@@ -20,7 +20,8 @@ final class VideoDetailViewModel {
   var forceShowLandscape: Bool = false
   
   var isLoading: Bool = false
-  // TODO: 에러메세지 타입 구현!
+  var showMemberError: Bool = false
+  var errorMsg: String = ""
   
   init() {
     self.videoVM = VideoViewModel()
@@ -41,50 +42,44 @@ final class VideoDetailViewModel {
     videoURL: String,
     teamspaceId: String
   ) async {
-#if DEBUG
-    if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
-      return }
-#endif
-    
+    if ProcessInfo.isRunningInPreviews { return } // 프리뷰 전용
+
     await MainActor.run {
       self.isLoading = true
     }
-    
-    do {
-      try await withThrowingTaskGroup(of: Void.self) { g in
-        g.addTask {
-          try await self.videoVM.setupPlayer(from: videoURL, videoId: videoId)
-        }
-        g.addTask {
-          try await self.loadTeamMembers(teamspaceId: teamspaceId)
-        }
-        g.addTask {
-          try await self.feedbackVM.loadFeedbacks(for: videoId)
-        }
-        try await g.waitForAll()
-        
-        await MainActor.run {
-          self.isLoading = false
-        }
+
+    // 각각 독립적으로 에러 처리
+    await withTaskGroup(of: Void.self) { g in
+      // 비디오 로드 (VideoViewModel 내부에서 에러 처리)
+      g.addTask {
+        await self.videoVM.setupPlayer(from: videoURL, videoId: videoId)
       }
-    } catch { // TODO: 에러처리 여기가 1순위!!!!!!!!!!!!!!!!!!
-      print("데이터 불러오기 실패")
-      await MainActor.run {
-        self.isLoading = false
+
+      // 팀 멤버 로드 (내부에서 에러 처리)
+      g.addTask {
+        await self.loadTeamMembers(teamspaceId: teamspaceId)
       }
+
+      // 피드백 로드 (FeedbackViewModel 내부에서 에러 처리)
+      g.addTask {
+        await self.feedbackVM.loadFeedbacks(for: videoId)
+      }
+
+      await g.waitForAll()
+    }
+
+    await MainActor.run {
+      self.isLoading = false
     }
   }
 }
 // MARK: 팀 스페이스 관련
 extension VideoDetailViewModel {
   // 팀 스페이스 멤버 조회
-  func loadTeamMembers(teamspaceId: String) async throws {
+  func loadTeamMembers(teamspaceId: String) async {
     do {
-      let members: [Members] = try await store.fetchAllFromSubcollection(
-        under: .teamspace,
-        parentId: teamspaceId,
-        subCollection: .members
-      )
+      
+      let members = try await self.fetchMember(teamspaceId: teamspaceId)
       
       var users: [User] = []
       for member in members {
@@ -97,9 +92,32 @@ extension VideoDetailViewModel {
       }
       await MainActor.run {
         self.teamMembers = users
+        self.errorMsg = ""
       }
-    } catch { // TODO: 에러 처리
-      print("팀 멤버 조회 실패: \(error)")
+    } catch let error as MemberError {
+      await MainActor.run {
+        self.showMemberError = true
+        self.errorMsg = error.userMsg
+      }
+    } catch {
+      await MainActor.run {
+        self.showMemberError = true
+        self.errorMsg = "알 수 없는 에러"
+      }
+    }
+  }
+  
+  private func fetchMember(teamspaceId: String) async throws -> [Members] {
+    do {
+      throw MemberError.fetchFailed
+      let m: [Members] = try await store.fetchAllFromSubcollection(
+        under: .teamspace,
+        parentId: teamspaceId,
+        subCollection: .members
+      )
+      return m
+    } catch {
+      throw MemberError.fetchFailed
     }
   }
   // 멘션 검색 기능
