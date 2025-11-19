@@ -11,6 +11,7 @@ struct TeamspaceTitleView: View {
   @EnvironmentObject private var router: MainRouter
   
   @Bindable var viewModel: HomeViewModel
+  @Bindable var projectListViewModel: ProjectListViewModel
   
   fileprivate struct Layout {
     enum EmptyTeamspaceViewLayout {
@@ -63,26 +64,29 @@ struct TeamspaceTitleView: View {
   }
   
   
-  // MARK: - 팀 스페이스 선택 뷰
+  // MARK: - 팀 스페이스가 있을 때 보이는 뷰
+  @ViewBuilder
   private var nonEmptyTeamspaceView: some View {
-    HStack(spacing: 8) {
-      Group {
-        Text(viewModel.currentTeamspace?.teamspaceName ?? Layout.NonEmptyTeamspaceViewLayout.teamspaceEmptyTitleText)
-          .font(.heading1SemiBold)
-          .foregroundStyle(Color.labelStrong)
-        
-        Spacer()
-        
-        Button {
-          router.push(to: .teamspace(.setting))
-        } label: {
-          Image(systemName: Layout.NonEmptyTeamspaceViewLayout.imageName)
-            .font(.system(size: Layout.NonEmptyTeamspaceViewLayout.imageFontSize, weight: .medium))
+    if !(projectListViewModel.editingState.rowState == .editing) {
+      HStack(spacing: 8) {
+        Group {
+          Text(viewModel.currentTeamspace?.teamspaceName ?? Layout.NonEmptyTeamspaceViewLayout.teamspaceEmptyTitleText)
+            .font(.heading1SemiBold)
             .foregroundStyle(Color.labelStrong)
+          
+          Spacer()
+          
+          Button {
+            router.push(to: .teamspace(.setting))
+          } label: {
+            Image(systemName: Layout.NonEmptyTeamspaceViewLayout.imageName)
+              .font(.system(size: Layout.NonEmptyTeamspaceViewLayout.imageFontSize, weight: .medium))
+              .foregroundStyle(Color.labelStrong)
+          }
+          .clearGlassButtonIfAvailable()
         }
-        .clearGlassButtonIfAvailable()
+        .padding(.vertical, 6.5)
       }
-      .padding(.vertical, 6.5)
     }
   }
 }
@@ -93,8 +97,11 @@ struct TeamspaceTitleView: View {
 #Preview("팀 없을 때") {
   ZStack {
     Color.backgroundNormal.ignoresSafeArea()
-    TeamspaceTitleView(viewModel: HomeViewModel())
-      .environmentObject(MainRouter())
+    TeamspaceTitleView(
+      viewModel: HomeViewModel(),
+      projectListViewModel: ProjectListViewModel()
+    )
+    .environmentObject(MainRouter())
   }
 }
 
