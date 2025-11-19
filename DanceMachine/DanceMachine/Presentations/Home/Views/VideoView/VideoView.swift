@@ -50,6 +50,8 @@ struct VideoView: View {
 //  @State private var reportTargetFeedback: Feedback? = nil
   @State private var showCreateReportSuccessToast: Bool = false
   
+  /// =======================================================
+  /// 드로잉 관련
   // MARK: 이미지 캡쳐 결과 //
   @State private var showFeedbackPaperDrawingView: Bool = false
   @State private var capturedImage: UIImage? = nil
@@ -63,6 +65,13 @@ struct VideoView: View {
   @Namespace private var feedbackImageNamespace
   @State private var selectedFeedbackImageURL: String? = nil
   @State private var showFeedbackImageFull: Bool = false
+  
+  // MARK: 드로잉 데이터 영속성 (편집 가능하도록 저장)
+  @State private var savedDrawingData: Data? = nil // PencilKit 드로잉 데이터
+  @State private var savedMarkupData: Data? = nil // PaperKit 마크업 데이터
+  @State private var backgroundImage: UIImage? = nil // 원본 캡처 이미지
+  @State private var isEditingExistingDrawing: Bool = false // 편집 모드 여부
+  /// ========================================================
   
   // MARK: 전역으로 관리되는 ID
   let userId: String = FirebaseAuthManager.shared.userInfo?.userId ?? ""
@@ -107,6 +116,8 @@ struct VideoView: View {
             showFeedbackPaperDrawingView: $showFeedbackPaperDrawingView,
             capturedImage: $capturedImage,
             editedOverlayImage: $editedOverlayImage,
+            backgroundImage: $backgroundImage,
+            isEditingExistingDrawing: $isEditingExistingDrawing,
             drawingImageNamespace: drawingImageNamespace,
             showDrawingImageFull: $showDrawingImageFull,
             feedbackImageNamespace: feedbackImageNamespace,
@@ -137,6 +148,8 @@ struct VideoView: View {
                 showFeedbackPaperDrawingView: $showFeedbackPaperDrawingView,
                 capturedImage: $capturedImage,
                 editedOverlayImage: $editedOverlayImage,
+                backgroundImage: $backgroundImage,
+                isEditingExistingDrawing: $isEditingExistingDrawing,
                 drawingImageNamespace: drawingImageNamespace,
                 showDrawingImageFull: $showDrawingImageFull,
                 feedbackImageNamespace: feedbackImageNamespace,
@@ -180,9 +193,14 @@ struct VideoView: View {
         }
       }
       .onChange(of: showFeedbackInput) { _, newValue in
+        // 피드백 입력창이 닫힐 때 모든 드로잉 관련 데이터 초기화
         if !newValue {
           vm.feedbackVM.isRecordingInterval = false
-          self.editedOverlayImage = nil // 인풋 뷰가 내려갈 때 이미지도 초기화
+          self.editedOverlayImage = nil // 합성된 이미지 초기화
+          self.savedDrawingData = nil // PencilKit 데이터 초기화
+          self.savedMarkupData = nil // PaperKit 데이터 초기화
+          self.backgroundImage = nil // 원본 캡처 이미지 초기화
+          self.isEditingExistingDrawing = false // 편집 모드 초기화
         }
       }
       .toolbar(.hidden, for: .tabBar)
@@ -206,26 +224,41 @@ struct VideoView: View {
     .fullScreenCover(isPresented: $showFeedbackPaperDrawingView) {
       // MARK: - iOS 18 / 26 분기 처리 (Drawing)
       if #available(iOS 26.0, *) {
-        FeedbackPaperDrawingView(image: $capturedImage) { image in
-          editedOverlayImage = image
-          self.capturedImage = nil
-        }
+        FeedbackPaperDrawingView(
+          image: $capturedImage,
+          onComplete: { finalImage, markupData in
+            // 완료 시: 합성 이미지 + 마크업 데이터 저장
+            editedOverlayImage = finalImage // 배경 + 드로잉 합성 이미지
+            savedMarkupData = markupData // 수정 가능한 마크업 데이터
+            backgroundImage = capturedImage // 원본 배경 이미지 (재수정 시 사용)
+            self.capturedImage = nil
+            isEditingExistingDrawing = false
+          },
+          initialMarkupData: isEditingExistingDrawing ? savedMarkupData : nil // 편집 모드면 기존 데이터 로드
+        )
       }
       else {
-        FeedbackPencilDrawingView(image: $capturedImage,
-          onDone: { merged in
-          DispatchQueue.main.async {
-            editedOverlayImage = merged
-            self.capturedImage = nil
-            showFeedbackPaperDrawingView = false
-          }
-        },
+        FeedbackPencilDrawingView(
+          image: $capturedImage,
+          initialDrawing: isEditingExistingDrawing ? savedDrawingData : nil, // 편집 모드면 기존 데이터 로드
+          onDone: { merged, drawingData in
+            DispatchQueue.main.async {
+              // 완료 시: 합성 이미지 + 드로잉 데이터 저장
+              editedOverlayImage = merged // 배경 + 드로잉 합성 이미지
+              savedDrawingData = drawingData // 수정 가능한 드로잉 데이터
+              backgroundImage = capturedImage // 원본 배경 이미지 (재수정 시 사용)
+              self.capturedImage = nil
+              isEditingExistingDrawing = false
+              showFeedbackPaperDrawingView = false
+            }
+          },
           onCancel: {
-          DispatchQueue.main.async {
-            self.capturedImage = nil
-            showFeedbackPaperDrawingView = false
+            DispatchQueue.main.async {
+              self.capturedImage = nil
+              isEditingExistingDrawing = false
+              showFeedbackPaperDrawingView = false
+            }
           }
-        }
         )
       }
     }

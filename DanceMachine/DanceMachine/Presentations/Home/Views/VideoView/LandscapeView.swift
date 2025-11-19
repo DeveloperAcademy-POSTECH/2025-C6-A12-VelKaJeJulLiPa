@@ -44,14 +44,16 @@ struct LandscapeView: View {
   @Binding var showFeedbackPaperDrawingView: Bool
   @Binding var capturedImage: UIImage?
   @Binding var editedOverlayImage: UIImage?
-  
+  @Binding var backgroundImage: UIImage?
+  @Binding var isEditingExistingDrawing: Bool
+
   let drawingImageNamespace: Namespace.ID
   @Binding var showDrawingImageFull: Bool
 
   let feedbackImageNamespace: Namespace.ID
   @Binding var selectedFeedbackImageURL: String?
   @Binding var showFeedbackImageFull: Bool
-  
+
   /// 이미지 확대 변수
   private var isImageOverlayPresented: Bool {
     showDrawingImageFull || showFeedbackImageFull
@@ -381,6 +383,7 @@ struct LandscapeView: View {
             },
             timeSeek: { vm.videoVM.seekToTime(to: self.pointTime) },
             drawingButtonTapped: { captureCurrentFrame() },
+            editDrawingTapped: { editExistingDrawing() },
             feedbackDrawingImage: $editedOverlayImage,
             imageNamespace: drawingImageNamespace,
             showImageFull: $showDrawingImageFull
@@ -390,32 +393,50 @@ struct LandscapeView: View {
     }
   }
 
-  /// 현재 플레이어 시점의 프레임을 이미지로 캡처 (copyCGImage 대체)
+  // MARK: - 드로잉 관련 함수
+
+  /// "드로잉 하기" 버튼 클릭 시: 현재 비디오 프레임을 캡처하여 드로잉 시작
+  /// - 비디오의 현재 재생 시점을 이미지로 캡처
+  /// - 캡처한 이미지를 배경으로 드로잉 뷰 표시
+  /// - isEditingExistingDrawing = false (새 드로잉 모드)
   private func captureCurrentFrame() {
     guard let player = vm.videoVM.player,
           let asset  = player.currentItem?.asset else { return }
-    
+
     let time = player.currentTime()
-    
+
     let generator = AVAssetImageGenerator(asset: asset)
     generator.appliesPreferredTrackTransform = true
     generator.requestedTimeToleranceBefore = .zero
     generator.requestedTimeToleranceAfter  = .zero
     generator.dynamicRangePolicy = .forceSDR
-    
+
     generator.generateCGImageAsynchronously(for: time) { cgImage, actualTime, error in
       guard let cgImage = cgImage, error == nil else {
-        // print("error: \(error ?? NSError()")
         print("적절한 에러 처리 추가하기")
         return
       }
       let image = UIImage(cgImage: cgImage)
       DispatchQueue.main.async {
-        self.capturedImage = image
+        self.capturedImage = image // 드로잉 뷰에 전달할 이미지
+        self.backgroundImage = image // 재수정 시 사용할 원본 이미지 저장
+        self.isEditingExistingDrawing = false // 새 드로잉 모드
         self.showFeedbackPaperDrawingView = true
         print("이미지 캡처 성공 @ \(CMTimeGetSeconds(actualTime))s")
       }
     }
+  }
+
+  /// 썸네일 클릭 시: 기존 드로잉을 수정 모드로 열기
+  /// - 원본 배경 이미지 (backgroundImage)를 다시 로드
+  /// - 저장된 드로잉 데이터 (savedMarkupData/savedDrawingData)를 로드
+  /// - isEditingExistingDrawing = true (편집 모드)
+  private func editExistingDrawing() {
+    guard let backgroundImage = backgroundImage else { return }
+
+    self.capturedImage = backgroundImage // 원본 배경 이미지 재로드
+    self.isEditingExistingDrawing = true // 편집 모드 활성화
+    self.showFeedbackPaperDrawingView = true
   }
 }
 

@@ -23,6 +23,9 @@ struct FeedbackInPutView: View {
   
   let drawingButtonTapped: () -> Void
   
+  // 드로잉 편집
+  let editDrawingTapped: () -> Void
+  
   @State private var content: String = ""
   @FocusState private var isFocused: Bool
 
@@ -123,23 +126,25 @@ struct FeedbackInPutView: View {
           timeSeek: { timeSeek() }
         )
       }
-      Button {
-        drawingButtonTapped()
-      } label: {
-        HStack(spacing: 4) {
-          Image(systemName: "scribble.variable")
-            .font(.footnoteMedium)
-            .foregroundStyle(.labelStrong)
-          Text((feedbackDrawingImage != nil) ? "수정하기" : "드로잉 하기")
-            .font(.footnoteMedium)
-            .foregroundStyle(.labelStrong)
+      if self.feedbackDrawingImage == nil {
+        Button {
+          drawingButtonTapped()
+        } label: {
+          HStack(spacing: 4) {
+            Image(systemName: "scribble.variable")
+              .font(.footnoteMedium)
+              .foregroundStyle(.labelStrong)
+            Text("드로잉 하기")
+              .font(.footnoteMedium)
+              .foregroundStyle(.labelStrong)
+          }
+          .padding(.vertical, 7)
+          .padding(.horizontal, 10)
         }
-        .padding(.vertical, 7)
-        .padding(.horizontal, 10)
-      }
-      .background {
-        RoundedRectangle(cornerRadius: 1000)
-          .fill(Color.fillAssitive)
+        .background {
+          RoundedRectangle(cornerRadius: 1000)
+            .fill(Color.fillAssitive)
+        }
       }
       feedbackImageView.frame(width: 30, height: 30)
       Spacer()
@@ -169,7 +174,8 @@ struct FeedbackInPutView: View {
           .matchedGeometryEffect(id: "feedbackImage", in: imageNamespace)
           .onTapGesture {
             withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-              showImageFull = true
+//              showImageFull = true
+              self.editDrawingTapped() // 기존 이미지를 시트에 전달
             }
           }
       }
@@ -221,6 +227,7 @@ struct FeedbackInPutView: View {
         refresh: {},
         timeSeek: {},
         drawingButtonTapped: {},
+        editDrawingTapped: {},
         feedbackDrawingImage: $feedbackDrawingImage,
         imageNamespace: imageNamespace,
         showImageFull: $showImageFull
