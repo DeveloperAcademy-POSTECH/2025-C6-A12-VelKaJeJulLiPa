@@ -94,7 +94,7 @@ actor VideoCacheManager {
     progressHandler: @escaping (Double) -> Void
   ) async throws -> URL {
     guard let url = URL(string: urlString) else {
-      throw URLError(.badURL)
+      throw VideoError.fetchFailed
     }
     
     print("비디오 다운로드 시작: \(videoId)")

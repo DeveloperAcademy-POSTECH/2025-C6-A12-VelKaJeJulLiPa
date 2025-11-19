@@ -249,6 +249,17 @@ struct VideoView: View {
       }
     )
     .alert(
+      vm.errorMsg,
+      isPresented: $vm.showMemberError,
+      actions: {
+        Button("재시도", role: .destructive) {
+          Task {
+            await vm.loadAllData(videoId: videoId, videoURL: videoURL, teamspaceId: teamspaceId)
+          }
+        }
+      }
+    )
+    .alert(
       "존재하지 않는 영상입니다.",
       isPresented: $vm.videoVM.notiFalseAlert,
       actions: {
