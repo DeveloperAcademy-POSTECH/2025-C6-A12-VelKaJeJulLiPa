@@ -257,16 +257,15 @@ struct TeamspaceSettingView: View {
               .foregroundStyle(Color.accentRedNormal)
           }
           Spacer().frame(height: 32)
-        } else {
-          Button {
-            viewModel.teamspaceSettingPresentationState.isPresentingDeleteTeamspaceAlert = true
-          } label: {
-            Text(NameSpace.Bottom.deleteTeamspaceTitle)
-              .font(.headline2Medium)
-              .foregroundStyle(Color.accentRedStrong)
-          }
-          Spacer().frame(height: 36)
         }
+        Button {
+          viewModel.teamspaceSettingPresentationState.isPresentingDeleteTeamspaceAlert = true
+        } label: {
+          Text(NameSpace.Bottom.deleteTeamspaceTitle)
+            .font(.headline2Medium)
+            .foregroundStyle(Color.accentRedStrong)
+        }
+        Spacer().frame(height: 36)
       }
     }
   }
