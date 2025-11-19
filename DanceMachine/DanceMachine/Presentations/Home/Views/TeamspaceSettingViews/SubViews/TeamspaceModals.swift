@@ -141,13 +141,23 @@ extension View {
         }
         Button(TeamspaceModalsLayout.SingleMemberRemoval.removeTitle, role: .destructive) {
           Task {
-            guard let targetUser = viewModel.teamspaceSettingPresentationState.selectedUserForRemoval else { return }
+            
+            viewModel.dataState.loading = true
+            
+            defer { viewModel.dataState.loading = false }
+            
+            guard let targetUser = viewModel.teamspaceSettingPresentationState.selectedUserForRemoval else {
+              print("targetUser 오류")
+              return
+            }
+            print("targetUser: \(targetUser)")
+            
             do {
               let users = try await viewModel.removeTeamMemberAndReload(userId: targetUser.userId)
-              await MainActor.run {
+//              await MainActor.run {
                 viewModel.dataState.users = users
                 viewModel.teamspaceSettingPresentationState.selectedUserForRemoval = nil
-              }
+             // }
             } catch {
               print("single member remove error: \(error.localizedDescription)")
             }
@@ -187,12 +197,14 @@ extension View {
         if let target = viewModel.teamspaceSettingPresentationState.selectedUserForRemoval {
           MemberManagementView(
             viewModel: viewModel,
-            user: target
+            user: target,
+            onCompleted: {
+              Task {
+                await viewModel.onAppear()
+              }
+            }
           )
           .appHalfSheetStyle()
-          .onDisappear {
-            viewModel.teamspaceSettingPresentationState.selectedUserForRemoval = nil
-          }
         }
       }
       

@@ -62,6 +62,10 @@ struct TeamspaceSettingView: View {
       if ProcessInfo.isRunningInPreviews { return } // 프리뷰 전용
       await viewModel.onAppear()
     }
+    .onDisappear {
+      viewModel.teamspaceSettingPresentationState.selectedUserForRemoval = nil
+      // 화면 사라질 때, 선택 유저 초기화
+    }
     .teamspaceModals(viewModel, router: rotuer) // 모달
   }
   
