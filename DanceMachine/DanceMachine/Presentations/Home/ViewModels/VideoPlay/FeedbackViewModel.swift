@@ -79,7 +79,7 @@ extension FeedbackViewModel {
     } catch {
       await MainActor.run {
         self.isLoading = false
-        self.errorMsg = "알 수 없는 오류입니다.\n잠시 후에 다시 시도해주세요."
+        self.errorMsg = "알 수 없는 오류입니다.\n잠시 후에 다시 시도해 주세요."
         self.showErrorView = true
       }
       print("알 수 없는 오류로 피드백 불러오기 실패")

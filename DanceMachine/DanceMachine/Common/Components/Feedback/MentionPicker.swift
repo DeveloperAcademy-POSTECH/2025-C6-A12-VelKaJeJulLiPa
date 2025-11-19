@@ -42,7 +42,7 @@ struct MentionPicker: View { // FIXME: 디자인 필요
   }
 
   private var emptyView: some View {
-    Text("팀원이 없습니다. 팀원을 초대해주세요")
+    Text("팀원이 없습니다. 팀원을 초대해 주세요")
       .font(.headline2Medium)
       .foregroundStyle(.labelAssitive)
       .frame(maxWidth: .infinity)

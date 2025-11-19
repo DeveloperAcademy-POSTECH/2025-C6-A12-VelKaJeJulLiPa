@@ -227,7 +227,7 @@ struct ReplySheet: View {
       teamMembers: teamMembers,
       filteredMembers: filteredMembers,
       showMentionPicker: mM.showPicker,
-      placeholder: mM.taggedUsers.isEmpty ? "@팀원 태그" : "답글을 입력해주세요.",
+      placeholder: mM.taggedUsers.isEmpty ? "@팀원 태그" : "답글을 입력해 주세요.",
       onSubmit: {
         onReplySubmit(
           content, mM.taggedUsers.map { $0.userId }

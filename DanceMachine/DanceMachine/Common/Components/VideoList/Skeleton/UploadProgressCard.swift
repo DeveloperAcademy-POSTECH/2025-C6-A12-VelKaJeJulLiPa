@@ -260,7 +260,7 @@ struct UploadProgressCard: View {
 
 #Preview("fileToLarge") {
   @Previewable @State var vm = VideoProgressManager.shared
-  vm.uploadState = .fileToLarge(message: "더 짧거나 낮은 화질의 영상을\n선택해주세요.")
+  vm.uploadState = .fileToLarge(message: "더 짧거나 낮은 화질의 영상을\n선택해 주세요.")
   return UploadProgressCard(
     cardSize: 172,
     progressManager: vm,
@@ -293,7 +293,7 @@ struct UploadProgressCard: View {
 
 #Preview("Failed") {
   @Previewable @State var vm = VideoProgressManager.shared
-  vm.uploadState = .failed(message: "네트워크 상태를 확인해주세요.")
+  vm.uploadState = .failed(message: "네트워크 상태를 확인해 주세요.")
   return UploadProgressCard(
     cardSize: 172,
     progressManager: vm,

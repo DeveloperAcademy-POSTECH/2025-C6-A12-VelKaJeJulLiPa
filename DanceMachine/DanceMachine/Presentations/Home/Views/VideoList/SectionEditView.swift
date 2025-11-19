@@ -90,7 +90,7 @@ struct SectionEditView: View {
       duration: 2,
       position: .bottom,
       bottomPadding: 63) {
-        ToastView(text: "10자 미만으로 입력해주세요.", icon: .warning)
+        ToastView(text: "10자 미만으로 입력해 주세요.", icon: .warning)
       }
       .unsavedChangesAlert(
         isPresented: $showExitAlert,

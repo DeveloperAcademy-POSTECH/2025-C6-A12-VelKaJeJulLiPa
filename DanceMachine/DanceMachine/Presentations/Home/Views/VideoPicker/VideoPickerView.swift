@@ -42,7 +42,7 @@ struct VideoPickerView: View {
         position: .bottom,
         bottomPadding: 16,
         content: {
-          ToastView(text: "20자 미만으로 입력해주세요.", icon: .warning)
+          ToastView(text: "20자 미만으로 입력해 주세요.", icon: .warning)
         }
       )
       .dismissKeyboardOnTap()
@@ -176,7 +176,7 @@ struct VideoPickerView: View {
       .frame(height: 51)
       .overlay {
         TextField(
-          vm.selectedAsset == nil ? "업로드할 동영상을 선택하세요." : "동영상 제목을 입력해주세요.",
+          vm.selectedAsset == nil ? "업로드할 동영상을 선택하세요." : "동영상 제목을 입력해 주세요.",
           text: $pickerViewModel.videoTitle
         )
         .padding([.leading, .vertical], 16)

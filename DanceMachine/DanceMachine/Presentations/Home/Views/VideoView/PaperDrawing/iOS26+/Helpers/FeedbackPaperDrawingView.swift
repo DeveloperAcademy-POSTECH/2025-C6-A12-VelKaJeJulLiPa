@@ -94,7 +94,7 @@ struct FeedbackPaperDrawingView: View {
         // 텍스트 삽입
         Button {
           // 기본 스타일의 NSAttributedString 생성
-          let attributed = NSAttributedString(string: "텍스트를 입력해주세요.", attributes: [
+          let attributed = NSAttributedString(string: "텍스트를 입력해 주세요.", attributes: [
             .font: UIFont.systemFont(ofSize: 18, weight: .regular),
             .foregroundColor: UIColor.label
           ])
