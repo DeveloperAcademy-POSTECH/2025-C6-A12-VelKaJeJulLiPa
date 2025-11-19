@@ -39,6 +39,8 @@ enum VideoEvent {
   case videoDelete // 영상 삭제 완료
   case videoTitleEdit // 비디오 제목 업데이트 완료
   
+  case videoEditFailed // 영상 이동 실패
+  
   case refreshView
 
   var name: Foundation.Notification.Name {
@@ -46,6 +48,7 @@ enum VideoEvent {
     case .videoEdit: Foundation.Notification.Name("showEditToast")
     case .videoDelete: Foundation.Notification.Name("showDeleteToast")
     case .videoTitleEdit: Foundation.Notification.Name("showEditVideoTitleToast")
+    case .videoEditFailed: Foundation.Notification.Name("videoEditFailed")
   
     case .refreshView: Foundation.Notification.Name("refreshVideoView")
     }
@@ -55,18 +58,12 @@ enum VideoEvent {
 // MARK: - Section Events
 
 enum SectionEvent {
-//  case createFailed // 섹션 생성 실패
-//  case updateFailed // 섹션 수정 실패
-//  case deleteFailed // 섹션 삭제 실패
-  case sectionCRUDFailed
+  case sectionCRUDFailed // 섹션 CRUD 토스트 (에러타입에 의해 분기)
   
   case sectionEditWarning // 섹션 이름 제한 토스트
 
   var name: Foundation.Notification.Name {
     switch self {
-//    case .createFailed: Foundation.Notification.Name("sectionCreateFailed")
-//    case .updateFailed: Foundation.Notification.Name("sectionUpdateFailed")
-//    case .deleteFailed: Foundation.Notification.Name("sectionDeleteFailed")
     case .sectionCRUDFailed: Foundation.Notification.Name("sectionCRUDFailed")
     case .sectionEditWarning: Foundation.Notification.Name("showEditWarningToast")
     }
