@@ -45,9 +45,6 @@ struct FeedbackInPutView: View {
   var body: some View {
     VStack(spacing: 16) {
       topRow
-      if feedbackDrawingImage != nil {
-        feedbackImageView.frame(maxWidth: .infinity, alignment: .leading)
-      }
       if !mM.taggedUsers.isEmpty {
         TaggedUsersView(
           taggedUsers: mM.taggedUsers,
@@ -113,10 +110,7 @@ struct FeedbackInPutView: View {
   }
   
   private var topRow: some View {
-    HStack(spacing: 4) {
-      Text("타임 스탬프:")
-        .font(.headline2Medium)
-        .foregroundStyle(.labelNormal)
+    HStack(spacing: 8) {
       switch feedbackType {
       case .point:
         TimestampInput(
@@ -129,15 +123,26 @@ struct FeedbackInPutView: View {
           timeSeek: { timeSeek() }
         )
       }
-      Spacer()
-      
-      // TODO: 여기에 드로잉 버튼으로 갈 이미지 삽입
       Button {
         drawingButtonTapped()
       } label: {
-        Text("드로잉 이동")
+        HStack(spacing: 4) {
+          Image(systemName: "scribble.variable")
+            .font(.footnoteMedium)
+            .foregroundStyle(.labelStrong)
+          Text((feedbackDrawingImage != nil) ? "수정하기" : "드로잉 하기")
+            .font(.footnoteMedium)
+            .foregroundStyle(.labelStrong)
+        }
+        .padding(.vertical, 7)
+        .padding(.horizontal, 10)
       }
-      
+      .background {
+        RoundedRectangle(cornerRadius: 1000)
+          .fill(Color.fillAssitive)
+      }
+      feedbackImageView.frame(width: 30, height: 30)
+      Spacer()
       clearButton
     }
   }
@@ -159,8 +164,8 @@ struct FeedbackInPutView: View {
         Image(uiImage: image)
           .resizable()
           .scaledToFill()
-          .frame(width: 100, height: 100)
-          .clipShape(RoundedRectangle(cornerRadius: 8))
+          .frame(width: 30, height: 30)
+          .clipShape(RoundedRectangle(cornerRadius: 100))
           .matchedGeometryEffect(id: "feedbackImage", in: imageNamespace)
           .onTapGesture {
             withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
