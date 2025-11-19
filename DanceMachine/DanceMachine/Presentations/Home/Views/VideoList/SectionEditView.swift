@@ -138,7 +138,7 @@ struct SectionEditView: View {
         } label: {
           VStack(spacing: 24) {
             Image(.sectionAdd)
-            Text("파트를 추가해보세요.")
+            Text("파트를 추가해 보세요.")
               .font(.headline2Medium)
               .foregroundStyle(.secondaryAssitive)
           }
