@@ -33,6 +33,7 @@ struct TaggedUsersView: View {
               onRemoveAll()
             } label: {
               Image(systemName: "xmark.circle.fill")
+                .symbolRenderingMode(.hierarchical)
                 .font(.system(size: 16))
                 .foregroundStyle(Color.labelAssitive)
             }
@@ -52,6 +53,7 @@ struct TaggedUsersView: View {
                 onRemove(user.userId)
               } label: {
                 Image(systemName: "xmark.circle.fill")
+                  .symbolRenderingMode(.hierarchical)
                   .font(.system(size: 16))
                   .foregroundStyle(Color.labelAssitive)
               }
