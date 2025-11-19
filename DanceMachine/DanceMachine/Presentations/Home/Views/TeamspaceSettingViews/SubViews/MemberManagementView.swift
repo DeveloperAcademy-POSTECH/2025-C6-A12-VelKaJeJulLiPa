@@ -171,42 +171,34 @@ struct MemberManagementView: View {
   }
   
   // MARK: - Actions
-  
   private func giveOwnerRole() {
-    Task {
-      await MainActor.run {
-        isUpdateCompleted = false
-        isUpdatingOwner = true
-        checkEffectActive = false
-      }
+    Task { @MainActor in
+      // 0) UI 상태 초기화
+      isUpdateCompleted = false
+      isUpdatingOwner = true
+      checkEffectActive = false
       
       do {
-        // 실제 팀장 변경 로직
-        try await viewModel.updateTeamspaceOwner(userId: user.userId) // TODO: 테스트 필요
-       
-        // 1) 로딩 종료 + 완료 상태로 전환, 그 순간 딱 한 번 보이면서 그리기 시작
-        await MainActor.run {
-          isUpdatingOwner = false
-          isUpdateCompleted = true
-          checkEffectActive = true
-        }
+        // 1) 팀장 변경 로직 (완료되면 currentTeamspace / teamspaceRole 갱신됨)
+        try await viewModel.updateTeamspaceOwner(userId: user.userId)
+        
+        // 2) 로딩 종료 + 체크 아이콘 노출
+        isUpdatingOwner = false
+        isUpdateCompleted = true
+        checkEffectActive = true
         
         // 3) 2초 유지
         try? await Task.sleep(for: .seconds(2))
         
-        await viewModel.onAppear() // 화면 갱신 후 dismiss
+        // 4) 완료 콜백 + 시트 닫기
+        onCompleted()
+        dismiss()
         
-        await MainActor.run {
-          onCompleted()
-          dismiss()
-        }
-       
       } catch {
-        await MainActor.run {
-          isUpdatingOwner = false
-          isUpdateCompleted = false
-          checkEffectActive = false
-        }
+        // 실패 시 UI 롤백
+        isUpdatingOwner = false
+        isUpdateCompleted = false
+        checkEffectActive = false
         print("updateTeamspaceOwner error: \(error.localizedDescription)")
       }
     }
