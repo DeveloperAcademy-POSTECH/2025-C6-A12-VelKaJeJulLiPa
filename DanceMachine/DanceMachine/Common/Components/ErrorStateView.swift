@@ -10,19 +10,18 @@ import SwiftUI
 struct ErrorStateView: View {
   let mainSymbol: String?
   let message: String
-  let isAnimating: Bool
-  let onRetry: () -> Void
+  let action: () -> Void
+  
+  @State private var isRotating: Bool = false
   
   init(
      mainSymbol: String? = nil,
      message: String,
-     isAnimating: Bool,
-     onRetry: @escaping () -> Void
+     action: @escaping () -> Void
    ) {
      self.mainSymbol = mainSymbol
      self.message = message
-     self.isAnimating = isAnimating
-     self.onRetry = onRetry
+     self.action = action
    }
   
   var body: some View {
@@ -41,9 +40,17 @@ struct ErrorStateView: View {
         
         Image(systemName: "arrow.trianglehead.clockwise")
           .foregroundStyle(Color.labelStrong)
-          .symbolEffect(.rotate.wholeSymbol, options: .nonRepeating, value: isAnimating)
-          .onTapGesture { onRetry() }
-      }
+          .symbolEffect(
+            .rotate.wholeSymbol,
+            options: .repeat(1).speed(1.5),
+            isActive: isRotating
+          )
+          .onTapGesture {
+             isRotating.toggle()
+             DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+               action()
+             }
+           }      }
     }
   }
 }
@@ -51,17 +58,15 @@ struct ErrorStateView: View {
 #Preview {
   ErrorStateView(
     mainSymbol: "exclamationmark.triangle.fill",
-    message: "메시지가 이렇게 보입니다.",
-    isAnimating: true,
-    onRetry: { print("onRetry") }
+    message: "메시지를 입력해주세요.",
+    action: { print("action") }
   )
 }
 
 #Preview {
   ErrorStateView(
-    message: "메시지가 이렇게 보입니다.",
-    isAnimating: false,
-    onRetry: { print("onRetry") }
+    message: "메시지를 입력해주세요.",
+    action: { print("action") }
   )
 }
 

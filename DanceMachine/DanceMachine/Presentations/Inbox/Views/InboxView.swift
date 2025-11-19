@@ -20,7 +20,6 @@ struct InboxView: View {
           ErrorStateView(
             mainSymbol: "exclamationmark.triangle.fill",
             message: "알림 불러오기를 실패했습니다.\n네트워크를 확인해주세요",
-            isAnimating: viewModel.isRefreshing
           ) {
             Task { await viewModel.refresh() }
           }
