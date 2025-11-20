@@ -99,23 +99,3 @@ struct InboxView: View {
     }
   }
 }
-
-
-
-/// 올바른 주격 조사를 반환하는 메서드입니다.
-/// "가" 혹은 "이"를 반환합니다.
-func koreanParticle(_ input: String) -> String {
-  
-  guard let text = input.last else { return input }
-  
-  let val = UnicodeScalar(String(text))?.value
-  guard let value = val else { return input }
-  // 종성 인덱스 계산
-  let index = (value - 0xac00) % 28
-  // 조사 판별 후 리턴
-  if index == 0 {
-    return "가" // 를
-  } else {
-    return "이" // 을
-  }
-}
