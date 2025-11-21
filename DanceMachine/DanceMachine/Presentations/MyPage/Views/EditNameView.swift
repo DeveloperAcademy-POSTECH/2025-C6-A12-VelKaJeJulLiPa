@@ -166,5 +166,3 @@ struct EditNameView: View {
     EditNameView()
   }
 }
-
-// viewModel.showErrorMessage = true
