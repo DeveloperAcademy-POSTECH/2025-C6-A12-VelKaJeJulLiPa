@@ -11,6 +11,7 @@ import AuthenticationServices
 //TODO: Hi-fi 디자인 반영 (현재는 임시)
 struct LoginView: View {
   @State private var viewModel = LoginViewModel()
+  @EnvironmentObject var router: AuthRouter
   
   
   var body: some View {
@@ -51,6 +52,11 @@ struct LoginView: View {
                 .tint(.white)
             }
           }
+      }
+    }
+    .onReceive(viewModel.$isNewUser) { isNewUser in
+      if isNewUser {
+        router.push(to: .termsAgree)
       }
     }
   }
