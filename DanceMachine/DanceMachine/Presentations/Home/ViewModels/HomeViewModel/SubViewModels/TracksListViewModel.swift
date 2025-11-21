@@ -129,6 +129,23 @@ extension TracksListViewModel {
       return .viewing
     }
   }
+  
+  // 캐시/로컬 상태 초기화
+  @MainActor
+  func clearCache() {
+    guard let key = projectKey else { return }
+    
+    cacheState.byProject[key] = nil
+    cacheState.error[key] = nil
+    cacheState.loading.remove(key)
+    
+    dataState.tracks = []
+    dataState.errorText = nil
+    dataState.isLoading = false
+    
+    alertState.pendingDeleteTrack = nil
+    alertState.isPresentingDeleteAlert = false
+  }
 }
 
 // MARK: - 삭제 플로우 (프로젝트와 동일)
@@ -193,7 +210,7 @@ extension TracksListViewModel {
     guard editingState.rowState == .editing,
           let tid = editingState.editingId else { return }
     guard let project else { print("🙅🏻‍♂️곡 수정 오류"); return }
-
+    
     let name = editingState.editText.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !name.isEmpty else { return }
     
