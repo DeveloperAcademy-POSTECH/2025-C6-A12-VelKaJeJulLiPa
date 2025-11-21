@@ -44,17 +44,6 @@ struct ReplySheet: View {
 
   let onImageTap: (String) -> Void
 
-  var onDismiss: (() -> Void)? = nil  // 가로모드 패널용 dismiss 콜백
-
-  // dismiss 호출 helper
-  private func dismissSheet() {
-    if let onDismiss = onDismiss {
-      onDismiss()
-    } else {
-      dismiss()
-    }
-  }
-
   private var filteredMembers: [User] {
     if mM.mentionQuery.isEmpty {
       return teamMembers
@@ -87,7 +76,7 @@ struct ReplySheet: View {
         currentUserId: currentUserId,
         onDelete: {
           onFeedbackDelete()
-          dismissSheet()
+          dismiss()
         },
         onReport: { isReportSheetPresented = true },
         showBottomReplyButton: true,
@@ -97,7 +86,7 @@ struct ReplySheet: View {
         imageNamespace: imageNamespace,
         onImageTap: { url in
           onImageTap(url)
-          dismissSheet()
+          dismiss()
         }
       )
       replyList
@@ -191,7 +180,7 @@ struct ReplySheet: View {
       ToolbarLeadingBackButton(icon: .xmark)
       ToolbarCenterTitle(text: "댓글")
     }
-    .background(Color.backgroundNormal)
+    .background(Color.backgroundNormal.ignoresSafeArea())
   }
   
   private var replyList: some View {
@@ -227,7 +216,7 @@ struct ReplySheet: View {
       teamMembers: teamMembers,
       filteredMembers: filteredMembers,
       showMentionPicker: mM.showPicker,
-      placeholder: mM.taggedUsers.isEmpty ? "@팀원 태그" : "답글을 입력해 주세요.",
+      placeholder: "댓글을 입력해 주세요.",
       onSubmit: {
         onReplySubmit(
           content, mM.taggedUsers.map { $0.userId }
