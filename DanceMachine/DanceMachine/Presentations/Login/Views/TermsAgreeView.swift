@@ -19,9 +19,10 @@ struct TermsAgreeView: View {
   }
   
   private func agreeAll() {
-    isPrivacyAgreed.toggle()
-    isTermsOfUseAgreed.toggle()
-    isAgeValid.toggle()
+      let newValue = !isAllTermsAgreed   // 전체동의 상태 반전
+      isPrivacyAgreed = newValue
+      isTermsOfUseAgreed = newValue
+      isAgeValid = newValue
   }
   
   
