@@ -17,7 +17,6 @@ final class VideoDetailViewModel {
   var videoVM: VideoViewModel
   var feedbackVM: FeedbackViewModel
   
-  var forceShowLandscape: Bool = false
   
   var isLoading: Bool = false
   var showMemberError: Bool = false
@@ -126,39 +125,7 @@ extension VideoDetailViewModel {
   }
 }
 // MARK: - 가로모드
-extension VideoDetailViewModel {
-  @MainActor
-  func enterLandscapeMode() {
-   
-    AppDelegate.orientationMask = .landscape
-    
-    guard let scene = UIApplication.shared.connectedScenes
-      .compactMap({ $0 as? UIWindowScene })
-      .first else { return }
-    
-    scene.keyWindow?.rootViewController?.setNeedsUpdateOfSupportedInterfaceOrientations()
-    
-    scene.requestGeometryUpdate(.iOS(interfaceOrientations: .landscapeRight))
-    
-    forceShowLandscape = true
-  }
-  
-  @MainActor
-  func exitLandscapeMode() {
-    AppDelegate.orientationMask = .portrait
-    
-    guard let scene = UIApplication.shared.connectedScenes
-      .compactMap({ $0 as? UIWindowScene })
-      .first else { return }
-    
-    scene.keyWindow?.rootViewController?.setNeedsUpdateOfSupportedInterfaceOrientations()
-    
-    
-    scene.requestGeometryUpdate(.iOS(interfaceOrientations: .portrait))
-    
-    forceShowLandscape = false
-  }
-}
+
 // MARK: - 프리뷰 전용 목데이터
 extension VideoDetailViewModel {
   static var preview: VideoDetailViewModel {
