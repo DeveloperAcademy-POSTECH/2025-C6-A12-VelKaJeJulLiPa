@@ -119,6 +119,10 @@ struct NameSettingView: View {
       ToastView(text: "이름은 10자 이내로 입력해주세요.", icon: .warning)
     }
     .dismissKeyboardOnTap()
+    .background(
+      DisableSwipeBackGesture()
+        .allowsHitTesting(false)
+    )
   }
 }
 

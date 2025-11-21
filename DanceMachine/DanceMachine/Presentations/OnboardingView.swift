@@ -17,10 +17,6 @@ struct OnboardingView: View {
           AuthNavigationRoutingView(destination: destination)
         }
     }
-    .background(
-      DisableSwipeBackGesture()
-        .allowsHitTesting(false)
-    )
   }
 }
 

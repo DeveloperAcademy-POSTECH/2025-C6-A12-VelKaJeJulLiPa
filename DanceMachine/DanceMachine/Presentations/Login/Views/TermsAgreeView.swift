@@ -190,6 +190,10 @@ struct TermsAgreeView: View {
       }
       .padding()
     }
+    .background(
+      DisableSwipeBackGesture()
+        .allowsHitTesting(false)
+    )
   }
   
   
@@ -201,8 +205,6 @@ struct TermsAgreeView: View {
       isEnabled: isAllTermsAgreed
     ) {
       router.push(to: .initialNameSetting)
-      //      router.replace(with: .initialNameSetting)
-      
     }
   }
   
