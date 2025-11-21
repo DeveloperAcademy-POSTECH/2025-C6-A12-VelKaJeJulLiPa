@@ -24,10 +24,8 @@ struct iPadVideoView: View {
   
   @State private var columnVisibility: NavigationSplitViewVisibility = .all
   @State private var showFullScreen: Bool = false
-  
-  private var isDeviceLandscape: Bool {
-    proxy.size.width > proxy.size.height
-  }
+  @State private var isDeviceLandscape: Bool = false
+  @State private var lastSize: CGSize = .zero
 
   var body: some View {
     ZStack {
@@ -85,6 +83,23 @@ struct iPadVideoView: View {
         ToolbarCenterTitle(text: videoTitle)
       }
     }
+    .onAppear {
+      lastSize = proxy.size
+      updateOrientation()
+    }
+    .onChange(of: proxy.size) { oldSize, newSize in
+      // 키보드는 높이만 변경하므로, 너비 변화만 체크 (회전 감지)
+      let widthDiff = abs(newSize.width - lastSize.width)
+
+      if widthDiff > 50 { // 너비가 50pt 이상 변하면 회전으로 간주
+        lastSize = newSize
+        updateOrientation()
+      }
+    }
+  }
+
+  private func updateOrientation() {
+    isDeviceLandscape = proxy.size.width > proxy.size.height
   }
   // MARK: iPad 가로모드 레이아웃 스플릿 뷰
   @ViewBuilder
@@ -135,6 +150,7 @@ struct iPadVideoView: View {
           videoId: videoId,
           userId: userId,
           filteredFeedbacks: filteredFeedbacks,
+          iPadLandscape: true,
           drawingImageNamespace: drawingImageNamespace,
           feedbackImageNamespace: feedbackImageNamespace,
           onDrawingAction: onCaptureFrame,
@@ -150,17 +166,15 @@ struct iPadVideoView: View {
   // MARK: - iPad 세로모드 레이아웃
   @ViewBuilder
   private var portraitView: some View {
-    ZStack {
-      Color.backgroundNormal.ignoresSafeArea()
-      
       VStack(spacing: 0) {
         VideoPlayerContainer(
           vm: vm,
           state: state,
           videoId: videoId,
           videoURL: videoURL,
-          aspectRatio: nil,
+          aspectRatio: 16/9,
           isLandscapeMode: false,
+          iPad: true,
           showFeedbackPanel: false,
           onDrawingAction: onCaptureFrame,
           onFullscreenToggle: {
@@ -185,6 +199,7 @@ struct iPadVideoView: View {
             }
           }
         )
+        .frame(height: proxy.size.width * 9 / 16)
         .offset(y: state.dragOffset * 0.5)
 
         FeedbackContainer(
@@ -193,6 +208,7 @@ struct iPadVideoView: View {
           videoId: videoId,
           userId: userId,
           filteredFeedbacks: filteredFeedbacks,
+          iPadLandscape: false,
           drawingImageNamespace: drawingImageNamespace,
           feedbackImageNamespace: feedbackImageNamespace,
           onDrawingAction: onCaptureFrame,
@@ -200,7 +216,7 @@ struct iPadVideoView: View {
           onFeedbackSelect: nil
         )
       }
-    }
+      .background(Color.backgroundNormal.ignoresSafeArea())
   }
 
   // MARK: - 전체화면 레이아웃
