@@ -83,21 +83,6 @@ final class ProjectListViewModel {
     return trimmed.isEmpty
   }
   
-  // MARK: - 권한
-  
-  /// 프로젝트 수정 할 수 있는 권한 체크
-  func canEdit(project: Project) -> Bool {
-    guard let user = FirebaseAuthManager.shared.userInfo?.userId else {
-      print("🙅🏻‍♂️ 유저 정보를 불러올 수 없습니다.")
-      return false
-    }
-    guard let teamspace = self.currentTeamspace else {
-      print("🙅🏻‍♂️ 팀 스페이스를 불러올 수 없습니다.")
-      return false
-    }
-    return project.creatorId == user || teamspace.ownerId == user
-  }
-  
   // MARK: - 확장 / 헤더 타이틀
   
   func toggleExpand(_ project: Project) {
@@ -134,6 +119,8 @@ final class ProjectListViewModel {
       guard case .editing = editingState.rowState,
             let pid = editingState.editingId else { return }
       
+      guard let teamspaceId = currentTeamspace?.teamspaceId.uuidString else { print("🙅🏻‍♂️팀 스페이스 오류"); return }
+      
       let name = editingState.editText
         .trimmingCharacters(in: .whitespacesAndNewlines)
       
@@ -142,14 +129,17 @@ final class ProjectListViewModel {
       // 1) Firestore 업데이트
       try await updateProjectName(projectId: pid.uuidString, newName: name)
       
-      // 2) 로컬 배열 반영
+      // 2) updateAt 갱신
+      try await renewalTeamspaceUpdateAt(teamspaceId: teamspaceId)
+      
+      // 3) 로컬 배열 반영
       if let index = dataState.projects.firstIndex(where: { $0.projectId == pid }) {
         dataState.projects[index].projectName = name
       } else {
         print("⚠️ commitIfPossible: 해당 projectId를 로컬 projects에서 찾지 못했습니다.")
       }
       
-      // 3) 필요하면 상위 콜백 호출
+      // 4) 필요하면 상위 콜백 호출
       if let onCommitRename {
         await onCommitRename(pid, name)
       }
@@ -197,8 +187,11 @@ final class ProjectListViewModel {
   /// 삭제 Alert 에서 확인 눌렀을 때
   func confirmDelete() async {
     do {
+      guard let teamspaceId = currentTeamspace?.teamspaceId.uuidString else { print("🙅🏻‍♂️팀 스페이스 오류"); return }
       guard let project = presentationState.pendingDeleteProject else { return }
+      
       try await deleteProject(projectId: project.projectId.uuidString)
+      try await renewalTeamspaceUpdateAt(teamspaceId: teamspaceId)
       
       // TODO: batch 추가하기(곡, 비디오, 영상 삭제 연쇄삭제)
       // 새로 고침
@@ -237,6 +230,15 @@ extension ProjectListViewModel {
       collection: .project,
       documentId: projectId,
       asDictionary: [Project.CodingKeys.projectName.stringValue: newName]
+    )
+  }
+  
+  /// 현재 프로젝트를 포함하는 팀 스페이스의 updateAt을 갱신하는 메서드입니다.
+  private func renewalTeamspaceUpdateAt(teamspaceId: String) async throws {
+    try await FirestoreManager.shared.updateTimestampField(
+      field: .update,
+      in: .teamspace,
+      documentId: teamspaceId
     )
   }
 }
