@@ -9,7 +9,7 @@ import SwiftUI
 import AVFoundation
 
 /// iPhone 가로모드 입니다.
-struct LandscapeView: View {
+struct iPhoneLandscapeView: View {
   @Bindable var vm: VideoDetailViewModel
   @Bindable var state: VideoViewState
   

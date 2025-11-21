@@ -9,7 +9,7 @@ import SwiftUI
 import AVFoundation
 
 /// iPhone 세로모드 입니다.
-struct PortraitView: View {
+struct iPhonePortraitView: View {
   @Bindable var vm: VideoDetailViewModel
   @Bindable var state: VideoViewState
   
