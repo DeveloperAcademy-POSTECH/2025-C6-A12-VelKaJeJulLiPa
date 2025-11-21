@@ -62,33 +62,37 @@ final class VideoViewState {
 extension VideoViewState {
   @MainActor
   func enterLandscapeMode() {
-   
-    AppDelegate.orientationMask = .landscape
-    
-    guard let scene = UIApplication.shared.connectedScenes
-      .compactMap({ $0 as? UIWindowScene })
-      .first else { return }
-    
-    scene.keyWindow?.rootViewController?.setNeedsUpdateOfSupportedInterfaceOrientations()
-    
-    scene.requestGeometryUpdate(.iOS(interfaceOrientations: .landscapeRight))
-    
+    // iPad: UI만 전환 (기기 회전 없음)
+    // iPhone: 기기 회전 + UI 전환
+    if UIDevice.current.userInterfaceIdiom == .phone {
+      AppDelegate.orientationMask = .landscape
+
+      guard let scene = UIApplication.shared.connectedScenes
+        .compactMap({ $0 as? UIWindowScene })
+        .first else { return }
+
+      scene.keyWindow?.rootViewController?.setNeedsUpdateOfSupportedInterfaceOrientations()
+      scene.requestGeometryUpdate(.iOS(interfaceOrientations: .landscapeRight))
+    }
+
     forceShowLandscape = true
   }
-  
+
   @MainActor
   func exitLandscapeMode() {
-    AppDelegate.orientationMask = .portrait
-    
-    guard let scene = UIApplication.shared.connectedScenes
-      .compactMap({ $0 as? UIWindowScene })
-      .first else { return }
-    
-    scene.keyWindow?.rootViewController?.setNeedsUpdateOfSupportedInterfaceOrientations()
-    
-    
-    scene.requestGeometryUpdate(.iOS(interfaceOrientations: .portrait))
-    
+    // iPad: UI만 전환 (기기 회전 없음)
+    // iPhone: 기기 회전 + UI 전환
+    if UIDevice.current.userInterfaceIdiom == .phone {
+      AppDelegate.orientationMask = .portrait
+
+      guard let scene = UIApplication.shared.connectedScenes
+        .compactMap({ $0 as? UIWindowScene })
+        .first else { return }
+
+      scene.keyWindow?.rootViewController?.setNeedsUpdateOfSupportedInterfaceOrientations()
+      scene.requestGeometryUpdate(.iOS(interfaceOrientations: .portrait))
+    }
+
     forceShowLandscape = false
   }
 }
