@@ -9,20 +9,6 @@ import SwiftUI
 import SwiftData
 
 @Model
-final class TeamspaceCache {
-  @Attribute(.unique) var userId: String
-  var updatedAt: Date
-  var teamspace: [Teamspace]
-  
-  init(userId: String, updatedAt: Date, teamspace: [Teamspace]) {
-    self.userId = userId
-    self.updatedAt = updatedAt
-    self.teamspace = teamspace
-  }
-}
-
-
-@Model
 final class ProjectCache {
   @Attribute(.unique) var teamspaceId: String
   var updatedAt: Date
@@ -60,53 +46,6 @@ final class CacheStore {
     self.context = ModelContext(container)
   }
 }
-
-
-// MARK: - Teamspace Cache
-extension CacheStore {
-  // 특정 사용자 updatedAt 불러오기
-  func checkedUpdatedAt(userId: String) throws -> String {
-    let cacheData = FetchDescriptor<TeamspaceCache>(
-      predicate: #Predicate { $0.userId == userId }
-    )
-    
-    guard let updatedAt = try context.fetch(cacheData).first?.updatedAt.iso8601KST() else { return "" }
-    
-    return updatedAt
-  }
-  
-  // 특정 사용자 캐시 불러오기
-  func loadTeamspaces(userId: String) throws -> [Teamspace] {
-    let fd = FetchDescriptor<TeamspaceCache>(
-      predicate: #Predicate { $0.userId == userId }
-    )
-    return try context.fetch(fd).first?.teamspace ?? []
-  }
-  
-  // 전체 교체 저장(upsert)
-  func replaceTeamspaces(userId: String, userUpdatedAt: Date, teamspace: [Teamspace]) throws {
-    let fd = FetchDescriptor<TeamspaceCache>(
-      predicate: #Predicate { $0.userId == userId }
-    )
-    if let existing = try context.fetch(fd).first {
-      existing.teamspace = teamspace
-      existing.updatedAt = userUpdatedAt
-    } else {
-      context.insert(TeamspaceCache(userId: userId, updatedAt: userUpdatedAt, teamspace: teamspace))
-      print("context 삽입 성공")
-      
-    }
-    try context.save()
-  }
-  
-  // 캐시 비우기(선택사항)
-  func clear(for userId: String) throws {
-    let fd = FetchDescriptor<TeamspaceCache>(predicate: #Predicate { $0.userId == userId })
-    for item in try context.fetch(fd) { context.delete(item) }
-    try context.save()
-  }
-}
-
 
 // MARK: - Project Cache
 extension CacheStore {
@@ -210,14 +149,54 @@ extension CacheStore {
 }
 
 
+// MARK: - Debug helpers
+extension CacheStore {
+
+  // 현재 팀스페이스 프로젝트 캐시 전체 출력
+  func debugPrintProjectCache(teamspaceId: String, prefix: String = "🧪") {
+    do {
+      let fd = FetchDescriptor<ProjectCache>(
+        predicate: #Predicate { $0.teamspaceId == teamspaceId }
+      )
+      let result = try context.fetch(fd)
+
+      if result.isEmpty {
+        print("\(prefix) ProjectCache 없음. teamspaceId=\(teamspaceId)")
+        return
+      }
+
+      for item in result {
+        print("""
+        \(prefix) ProjectCache dump
+        - teamspaceId: \(item.teamspaceId)
+        - updatedAt: \(item.updatedAt.iso8601KST())
+        - projectsCount: \(item.project.count)
+        - projectNames: \(item.project.map { $0.projectName })
+        """)
+      }
+    } catch {
+      print("\(prefix) ProjectCache dump 실패: \(error.localizedDescription)")
+    }
+  }
+
+  // 캐시 updatedAt만 빠르게 보기
+  func debugProjectUpdatedAt(teamspaceId: String, prefix: String = "🧪") {
+    do {
+      let cached = try checkedProjectUpdatedAt(teamspaceId: teamspaceId)
+      print("\(prefix) cachedProjectUpdatedAtString: \(cached)")
+    } catch {
+      print("\(prefix) cachedProjectUpdatedAtString 조회 실패: \(error.localizedDescription)")
+    }
+  }
+}
+
 
 
 struct CacheStoreKey: EnvironmentKey {
   static let defaultValue: CacheStore = {
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
     let container = try! ModelContainer(
-      for: TeamspaceCache.self,
-          ProjectCache.self,
+      for: ProjectCache.self,
           TracksCache.self,
       configurations: config
     )
