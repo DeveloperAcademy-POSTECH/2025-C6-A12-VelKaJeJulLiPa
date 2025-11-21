@@ -212,6 +212,7 @@ struct ProjectListView: View {
       
       await homeViewModel.onAppear()
       await projectListViewModel.onAppear()
+      await tracksViewModel?.onAppear()
       
       // FIXME: - 확인 필요
       if let tracksVM = tracksViewModel,
