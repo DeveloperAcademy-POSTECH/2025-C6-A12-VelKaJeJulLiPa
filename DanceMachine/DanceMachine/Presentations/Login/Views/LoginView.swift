@@ -45,7 +45,7 @@ struct LoginView: View {
           }
         
         Button {
-          Task { await viewModel.signInApple() }
+          Task { try await viewModel.signInApple() }
         } label: {
           SignInWithAppleButtonViewRepresentable(
             type: .default,
@@ -60,6 +60,14 @@ struct LoginView: View {
         
         Spacer()
       }
+    }
+    .alert(
+      "로그인 실패",
+      isPresented: $viewModel.showError
+    ) {
+      Button("확인", role: .cancel) {}
+    } message: {
+      Text("로그인을 실패했습니다.\n다시 시도해주세요.")
     }
     .onReceive(viewModel.$isNewUser) { isNewUser in
       if isNewUser {
