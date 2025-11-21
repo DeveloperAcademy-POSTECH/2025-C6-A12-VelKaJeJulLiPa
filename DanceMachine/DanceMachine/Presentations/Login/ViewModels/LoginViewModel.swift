@@ -54,6 +54,7 @@ final class LoginViewModel: ObservableObject {
         try await FirestoreManager.shared.updateUserLastLogin(userInfo)
         FirebaseAuthManager.shared.userInfo = userInfo
         FirebaseAuthManager.shared.didCompleteAuthFlow = true
+        FirebaseAuthManager.shared.isSigningIn = false
         FirebaseAuthManager.shared.authenticationState = .authenticated
       } else {
         FirebaseAuthManager.shared.userInfo = user
