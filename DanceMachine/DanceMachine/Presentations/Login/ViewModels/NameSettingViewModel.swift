@@ -57,7 +57,7 @@ final class NameSettingViewModel {
   }
   
   
-  ///  - FirebaseAuthManager 의 authenticationState이 false가 되면 RootView 로 화면이 전환됩니다.
+  ///  - FirebaseAuthManager 의 authenticationState이 true가 되면 RootView 로 화면이 전환됩니다.
   func completeNameSetting() {
     authManager.completeAuthFlow()
   }
