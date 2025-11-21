@@ -208,7 +208,7 @@ struct VideoView: View {
     } else {
       // iPhone
       if state.forceShowLandscape {
-        LandscapeView(
+        iPhoneLandscapeView(
           vm: vm,
           state: state,
           filteredFeedback: filteredFeedbacks,
@@ -222,7 +222,7 @@ struct VideoView: View {
           feedbackImageNamespace: feedbackImageNamespace
         )
       } else {
-        PortraitView(
+        iPhonePortraitView(
           vm: vm,
           state: state,
           filteredFeedback: filteredFeedbacks,

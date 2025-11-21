@@ -106,7 +106,7 @@ struct ReplyCard: View {
       replyAction()
     } label: {
       Text("답글달기")
-        .font(.footnoteMedium)
+        .font(.caption1Medium)
         .foregroundStyle(.labelNormal)
     }
     .buttonStyle(.plain)
