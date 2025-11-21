@@ -7,7 +7,6 @@
 
 import Combine
 import FirebaseAuth
-import SwiftUI
 
 @Observable
 final class NameSettingViewModel {
