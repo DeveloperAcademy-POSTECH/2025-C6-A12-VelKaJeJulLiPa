@@ -17,6 +17,7 @@ import UserNotifications
 final class HomeViewModel {
   
   var state = CurrentTeamspaceState()
+  var isFirstAppear: Bool = false
   
   // 현재 선택된 팀스페이스 (FirebaseAuthManager의 currentTeamspace와 연동)
   var currentTeamspace: Teamspace? {
@@ -62,7 +63,10 @@ final class HomeViewModel {
     
     self.state.isLoading = true
     
-    defer { self.state.isLoading = false }
+    defer {
+      self.isFirstAppear = true
+      self.state.isLoading = false
+    }
     
     do {
       // 1. 현재 로그인 유저 정보 로드
