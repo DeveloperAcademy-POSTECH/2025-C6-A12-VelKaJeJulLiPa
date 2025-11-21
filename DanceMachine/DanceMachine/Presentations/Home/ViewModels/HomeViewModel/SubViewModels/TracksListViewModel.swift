@@ -142,11 +142,12 @@ extension TracksListViewModel {
   
   // 2) 삭제 확정: 서버 삭제 + 로컬/캐시 갱신 + 토스트 트리거
   func confirmDelete() async {
-    guard let project else { return }
+    guard let project else { print("🙅🏻‍♂️곡 삭제 오류"); return }
     guard let pending = alertState.pendingDeleteTrack else { return }
     
     do {
       try await deleteTrack(trackId: pending.tracksId.uuidString)
+      try await renewalProjectUpdateAt(projectId: project.projectId.uuidString)
       
       // 로컬 리스트에서 제거
       dataState.tracks.removeAll { $0.tracksId == pending.tracksId }
@@ -168,14 +169,6 @@ extension TracksListViewModel {
     } catch {
       dataState.errorText = error.localizedDescription
     }
-  }
-  
-  private func deleteTrack(trackId: String) async throws {
-    // FirestoreManager에 맞는 실제 삭제 API로 교체해서 쓰면 됨
-    try await FirestoreManager.shared.delete(
-      collectionType: .tracks,
-      documentID: trackId
-    )
   }
 }
 
@@ -199,12 +192,14 @@ extension TracksListViewModel {
   func commitIfPossible() async {
     guard editingState.rowState == .editing,
           let tid = editingState.editingId else { return }
-    
+    guard let project else { print("🙅🏻‍♂️곡 수정 오류"); return }
+
     let name = editingState.editText.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !name.isEmpty else { return }
     
     do {
       try await updateTrackName(trackId: tid.uuidString, newName: name)
+      try await renewalProjectUpdateAt(projectId: project.projectId.uuidString)
       
       if let idx = dataState.tracks.firstIndex(where: { $0.tracksId == tid }) {
         dataState.tracks[idx].trackName = name
@@ -219,14 +214,6 @@ extension TracksListViewModel {
     } catch {
       dataState.errorText = error.localizedDescription
     }
-  }
-  
-  private func updateTrackName(trackId: String, newName: String) async throws {
-    try await FirestoreManager.shared.updateFields(
-      collection: .tracks,
-      documentId: trackId,
-      asDictionary: [Tracks.CodingKeys.trackName.stringValue: newName]
-    )
   }
 }
 
@@ -249,5 +236,33 @@ extension TracksListViewModel {
       print("섹션 목록 조회 중 오류가 발생했습니다. (fetchSection 실패): \(error.localizedDescription)")
       return []
     }
+  }
+}
+
+// MARK: - Private Method
+extension TracksListViewModel {
+  /// 현재 곡을 포함하는 프로젝트의 updateAt을 갱신하는 메서드입니다.
+  private func renewalProjectUpdateAt(projectId: String) async throws {
+    try await FirestoreManager.shared.updateTimestampField(
+      field: .update,
+      in: .project,
+      documentId: projectId
+    )
+  }
+  
+  private func deleteTrack(trackId: String) async throws {
+    // FirestoreManager에 맞는 실제 삭제 API로 교체해서 쓰면 됨
+    try await FirestoreManager.shared.delete(
+      collectionType: .tracks,
+      documentID: trackId
+    )
+  }
+  
+  private func updateTrackName(trackId: String, newName: String) async throws {
+    try await FirestoreManager.shared.updateFields(
+      collection: .tracks,
+      documentId: trackId,
+      asDictionary: [Tracks.CodingKeys.trackName.stringValue: newName]
+    )
   }
 }
