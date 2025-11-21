@@ -86,15 +86,13 @@ struct iPhoneLandscapeView: View {
                 filteredFeedbacks: filteredFeedback,
                 drawingImageNamespace: drawingImageNamespace,
                 feedbackImageNamespace: feedbackImageNamespace,
-                leadingPadding: 12,
                 onDrawingAction: onCaptureFrame,
                 editExistingDrawing: editExistingDrawing,
                 onFeedbackSelect: { feedback in
                   withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                     selectedFeedbackForReply = feedback
                   }
-                },
-                imageNamespace: feedbackImageNamespace
+                }
               )
               .opacity(selectedFeedbackForReply == nil ? 1 : 0)
               .offset(x: selectedFeedbackForReply == nil ? 0 : -20)

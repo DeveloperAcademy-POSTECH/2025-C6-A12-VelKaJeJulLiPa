@@ -11,28 +11,37 @@ import SwiftUI
 struct FeedbackContainer: View {
   @Bindable var vm: VideoDetailViewModel
   @Bindable var state: VideoViewState
-  
+
   let videoId: String
   let userId: String
   let filteredFeedbacks: [Feedback]
   let drawingImageNamespace: Namespace.ID
   let feedbackImageNamespace: Namespace.ID
-  let leadingPadding: CGFloat
   let onDrawingAction: (() -> Void)? // 드로잉 액션
   let editExistingDrawing: (() -> Void)?
   let onFeedbackSelect: ((Feedback) -> Void)?
-  
-  let imageNamespace: Namespace.ID
-  
+  var isSidebarVisible: Bool = true // iPad NavigationSplitView 사이드바 표시 여부
+
+  private var isIPad: Bool {
+    UIDevice.current.userInterfaceIdiom == .pad
+  }
+
+  private var leadingPadding: CGFloat {
+    if isIPad && !isSidebarVisible {
+      return 54 // 사이드바 버튼 크기만큼
+    }
+    return 16
+  }
+
   var body: some View {
     VStack(spacing: 0) {
       HStack {
         FeedbackSection(feedbackFilter: $state.feedbackFilter)
-          .padding(.horizontal, 16)
-//          .padding(.vertical, showCloseButton ? 10 : 8)
-//          .padding(.leading, leadingPadding)
+          .padding(.leading, leadingPadding)
+          .padding(.trailing, 16)
       }
       .padding(.vertical, 10)
+      .padding(.top, isIPad ? 80 : 0)
       Divider().frame(height: 0)
       // 피드백 리스트
       if vm.feedbackVM.showErrorView {
@@ -54,7 +63,7 @@ struct FeedbackContainer: View {
           userId: userId,
           videoId: videoId,
           onFeedbackNavigate: onFeedbackSelect,
-          imageNamespace: imageNamespace
+          imageNamespace: feedbackImageNamespace
         )
       }
     }
