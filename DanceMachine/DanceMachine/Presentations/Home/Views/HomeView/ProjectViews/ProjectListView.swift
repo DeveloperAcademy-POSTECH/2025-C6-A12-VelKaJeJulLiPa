@@ -10,6 +10,7 @@ import SwiftUI
 struct ProjectListView: View {
   
   @EnvironmentObject private var router: MainRouter
+  @Environment(\.cacheStore) private var cacheStore
   
   @Bindable var homeViewModel: HomeViewModel
   @Bindable var projectListViewModel: ProjectListViewModel
@@ -88,7 +89,7 @@ struct ProjectListView: View {
         }
       }
     }
-    .task { await projectListViewModel.onAppear() }
+    .task { await projectListViewModel.onAppear(cacheStore: cacheStore) }
     .projectListModals(
         homeViewModel: homeViewModel,
         projectListViewModel: projectListViewModel,

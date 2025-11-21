@@ -41,7 +41,7 @@ final class ProjectListViewModel {
   var editingState       = ProjectListEditingState()
   var presentationState  = ProjectListAlertState()
   
-  /// 현재 선택된 팀스페이스 (FirebaseAuthManager의 currentTeamspace와 연동)
+  // 현재 선택된 팀스페이스 (FirebaseAuthManager의 currentTeamspace와 연동)
   var currentTeamspace: Teamspace? {
     FirebaseAuthManager.shared.currentTeamspace
   }
@@ -49,40 +49,102 @@ final class ProjectListViewModel {
   // 부모(HomeView)에서 넣어줄 콜백들 (필요하면 사용)
   @ObservationIgnored var onCommitRename: ((UUID, String) async -> Void)?
   @ObservationIgnored var onTapProject: ((Project) -> Void)?
-
+  
   // 프로젝트별 TracksListViewModel 캐시
   private var tracksVMByProject: [UUID: TracksListViewModel] = [:]
   
+  // Project 캐시 스토어 (뷰에서 1번 주입해두면 내부에서 계속 사용)
+  @ObservationIgnored private var cacheStore: CacheStore?
+  
   // MARK: - 라이프사이클
   
+  // 뷰에서 cacheStore를 넘겨줄 때 사용하는 entry
+  func onAppear(cacheStore: CacheStore) async {
+    self.cacheStore = cacheStore
+    await onAppear()
+  }
+  
+  // 기존 entry. cacheStore가 주입돼 있으면 캐싱 로직을 사용하고,
+  // 없으면 서버 로딩만 수행
   func onAppear() async {
     do {
       guard let currentTeamspace else {
         print("🙅🏻‍♂️현재 팀 스페이스 없음 error")
         return
       }
+
       dataState.isLoading = true
       defer { dataState.isLoading = false }
-      
-      dataState.projects = try await loadProject(
-        teamspaceId: currentTeamspace.teamspaceId.uuidString
-      )
-      print("🍏 현재 팀 스페이스의 프로젝트를 불러옴. \(dataState.projects.count)개")
+
+      let teamspaceId = currentTeamspace.teamspaceId.uuidString
+
+      if let cacheStore {
+        let remoteUpdatedAtString = currentTeamspace.updatedAt?.iso8601KST()
+        let cachedUpdatedAtString = try cacheStore.checkedProjectUpdatedAt(teamspaceId: teamspaceId)
+
+        debugCacheLog(
+          phase: "compare",
+          teamspaceId: teamspaceId,
+          remoteUpdatedAtString: remoteUpdatedAtString,
+          cachedUpdatedAtString: cachedUpdatedAtString
+        )
+
+        if !cachedUpdatedAtString.isEmpty,
+           cachedUpdatedAtString == remoteUpdatedAtString {
+
+          let cachedProjects = try cacheStore.loadProjects(teamspaceId: teamspaceId)
+          dataState.projects = cachedProjects
+
+          print("🍀 캐시 히트 → cache projects 사용. count=\(cachedProjects.count)")
+          cacheStore.debugPrintProjectCache(teamspaceId: teamspaceId, prefix: "🍀")
+          return
+        } else {
+          print("🥀 캐시 미스 → 서버 fetch 진행")
+          cacheStore.debugPrintProjectCache(teamspaceId: teamspaceId, prefix: "🥀(before fetch)")
+        }
+      }
+
+      // 서버 로딩
+      let freshProjects = try await loadProject(teamspaceId: teamspaceId)
+      dataState.projects = freshProjects
+      print("🍏 서버 fetch 완료. count=\(freshProjects.count)")
+
+      if let cacheStore,
+         let updatedAt = currentTeamspace.updatedAt {
+
+        try cacheStore.replaceProjects(
+          teamspaceId: teamspaceId,
+          teamspaceUpdatedAt: updatedAt,
+          project: freshProjects
+        )
+
+        print("🧊 캐시 교체 완료")
+        cacheStore.debugPrintProjectCache(teamspaceId: teamspaceId, prefix: "🧊(after replace)")
+      }
+
     } catch {
-      print("프로젝트 목록 조회 중 오류가 발생했습니다. \(error.localizedDescription)")
+      print("프로젝트 목록 조회 중 오류: \(error.localizedDescription)")
     }
+  }
+  
+  // MARK: - (옵션) 프로젝트 캐시 비우기
+  
+  // refreshable에서 호출할 용도
+  func clearProjectCache() {
+    guard let cacheStore,
+          let teamspaceId = currentTeamspace?.teamspaceId.uuidString
+    else { return }
+    try? cacheStore.projectCacheClear(teamspaceId: teamspaceId)
   }
   
   // MARK: - 헤더 primary 버튼 비활성화 로직
   
   func isPrimaryButtonDisabled() -> Bool {
-    // 편집 모드가 아니면 의미 없음
     guard case .editing = editingState.rowState else { return false }
     
     let trimmed = editingState.editText
       .trimmingCharacters(in: .whitespacesAndNewlines)
     
-    // 비어 있으면 비활성화
     return trimmed.isEmpty
   }
   
@@ -100,14 +162,12 @@ final class ProjectListViewModel {
   
   // MARK: - 편집 상태 전환
   
-  /// 프로젝트 상태를 view -> editing 으로 전환
   func startEditing(project: Project) {
     editingState.rowState  = .editing
     editingState.editingId = project.projectId
     editingState.editText  = project.projectName
   }
   
-  /// 프로젝트 상태를 editing -> view 로 전환
   func cancelEditing(keepText: Bool) {
     if !keepText {
       editingState.editText = ""
@@ -116,13 +176,15 @@ final class ProjectListViewModel {
     editingState.rowState  = .viewing
   }
   
-  /// 헤더의 체크 버튼에서 호출할 저장 로직
   func commitIfPossible() async {
     do {
       guard case .editing = editingState.rowState,
             let pid = editingState.editingId else { return }
       
-      guard let teamspaceId = currentTeamspace?.teamspaceId.uuidString else { print("🙅🏻‍♂️팀 스페이스 오류"); return }
+      guard let teamspaceId = currentTeamspace?.teamspaceId.uuidString else {
+        print("🙅🏻‍♂️팀 스페이스 오류")
+        return
+      }
       
       let name = editingState.editText
         .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -147,14 +209,31 @@ final class ProjectListViewModel {
         await onCommitRename(pid, name)
       }
       
-      // 4) 편집 상태 초기화
+      // 5) 편집 상태 초기화
       editingState.editText  = ""
       editingState.editingId = nil
       editingState.rowState  = .viewing
       
-      self.presentationState.showNameUpdateCompletedToast = true // 성공 토스트 메세지
+      presentationState.showNameUpdateCompletedToast = true
+      
+      // 6) 캐시 업데이트도 최신으로 교체
+      if let cacheStore,
+         let currentTeamspace,
+         let updatedAt = currentTeamspace.updatedAt {
+        
+        let tid = currentTeamspace.teamspaceId.uuidString
+        try? cacheStore.replaceProjects(
+          teamspaceId: tid,
+          teamspaceUpdatedAt: updatedAt,
+          project: dataState.projects
+        )
+        
+        print("🧪 commit 후 캐시 교체됨")
+        cacheStore.debugPrintProjectCache(teamspaceId: tid, prefix: "🧪(after commit)")
+      }
+      
     } catch {
-      self.presentationState.showNameUpdateFailToast = true // 실패 토스트 메세지
+      presentationState.showNameUpdateFailToast = true
       print("🙅🏻‍♂️ 프로젝트 수정을 실패했습니다. error: \(error.localizedDescription)")
     }
   }
@@ -162,12 +241,10 @@ final class ProjectListViewModel {
   // MARK: - 프로젝트별 per-row 상태
   
   func perRowState(for projectId: UUID) -> ProjectRowState {
-    // 전체가 viewing 이면 무조건 보기 모드
     guard editingState.rowState == .editing else {
       return .viewing
     }
     
-    // 편집 중인 아이디와 이 row의 아이디가 같을 때만 editing
     if editingState.editingId == projectId {
       return .editing
     } else {
@@ -181,27 +258,44 @@ final class ProjectListViewModel {
     onTapProject?(project)
   }
   
-  /// 삭제 Alert을 띄우는 메서드
   func requestDelete(project: Project) {
     presentationState.pendingDeleteProject     = project
     presentationState.isPresentingDeleteAlert  = true
   }
   
-  /// 삭제 Alert 에서 확인 눌렀을 때
   func confirmDelete() async {
     do {
-      guard let teamspaceId = currentTeamspace?.teamspaceId.uuidString else { print("🙅🏻‍♂️팀 스페이스 오류"); return }
+      guard let teamspaceId = currentTeamspace?.teamspaceId.uuidString else {
+        print("🙅🏻‍♂️팀 스페이스 오류")
+        return
+      }
       guard let project = presentationState.pendingDeleteProject else { return }
       
       try await deleteProject(projectId: project.projectId.uuidString)
       try await renewalTeamspaceUpdateAt(teamspaceId: teamspaceId)
       
-      // TODO: batch 추가하기(곡, 비디오, 영상 삭제 연쇄삭제)
-      // 새로 고침
+      // 서버 기준 최신으로 다시 로딩(캐시 주입돼 있으면 캐싱 로직이 알아서 동작)
       await onAppear()
       
       presentationState.isPresentingDeleteAlert = false
       presentationState.pendingDeleteProject    = nil
+      
+      // 캐시도 최신 projects로 교체
+      if let cacheStore,
+         let currentTeamspace,
+         let updatedAt = currentTeamspace.updatedAt {
+
+        let tid = currentTeamspace.teamspaceId.uuidString
+        try? cacheStore.replaceProjects(
+          teamspaceId: tid,
+          teamspaceUpdatedAt: updatedAt,
+          project: dataState.projects
+        )
+
+        print("🧪 commit 후 캐시 교체됨")
+        cacheStore.debugPrintProjectCache(teamspaceId: tid, prefix: "🧪(after commit)")
+      }
+      
     } catch {
       print("🙅🏻‍♂️프로젝트 삭제에 실패했습니다. error: \(error.localizedDescription)")
     }
@@ -210,7 +304,6 @@ final class ProjectListViewModel {
 
 // MARK: - Private Method
 extension ProjectListViewModel {
-  /// 현재 팀 스페이스의 프로젝트를 로드
   private func loadProject(teamspaceId: String) async throws -> [Project] {
     try await FirestoreManager.shared.fetchAll(
       teamspaceId,
@@ -219,7 +312,6 @@ extension ProjectListViewModel {
     )
   }
   
-  /// 프로젝트 삭제
   private func deleteProject(projectId: String) async throws {
     try await FirestoreManager.shared.delete(
       collectionType: .project,
@@ -227,7 +319,6 @@ extension ProjectListViewModel {
     )
   }
   
-  /// 프로젝트 이름 수정
   private func updateProjectName(projectId: String, newName: String) async throws {
     try await FirestoreManager.shared.updateFields(
       collection: .project,
@@ -236,7 +327,6 @@ extension ProjectListViewModel {
     )
   }
   
-  /// 현재 프로젝트를 포함하는 팀 스페이스의 updateAt을 갱신하는 메서드입니다.
   private func renewalTeamspaceUpdateAt(teamspaceId: String) async throws {
     try await FirestoreManager.shared.updateTimestampField(
       field: .update,
@@ -246,33 +336,31 @@ extension ProjectListViewModel {
   }
 }
 
-
 // MARK: - 곡(Tracks) 내부 캐싱 관련 메서드
 extension ProjectListViewModel {
   // 프로젝트에 대한 tracksVM 가져오기 (없으면 생성해서 저장)
-   @MainActor
-   func tracksViewModel(for project: Project) -> TracksListViewModel {
-     if let cached = tracksVMByProject[project.projectId] {
-       return cached
-     }
-     let newVM = TracksListViewModel(project: project)
-     tracksVMByProject[project.projectId] = newVM
-     return newVM
-   }
+  @MainActor
+  func tracksViewModel(for project: Project) -> TracksListViewModel {
+    if let cached = tracksVMByProject[project.projectId] {
+      return cached
+    }
+    let newVM = TracksListViewModel(project: project)
+    tracksVMByProject[project.projectId] = newVM
+    return newVM
+  }
 
-   // 특정 프로젝트 캐시 제거 (삭제/나가기 등에서 호출)
-   @MainActor
-   func removeTracksCache(for projectId: UUID) {
-     tracksVMByProject[projectId] = nil
-   }
+  // 특정 프로젝트 캐시 제거 (삭제/나가기 등에서 호출)
+  @MainActor
+  func removeTracksCache(for projectId: UUID) {
+    tracksVMByProject[projectId] = nil
+  }
 
-   // 전체 트랙 캐시 제거가 필요하면
-   @MainActor
-   func clearAllTracksCache() {
-     tracksVMByProject.removeAll()
-   }
+  // 전체 트랙 캐시 제거
+  @MainActor
+  func clearAllTracksCache() {
+    tracksVMByProject.removeAll()
+  }
 }
-
 
 
 
@@ -280,11 +368,11 @@ extension ProjectListViewModel {
 
 //@Observable
 //final class ProjectListViewModel {
-//  
+//
 //  var state = ProjectListState()
-//  
+//
 //  private(set) var currentTeamspace: Teamspace? = FirebaseAuthManager.shared.currentTeamspace
-//  
+//
 //  // TODO: 현재 프로젝트를 불러오는 매서드
 //  /// 현재 팀스페이스의 프로젝트 목록을 Firestore에서 비동기적으로 가져옵니다.
 //  func fetchCurrentTeamspaceProject() async {
@@ -296,13 +384,13 @@ extension ProjectListViewModel {
 //      print("프로젝트 목록 조회 중 오류가 발생했습니다. \(error.localizedDescription)")
 //    }
 //  }
-//  
-//  
+//
+//
 //}
 
 // MARK: - private Method
 //extension ProjectListViewModel {
-//  
+//
 //  private func loadProject(teamspaceId: String) async throws -> [Project] {
 //    return try await FirestoreManager.shared.fetchAll(
 //      teamspaceId,
@@ -310,5 +398,26 @@ extension ProjectListViewModel {
 //      where: Project.CodingKeys.teamspaceId.stringValue
 //    )
 //  }
-// 
+//
 //}
+
+
+// MARK: - Debug logger
+extension ProjectListViewModel {
+
+  private func debugCacheLog(
+    phase: String,
+    teamspaceId: String,
+    remoteUpdatedAtString: String?,
+    cachedUpdatedAtString: String?
+  ) {
+    print("""
+    🧪 [ProjectCache \(phase)]
+    - teamspaceId: \(teamspaceId)
+    - remoteUpdatedAtString: \(remoteUpdatedAtString ?? "nil")
+    - cachedUpdatedAtString: \(cachedUpdatedAtString ?? "nil")
+    - isEqual: \(remoteUpdatedAtString == cachedUpdatedAtString)
+    - localProjectsCount(now): \(dataState.projects.count)
+    """)
+  }
+}
