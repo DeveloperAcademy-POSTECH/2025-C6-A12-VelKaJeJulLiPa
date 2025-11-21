@@ -210,6 +210,12 @@ struct ProjectListView: View {
       isRefreshing = true
       defer { isRefreshing = false }
       
+      await MainActor.run {
+        projectListViewModel.clearAllTracksCache() // 프로젝트별 tracksVM 캐시 제거
+        tracksViewModel?.clearCache()
+        tracksViewModel = nil
+      }
+      
       await homeViewModel.onAppear()
       await projectListViewModel.onAppear()
       await tracksViewModel?.onAppear()
@@ -218,6 +224,17 @@ struct ProjectListView: View {
       if let tracksVM = tracksViewModel,
          tracksVM.project != nil {
         await tracksVM.loadTracks(forceRefresh: true)
+      }
+      
+      // 만약 지금 프로젝트가 펼쳐진 상태면, 그 프로젝트의 tracksVM을 다시 붙여서 강제 로드
+      if let expandedId = projectListViewModel.editingState.expandedId,
+         let expandedProject = projectListViewModel.dataState.projects.first(where: { $0.projectId == expandedId }) {
+        
+        let vm = await MainActor.run {
+          projectListViewModel.tracksViewModel(for: expandedProject)
+        }
+        tracksViewModel = vm
+        await vm.loadTracks(forceRefresh: true)
       }
     }
     .overlay(alignment: .top) {
@@ -252,7 +269,8 @@ struct ProjectListView: View {
         projectListViewModel.toggleExpand(project)
         
         if projectListViewModel.editingState.expandedId == project.projectId {
-          tracksViewModel = TracksListViewModel(project: project)
+          //tracksViewModel = TracksListViewModel(project: project)
+          tracksViewModel = projectListViewModel.tracksViewModel(for: project)
         } else {
           tracksViewModel = nil
         }

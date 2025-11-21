@@ -49,6 +49,9 @@ final class ProjectListViewModel {
   // 부모(HomeView)에서 넣어줄 콜백들 (필요하면 사용)
   @ObservationIgnored var onCommitRename: ((UUID, String) async -> Void)?
   @ObservationIgnored var onTapProject: ((Project) -> Void)?
+
+  // 프로젝트별 TracksListViewModel 캐시
+  private var tracksVMByProject: [UUID: TracksListViewModel] = [:]
   
   // MARK: - 라이프사이클
   
@@ -244,7 +247,31 @@ extension ProjectListViewModel {
 }
 
 
+// MARK: - 곡(Tracks) 내부 캐싱 관련 메서드
+extension ProjectListViewModel {
+  // 프로젝트에 대한 tracksVM 가져오기 (없으면 생성해서 저장)
+   @MainActor
+   func tracksViewModel(for project: Project) -> TracksListViewModel {
+     if let cached = tracksVMByProject[project.projectId] {
+       return cached
+     }
+     let newVM = TracksListViewModel(project: project)
+     tracksVMByProject[project.projectId] = newVM
+     return newVM
+   }
 
+   // 특정 프로젝트 캐시 제거 (삭제/나가기 등에서 호출)
+   @MainActor
+   func removeTracksCache(for projectId: UUID) {
+     tracksVMByProject[projectId] = nil
+   }
+
+   // 전체 트랙 캐시 제거가 필요하면
+   @MainActor
+   func clearAllTracksCache() {
+     tracksVMByProject.removeAll()
+   }
+}
 
 
 
