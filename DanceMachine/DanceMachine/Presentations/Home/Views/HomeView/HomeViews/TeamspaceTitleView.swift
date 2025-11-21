@@ -12,6 +12,7 @@ struct TeamspaceTitleView: View {
   
   @Bindable var viewModel: HomeViewModel
   @Bindable var projectListViewModel: ProjectListViewModel
+  @Binding var tracksViewModel: TracksListViewModel? // FIXME: - 확인 필요
   
   fileprivate struct Layout {
     enum EmptyTeamspaceViewLayout {
@@ -67,7 +68,7 @@ struct TeamspaceTitleView: View {
   // MARK: - 팀 스페이스가 있을 때 보이는 뷰
   @ViewBuilder
   private var nonEmptyTeamspaceView: some View {
-    if !(projectListViewModel.editingState.rowState == .editing) {
+    if !(projectListViewModel.editingState.rowState == .editing || tracksViewModel?.editingState.rowState == .editing) {
       HStack(spacing: 8) {
         Group {
           Text(viewModel.currentTeamspace?.teamspaceName ?? Layout.NonEmptyTeamspaceViewLayout.teamspaceEmptyTitleText)
@@ -93,13 +94,13 @@ struct TeamspaceTitleView: View {
 
 
 // MARK: - 프리뷰
-
 #Preview("팀 없을 때") {
   ZStack {
     Color.backgroundNormal.ignoresSafeArea()
     TeamspaceTitleView(
       viewModel: HomeViewModel(),
-      projectListViewModel: ProjectListViewModel()
+      projectListViewModel: ProjectListViewModel(),
+      tracksViewModel: .constant(TracksListViewModel())
     )
     .environmentObject(MainRouter())
   }
