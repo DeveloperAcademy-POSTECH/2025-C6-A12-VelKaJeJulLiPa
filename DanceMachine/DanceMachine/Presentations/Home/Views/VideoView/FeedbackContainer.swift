@@ -15,6 +15,7 @@ struct FeedbackContainer: View {
   let videoId: String
   let userId: String
   let filteredFeedbacks: [Feedback]
+  let iPadLandscape: Bool
   let drawingImageNamespace: Namespace.ID
   let feedbackImageNamespace: Namespace.ID
   let onDrawingAction: (() -> Void)? // 드로잉 액션
@@ -41,7 +42,7 @@ struct FeedbackContainer: View {
           .padding(.trailing, 16)
       }
       .padding(.vertical, 10)
-      .padding(.top, isIPad ? 80 : 0)
+      .padding(.top, isIPad && iPadLandscape ? 80 : 0)
       Divider().frame(height: 0)
       // 피드백 리스트
       if vm.feedbackVM.showErrorView {
