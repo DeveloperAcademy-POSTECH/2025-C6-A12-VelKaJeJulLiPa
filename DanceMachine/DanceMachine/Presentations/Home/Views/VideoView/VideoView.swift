@@ -53,7 +53,7 @@ struct VideoView: View {
           state.isEditingExistingDrawing = false // 편집 모드 초기화
         }
       }
-      .toolbar(.hidden, for: .tabBar)
+//      .toolbar(.hidden, for: .tabBar)
     }
     .disabled(vm.feedbackVM.isUploading)
     .overlay(alignment: .center, content: {
@@ -67,10 +67,10 @@ struct VideoView: View {
     })
     .onChange(of: state.isImageOverlayPresented) { dismissKeyboard() } // 오버레이(이미지 확대)로 교체시 키보드 내리기
     // 드로잉 이미지 확대 시, 툴 바 숨기기 처리
-    .toolbar(
-      state.showDrawingImageFull || state.showFeedbackImageFull || state.forceShowLandscape ? .hidden : .visible,
-      for: .navigationBar
-    )
+//    .toolbar(
+//      state.showDrawingImageFull || state.showFeedbackImageFull || state.forceShowLandscape ? .hidden : .visible,
+//      for: .navigationBar
+//    )
     .fullScreenCover(isPresented: $state.showFeedbackPaperDrawingView) {
       // MARK: - iOS 18 / 26 분기 처리 (Drawing)
       if #available(iOS 26.0, *) {
@@ -200,11 +200,25 @@ struct VideoView: View {
     }
   }
   
+  /// 기기별 뷰 함수입니당
   @ViewBuilder
   private func deviceSpecificView(proxy: GeometryProxy) -> some View {
     if UIDevice.current.userInterfaceIdiom == .pad {
       // iPad
-      EmptyView()
+      iPadVideoView(
+        vm: vm,
+        state: state,
+        videoId: videoId,
+        videoTitle: videoTitle,
+        videoURL: videoURL,
+        userId: userId,
+        filteredFeedbacks: filteredFeedbacks,
+        proxy: proxy,
+        drawingImageNamespace: drawingImageNamespace,
+        feedbackImageNamespace: feedbackImageNamespace,
+        onCaptureFrame: { self.captureCurrentFrame() },
+        editExistingDrawing: { self.editExistingDrawing() }
+      )
     } else {
       // iPhone
       if state.forceShowLandscape {
