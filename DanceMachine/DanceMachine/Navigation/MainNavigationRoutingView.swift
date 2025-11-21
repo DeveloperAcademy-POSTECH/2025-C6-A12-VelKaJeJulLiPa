@@ -15,7 +15,7 @@ struct MainNavigationRoutingView: View {
     Group {
       switch destination {
       case .home:
-        HomeView()
+        HomeViewContent()
       case .inbox(let route):
         switch route {
         case .list:
@@ -26,27 +26,27 @@ struct MainNavigationRoutingView: View {
         case .profile:
           MyPageView()
         case .editName:
-          EditNameView().toolbar(.hidden, for: .tabBar)
+          EditNameView()
         case .privacyPolicy:
-          PrivacyPolicyView().toolbar(.hidden, for: .tabBar)
+          PrivacyPolicyView()
         case .termsOfUse:
-          TermsOfUseView().toolbar(.hidden, for: .tabBar)
+          TermsOfUseView()
         case .accountSetting:
-          AccountSettingView().toolbar(.hidden, for: .tabBar)
+          AccountSettingView()
         case .appMaker:
-          AppMakerView().toolbar(.hidden, for: .tabBar)
+          AppMakerView()
         }
       case .teamspace(let route):
         switch route {
         case .create:
           CreateTeamspaceView(presentationStyle: .navigation).toolbar(.hidden, for: .tabBar)
         case .setting:
-          TeamspaceSettingView().toolbar(.hidden, for: .tabBar)
+          TeamspaceSettingView()
         }
       case .project(let route):
         switch route {
         case .create:
-          CreateProjectView().toolbar(.hidden, for: .tabBar)
+          CreateProjectView()
         }
       case .video(let route):
         switch route {
