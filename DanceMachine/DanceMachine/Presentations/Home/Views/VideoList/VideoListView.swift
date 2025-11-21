@@ -28,17 +28,20 @@ struct VideoListView: View {
     vm: VideoListViewModel = .init(),
     tracksId: String,
     sectionId: String,
-    trackName: String
+    trackName: String,
+    onBackButtonTap: (() -> Void)? = nil
   ) {
     self.vm = vm
     self.tracksId = tracksId
     self.sectionId = sectionId
     self.trackName = trackName
+    self.onBackButtonTap = onBackButtonTap
   }
-  
+
   let tracksId: String
   let sectionId: String
   let trackName: String
+  let onBackButtonTap: (() -> Void)?
   
   var body: some View {
     GeometryReader { geometry in
@@ -76,9 +79,9 @@ struct VideoListView: View {
       )
     }
     .navigationBarTitleDisplayMode(.inline)
-    .toolbar(.hidden, for: .tabBar)
+//    .toolbar(.hidden, for: .tabBar)
     .toolbar {
-      ToolbarLeadingBackButton(icon: .chevron)
+      ToolbarLeadingBackButton(icon: .chevron, action: onBackButtonTap)
       ToolbarCenterTitle(text: trackName)
       ToolbarUploadButton {
         Task {
