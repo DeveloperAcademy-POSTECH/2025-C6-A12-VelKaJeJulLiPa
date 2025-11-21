@@ -69,6 +69,7 @@ struct iPhonePortraitView: View {
         videoId: videoId,
         userId: userId,
         filteredFeedbacks: filteredFeedback,
+        iPadLandscape: false,
         drawingImageNamespace: drawingImageNamespace,
         feedbackImageNamespace: feedbackImageNamespace,
         onDrawingAction: onCaptureFrame,
