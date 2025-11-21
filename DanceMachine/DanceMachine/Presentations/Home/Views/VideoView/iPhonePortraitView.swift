@@ -71,12 +71,19 @@ struct iPhonePortraitView: View {
         filteredFeedbacks: filteredFeedback,
         drawingImageNamespace: drawingImageNamespace,
         feedbackImageNamespace: feedbackImageNamespace,
-        leadingPadding: 16,
         onDrawingAction: onCaptureFrame,
         editExistingDrawing: editExistingDrawing,
-        onFeedbackSelect: nil,
-        imageNamespace: feedbackImageNamespace
+        onFeedbackSelect: nil
       )
+    }
+    .sheet(isPresented: $state.showSpeedSheet) {
+      PlaybackSpeedSheet(
+        playbackSpeed: $vm.videoVM.playbackSpeed,
+        onSpeedChange: { speed in
+          vm.videoVM.setPlaybackSpeed(speed)
+        }
+      )
+      .presentationDetents([.fraction(0.25)])
     }
     .background(Color.backgroundNormal.ignoresSafeArea())
     .toolbarTitleDisplayMode(.inline)
