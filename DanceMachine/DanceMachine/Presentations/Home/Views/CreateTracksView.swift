@@ -21,8 +21,6 @@ struct CreateTracksView: View {
   @State private var closeAlert: Bool = false
   @State private var isCreatingTrack: Bool = false
   
-  
-  //  @Binding var choiceSelectedProject: Project?
   let choiceSelectedProject: Project?
   
   @State var overText: Bool = false
@@ -195,16 +193,16 @@ struct CreateTracksView: View {
             tracksName: trackNameText
           )
           
-          await MainActor.run { self.checkEffectActive = true }
+          await MainActor.run {
+            onCreated()
+            checkEffectActive = true
+          }
           
           try? await Task.sleep(for: .seconds(2)) // 애니메이션 2초 효과
           
           await MainActor.run {
             dismiss()
           }
-          
-          await tracksListViewModel.onAppear()
-          
         }
       }
       .disabled(isCreatingTrack)
@@ -247,6 +245,7 @@ struct CreateTracksView: View {
             Image(systemName: "checkmark.circle")
               .font(.system(size: 24, weight: .medium))
               .foregroundStyle(Color.secondaryNormal)
+              .opacity(checkEffectActive ? 1 : 0)
           }
           
           Text("곡을 생성했습니다.")
@@ -262,19 +261,14 @@ struct CreateTracksView: View {
   NavigationStack {
     CreateTracksView(
       tracksListViewModel: TracksListViewModel(
-        project: .init(
+        project: Project(
           projectId: UUID(),
           teamspaceId: "",
           creatorId: "",
           projectName: ""
         )
       ),
-      choiceSelectedProject: .init(
-        projectId: UUID(),
-        teamspaceId: "",
-        creatorId: "",
-        projectName: ""
-      )
+      choiceSelectedProject: nil
     )
   }
 }

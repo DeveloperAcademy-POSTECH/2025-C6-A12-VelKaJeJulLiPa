@@ -247,7 +247,7 @@ struct CreateTeamspaceView: View {
     RoundedRectangle(cornerRadius: 15)
       .fill(Color.fillAssitive)
       .frame(height: 47)
-      .opacity(checkEffectActive ? 1 : 0) // 전체 오버레이 자체를 페이드 인
+      .opacity(checkEffectActive ? 1 : 0)
       .overlay {
         HStack(spacing: 10) {
           if #available(iOS 26.0, *) {
@@ -257,12 +257,13 @@ struct CreateTeamspaceView: View {
               .symbolEffect(
                 .drawOn,
                 options: .nonRepeating,
-                isActive: !checkEffectActive   // 이 값이 false → true로 바뀔 때 한 번 그림
+                isActive: !checkEffectActive
               )
           } else {
             Image(systemName: "checkmark.circle")
               .font(.system(size: 24, weight: .medium))
               .foregroundStyle(Color.secondaryNormal)
+              .opacity(checkEffectActive ? 1 : 0)
           }
           
           Text("팀을 생성했습니다.")
