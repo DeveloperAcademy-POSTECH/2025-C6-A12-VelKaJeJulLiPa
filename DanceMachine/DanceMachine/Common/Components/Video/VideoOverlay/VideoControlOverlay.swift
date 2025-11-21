@@ -24,6 +24,8 @@ struct VideoControlOverlay: View {
 
   let isLandscapeMode: Bool
   let showFeedbackPanel: Bool
+  
+  let drawingAction: () -> Void
 
   var body: some View {
     ZStack {
@@ -49,6 +51,7 @@ struct VideoControlOverlay: View {
       VideoSettingButtons(
         action: onSpeedAction,
         toggleOrientations: onToggleOrientation,
+        drawingAction: drawingAction,
         isLandscapeMode: isLandscapeMode,
         toggleFeedbackPanel: onToggleFeedbackPanel,
         showFeedbackPanel: showFeedbackPanel
