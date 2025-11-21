@@ -210,6 +210,7 @@ struct ProjectListView: View {
       isRefreshing = true
       defer { isRefreshing = false }
       
+      await homeViewModel.onAppear()
       await projectListViewModel.onAppear()
       
       // FIXME: - 확인 필요
