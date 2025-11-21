@@ -344,7 +344,7 @@ extension ProjectListViewModel {
     if let cached = tracksVMByProject[project.projectId] {
       return cached
     }
-    let newVM = TracksListViewModel(project: project)
+    let newVM = TracksListViewModel(project: project, cacheStore: cacheStore)
     tracksVMByProject[project.projectId] = newVM
     return newVM
   }
@@ -419,5 +419,45 @@ extension ProjectListViewModel {
     - isEqual: \(remoteUpdatedAtString == cachedUpdatedAtString)
     - localProjectsCount(now): \(dataState.projects.count)
     """)
+  }
+}
+
+
+// MARK: - 새로고침 메서드
+extension ProjectListViewModel {
+
+  // refreshable에서 쓸 "강제 서버 새로고침"
+  func refreshFromServer() async {
+    do {
+      guard let currentTeamspace else {
+        print("🙅🏻‍♂️현재 팀 스페이스 없음 error")
+        return
+      }
+
+      dataState.isLoading = true
+      defer { dataState.isLoading = false }
+
+      let teamspaceId = currentTeamspace.teamspaceId.uuidString
+
+      // 1) 무조건 서버에서 fetch
+      let freshProjects = try await loadProject(teamspaceId: teamspaceId)
+      dataState.projects = freshProjects
+      print("🔄 refresh 서버 fetch 완료. count=\(freshProjects.count)")
+
+      // 2) fetch 결과로 캐시 교체 (updatedAt nil이면 Date()로 대체)
+      if let cacheStore {
+        let updatedAt = currentTeamspace.updatedAt ?? Date()
+        try? cacheStore.replaceProjects(
+          teamspaceId: teamspaceId,
+          teamspaceUpdatedAt: updatedAt,
+          project: freshProjects
+        )
+        print("🧊 refresh 후 프로젝트 캐시 갱신 완료. updatedAt=\(updatedAt.iso8601KST())")
+        cacheStore.debugPrintProjectCache(teamspaceId: teamspaceId, prefix: "🧊(after refresh)")
+      }
+
+    } catch {
+      print("🙅🏻‍♂️ refresh 프로젝트 로딩 실패: \(error.localizedDescription)")
+    }
   }
 }
