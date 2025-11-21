@@ -36,7 +36,7 @@ struct FeedbackPencilDrawingView: View {
   var body: some View {
     GeometryReader { geo in
       ZStack {
-        Color.backgroundNormal.ignoresSafeArea()
+        Color.black.ignoresSafeArea()
         VStack(spacing: 4) {
           drawingToolbar.padding(.horizontal, 16)
           PencilCanvasView(
@@ -106,81 +106,72 @@ struct FeedbackPencilDrawingView: View {
   
   // MARK: - 탑 타이틀
   private var drawingToolbar: some View {
-    LabeledContent {
-      HStack(spacing: 16) {
-        // 되돌리기
-        Button {
-          undoDrawing()
-        } label: {
-          Image(systemName: "arrow.uturn.backward")
-            .resizable()
-            .scaledToFit()
-            .frame(width: 24, height: 24)
-            .foregroundStyle(Color.labelStrong)
-        }
-        
-        /// 앞으로 가기
-        Button {
-          redoDrawing()
-        } label: {
-          Image(systemName: "arrow.uturn.forward")
-            .resizable()
-            .scaledToFit()
-            .frame(width: 24, height: 24)
-            .foregroundStyle(Color.labelStrong)
-        }
-        
-        
-        // 팬슬 툴
-        Button {
-          showsToolPicker.toggle()
-        } label: {
-          if showsToolPicker {
-            Image(systemName: "pencil.circle.fill")
-              .resizable()
-              .scaledToFit()
-              .frame(width: 24, height: 24)
-              .foregroundStyle(Color.labelStrong)
-          }
-          else {
-            Image(systemName: "pencil.circle")
-              .resizable()
-              .scaledToFit()
-              .frame(width: 24, height: 24)
-              .foregroundStyle(Color.labelStrong)
-          }
-        }
-        
-        
-        // 완료 버튼
-        Button {
-          if let merged = exportMergedImageOnscreenSize() {
-            // 완료 시: 합성 이미지 + 드로잉 데이터 반환
-            let drawingData = canvasView.drawing.dataRepresentation()
-            onDone(merged, drawingData) // 합성 이미지, 드로잉 데이터
-            dismiss()
-          }
-        } label: {
-          Image(systemName: "checkmark.circle.fill")
-            .resizable()
-            .scaledToFit()
-            .frame(width: 24, height: 24)
-            .foregroundStyle(Color.labelStrong)
-        }
-        
-      }
-    } label: {
+    HStack(spacing: 12) {
+      // X 버튼
       Button {
         dismiss()
       } label: {
-        Image(systemName: "xmark.circle.fill")
-          .resizable()
-          .frame(width: 24, height: 24) // FIXME: - 크기 수정
+        Image(systemName: "xmark")
+          .font(.system(size: 22, weight: .medium))
           .foregroundStyle(Color.labelStrong)
       }
+      .frame(width: 44, height: 44)
+      .drawingButton()
+
+      Spacer()
+
+      // 버튼 그룹들
+      HStack(spacing: 12) {
+        // 그룹 1: Undo/Redo
+        HStack(spacing: 0) {
+          Button {
+            undoDrawing()
+          } label: {
+            Image(systemName: "arrow.uturn.backward")
+              .font(.system(size: 22, weight: .medium))
+              .foregroundStyle(Color.labelStrong)
+          }
+          .frame(width: 44, height: 44)
+
+          Button {
+            redoDrawing()
+          } label: {
+            Image(systemName: "arrow.uturn.forward")
+              .font(.system(size: 22, weight: .medium))
+              .foregroundStyle(Color.labelStrong)
+          }
+          .frame(width: 44, height: 44)
+        }
+        .padding(.horizontal, 4)
+        .drawingButtonGroup()
+
+        // 그룹 2: Pencil Tool
+        Button {
+          showsToolPicker.toggle()
+        } label: {
+          Image(systemName: showsToolPicker ? "pencil.tip.crop.circle.fill" : "pencil.tip.crop.circle")
+            .font(.system(size: 22, weight: .medium))
+            .foregroundStyle(Color.labelStrong)
+        }
+        .frame(width: 44, height: 44)
+        .drawingButton()
+
+        // 그룹 3: 완료
+        Button {
+          if let merged = exportMergedImageOnscreenSize() {
+            let drawingData = canvasView.drawing.dataRepresentation()
+            onDone(merged, drawingData)
+            dismiss()
+          }
+        } label: {
+          Image(systemName: "checkmark")
+            .font(.system(size: 22, weight: .semibold))
+            .foregroundStyle(Color.white)
+        }
+        .frame(width: 44, height: 44)
+        .drawingSubmitButton()
+      }
     }
-    .font(.headline)
-    .foregroundStyle(.black)
   }
   
   /// 팬슬 이전 그림 취소하는 기능입니다.

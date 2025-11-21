@@ -85,7 +85,7 @@ final class FeedbackPaperDrawingData {
     // 확대는 8배까지(유튜브가 8배 zoom), 축소는 1배 미만 불가
     controller.zoomRange = 1.0 ... 8.0
     
-    controller.view.backgroundColor = UIColor(Color.backgroundNormal)
+    controller.view.backgroundColor = UIColor(Color.black)
     
 
     // 초기 이미지 있으면 먼저 캔버스에 올리기 (initiakize)

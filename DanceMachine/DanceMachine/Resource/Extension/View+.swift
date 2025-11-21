@@ -238,4 +238,58 @@ extension View {
       self
     }
   }
+  
+  @ViewBuilder
+  func drawingButton() -> some View {
+    if #available(iOS 26.0, *) {
+      self
+        .glassEffect(
+          .clear.interactive(),
+          in: Circle()
+        )
+    } else {
+      self
+        .background {
+          Circle()
+            .fill(Color.black.opacity(0.25))
+            .shadow(color: .white.opacity(0.3), radius: 2, x: 0, y: 1)
+        }
+    }
+  }
+
+  @ViewBuilder
+  func drawingButtonGroup() -> some View {
+    if #available(iOS 26.0, *) {
+      self
+        .glassEffect(
+          .clear.interactive(),
+          in: Capsule()
+        )
+    } else {
+      self
+        .background {
+          Capsule()
+            .fill(Color.black.opacity(0.25))
+            .shadow(color: .white.opacity(0.3), radius: 2, x: 0, y: 1)
+        }
+    }
+  }
+
+  @ViewBuilder
+  func drawingSubmitButton() -> some View {
+    if #available(iOS 26.0, *) {
+      self
+        .glassEffect(
+          .clear.tint(Color.secondaryStrong).interactive(),
+          in: Circle()
+        )
+    } else {
+      self
+        .background {
+          Circle()
+            .fill(Color.secondaryStrong)
+            .shadow(color: .white.opacity(0.3), radius: 2, x: 0, y: 1)
+        }
+    }
+  }
 }
