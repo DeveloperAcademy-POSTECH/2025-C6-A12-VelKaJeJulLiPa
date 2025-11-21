@@ -13,65 +13,15 @@ struct VideoView: View {
   @EnvironmentObject private var router: MainRouter
   
   @State private var vm: VideoDetailViewModel = .init()
-
-  @State private var showFeedbackInput: Bool = false
-  @State private var feedbackType: FeedbackType = .point
-  @State private var feedbackFilter: FeedbackFilter = .all
-
-  // MARK: 슬라이더 관련
-  @State private var isDragging: Bool = false
-  @State private var sliderValue: Double = 0
-
-  // MARK: 피드백 시점 관련
-  @State private var pointTime: Double = 0
-  @State private var intervalTime: Double = 0
-
-  // MARK: 글래스 이팩트 버튼
-  @Namespace private var buttonNamespace
-  @State private var showIntervalButton: Bool = false
-  @State private var buttonSpacing: CGFloat = 4
-
-  
-  // MARK: 가로모드 관련
-  @State private var isLandscape: Bool = false // 디바이스 가로모드 감지
-  @State private var forceShowLandscape: Bool = false // 전체 화면 버튼으로 가는 가로모드
-  @State private var showFeedbackPanel: Bool = false
-
-  // MARK: 스와이프 제스처 관련
-  @State private var dragOffset: CGFloat = 0
-  
-  // MARK: 배속 좆러
-  @State private var showSpeedSheet: Bool = false
-  
-  // MARK: 스크롤 관련
-  @State private var scrollProxy: ScrollViewProxy? = nil
+  @State private var state: VideoViewState = .init()
   
   // MARK: 신고하기 관련
-//  @State private var reportTargetFeedback: Feedback? = nil
   @State private var showCreateReportSuccessToast: Bool = false
-  
-  /// =======================================================
-  /// 드로잉 관련
-  // MARK: 이미지 캡쳐 결과 //
-  @State private var showFeedbackPaperDrawingView: Bool = false
-  @State private var capturedImage: UIImage? = nil
-  @State private var editedOverlayImage: UIImage? = nil
   
   // 🔥 전체 화면 프리뷰용 상태 & 네임스페이스 //
   @Namespace private var drawingImageNamespace
-  @State private var showDrawingImageFull: Bool = false
-  
   // 🔥 피드백 카드 이미지 풀스크린용 상태
   @Namespace private var feedbackImageNamespace
-  @State private var selectedFeedbackImageURL: String? = nil
-  @State private var showFeedbackImageFull: Bool = false
-  
-  // MARK: 드로잉 데이터 영속성 (편집 가능하도록 저장)
-  @State private var savedDrawingData: Data? = nil // PencilKit 드로잉 데이터
-  @State private var savedMarkupData: Data? = nil // PaperKit 마크업 데이터
-  @State private var backgroundImage: UIImage? = nil // 원본 캡처 이미지
-  @State private var isEditingExistingDrawing: Bool = false // 편집 모드 여부
-  /// ========================================================
   
   // MARK: 전역으로 관리되는 ID
   let userId: String = FirebaseAuthManager.shared.userInfo?.userId ?? ""
@@ -81,126 +31,26 @@ struct VideoView: View {
   let videoURL: String
   let teamspaceId: String
 
-  
   // 피드백 필터링 (내 피드백, 전체 피드백)
   var filteredFeedbacks: [Feedback] {
-    switch feedbackFilter {
+    switch state.feedbackFilter {
     case .all: return vm.feedbackVM.feedbacks
     case .mine: return vm.feedbackVM.feedbacks.filter { $0.taggedUserIds.contains(userId) }
     }
   }
   
-  /// 이미지 확대 변수
-  private var isImageOverlayPresented: Bool {
-    showDrawingImageFull || showFeedbackImageFull
-  }
-  
   var body: some View {
     GeometryReader { proxy in
-      Group {
-        if vm.forceShowLandscape {
-          LandscapeView(
-            vm: vm,
-            isDragging: $isDragging,
-            sliderValue: $sliderValue,
-            feedbackFilter: $feedbackFilter,
-            scrollProxy: $scrollProxy,
-            pointTime: $pointTime,
-            intervalTime: $intervalTime,
-            dragOffset: $dragOffset,
-            forceShowLandscape: $forceShowLandscape,
-            filteredFeedback: filteredFeedbacks,
-            userId: userId,
-            proxy: proxy,
-            videoId: videoId,
-            showFeedbackPaperDrawingView: $showFeedbackPaperDrawingView,
-            capturedImage: $capturedImage,
-            editedOverlayImage: $editedOverlayImage,
-            backgroundImage: $backgroundImage,
-            isEditingExistingDrawing: $isEditingExistingDrawing,
-            drawingImageNamespace: drawingImageNamespace,
-            showDrawingImageFull: $showDrawingImageFull,
-            feedbackImageNamespace: feedbackImageNamespace,
-            selectedFeedbackImageURL: $selectedFeedbackImageURL,
-            showFeedbackImageFull: $showFeedbackImageFull
-          )
-        } else {
-          ZStack {
-            Color.backgroundNormal.ignoresSafeArea()
-            VStack {
-              PortraitView(
-                vm: vm,
-                isDragging: $isDragging,
-                sliderValue: $sliderValue,
-                feedbackFilter: $feedbackFilter,
-                scrollProxy: $scrollProxy,
-                pointTime: $pointTime,
-                intervalTime: $intervalTime,
-                showFeedbackInput: $showFeedbackInput,
-                dragOffset: $dragOffset,
-                forceShowLandscape: $forceShowLandscape,
-                filteredFeedback: filteredFeedbacks,
-                userId: userId,
-                proxy: proxy,
-                videoTitle: videoTitle,
-                videoId: videoId,
-                videoURL: videoURL,
-                showFeedbackPaperDrawingView: $showFeedbackPaperDrawingView,
-                capturedImage: $capturedImage,
-                editedOverlayImage: $editedOverlayImage,
-                backgroundImage: $backgroundImage,
-                isEditingExistingDrawing: $isEditingExistingDrawing,
-                drawingImageNamespace: drawingImageNamespace,
-                showDrawingImageFull: $showDrawingImageFull,
-                feedbackImageNamespace: feedbackImageNamespace,
-                selectedFeedbackImageURL: $selectedFeedbackImageURL,
-                showFeedbackImageFull: $showFeedbackImageFull
-              )
-            }
-          }
-        }
-        
-        // 드로잉 이미지 전체 프리뷰
-        if let image = editedOverlayImage {
-          ZoomableImageOverlay(
-            isPresented: $showDrawingImageFull,
-            backgroundColor: Color.backgroundNormal
-          ) {
-            Image(uiImage: image)
-              .resizable()
-              .scaledToFit()
-              .matchedGeometryEffect(id: "feedbackImage", in: drawingImageNamespace)
-          }
-        }
-        
-        // 피드백 카드 이미지 전체 프리뷰
-        if let urlString = selectedFeedbackImageURL,
-           let url = URL(string: urlString) {
-          ZoomableImageOverlay(
-            isPresented: $showFeedbackImageFull,
-            backgroundColor: Color.backgroundNormal
-          ) {
-            KFImage(url)
-              .placeholder {
-                ProgressView()
-              }
-              .retry(maxCount: 2, interval: .seconds(2))
-              .cacheOriginalImage()
-              .resizable()
-              .scaledToFit()
-              .matchedGeometryEffect(id: urlString, in: feedbackImageNamespace)
-          }
-        }
-      }
-      .onChange(of: showFeedbackInput) { _, newValue in
+      deviceSpecificView(proxy: proxy)
+      .onChange(of: state.showFeedbackInput) { _, newValue in
         // 피드백 입력창이 닫힐 때 모든 드로잉 관련 데이터 초기화
         if !newValue {
           vm.feedbackVM.isRecordingInterval = false
-          self.editedOverlayImage = nil // 합성된 이미지 초기화
-          self.savedDrawingData = nil // PencilKit 데이터 초기화
-          self.savedMarkupData = nil // PaperKit 데이터 초기화
-          self.backgroundImage = nil // 원본 캡처 이미지 초기화
-          self.isEditingExistingDrawing = false // 편집 모드 초기화
+          state.editedOverlayImage = nil // 합성된 이미지 초기화
+          state.savedDrawingData = nil // PencilKit 데이터 초기화
+          state.savedMarkupData = nil // PaperKit 데이터 초기화
+          state.backgroundImage = nil // 원본 캡처 이미지 초기화
+          state.isEditingExistingDrawing = false // 편집 모드 초기화
         }
       }
       .toolbar(.hidden, for: .tabBar)
@@ -215,48 +65,80 @@ struct VideoView: View {
         }
       }
     })
-    .onChange(of: isImageOverlayPresented) { dismissKeyboard() } // 오버레이(이미지 확대)로 교체시 키보드 내리기
+    .onChange(of: state.isImageOverlayPresented) { dismissKeyboard() } // 오버레이(이미지 확대)로 교체시 키보드 내리기
     // 드로잉 이미지 확대 시, 툴 바 숨기기 처리
     .toolbar(
-      showDrawingImageFull || showFeedbackImageFull || vm.forceShowLandscape ? .hidden : .visible,
+      state.showDrawingImageFull || state.showFeedbackImageFull || state.forceShowLandscape ? .hidden : .visible,
       for: .navigationBar
     )
-    .fullScreenCover(isPresented: $showFeedbackPaperDrawingView) {
+    .fullScreenCover(isPresented: $state.showFeedbackPaperDrawingView) {
       // MARK: - iOS 18 / 26 분기 처리 (Drawing)
       if #available(iOS 26.0, *) {
         FeedbackPaperDrawingView(
-          image: $capturedImage,
+          image: $state.capturedImage,
           onComplete: { finalImage, markupData in
             // 완료 시: 합성 이미지 + 마크업 데이터 저장
-            editedOverlayImage = finalImage // 배경 + 드로잉 합성 이미지
-            savedMarkupData = markupData // 수정 가능한 마크업 데이터
-            backgroundImage = capturedImage // 원본 배경 이미지 (재수정 시 사용)
-            self.capturedImage = nil
-            isEditingExistingDrawing = false
+            state.editedOverlayImage = finalImage // 배경 + 드로잉 합성 이미지
+            state.savedMarkupData = markupData // 수정 가능한 마크업 데이터
+            state.backgroundImage = state.capturedImage // 원본 배경 이미지 (재수정 시 사용)
+            state.capturedImage = nil
+            state.isEditingExistingDrawing = false
+
+            // 피드백 입력 상태가 아니면 자동으로 피드백 입력창 열기
+            if !state.showFeedbackInput {
+              state.feedbackType = .point
+              state.pointTime = vm.videoVM.currentTime
+              state.showFeedbackInput = true
+              if vm.videoVM.isPlaying {
+                vm.videoVM.togglePlayPause()
+              }
+
+              // 가로모드일 때 피드백 패널이 안 열려있으면 열기
+              if state.forceShowLandscape && !state.showFeedbackPanel {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                  state.showFeedbackPanel = true
+                }
+              }
+            }
           },
-          initialMarkupData: isEditingExistingDrawing ? savedMarkupData : nil // 편집 모드면 기존 데이터 로드
+          initialMarkupData: state.isEditingExistingDrawing ? state.savedMarkupData : nil // 편집 모드면 기존 데이터 로드
         )
       }
       else {
         FeedbackPencilDrawingView(
-          image: $capturedImage,
-          initialDrawing: isEditingExistingDrawing ? savedDrawingData : nil, // 편집 모드면 기존 데이터 로드
+          image: $state.capturedImage,
+          initialDrawing: state.isEditingExistingDrawing ? state.savedDrawingData : nil, // 편집 모드면 기존 데이터 로드
           onDone: { merged, drawingData in
             DispatchQueue.main.async {
               // 완료 시: 합성 이미지 + 드로잉 데이터 저장
-              editedOverlayImage = merged // 배경 + 드로잉 합성 이미지
-              savedDrawingData = drawingData // 수정 가능한 드로잉 데이터
-              backgroundImage = capturedImage // 원본 배경 이미지 (재수정 시 사용)
-              self.capturedImage = nil
-              isEditingExistingDrawing = false
-              showFeedbackPaperDrawingView = false
+              state.editedOverlayImage = merged // 배경 + 드로잉 합성 이미지
+              state.savedDrawingData = drawingData // 수정 가능한 드로잉 데이터
+              state.backgroundImage = state.capturedImage // 원본 배경 이미지 (재수정 시 사용)
+              state.capturedImage = nil
+              state.isEditingExistingDrawing = false
+              state.showFeedbackPaperDrawingView = false
+
+              // 피드백 입력 상태가 아니면 자동으로 피드백 입력창 열기
+              if !state.showFeedbackInput {
+                state.feedbackType = .point
+                state.pointTime = vm.videoVM.currentTime
+                state.showFeedbackInput = true
+                if vm.videoVM.isPlaying {
+                  vm.videoVM.togglePlayPause()
+                }
+
+                // 가로모드일 때 피드백 패널이 안 열려있으면 열기
+                if state.forceShowLandscape && !state.showFeedbackPanel {
+                  withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    state.showFeedbackPanel = true
+                  }
+                }
+              }
             }
           },
           onCancel: {
             DispatchQueue.main.async {
-              self.capturedImage = nil
-              isEditingExistingDrawing = false
-              showFeedbackPaperDrawingView = false
+              state.resetDrwaingData()
             }
           }
         )
@@ -316,6 +198,92 @@ struct VideoView: View {
             await vm.loadAllData(videoId: videoId, videoURL: videoURL, teamspaceId: teamspaceId)
         }
     }
+  }
+  
+  @ViewBuilder
+  private func deviceSpecificView(proxy: GeometryProxy) -> some View {
+    if UIDevice.current.userInterfaceIdiom == .pad {
+      // iPad
+      EmptyView()
+    } else {
+      // iPhone
+      if state.forceShowLandscape {
+        LandscapeView(
+          vm: vm,
+          state: state,
+          filteredFeedback: filteredFeedbacks,
+          userId: userId,
+          proxy: proxy,
+          videoId: videoId,
+          videoURL: videoURL,
+          onCaptureFrame: { self.captureCurrentFrame() },
+          editExistingDrawing: { self.editExistingDrawing() },
+          drawingImageNamespace: drawingImageNamespace,
+          feedbackImageNamespace: feedbackImageNamespace
+        )
+      } else {
+        PortraitView(
+          vm: vm,
+          state: state,
+          filteredFeedback: filteredFeedbacks,
+          userId: userId,
+          proxy: proxy,
+          videoTitle: videoTitle,
+          videoId: videoId,
+          videoURL: videoURL,
+          drawingImageNamespace: drawingImageNamespace,
+          feedbackImageNamespace: feedbackImageNamespace,
+          onCaptureFrame: { self.captureCurrentFrame() },
+          editExistingDrawing: { self.editExistingDrawing() }
+        )
+      }
+    }
+  }
+  
+  // MARK: - 드로잉 관련 함수
+
+  /// "드로잉 하기" 버튼 클릭 시: 현재 비디오 프레임을 캡처하여 드로잉 시작
+  /// - 비디오의 현재 재생 시점을 이미지로 캡처
+  /// - 캡처한 이미지를 배경으로 드로잉 뷰 표시
+  /// - isEditingExistingDrawing = false (새 드로잉 모드)
+  private func captureCurrentFrame() {
+    guard let player = vm.videoVM.player,
+          let asset  = player.currentItem?.asset else { return }
+
+    let time = player.currentTime()
+
+    let generator = AVAssetImageGenerator(asset: asset)
+    generator.appliesPreferredTrackTransform = true
+    generator.requestedTimeToleranceBefore = .zero
+    generator.requestedTimeToleranceAfter  = .zero
+    generator.dynamicRangePolicy = .forceSDR
+
+    generator.generateCGImageAsynchronously(for: time) { cgImage, actualTime, error in
+      guard let cgImage = cgImage, error == nil else {
+        print("적절한 에러 처리 추가하기")
+        return
+      }
+      let image = UIImage(cgImage: cgImage)
+      DispatchQueue.main.async {
+        state.capturedImage = image // 드로잉 뷰에 전달할 이미지
+        state.backgroundImage = image // 재수정 시 사용할 원본 이미지 저장
+        state.isEditingExistingDrawing = false // 새 드로잉 모드
+        state.showFeedbackPaperDrawingView = true
+        print("이미지 캡처 성공 @ \(CMTimeGetSeconds(actualTime))s")
+      }
+    }
+  }
+
+  /// 썸네일 클릭 시: 기존 드로잉을 수정 모드로 열기
+  /// - 원본 배경 이미지 (backgroundImage)를 다시 로드
+  /// - 저장된 드로잉 데이터 (savedMarkupData/savedDrawingData)를 로드
+  /// - isEditingExistingDrawing = true (편집 모드)
+  private func editExistingDrawing() {
+    guard let backgroundImage = state.backgroundImage else { return }
+
+    state.capturedImage = backgroundImage // 원본 배경 이미지 재로드
+    state.isEditingExistingDrawing = true // 편집 모드 활성화
+    state.showFeedbackPaperDrawingView = true
   }
 }
 
