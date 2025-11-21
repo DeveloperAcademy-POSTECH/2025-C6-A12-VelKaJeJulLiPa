@@ -84,9 +84,9 @@ extension TracksListViewModel {
     
     let key = project.projectId
     
+    // cached가 존재하면 empty여도 캐시 히트로 처리
     if !forceRefresh,
-       let cached = cacheState.byProject[key],
-       !cached.isEmpty {
+       let cached = cacheState.byProject[key] {
       dataState.tracks    = cached
       dataState.errorText = cacheState.error[key]
       dataState.isLoading = false
@@ -110,14 +110,18 @@ extension TracksListViewModel {
         where: Tracks.CodingKeys.projectId.stringValue
       )
       
+      // result가 빈 배열이어도 그대로 캐시에 저장됨
       dataState.tracks = result
       cacheState.byProject[key] = result
-      cacheState.error[key]     = nil
+      cacheState.error[key] = nil
       
     } catch {
       let message = error.localizedDescription
       dataState.errorText = message
       cacheState.error[key] = message
+      
+      // 실패했을 때도 "빈 상태 캐시"를 남기고 싶으면 아래 한 줄 추가 가능
+      // cacheState.byProject[key] = []
     }
   }
   
