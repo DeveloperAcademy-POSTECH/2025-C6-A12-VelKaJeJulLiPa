@@ -17,7 +17,7 @@ struct CheckmarkButton: View {
       action()
     } label: {
       Circle()
-        .fill(disable ? .clear : Color.accentBlueStrong)
+        .fill(disable ? .clear : Color.checkmark)
         .frame(width: 44, height: 44)
     }
     .disabled(disable)
