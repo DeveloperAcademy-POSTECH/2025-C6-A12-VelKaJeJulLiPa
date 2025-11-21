@@ -32,11 +32,14 @@ struct FeedbackPaperDrawingView: View {
   
   var body: some View {
     ZStack {
-      Color.backgroundNormal.ignoresSafeArea()
+      Color.black.ignoresSafeArea()
       VStack {
         topTitleView.padding(.horizontal, 16)
         drawingView
       }
+    }
+    .onAppear {
+      self.showTools = true
     }
     .photosPicker(isPresented: $showImagePicker, selection: $photoItem)
     .onChange(of: photoItem) { oldValue, newValue in
@@ -154,26 +157,15 @@ struct FeedbackPaperDrawingView: View {
             }
           }
         } label: {
-          Image(systemName: "checkmark.circle.fill")
-            .resizable()
-            .scaledToFit()
-            .frame(width: 24, height: 24)
-            .foregroundStyle(Color.labelStrong)
+          Image(systemName: "checkmark")
+            .font(.system(size: 22, weight: .medium))
+            .foregroundStyle(Color.white)
         }
-        
-      }
-    } label: {
-      Button {
-        dismiss()
-      } label: {
-        Image(systemName: "xmark.circle.fill")
-          .resizable()
-          .frame(width: 24, height: 24) // FIXME: - 크기 수정
-          .foregroundStyle(Color.labelStrong)
+        .frame(width: 44, height: 44)
+        .drawingSubmitButton()
       }
     }
-    .font(.headline)
-    .foregroundStyle(.black)
+    .padding(.horizontal, 16)
   }
   
   

@@ -65,7 +65,7 @@ struct PencilCanvasView: UIViewRepresentable {
     // 3) 배경 이미지
     let bg = UIImageView()
     bg.translatesAutoresizingMaskIntoConstraints = false
-    bg.backgroundColor = UIColor(Color.materialDimmer)
+    bg.backgroundColor = UIColor(Color.black)
     bg.contentMode = .scaleAspectFit
     bg.clipsToBounds = true
     bg.image = image

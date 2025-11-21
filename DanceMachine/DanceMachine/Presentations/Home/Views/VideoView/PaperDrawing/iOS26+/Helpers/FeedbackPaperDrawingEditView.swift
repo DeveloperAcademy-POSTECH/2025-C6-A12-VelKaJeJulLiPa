@@ -31,7 +31,10 @@ struct FeedbackPaperDrawingEditView: View {
   var body: some View {
     if let controller = feedbackPaperDrawingData.controller {
       // 컨트롤러가 준비되면 PaperKit 뷰 표시
-      PaperControllerView(controller: controller)
+      PaperControllerView(controller: controller) {
+        // 컨트롤러가 화면에 표시된 후 툴피커 자동 표시
+        feedbackPaperDrawingData.showPencilKitTools(true)
+      }
     } else {
       // 컨트롤러 준비 중 로딩 표시
       ProgressView()
@@ -55,13 +58,18 @@ struct FeedbackPaperDrawingEditView: View {
 @available(iOS 26.0, *)
 fileprivate struct PaperControllerView: UIViewControllerRepresentable {
   var controller: PaperMarkupViewController
-  
+  var onControllerReady: (() -> Void)? = nil
+
   func makeUIViewController(context: Context) -> some PaperMarkupViewController {
     let bgView = UIView()
-    bgView.backgroundColor = UIColor(Color.materialDimmer)
+    bgView.backgroundColor = UIColor(Color.black)
     controller.contentView = bgView
-    
-    
+
+    // 컨트롤러가 준비되면 콜백 호출
+    DispatchQueue.main.async {
+      onControllerReady?()
+    }
+
     return controller
   }
   
