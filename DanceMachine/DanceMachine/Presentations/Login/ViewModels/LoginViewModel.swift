@@ -53,11 +53,9 @@ final class LoginViewModel: ObservableObject {
         let userInfo: User = try await FirestoreManager.shared.get(user.userId, from: .users)
         try await FirestoreManager.shared.updateUserLastLogin(userInfo)
         FirebaseAuthManager.shared.userInfo = userInfo
-        FirebaseAuthManager.shared.needsNameSetting = false
       } else {
         try await FirestoreManager.shared.createUser(user)
         FirebaseAuthManager.shared.userInfo = user
-        FirebaseAuthManager.shared.needsNameSetting = true
       }
       
       FirebaseAuthManager.shared.authenticationState = .authenticated

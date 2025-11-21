@@ -25,7 +25,6 @@ final class FirebaseAuthManager: ObservableObject {
   @Published var user: FirebaseAuth.User?
   @Published var userInfo: User?
   @Published var authenticationState: AuthenticationState = .unauthenticated
-  @Published var needsNameSetting: Bool = false
   
   private var authStateHandler: AuthStateDidChangeListenerHandle?
   private var currentNonce: String?
@@ -71,7 +70,6 @@ final class FirebaseAuthManager: ObservableObject {
       } else {
         print("user == nil 이어서 userInfo 도 nil 로 세팅됨")
         self.userInfo = nil
-        self.needsNameSetting = false
         self.authenticationState = .unauthenticated
       }
     }
@@ -87,10 +85,8 @@ final class FirebaseAuthManager: ObservableObject {
     do {
       if let user: User = try await FirestoreManager.shared.get(uid, from: .users) {
         self.userInfo = user
-        self.needsNameSetting = false
       } else {
         self.userInfo = nil
-        self.needsNameSetting = true
       }
     } catch {
       self.authenticationState = .unauthenticated
