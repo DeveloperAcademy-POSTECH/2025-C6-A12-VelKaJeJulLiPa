@@ -9,6 +9,7 @@ import SwiftUI
 import FirebaseAuth
 
 struct NameSettingView: View {
+  @EnvironmentObject private var router: AuthRouter
   @State private var viewModel = NameSettingViewModel()
   @State private var name: String = ""
   @State private var showToastMessage: Bool = false
@@ -90,12 +91,14 @@ struct NameSettingView: View {
           title: "확인",
           color: Color.secondaryNormal,
           height: 47,
-          isEnabled: !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+          isEnabled: !name
+            .trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !viewModel.isLoading,
+          isLoading: viewModel.isLoading
         ) {
           Task {
-            await viewModel.updateUserName(name: name)
+            try await viewModel.createNewuser()
             dismissKeyboard()
-            viewModel.setNeedsNameSettingToFalse()
+            viewModel.completeNameSetting()
           }
         }
         .padding()
@@ -103,6 +106,9 @@ struct NameSettingView: View {
     }
     .onAppear {
       name = viewModel.displayName
+    }
+    .onDisappear {
+      router.destination.removeAll()
     }
     .toast(
       isPresented: $showToastMessage,
