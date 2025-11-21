@@ -23,6 +23,10 @@ struct VideoPlayerContainer: View {
   let onDragChanged: ((DragGesture.Value) -> Void)?
   let onDragEnded: ((DragGesture.Value) -> Void)?
   
+  private var isIPad: Bool {
+    UIDevice.current.userInterfaceIdiom == .pad
+  }
+  
   var body: some View {
     ZStack {
       // 비디오 플레이어
@@ -48,28 +52,38 @@ struct VideoPlayerContainer: View {
       .gesture(
         DragGesture(minimumDistance: 30)
           .onChanged { value in
-            // Landscape: 아래로만, Portrait: 위로만 드래그 허용
-            if isLandscapeMode {
-              // 아래로 드래그 (양수)만 허용
-              if value.translation.height > 0 {
-                onDragChanged?(value)
-              }
+            // iPad: 양방향 모두 허용, iPhone: 방향별 제한
+            if isIPad {
+              onDragChanged?(value)
             } else {
-              // 위로 드래그 (음수)만 허용
-              if value.translation.height < 0 {
-                onDragChanged?(value)
+              // iPhone: Landscape는 아래로만, Portrait는 위로만
+              if isLandscapeMode {
+                // 아래로 드래그 (양수)만 허용
+                if value.translation.height > 0 {
+                  onDragChanged?(value)
+                }
+              } else {
+                // 위로 드래그 (음수)만 허용
+                if value.translation.height < 0 {
+                  onDragChanged?(value)
+                }
               }
             }
           }
           .onEnded { value in
-            // 같은 방향 체크
-            if isLandscapeMode {
-              if value.translation.height > 0 {
-                onDragEnded?(value)
-              }
+            // iPad: 양방향 모두 허용, iPhone: 방향별 제한
+            if isIPad {
+              onDragEnded?(value)
             } else {
-              if value.translation.height < 0 {
-                onDragEnded?(value)
+              // iPhone: 같은 방향 체크
+              if isLandscapeMode {
+                if value.translation.height > 0 {
+                  onDragEnded?(value)
+                }
+              } else {
+                if value.translation.height < 0 {
+                  onDragEnded?(value)
+                }
               }
             }
           }
@@ -135,12 +149,17 @@ struct VideoPlayerContainer: View {
             state.showSpeedSheet = true
           },
           onToggleOrientation: {
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-              state.forceShowLandscape.toggle()
-              if state.forceShowLandscape {
-                state.enterLandscapeMode()
-              } else {
-                state.exitLandscapeMode()
+            // iPad는 onFullscreenToggle 사용, iPhone은 기존 방식
+            if UIDevice.current.userInterfaceIdiom == .pad {
+              onFullscreenToggle()
+            } else {
+              withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                state.forceShowLandscape.toggle()
+                if state.forceShowLandscape {
+                  state.enterLandscapeMode()
+                } else {
+                  state.exitLandscapeMode()
+                }
               }
             }
           },
@@ -149,6 +168,7 @@ struct VideoPlayerContainer: View {
           showFeedbackPanel: showFeedbackPanel,
           drawingAction: onDrawingAction
         )
+        .padding(.vertical, isIPad ? 40 : 0)
         .padding(.horizontal, isLandscapeMode && !showFeedbackPanel ? 24 : 0)
         .onChange(of: vm.videoVM.currentTime) { _, newValue in
           if !state.isDragging {
