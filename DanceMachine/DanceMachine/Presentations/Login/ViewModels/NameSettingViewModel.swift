@@ -14,9 +14,9 @@ final class NameSettingViewModel {
   private let authManager = FirebaseAuthManager.shared
   private let storeManager = FirestoreManager.shared
   
-  var isLoading: Bool = false
-  
   var displayName: String = ""
+  var isLoading: Bool = false
+  var showError: Bool = false
   
   init() {
     displayName = authManager.displayName(from: authManager.user?.displayName)
@@ -52,7 +52,8 @@ final class NameSettingViewModel {
     do {
       try await storeManager.createUser(userInfo)
     } catch {
-      print(error.localizedDescription)
+      showError = true
+      throw FirestoreError.addFailed(underlying: error)
     }
   }
   
