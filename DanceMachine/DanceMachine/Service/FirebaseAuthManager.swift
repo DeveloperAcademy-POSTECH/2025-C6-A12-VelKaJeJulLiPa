@@ -21,6 +21,7 @@ final class FirebaseAuthManager: ObservableObject {
   private let firebaseAuth = Auth.auth()
   
   @AppStorage(UserDefaultsKey.hasLaunchedBefore.rawValue) var hasLaunchedBefore: Bool = false
+  @AppStorage(UserDefaultsKey.didCompleteAuthFlow.rawValue) var didCompleteAuthFlow = false
   
   @Published var user: FirebaseAuth.User?
   @Published var userInfo: User?
