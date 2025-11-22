@@ -65,12 +65,11 @@ struct ZoomableImageOverlay<Content: View>: View {
               }
 
             let isLandscape = proxy.size.width > proxy.size.height
-            let maxWidthRatio: CGFloat = isLandscape ? 0.5 : 0.9
             let maxHeightRatio: CGFloat = isLandscape ? 0.95 : 0.8
 
             content()
               .frame(
-                maxWidth: proxy.size.width * maxWidthRatio,
+                maxWidth: proxy.size.width * 0.9,
                 maxHeight: proxy.size.height * maxHeightRatio
               )
               .clipShape(RoundedRectangle(cornerRadius: 12))
