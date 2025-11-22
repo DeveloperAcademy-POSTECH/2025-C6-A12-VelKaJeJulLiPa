@@ -27,20 +27,6 @@ struct ZoomableImageOverlay<Content: View>: View {
             }
 
           VStack {
-            HStack {
-              Button {
-                close()
-              } label: {
-                Image(systemName: "xmark.circle.fill")
-                  .resizable()
-                  .scaledToFit()
-                  .frame(width: 44, height: 44)
-                  .foregroundStyle(Color.labelNormal)
-              }
-              .padding([.top, .leading], 16)
-
-              Spacer()
-            }
 
             Spacer()
 
@@ -78,10 +64,14 @@ struct ZoomableImageOverlay<Content: View>: View {
                 }
               }
 
+            let isLandscape = proxy.size.width > proxy.size.height
+            let maxWidthRatio: CGFloat = isLandscape ? 0.5 : 0.9
+            let maxHeightRatio: CGFloat = isLandscape ? 0.95 : 0.8
+
             content()
               .frame(
-                maxWidth: proxy.size.width * 0.9,
-                maxHeight: proxy.size.height * 0.8
+                maxWidth: proxy.size.width * maxWidthRatio,
+                maxHeight: proxy.size.height * maxHeightRatio
               )
               .clipShape(RoundedRectangle(cornerRadius: 12))
               .scaleEffect(scale)
@@ -93,6 +83,19 @@ struct ZoomableImageOverlay<Content: View>: View {
             Spacer()
           }
         }
+        .overlay(alignment: .topLeading, content: {
+          Button {
+            close()
+          } label: {
+            Image(systemName: "xmark.circle.fill")
+              .resizable()
+              .scaledToFit()
+              .frame(width: 44, height: 44)
+              .foregroundStyle(Color.labelStrong)
+          }
+          .drawingButton()
+          .padding()
+        })
         .transition(.opacity)
         .zIndex(999)
       }
