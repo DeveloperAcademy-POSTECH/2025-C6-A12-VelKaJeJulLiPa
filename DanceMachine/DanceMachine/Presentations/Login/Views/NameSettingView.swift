@@ -9,6 +9,7 @@ import SwiftUI
 import FirebaseAuth
 
 struct NameSettingView: View {
+  @EnvironmentObject private var router: AuthRouter
   @State private var viewModel = NameSettingViewModel()
   @State private var name: String = ""
   @State private var showToastMessage: Bool = false
@@ -90,12 +91,14 @@ struct NameSettingView: View {
           title: "확인",
           color: Color.secondaryNormal,
           height: 47,
-          isEnabled: !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+          isEnabled: !name
+            .trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !viewModel.isLoading,
+          isLoading: viewModel.isLoading
         ) {
           Task {
-            await viewModel.updateUserName(name: name)
             dismissKeyboard()
-            viewModel.setNeedsNameSettingToFalse()
+            try await viewModel.createNewuser()
+            viewModel.completeNameSetting()
           }
         }
         .padding()
@@ -103,6 +106,9 @@ struct NameSettingView: View {
     }
     .onAppear {
       name = viewModel.displayName
+    }
+    .onDisappear {
+      router.destination.removeAll()
     }
     .toast(
       isPresented: $showToastMessage,
@@ -112,7 +118,19 @@ struct NameSettingView: View {
     ) {
       ToastView(text: "이름은 10자 이내로 입력해주세요.", icon: .warning)
     }
+    .toast(
+      isPresented: $viewModel.showError,
+      duration: 2,
+      position: .bottom,
+      bottomPadding: 16 + 47 + 16 // 아래 빈공간 + 버튼 크기 + 윗 빈공간
+    ) {
+      ToastView(text: "문제가 발생했습니다.", icon: .warning)
+    }
     .dismissKeyboardOnTap()
+    .background(
+      DisableSwipeBackGesture()
+        .allowsHitTesting(false)
+    )
   }
 }
 

@@ -28,10 +28,27 @@ extension Font {
     }
   }
   
+  enum EstablishRetrosans {
+    case regular
+    
+    var value: String {
+      switch self {
+      case .regular:
+        return "establishRetrosansOTF"
+      }
+    }
+  }
+  
   /// Pretendard 기본 생성 함수
   static func pretendard(_ weight: Pretendard, size: CGFloat) -> Font {
     .custom(weight.value, fixedSize: size)
   }
+  
+  /// Establish-RetroSans 기본 생성 함수
+  static func establishRetrosans(_ weight: EstablishRetrosans, size: CGFloat) -> Font {
+    .custom(weight.value, fixedSize: size)
+  }
+  
 }
 
 // MARK: - Design System Typography

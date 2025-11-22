@@ -45,13 +45,9 @@ struct InboxNotificationRow: View {
           VStack(alignment: .leading, spacing: 8) {
             // 알림 제목
             HStack(spacing: 0) {
-              Text(notification.senderName)
+              Text(josa(notification.senderName, "이/가") + " ")
                 .font(.heading1SemiBold)
                 .foregroundStyle(.labelStrong)
-                .multilineTextAlignment(.leading)
-              Text(koreanParticle(notification.senderName) + " ")
-                .font(.heading1Medium)
-                .foregroundStyle(.labelNormal)
                 .multilineTextAlignment(.leading)
               Text(notification.type == .feedback ? "피드백을 남겼어요" : "답글을 남겼어요" )
                 .font(.heading1Medium)

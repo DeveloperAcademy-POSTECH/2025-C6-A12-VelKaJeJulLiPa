@@ -10,6 +10,10 @@ import Foundation
 
 enum AuthRoute: Hashable {
   case login
+  case termsAgree
+  case initialNameSetting
+  case privacyPolicy
+  case termsOfUse
 }
 
 
