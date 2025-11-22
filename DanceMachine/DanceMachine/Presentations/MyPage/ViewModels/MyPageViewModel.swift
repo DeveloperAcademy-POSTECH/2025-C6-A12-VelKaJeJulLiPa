@@ -16,12 +16,11 @@ final class MyPageViewModel: ObservableObject {
   var myName: String { FirebaseAuthManager.shared.userInfo?.name ?? "Unknown" }
   var appVersion: String {
     guard let info = Bundle.main.infoDictionary,
-          let currentVersion = info["CFBundleShortVersionString"] as? String,
-          let buildNumber = info["CFBundleVersion"] as? String else {
+          let currentVersion = info["CFBundleShortVersionString"] as? String else {
       return "Unknown"
     }
     
-    return "\(currentVersion) (\(buildNumber))"
+    return "\(currentVersion)"
   }
   
   //MARK: - 알림 수신(기본 설정앱으로 이동)

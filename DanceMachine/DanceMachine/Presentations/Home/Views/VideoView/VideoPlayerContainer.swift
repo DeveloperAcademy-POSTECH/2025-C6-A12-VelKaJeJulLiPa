@@ -168,7 +168,7 @@ struct VideoPlayerContainer: View {
           showFeedbackPanel: showFeedbackPanel,
           drawingAction: onDrawingAction
         )
-        .padding(.vertical, isIPad ? 40 : 0)
+        .padding(.vertical, isIPad && isLandscapeMode ? 40 : 0)
         .padding(.horizontal, isLandscapeMode && !showFeedbackPanel ? 24 : 0)
         .onChange(of: vm.videoVM.currentTime) { _, newValue in
           if !state.isDragging {

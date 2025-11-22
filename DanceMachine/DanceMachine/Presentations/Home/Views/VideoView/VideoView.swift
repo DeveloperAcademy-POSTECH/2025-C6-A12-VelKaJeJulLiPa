@@ -41,20 +41,39 @@ struct VideoView: View {
   
   var body: some View {
     GeometryReader { proxy in
-      deviceSpecificView(proxy: proxy)
-      .onChange(of: state.showFeedbackInput) { _, newValue in
-        // 피드백 입력창이 닫힐 때 모든 드로잉 관련 데이터 초기화
-        if !newValue {
-          vm.feedbackVM.isRecordingInterval = false
-          state.editedOverlayImage = nil // 합성된 이미지 초기화
-          state.savedDrawingData = nil // PencilKit 데이터 초기화
-          state.savedMarkupData = nil // PaperKit 데이터 초기화
-          state.backgroundImage = nil // 원본 캡처 이미지 초기화
-          state.isEditingExistingDrawing = false // 편집 모드 초기화
+      ZStack {
+        deviceSpecificView(proxy: proxy)
+          .onChange(of: state.showFeedbackInput) { _, newValue in
+            // 피드백 입력창이 닫힐 때 모든 드로잉 관련 데이터 초기화
+            if !newValue {
+              vm.feedbackVM.isRecordingInterval = false
+              state.editedOverlayImage = nil // 합성된 이미지 초기화
+              state.savedDrawingData = nil // PencilKit 데이터 초기화
+              state.savedMarkupData = nil // PaperKit 데이터 초기화
+              state.backgroundImage = nil // 원본 캡처 이미지 초기화
+              state.isEditingExistingDrawing = false // 편집 모드 초기화
+            }
+          }
+        
+        if let urlString = state.selectedFeedbackImageURL,
+           let url = URL(string: urlString) {
+          ZoomableImageOverlay(
+            isPresented: $state.showFeedbackImageFull,
+            backgroundColor: Color.black) {
+              KFImage(url)
+                .placeholder {
+                  VideoLottieView()
+                }
+                .retry(maxCount: 2, interval: .seconds(2))
+                .cacheOriginalImage()
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .matchedGeometryEffect(id: urlString, in: feedbackImageNamespace)
+            }
         }
       }
-//      .toolbar(.hidden, for: .tabBar)
     }
+    
     .disabled(vm.feedbackVM.isUploading)
     .overlay(alignment: .center, content: {
       if vm.feedbackVM.isUploading {
@@ -67,10 +86,10 @@ struct VideoView: View {
     })
     .onChange(of: state.isImageOverlayPresented) { dismissKeyboard() } // 오버레이(이미지 확대)로 교체시 키보드 내리기
     // 드로잉 이미지 확대 시, 툴 바 숨기기 처리
-//    .toolbar(
-//      state.showDrawingImageFull || state.showFeedbackImageFull || state.forceShowLandscape ? .hidden : .visible,
-//      for: .navigationBar
-//    )
+    .toolbar(
+      state.showDrawingImageFull || state.showFeedbackImageFull || state.forceShowLandscape ? .hidden : .visible,
+      for: .navigationBar
+    )
     .fullScreenCover(isPresented: $state.showFeedbackPaperDrawingView) {
       // MARK: - iOS 18 / 26 분기 처리 (Drawing)
       if #available(iOS 26.0, *) {
