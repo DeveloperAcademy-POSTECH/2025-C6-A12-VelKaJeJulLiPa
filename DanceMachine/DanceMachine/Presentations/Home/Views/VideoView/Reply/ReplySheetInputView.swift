@@ -25,6 +25,8 @@ struct ReplySheetInputView: View {
   let onRemoveAllTags: () -> Void
   let onFocusChange: (Bool) -> Void
 
+  @State private var viewHeight: CGFloat = 0
+
   var body: some View {
     VStack(spacing: 8) {
       // Tagged users
@@ -48,6 +50,16 @@ struct ReplySheetInputView: View {
       .onChange(of: content, onContentChange)
     }
     .padding([.vertical, .horizontal], 16)
+    .background(
+      GeometryReader { geometry in
+        Color.clear.onAppear {
+          viewHeight = geometry.size.height
+        }
+        .onChange(of: geometry.size.height) { _, newHeight in
+          viewHeight = newHeight
+        }
+      }
+    )
     .background {
       if isKeyboardVisible {
         RoundedRectangle(cornerRadius: 20)
@@ -69,8 +81,84 @@ struct ReplySheetInputView: View {
           selectAll: onSelectAllMentions,
           taggedUsers: taggedUsers
         )
-        .padding(.bottom, 65)
+        .padding(.bottom, viewHeight + 5)
       }
     }
   }
+}
+
+#Preview {
+  ReplySheetInputView(
+    content: .constant("답글 내용 테스트"),
+    isKeyboardVisible: .constant(true),
+    taggedUsers: [
+      User(
+        userId: "1",
+        email: "test1@test.com",
+        name: "김철수",
+        loginType: .apple,
+        fcmToken: "",
+        termsAgreed: true,
+        privacyAgreed: true
+      ),
+      User(
+        userId: "2",
+        email: "test2@test.com",
+        name: "이영희",
+        loginType: .apple,
+        fcmToken: "",
+        termsAgreed: true,
+        privacyAgreed: true
+      )
+    ],
+    teamMembers: [
+      User(
+        userId: "1",
+        email: "test1@test.com",
+        name: "김철수",
+        loginType: .apple,
+        fcmToken: "",
+        termsAgreed: true,
+        privacyAgreed: true
+      ),
+      User(
+        userId: "2",
+        email: "test2@test.com",
+        name: "이영희",
+        loginType: .apple,
+        fcmToken: "",
+        termsAgreed: true,
+        privacyAgreed: true
+      ),
+      User(
+        userId: "3",
+        email: "test3@test.com",
+        name: "박민수",
+        loginType: .apple,
+        fcmToken: "",
+        termsAgreed: true,
+        privacyAgreed: true
+      )
+    ],
+    filteredMembers: [
+      User(
+        userId: "3",
+        email: "test3@test.com",
+        name: "박민수",
+        loginType: .apple,
+        fcmToken: "",
+        termsAgreed: true,
+        privacyAgreed: true
+      )
+    ],
+    showMentionPicker: true,
+    placeholder: "답글을 입력하세요",
+    onSubmit: {},
+    onContentChange: { _, _ in },
+    onSelectMention: { _ in },
+    onSelectAllMentions: {},
+    onRemoveTag: { _ in },
+    onRemoveAllTags: {},
+    onFocusChange: { _ in }
+  )
 }

@@ -28,8 +28,8 @@ final class MentionManager {
         let queryStartIndex = newValue.index(after: lastAtIndex)
         if queryStartIndex < newValue.endIndex {
           mentionQuery = String(newValue[queryStartIndex...])
-          // 공백 입력 시 멘션 피커 닫음
-          if mentionQuery.contains(" ") {
+          // 공백 또는 줄바꿈 입력 시 멘션 피커 닫음
+          if mentionQuery.contains(" ") || mentionQuery.contains("\n") {
             self.showPicker = false
             self.mentionQuery = ""
           }

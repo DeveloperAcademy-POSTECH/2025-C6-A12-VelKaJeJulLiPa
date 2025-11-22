@@ -22,6 +22,41 @@ final class FeedbackPaperDrawingData {
   
   var canvasBackgroundColor: UIColor = .white
   
+  // MARK: - 드로잉 데이터 영속성 (편집 가능하도록 저장/로드)
+
+  /// 마크업 데이터를 Data로 변환하여 저장 가능한 형태로 추출
+  /// - Returns: 저장 가능한 마크업 데이터 (재편집 시 로드하여 사용)
+  func exportMarkupData() async throws -> Data? {
+    guard let markup = controller?.markup else { return nil }
+    return try await markup.dataRepresentation()
+  }
+
+  /// 저장된 마크업 데이터를 로드하여 컨트롤러 복원 (편집 모드)
+  /// - Parameters:
+  ///   - data: 이전에 저장한 마크업 데이터
+  ///   - size: 캔버스 크기 (화면 크기)
+  /// - Note: 기존 드로잉을 수정할 때 사용
+  func loadMarkupData(_ data: Data, size: CGSize) throws {
+    // 저장된 데이터로부터 마크업 복원
+    let markup = try PaperMarkup(dataRepresentation: data)
+
+    // 복원된 마크업으로 컨트롤러 생성
+    let controller = PaperMarkupViewController(
+      markup: markup,
+      supportedFeatureSet: featureSet
+    )
+
+    // 컨트롤러 설정 (initiakizeController와 동일)
+    controller.zoomRange = 1.0 ... 8.0
+    controller.view.backgroundColor = UIColor(Color.backgroundNormal)
+
+    // HDR 색상 범위 지원
+    featureSet.colorMaximumLinearExposure = 4
+    toolPicker.colorMaximumLinearExposure = 4
+
+    self.controller = controller
+  }
+  
   // MARK: - 초기화
   
   /// PaperKit 컨트롤러 + 캔버스 초기화
@@ -50,7 +85,7 @@ final class FeedbackPaperDrawingData {
     // 확대는 8배까지(유튜브가 8배 zoom), 축소는 1배 미만 불가
     controller.zoomRange = 1.0 ... 8.0
     
-    controller.view.backgroundColor = UIColor(Color.backgroundNormal)
+    controller.view.backgroundColor = UIColor(Color.black)
     
 
     // 초기 이미지 있으면 먼저 캔버스에 올리기 (initiakize)

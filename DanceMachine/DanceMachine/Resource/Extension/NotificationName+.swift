@@ -7,59 +7,113 @@
 
 import Foundation
 
-extension Foundation.Notification.Name {
-  // 비디오 업로드 후 자동 서버 호출
-  static let videoUpload = Foundation.Notification.Name("videoUpload")
-  static let didReceiveDeeplink = Foundation.Notification.Name("didReceiveDeeplink")
-  static let needToMarkAsRead = Foundation.Notification.Name("needToMarkAsRead")
-  static let projectDidCollapse = Foundation.Notification.Name("projectDidCollapse")
-  // 영상 이동 토스트
-  static let showEditToast = Foundation.Notification.Name("showEditToast")
-  // 영상 삭제 토스트
-  static let showDeleteToast = Foundation.Notification.Name("showDeleteToast")
-  // 섹션 글자 제한 토스트
-  static let showEditWarningToast = Foundation.Notification.Name("showEditWarningToast")
-  // 영상 이름 수정 제한 토스트
-  static let showEditVideoTitleToast = Foundation.Notification.Name("showEditVideoTitleToast")
-  // 신고 완료 토스트
-  static let showCreateReportSuccessToast = Foundation.Notification.Name("showCreateReportSuccessToast")
-  // 영상 화면에서 영상 정보 업데이트 하기 (푸시 알림으로 영상 화면 정보 업데이트)
-  static let refreshVideoView = Foundation.Notification.Name("refreshVideoView")
-}
+// MARK: - NotificationEvent (타입 안전한 Notification 관리)
 
 enum NotificationEvent {
-  case videoUpload
-  case didReceiveDeeplink
-  case needToMarkAsRead
-  case projectDidCollapse
-  case showEditToast
-  case showDeleteToast
-  case showEditWarningToast
-  case showEditVideoTitleToast
-  case showCreateReportSuccessToast
-  case refreshVideoView
-  
+  // MARK: Video 관련
+  case video(VideoEvent)
+
+  // MARK: Section 관련
+  case section(SectionEvent)
+
+  // MARK: Toast 관련
+  case toast(ToastEvent)
+
+  // MARK: System 관련
+  case system(SystemEvent)
+
   var name: Foundation.Notification.Name {
     switch self {
-    case .videoUpload: .videoUpload
-    case .didReceiveDeeplink: .didReceiveDeeplink
-    case .needToMarkAsRead: .needToMarkAsRead
-    case .projectDidCollapse: .projectDidCollapse
-    case .showEditToast: .showEditToast
-    case .showDeleteToast: .showDeleteToast
-    case .showEditWarningToast: .showEditWarningToast
-    case .showEditVideoTitleToast: .showEditVideoTitleToast
-    case .showCreateReportSuccessToast: .showCreateReportSuccessToast
-    case .refreshVideoView: .refreshVideoView
+    case .video(let event): event.name
+    case .section(let event): event.name
+    case .toast(let event): event.name
+    case .system(let event): event.name
     }
   }
 }
 
-extension NotificationCenter {
-  static func post(_ event: NotificationEvent, object: Any? = nil) {
-    NotificationCenter.default.post(name: event.name, object: object)
+// MARK: - Video Events
+
+enum VideoEvent {
+  case videoEdit // 영상 이동
+  case videoDelete // 영상 삭제 완료
+  case videoTitleEdit // 비디오 제목 업데이트 완료
+  
+  case videoEditFailed // 영상 이동 실패
+  
+  case refreshView
+
+  var name: Foundation.Notification.Name {
+    switch self {
+    case .videoEdit: Foundation.Notification.Name("showEditToast")
+    case .videoDelete: Foundation.Notification.Name("showDeleteToast")
+    case .videoTitleEdit: Foundation.Notification.Name("showEditVideoTitleToast")
+    case .videoEditFailed: Foundation.Notification.Name("videoEditFailed")
+  
+    case .refreshView: Foundation.Notification.Name("refreshVideoView")
+    }
   }
 }
 
+// MARK: - Section Events
 
+enum SectionEvent {
+  case sectionCRUDFailed // 섹션 CRUD 토스트 (에러타입에 의해 분기)
+  
+  case sectionEditWarning // 섹션 이름 제한 토스트
 
+  var name: Foundation.Notification.Name {
+    switch self {
+    case .sectionCRUDFailed: Foundation.Notification.Name("sectionCRUDFailed")
+    case .sectionEditWarning: Foundation.Notification.Name("showEditWarningToast")
+    }
+  }
+}
+
+// MARK: - Toast Events
+
+enum ToastEvent {
+  case reportSuccess
+
+  var name: Foundation.Notification.Name {
+    switch self {
+    case .reportSuccess: Foundation.Notification.Name("showCreateReportSuccessToast")
+    }
+  }
+}
+
+// MARK: - System Events
+
+enum SystemEvent {
+  case deeplink
+  case markAsRead
+  case projectCollapse
+  case showCreateReportSuccessToast
+
+  var name: Foundation.Notification.Name {
+    switch self {
+    case .deeplink: Foundation.Notification.Name("didReceiveDeeplink")
+    case .markAsRead: Foundation.Notification.Name("needToMarkAsRead")
+    case .projectCollapse: Foundation.Notification.Name("projectDidCollapse")
+    case .showCreateReportSuccessToast: Foundation.Notification.Name("showCreateReportSuccessToast")
+    }
+  }
+}
+
+// MARK: - NotificationCenter Extension
+
+extension NotificationCenter {
+  /// 타입 안전한 notification post
+  static func post(_ event: NotificationEvent, object: Any? = nil, userInfo: [AnyHashable: Any]? = nil) {
+    NotificationCenter.default.post(
+      name: event.name,
+      object: object,
+      userInfo: userInfo
+    )
+  }
+
+  /// 타입 안전한 notification publisher (SwiftUI용)
+  static func publisher(for event: NotificationEvent, object: AnyObject? = nil) -> NotificationCenter.Publisher {
+    NotificationCenter.default.publisher(for: event.name, object: object)
+  }
+}

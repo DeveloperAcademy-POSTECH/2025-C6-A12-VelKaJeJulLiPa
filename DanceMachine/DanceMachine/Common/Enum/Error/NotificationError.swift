@@ -18,7 +18,7 @@ enum NotificationError: LocalizedError {
   var errorDescription: String? {
     switch self {
     case .unauthorized:
-      return "알림 권한이 없습니다. 설정에서 알림을 허용해주세요."
+      return "알림 권한이 없습니다. 설정에서 알림을 허용해 주세요."
     case .badgeUpdateFailed(let underlying):
       return "앱 뱃지 업데이트에 실패했습니다. (\(underlying.localizedDescription))"
     case .fetchUnreadCountFailed(let underlying):

@@ -93,10 +93,7 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
       if UIApplication.shared.applicationState == .active {
         print("🔥 포그라운드 - 딥링크 처리")
         DispatchQueue.main.async {
-          NotificationCenter.default.post(
-            name: .didReceiveDeeplink,
-            object: deeplinkURL
-          )
+          NotificationCenter.post(.system(.deeplink), object: deeplinkURL)
         }
       } else {
         AppDelegate.pendingDeeplinkURL = deeplinkURL
@@ -113,10 +110,7 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
       if UIApplication.shared.applicationState == .active {
         print("🔥 포그라운드 - 푸시 알림 읽음 처리")
         DispatchQueue.main.async {
-          NotificationCenter.default.post(
-            name: .needToMarkAsRead,
-            object: notificationId
-          )
+          NotificationCenter.post(.system(.markAsRead), object: notificationId)
         }
       } else {
         AppDelegate.pendingNotificationId = notificationId

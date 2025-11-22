@@ -30,7 +30,7 @@ struct CreateReportView: View {
   var maxLength: Int = 100 // 최대 글자수
   var isInvalid: Bool { description.count == maxLength }
   var inputHelperText: String {
-    isInvalid ? "100자 미만으로 입력해주세요." : "\(description.count)/\(maxLength)"
+    isInvalid ? "100자 미만으로 입력해 주세요." : "\(description.count)/\(maxLength)"
   }
   
   let username = FirebaseAuthManager.shared.userInfo?.name ?? "Unknown"
@@ -62,7 +62,7 @@ struct CreateReportView: View {
   // MARK: - Body
   var body: some View {
     VStack(spacing: 0) {
-      Text("신고 사유를 작성해주세요.")
+      Text("신고 사유를 작성해 주세요.")
         .font(.title2SemiBold)
         .foregroundStyle(Color.labelStrong)
       
@@ -125,7 +125,7 @@ struct CreateReportView: View {
     ) {
       Button("확인", role: .cancel) {}
     } message: {
-      Text("잠시 후 다시 시도해주세요.")
+        Text("잠시 후 다시 시도해 주세요.")
     }
     .alert(
       "신고 정보를 서버에 저장하는데 실패했습니다.",
@@ -133,7 +133,7 @@ struct CreateReportView: View {
     ) {
       Button("확인", role: .cancel) {}
     } message: {
-      Text("잠시 후 다시 시도해주세요.")
+        Text("잠시 후 다시 시도해 주세요.")
     }
   }
 
@@ -167,11 +167,7 @@ struct CreateReportView: View {
           description: description
         )
         
-        NotificationCenter.default.post(
-          name: .showCreateReportSuccessToast,
-          object: nil,
-          userInfo: ["toastViewName": toastReceiveView]
-        )
+        NotificationCenter.post(.system(.showCreateReportSuccessToast), object: nil, userInfo: ["toastViewName": toastReceiveView])
         
         dismiss()
       } catch {
@@ -212,7 +208,7 @@ struct MultilineTextField: View {
   var body: some View {
     ZStack {
       TextField(
-        text.isEmpty && !isFocused ? "신고 사유를 입력해주세요." : "",
+        text.isEmpty && !isFocused ? "신고 사유를 입력해 주세요." : "",
         text: $text,
         axis: .vertical
       )

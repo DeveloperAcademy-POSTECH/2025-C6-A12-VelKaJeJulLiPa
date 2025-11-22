@@ -10,6 +10,7 @@ import SwiftUI
 struct VideoSettingButtons: View {
   let action: () -> Void
   let toggleOrientations: () -> Void
+  let drawingAction: () -> Void
 
   // 가로모드 여부와 피드백 패널 토글
   let isLandscapeMode: Bool
@@ -23,6 +24,10 @@ struct VideoSettingButtons: View {
         topButton
           .padding(.top, 10)
         Spacer()
+        if isLandscapeMode {
+          feedbackToggleButton          
+        }
+        Spacer()
         orientationButton
           .padding(.bottom, 54)
       }
@@ -33,22 +38,31 @@ struct VideoSettingButtons: View {
 
   private var topButton: some View {
     HStack(spacing: 15) {
-      if isLandscapeMode { // 가로모드일때
-        feedbackToggleButton
-        timeButton
-      } else if showFeedbackPanel { // 피드백 패널 열렸을때
-        timeButton
-      } else { // 세로모드일때
-        timeButton
-      }
+      drawingButton
+      timeButton
     }
+  }
+  
+  private var drawingButton: some View {
+    Button {
+      drawingAction()
+    } label: {
+      Image(systemName: "scribble.variable")
+        .font(.system(size: 20))
+        .foregroundStyle(.labelStrong)
+    }
+    .frame(width: 44, height: 44)
+    .contentShape(Rectangle())
+    .overlayController()
   }
 
   private var feedbackToggleButton: some View {
     Button {
       toggleFeedbackPanel?()
     } label: {
-      Image(systemName: "message")
+      Image(
+        systemName: showFeedbackPanel ? "chevron.right" : "chevron.left"
+      )
         .font(.system(size: 20))
         .foregroundStyle(.labelStrong)
     }
@@ -88,7 +102,7 @@ struct VideoSettingButtons: View {
 #Preview {
   VideoSettingButtons(
     action: {},
-    toggleOrientations: {},
+    toggleOrientations: {}, drawingAction: {},
     isLandscapeMode: false,
     toggleFeedbackPanel: {},
     showFeedbackPanel: false

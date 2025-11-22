@@ -27,15 +27,19 @@ struct FeedbackPaperDrawingView: View {
   @State private var photoItem: PhotosPickerItem?
   
   /// 완료 시 만들어진 이미지를 넘겨줄 콜백 (필요 없으면 nil)
-  var onComplete: ((UIImage) -> Void)?
+  var onComplete: ((UIImage, Data?) -> Void)? // markup 데이터도 넣어줌
+  var initialMarkupData: Data? = nil // markup 데이터
   
   var body: some View {
     ZStack {
-      Color.backgroundNormal.ignoresSafeArea()
+      Color.black.ignoresSafeArea()
       VStack {
         topTitleView.padding(.horizontal, 16)
         drawingView
       }
+    }
+    .onAppear {
+      self.showTools = true
     }
     .photosPicker(isPresented: $showImagePicker, selection: $photoItem)
     .onChange(of: photoItem) { oldValue, newValue in
@@ -53,105 +57,99 @@ struct FeedbackPaperDrawingView: View {
   
   // MARK: - 탑 타이틀
   private var topTitleView: some View {
-    LabeledContent {
-      HStack(spacing: 16) {
-        
-        // 되돌리기
-        Button {
-          self.feedbackPaperDrawingData.undo()
-        } label: {
-          Image(systemName: "arrow.uturn.backward")
-            .resizable()
-            .scaledToFit()
-            .frame(width: 24, height: 24)
-            .foregroundStyle(Color.labelStrong)
-        }
-        
-        /// 앞으로 가기
-        Button {
-          self.feedbackPaperDrawingData.redo()
-        } label: {
-          Image(systemName: "arrow.uturn.forward")
-            .resizable()
-            .scaledToFit()
-            .frame(width: 24, height: 24)
-            .foregroundStyle(Color.labelStrong)
-        }
-        
-        
-        // 이미지 삽입
-        Button {
-          self.showImagePicker = true
-        } label: {
-          Image(systemName: "photo")
-            .resizable()
-            .scaledToFit()
-            .frame(width: 24, height: 24)
-            .foregroundStyle(Color.labelStrong)
-        }
-        
-        
-        // 텍스트 삽입
-        Button {
-          // 기본 스타일의 NSAttributedString 생성
-          let attributed = NSAttributedString(string: "텍스트를 입력해주세요.", attributes: [
-            .font: UIFont.systemFont(ofSize: 18, weight: .regular),
-            .foregroundColor: UIColor.label
-          ])
-          
-          // 기본 텍스트 박스 크기와 시작 위치를 정의 (상단 중앙 근처)
-          let boxWidth: CGFloat = 200
-          let boxHeight: CGFloat = 60
-          // 화면 기준 적당한 위치 (여기서는 상단에서 100pt 아래, 가로 중앙 정렬)
-          let originX: CGFloat = UIScreen.main.bounds.width/2 - boxWidth/2
-          let originY: CGFloat = 100
-          let rect = CGRect(x: originX, y: originY, width: boxWidth, height: boxHeight)
-          
-          self.feedbackPaperDrawingData.insertText(
-            attributed,
-            rect: rect
-          )
-        } label: {
-          Image(systemName: "t.square")
-            .resizable()
-            .scaledToFit()
-            .frame(width: 24, height: 24)
-            .foregroundStyle(Color.labelStrong)
-        }
-        
-        
-        
-        // 팬슬 툴
-        Button {
-          showTools.toggle()
-          feedbackPaperDrawingData.showPencilKitTools(showTools)
-        } label: {
-          if showTools {
-            Image(systemName: "pencil.circle.fill")
-              .resizable()
-              .scaledToFit()
-              .frame(width: 24, height: 24)
+    HStack(spacing: 12) {
+      // X 버튼
+      Button {
+        dismiss()
+      } label: {
+        Image(systemName: "xmark")
+          .font(.system(size: 22, weight: .medium))
+          .foregroundStyle(Color.labelStrong)
+      }
+      .frame(width: 44, height: 44)
+      .drawingButton()
+
+      Spacer()
+
+      // 버튼 그룹들
+      HStack(spacing: 12) {
+        // 그룹 1: Undo/Redo
+        HStack(spacing: 0) {
+          Button {
+            self.feedbackPaperDrawingData.undo()
+          } label: {
+            Image(systemName: "arrow.uturn.backward")
+              .font(.system(size: 22, weight: .medium))
               .foregroundStyle(Color.labelStrong)
           }
-          else {
-            Image(systemName: "pencil.circle")
-              .resizable()
-              .scaledToFit()
-              .frame(width: 24, height: 24)
+          .frame(width: 44, height: 44)
+
+          Button {
+            self.feedbackPaperDrawingData.redo()
+          } label: {
+            Image(systemName: "arrow.uturn.forward")
+              .font(.system(size: 22, weight: .medium))
               .foregroundStyle(Color.labelStrong)
           }
+          .frame(width: 44, height: 44)
         }
-        
-        
-        // 완료 버튼
+        .padding(.horizontal, 4)
+        .drawingButtonGroup()
+
+        // 그룹 2: Image/Text/Pencil
+        HStack(spacing: 12) {
+          Button {
+            self.showImagePicker = true
+          } label: {
+            Image(systemName: "photo.badge.plus")
+              .font(.system(size: 22, weight: .medium))
+              .foregroundStyle(Color.labelStrong)
+          }
+          .frame(width: 44, height: 44)
+
+          Button {
+            let attributed = NSAttributedString(string: "텍스트를 입력해 주세요.", attributes: [
+              .font: UIFont.systemFont(ofSize: 22, weight: .regular),
+              .foregroundColor: UIColor.white
+            ])
+
+            let boxWidth: CGFloat = 200
+            let boxHeight: CGFloat = 60
+            let originX: CGFloat = UIScreen.main.bounds.width/2 - boxWidth/2
+            let originY: CGFloat = 100
+            let rect = CGRect(x: originX, y: originY, width: boxWidth, height: boxHeight)
+
+            self.feedbackPaperDrawingData.insertText(attributed, rect: rect)
+          } label: {
+            Image(systemName: "character.textbox")
+              .font(.system(size: 22, weight: .medium))
+              .foregroundStyle(Color.labelStrong)
+          }
+          .frame(width: 44, height: 44)
+
+          Button {
+            showTools.toggle()
+            feedbackPaperDrawingData.showPencilKitTools(showTools)
+          } label: {
+            Image(systemName: showTools ? "pencil.tip.crop.circle.fill" : "pencil.tip.crop.circle")
+              .font(.system(size: 22, weight: .medium))
+              .foregroundStyle(Color.labelStrong)
+          }
+          .frame(width: 44, height: 44)
+        }
+        .padding(.horizontal, 4)
+        .drawingButtonGroup()
+
+        // 그룹 3: 완료
         Button {
           Task { @MainActor in
-            
+            let markupData = try? await feedbackPaperDrawingData.exportMarkupData()
+
             if let image = await feedbackPaperDrawingData.exportAsImage(
               scale: displayScale,
               backgroundColor: UIColor(Color.materialDimmer)
             ) {
-              onComplete?(image)
+              onComplete?(image, markupData)
               dismiss()
             } else {
               print("이미지 캡쳐 실패")
@@ -159,26 +157,15 @@ struct FeedbackPaperDrawingView: View {
             }
           }
         } label: {
-          Image(systemName: "checkmark.circle.fill")
-            .resizable()
-            .scaledToFit()
-            .frame(width: 24, height: 24)
-            .foregroundStyle(Color.labelStrong)
+          Image(systemName: "checkmark")
+            .font(.system(size: 22, weight: .medium))
+            .foregroundStyle(Color.white)
         }
-        
-      }
-    } label: {
-      Button {
-        dismiss()
-      } label: {
-        Image(systemName: "xmark.circle.fill")
-          .resizable()
-          .frame(width: 24, height: 24) // FIXME: - 크기 수정
-          .foregroundStyle(Color.labelStrong)
+        .frame(width: 44, height: 44)
+        .drawingSubmitButton()
       }
     }
-    .font(.headline)
-    .foregroundStyle(.black)
+    .padding(.horizontal, 16)
   }
   
   
@@ -188,7 +175,8 @@ struct FeedbackPaperDrawingView: View {
       FeedbackPaperDrawingEditView(
         size: proxy.size,
         image: self.image,
-        feedbackPaperDrawingData: feedbackPaperDrawingData
+        feedbackPaperDrawingData: feedbackPaperDrawingData,
+        initialMarkupData: initialMarkupData
       )
     }
   }

@@ -149,7 +149,6 @@ struct FeedbackCard: View {
           .truncationMode(.tail)
         }
       }
-      //      Spacer()
     }
   }
   

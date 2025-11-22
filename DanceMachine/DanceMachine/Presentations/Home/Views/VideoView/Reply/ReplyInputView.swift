@@ -17,8 +17,9 @@ struct ReplyRecycle: View {
   
   @State private var content: String = ""
   @State private var mentionQuery: String = ""
-  
-  
+  @State private var viewHeight: CGFloat = 0
+
+
   private var filteredMembers: [User] {
     if mM.mentionQuery.isEmpty {
       return teamMembers
@@ -27,18 +28,25 @@ struct ReplyRecycle: View {
       $0.name.lowercased().contains(mM.mentionQuery.lowercased())
     }
   }
-  
+
   var body: some View {
     VStack(spacing: 16) {
       if replyingTo != nil {
         replyTo
       }
       if !mM.taggedUsers.isEmpty {
-        taggedView
+        TaggedUsersView(
+          taggedUsers: mM.taggedUsers,
+          teamMembers: teamMembers,
+          onRemove: { userId in
+            mM.taggedUsers.removeAll { $0.userId == userId }
+          },
+          onRemoveAll: { mM.taggedUsers.removeAll() }
+        )
       }
       CustomTextField(
         content: $content,
-        placeHolder: mM.taggedUsers.isEmpty ? "@팀원 태그" : "답글을 입력해주세요.",
+        placeHolder: "댓글을 입력해 주세요.",
         submitAction: {
           var taggedIds = Set(mM.taggedUsers.map { $0.userId })
           if let replyToId = replyingTo?.userId {
@@ -55,6 +63,16 @@ struct ReplyRecycle: View {
       }
     }
     .padding([.vertical, .horizontal], 16)
+    .background(
+      GeometryReader { geometry in
+        Color.clear.onAppear {
+          viewHeight = geometry.size.height
+        }
+        .onChange(of: geometry.size.height) { _, newHeight in
+          viewHeight = newHeight
+        }
+      }
+    )
     .background(
       RoundedRectangle(cornerRadius: 20)
         .fill(Color.backgroundElevated)
@@ -74,7 +92,7 @@ struct ReplyRecycle: View {
           },
           taggedUsers: mM.taggedUsers
         )
-        .padding(.bottom, 65)
+        .padding(.bottom, viewHeight + 5)
       }
     }
   }
@@ -96,54 +114,6 @@ struct ReplyRecycle: View {
       Image(systemName: "xmark")
         .font(.system(size: 17))
         .foregroundStyle(.labelNormal)
-    }
-  }
-  // MARK: 태그된 사용자 표시
-  private var taggedView: some View {
-    let isAllTagged = !teamMembers.isEmpty && mM.taggedUsers.count == teamMembers.count
-
-    return ScrollView(.horizontal, showsIndicators: false) {
-      HStack(spacing: 4) {
-        if isAllTagged {
-          // @All 태그 표시
-          HStack(spacing: 0) {
-            Text("@")
-              .font(.headline2Medium)
-              .foregroundStyle(.accentBlueStrong)
-            Text("All")
-              .font(.headline2Medium)
-              .foregroundStyle(.accentBlueStrong)
-            Button {
-              mM.taggedUsers.removeAll()
-            } label: {
-              Image(systemName: "xmark.circle.fill")
-                .font(.system(size: 16))
-                .foregroundStyle(Color.labelAssitive)
-            }
-          }
-          .animation(nil, value: mM.taggedUsers)
-        } else {
-          // 개별 태그 표시
-          ForEach(mM.taggedUsers, id: \.userId) { user in
-            HStack(spacing: 0) {
-              Text("@")
-                .font(.headline2Medium)
-                .foregroundStyle(.accentBlueStrong)
-              Text(user.name)
-                .font(.headline2Medium)
-                .foregroundStyle(.accentBlueStrong)
-              Button {
-                mM.taggedUsers.removeAll { $0.userId == user.userId }
-              } label: {
-                Image(systemName: "xmark.circle.fill")
-                  .font(.system(size: 16))
-                  .foregroundStyle(Color.labelAssitive)
-              }
-            }
-            .animation(nil, value: mM.taggedUsers)
-          }
-        }
-      }
     }
   }
 }

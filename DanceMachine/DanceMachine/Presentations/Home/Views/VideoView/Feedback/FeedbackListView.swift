@@ -9,10 +9,7 @@ import SwiftUI
 
 struct FeedbackListView: View {
   @Bindable var vm: VideoDetailViewModel
-
-  @Binding var pointTime: Double
-  @Binding var intervalTime: Double
-  @Binding var scrollProxy: ScrollViewProxy?
+  @Bindable var state: VideoViewState
 
   @State private var selectedFeedback: Feedback? = nil
   @State private var reportTargetFeedback: Feedback? = nil
@@ -26,8 +23,6 @@ struct FeedbackListView: View {
 
   // 이미지 전체 화면 관련
   let imageNamespace: Namespace.ID
-  @Binding var selectedFeedbackImageURL: String?
-  @Binding var showFeedbackImageFull: Bool
   
   var body: some View {
     ScrollViewReader { proxy in
@@ -43,64 +38,13 @@ struct FeedbackListView: View {
             emptyView
           } else {
             ForEach(filteredFeedbacks, id: \.feedbackId) { f in
-              // 가로모드 네비게이션 또는 세로모드 시트 처리
-              if let navigate = onFeedbackNavigate {
-                // 가로모드: 콜백으로 상태 변경
-                FeedbackCard(
-                  feedback: f,
-                  authorUser: vm.getAuthorUser(for: f.authorId),
-                  taggedUsers: vm.getTaggedUsers(for: f.taggedUserIds),
-                  replyCount: vm.feedbackVM.reply[f.feedbackId.uuidString]?.count ?? 0,
-                  action: { navigate(f) },
-                  showReplySheet: { navigate(f) },
-                  currentTime: pointTime,
-                  startTime: intervalTime,
-                  timeSeek: { vm.videoVM.seekToTime(to: f.startTime ?? self.pointTime ) },
-                  currentUserId: userId,
-                  onDelete: { Task { await vm.feedbackVM.deleteFeedback(f) } },
-                  onReport: { }, // 가로모드에서는 신고 비활성화
-                  imageNamespace: imageNamespace,
-                  onImageTap: { url in
-                    self.selectedFeedbackImageURL = url
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                      self.showFeedbackImageFull = true
-                    }
-                  }
-                )
-              } else {
-                // 세로모드: 기존 시트 방식
-                FeedbackCard(
-                  feedback: f,
-                  authorUser: vm.getAuthorUser(for: f.authorId),
-                  taggedUsers: vm.getTaggedUsers(for: f.taggedUserIds),
-                  replyCount: vm.feedbackVM.reply[f.feedbackId.uuidString]?.count ?? 0,
-                  action: { self.selectedFeedback = f },
-                  showReplySheet: { self.selectedFeedback = f },
-                  currentTime: pointTime,
-                  startTime: intervalTime,
-                  timeSeek: { vm.videoVM.seekToTime(to: f.startTime ?? self.pointTime ) },
-                  currentUserId: userId,
-                  onDelete: { Task { await vm.feedbackVM.deleteFeedback(f) } },
-                  onReport: {
-                    if !vm.forceShowLandscape { // 가로모드 시트 x
-                      self.reportTargetFeedback = f
-                    }
-                  },
-                  imageNamespace: imageNamespace,
-                  onImageTap: { url in
-                    self.selectedFeedbackImageURL = url
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                      self.showFeedbackImageFull = true
-                    }
-                  }
-                )
-              }
+              feedbackCardView(for: f)
             }
           }
           
         }
         .onAppear {
-          self.scrollProxy = proxy
+          state.scrollProxy = proxy
         }
         .sheet(item: $selectedFeedback) { feedback in
           NavigationStack {
@@ -110,9 +54,9 @@ struct FeedbackListView: View {
               taggedUsers: vm.getTaggedUsers(for: feedback.taggedUserIds),
               teamMembers: vm.teamMembers,
               replyCount: vm.feedbackVM.reply[feedback.feedbackId.uuidString]?.count ?? 0,
-              currentTime: pointTime,
-              startTime: intervalTime,
-              timeSeek: { vm.videoVM.seekToTime(to: self.pointTime) },
+              currentTime: state.pointTime,
+              startTime: state.intervalTime,
+              timeSeek: { vm.videoVM.seekToTime(to: state.pointTime) },
               getTaggedUsers: { ids in vm.getTaggedUsers(for: ids) },
               getAuthorUser: { ids in vm.getAuthorUser(for: ids) },
               onReplySubmit: {content, taggedIds in
@@ -135,12 +79,11 @@ struct FeedbackListView: View {
               },
               imageNamespace: imageNamespace,
               onImageTap: { url in
-                self.selectedFeedbackImageURL = url
+                state.selectedFeedbackImageURL = url
                 withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                  self.showFeedbackImageFull = true
+                  state.showFeedbackImageFull = true
                 }
-              },
-              onDismiss: nil
+              }
             )
           }
         }
@@ -170,6 +113,61 @@ struct FeedbackListView: View {
       .frame(width: g.size.width, height: g.size.height)
     }
     .frame(height: 300)
+  }
+
+  @ViewBuilder
+  private func feedbackCardView(for f: Feedback) -> some View {
+    if let navigate = onFeedbackNavigate {
+      // 가로모드: 콜백으로 상태 변경
+      FeedbackCard(
+        feedback: f,
+        authorUser: vm.getAuthorUser(for: f.authorId),
+        taggedUsers: vm.getTaggedUsers(for: f.taggedUserIds),
+        replyCount: vm.feedbackVM.reply[f.feedbackId.uuidString]?.count ?? 0,
+        action: { navigate(f) },
+        showReplySheet: { navigate(f) },
+        currentTime: state.pointTime,
+        startTime: state.intervalTime,
+        timeSeek: { vm.videoVM.seekToTime(to: f.startTime ?? state.pointTime ) },
+        currentUserId: userId,
+        onDelete: { Task { await vm.feedbackVM.deleteFeedback(f) } },
+        onReport: { }, // 가로모드에서는 신고 비활성화
+        imageNamespace: imageNamespace,
+        onImageTap: { url in
+          state.selectedFeedbackImageURL = url
+          withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+            state.showFeedbackImageFull = true
+          }
+        }
+      )
+    } else {
+      // 세로모드: 기존 시트 방식
+      FeedbackCard(
+        feedback: f,
+        authorUser: vm.getAuthorUser(for: f.authorId),
+        taggedUsers: vm.getTaggedUsers(for: f.taggedUserIds),
+        replyCount: vm.feedbackVM.reply[f.feedbackId.uuidString]?.count ?? 0,
+        action: { self.selectedFeedback = f },
+        showReplySheet: { self.selectedFeedback = f },
+        currentTime: state.pointTime,
+        startTime: state.intervalTime,
+        timeSeek: { vm.videoVM.seekToTime(to: f.startTime ?? state.pointTime ) },
+        currentUserId: userId,
+        onDelete: { Task { await vm.feedbackVM.deleteFeedback(f) } },
+        onReport: {
+          if !state.forceShowLandscape {
+            self.reportTargetFeedback = f
+          }
+        },
+        imageNamespace: imageNamespace,
+        onImageTap: { url in
+          state.selectedFeedbackImageURL = url
+          withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+            state.showFeedbackImageFull = true
+          }
+        }
+      )
+    }
   }
 }
 

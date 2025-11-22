@@ -116,7 +116,7 @@ struct NameSettingView: View {
       position: .bottom,
       bottomPadding: 16 + 47 + 16 // 아래 빈공간 + 버튼 크기 + 윗 빈공간
     ) {
-      ToastView(text: "이름은 10자 이내로 입력해주세요.", icon: .warning)
+      ToastView(text: "이름은 10자 이내로 입력해 주세요.", icon: .warning)
     }
     .toast(
       isPresented: $viewModel.showError,

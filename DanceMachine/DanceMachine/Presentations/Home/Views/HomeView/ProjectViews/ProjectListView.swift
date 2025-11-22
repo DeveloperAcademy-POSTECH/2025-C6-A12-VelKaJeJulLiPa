@@ -23,6 +23,8 @@ struct ProjectListView: View {
   @State private var failDeleteProject: Bool = false
   @State private var failEditProject: Bool = false
   
+  var onTrackSelect: ((Tracks) -> Void)? = nil
+  
   /// 유저 삭제 권한 판별 변수
   private var canCurrentUserDeletePendingTrack: Bool {
     guard let currentUserId = homeViewModel.currentUserId else { return false }
@@ -476,19 +478,23 @@ struct ProjectListView: View {
           tracksVM.startEditing(track: track)
         },
         rowTapAction: {
-          Task {
-            let section = try await tracksVM.fetchSection(tracks: track)
-            guard let first = section.first else { return }
-            
-            print("track.tracksId.uuidString: \(track.tracksId.uuidString)")
-            print("first.sectionId: \(first.sectionId,)")
-            print("track.trackName: \(track.trackName)")
-            
-            router.push(to: .video(.list(
-              tracksId: track.tracksId.uuidString,
-              sectionId: first.sectionId,
-              trackName: track.trackName
-            )))
+          if let onTrackSelect = onTrackSelect {
+            onTrackSelect(track) //
+          } else {
+            Task {
+              let section = try await tracksVM.fetchSection(tracks: track)
+              guard let first = section.first else { return }
+              
+              print("track.tracksId.uuidString: \(track.tracksId.uuidString)")
+              print("first.sectionId: \(first.sectionId,)")
+              print("track.trackName: \(track.trackName)")
+              
+              router.push(to: .video(.list(
+                tracksId: track.tracksId.uuidString,
+                sectionId: first.sectionId,
+                trackName: track.trackName
+              )))
+            }
           }
         },
         editText: Binding(

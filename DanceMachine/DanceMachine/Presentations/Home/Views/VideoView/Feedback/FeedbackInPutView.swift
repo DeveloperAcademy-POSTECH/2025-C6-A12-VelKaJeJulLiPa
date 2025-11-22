@@ -23,9 +23,11 @@ struct FeedbackInPutView: View {
   
   let drawingButtonTapped: () -> Void
   
+  // 드로잉 편집
+  let editDrawingTapped: () -> Void
+  
   @State private var content: String = ""
   @FocusState private var isFocused: Bool
-  @State private var taggedViewHeight: CGFloat = 0
 
   
   @Binding var feedbackDrawingImage: UIImage? // 드로잉 피드백 이미지
@@ -41,19 +43,25 @@ struct FeedbackInPutView: View {
     }
   }
   
+  @State private var viewHeight: CGFloat = 0
+
   var body: some View {
     VStack(spacing: 16) {
       topRow
-      if feedbackDrawingImage != nil {
-        feedbackImageView.frame(maxWidth: .infinity, alignment: .leading)
-      }
       if !mM.taggedUsers.isEmpty {
-        taggedView
+        TaggedUsersView(
+          taggedUsers: mM.taggedUsers,
+          teamMembers: teamMembers,
+          onRemove: { userId in
+            mM.taggedUsers.removeAll { $0.userId == userId }
+          },
+          onRemoveAll: { mM.taggedUsers.removeAll() }
+        )
       }
       CustomTextField(
         content: $content,
         placeHolder: (
-          mM.taggedUsers.isEmpty ? "@팀원 태그" : "피드백을 입력하세요."
+          "팀원을 태그하고 피드백을 입력하세요."
         ),
         submitAction: {
           onSubmit(content, mM.taggedUsers.map { $0.userId })
@@ -66,6 +74,16 @@ struct FeedbackInPutView: View {
       }
     }
     .padding([.vertical, .horizontal], 16)
+    .background(
+      GeometryReader { geometry in
+        Color.clear.onAppear {
+          viewHeight = geometry.size.height
+        }
+        .onChange(of: geometry.size.height) { _, newHeight in
+          viewHeight = newHeight
+        }
+      }
+    )
     .background(
       RoundedRectangle(cornerRadius: 20)
         .fill(Color.backgroundElevated)
@@ -85,7 +103,7 @@ struct FeedbackInPutView: View {
           },
           taggedUsers: mM.taggedUsers
         )
-        .padding(.bottom, 65)
+        .padding(.bottom, viewHeight + 5)
       }
     }
     .animation(.easeInOut(duration: 0.2), value: mM.showPicker)
@@ -95,10 +113,7 @@ struct FeedbackInPutView: View {
   }
   
   private var topRow: some View {
-    HStack(spacing: 4) {
-      Text("타임 스탬프:")
-        .font(.headline2Medium)
-        .foregroundStyle(.labelNormal)
+    HStack(spacing: 8) {
       switch feedbackType {
       case .point:
         TimestampInput(
@@ -111,15 +126,28 @@ struct FeedbackInPutView: View {
           timeSeek: { timeSeek() }
         )
       }
-      Spacer()
-      
-      // TODO: 여기에 드로잉 버튼으로 갈 이미지 삽입
-      Button {
-        drawingButtonTapped()
-      } label: {
-        Text("드로잉 이동")
+      if self.feedbackDrawingImage == nil {
+        Button {
+          drawingButtonTapped()
+        } label: {
+          HStack(spacing: 4) {
+            Image(systemName: "scribble.variable")
+              .font(.footnoteMedium)
+              .foregroundStyle(.labelStrong)
+            Text("드로잉 하기")
+              .font(.footnoteMedium)
+              .foregroundStyle(.labelStrong)
+          }
+          .padding(.vertical, 7)
+          .padding(.horizontal, 10)
+        }
+        .background {
+          RoundedRectangle(cornerRadius: 1000)
+            .fill(Color.fillAssitive)
+        }
       }
-      
+      feedbackImageView.frame(width: 30, height: 30)
+      Spacer()
       clearButton
     }
   }
@@ -141,105 +169,68 @@ struct FeedbackInPutView: View {
         Image(uiImage: image)
           .resizable()
           .scaledToFill()
-          .frame(width: 100, height: 100)
-          .clipShape(RoundedRectangle(cornerRadius: 8))
+          .frame(width: 30, height: 30)
+          .clipShape(RoundedRectangle(cornerRadius: 100))
           .matchedGeometryEffect(id: "feedbackImage", in: imageNamespace)
           .onTapGesture {
             withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-              showImageFull = true
+//              showImageFull = true
+              self.editDrawingTapped() // 기존 이미지를 시트에 전달
             }
           }
-      }
-    }
-  }
-  
-  // MARK: 태그된 사용자 표시
-  private var taggedView: some View {
-    let isAllTagged = !teamMembers.isEmpty && mM.taggedUsers.count == teamMembers.count
-    
-    return ScrollView(.horizontal, showsIndicators: false) {
-      HStack(spacing: 4) {
-        if isAllTagged {
-          // @All 태그 표시
-          HStack(spacing: 0) {
-            Text("@")
-              .font(.headline2Medium)
-              .foregroundStyle(.accentBlueStrong)
-            Text("All")
-              .font(.headline2Medium)
-              .foregroundStyle(.accentBlueStrong)
-            Button {
-              mM.taggedUsers.removeAll()
-            } label: {
-              Image(systemName: "xmark.circle.fill")
-                .font(.system(size: 16))
-                .foregroundStyle(Color.labelAssitive)
-            }
-          }
-        } else {
-          // 개별 태그 표시
-          ForEach(mM.taggedUsers, id: \.userId) { user in
-            HStack(spacing: 0) {
-              Text("@")
-                .font(.headline2Medium)
-                .foregroundStyle(.accentBlueStrong)
-              Text(user.name)
-                .font(.headline2Medium)
-                .foregroundStyle(.accentBlueStrong)
-              Button {
-                mM.taggedUsers.removeAll { $0.userId == user.userId }
-              } label: {
-                Image(systemName: "xmark.circle.fill")
-                  .font(.system(size: 16))
-                  .foregroundStyle(Color.labelAssitive)
-              }
-            }
-          }
-        }
       }
     }
   }
 }
 
-//#Preview {
-//  @Previewable @State var taggedUsers: [User] = .init(
-//    [User(
-//      userId: "1",
-//      email: "",
-//      name: "서영",
-//      loginType: LoginType.apple,
-//      fcmToken: "",
-//      termsAgreed: true,
-//      privacyAgreed: true
-//    ),
-//     User(
-//      userId: "2",
-//      email: "",
-//      name: "카단",
-//      loginType: LoginType.apple,
-//      fcmToken: "",
-//      termsAgreed: true,
-//      privacyAgreed: true
-//     ),
-//     User(
-//      userId: "3",
-//      email: "",
-//      name: "벨코",
-//      loginType: LoginType.apple,
-//      fcmToken: "",
-//      termsAgreed: true,
-//      privacyAgreed: true
-//     )]
-//  )
-//  FeedbackInPutView(
-//    teamMembers: taggedUsers,
-//    feedbackType: .interval,
-//    currentTime: 5.111111,
-//    startTime: 0.2,
-//    onSubmit: {_, _ in },
-//    refresh: {},
-//    timeSeek: {},
-//    drawingButtonTapped: {},
-//    feedbackDrawingImage: .constant(nil)
-//  )
-//}
+#Preview {
+    @Previewable @State var feedbackDrawingImage: UIImage? = nil
+    @Previewable @State var showImageFull: Bool = false
+    @Previewable @State var taggedUsers: [User] = [
+        User(
+          userId: "1",
+          email: "",
+          name: "서영",
+          loginType: .apple,
+          fcmToken: "",
+          termsAgreed: true,
+          privacyAgreed: true
+        ),
+        User(
+          userId: "2",
+          email: "",
+          name: "카단",
+          loginType: .apple,
+          fcmToken: "",
+          termsAgreed: true,
+          privacyAgreed: true
+        ),
+        User(
+          userId: "3",
+          email: "",
+          name: "벨코",
+          loginType: .apple,
+          fcmToken: "",
+          termsAgreed: true,
+          privacyAgreed: true
+        )
+    ]
+
+   @Namespace var imageNamespace
+
+    FeedbackInPutView(
+        teamMembers: taggedUsers,
+        feedbackType: .interval,
+        currentTime: 5.111111,
+        startTime: 0.2,
+        onSubmit: { _, _ in },
+        refresh: {},
+        timeSeek: {},
+        drawingButtonTapped: {},
+        editDrawingTapped: {},
+        feedbackDrawingImage: $feedbackDrawingImage,
+        imageNamespace: imageNamespace,
+        showImageFull: $showImageFull
+    )
+    .environmentObject(MainRouter())   // 필요하면 유지
+}

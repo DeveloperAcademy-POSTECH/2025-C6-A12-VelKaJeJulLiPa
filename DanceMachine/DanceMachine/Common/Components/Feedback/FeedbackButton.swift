@@ -54,14 +54,14 @@ struct FeedbackButtons: View {
       pointAction()
     } label: {
       HStack {
-        Text(landScape ? "시점" : "시점 피드백")
+        Text("시점 피드백")
           .font(.headline1Medium)
           .foregroundStyle(.labelStrong)
         Image(systemName: "bubble.circle")
           .font(.system(size: 20))
           .foregroundStyle(.labelStrong)
       }
-      .padding(.horizontal, 25)
+      .padding(.horizontal, 4)
       .padding(.vertical, 14)
       .frame(maxWidth: .infinity)
       .feedbackPointButton()
@@ -80,14 +80,14 @@ struct FeedbackButtons: View {
           Image(systemName: "stop.circle")
             .foregroundStyle(.primitiveButton)
         } else {
-          Text(landScape ? "구간" : "구간 피드백")
+          Text("구간 피드백")
             .font(.headline1Medium)
             .foregroundStyle(.primitiveButton)
           Image(.feedbackButton)
             .foregroundStyle(.primitiveButton)
         }
       }
-      .padding(.horizontal, 25)
+      .padding(.horizontal, 4)
       .padding(.vertical, 14)
       .frame(maxWidth: .infinity)
       .feedbackIntervalButton()

@@ -66,10 +66,6 @@ struct SectionSelectView: View {
       isPresented: $showExitAlert,
       onConfirm: { dismiss() }
     )
-//    .alert(vm.errorMsg ?? "알 수 없는 오류가 발생했습니다.",
-//           isPresented: $vm.showAlert) {
-//      Button("확인") { dismiss() }
-//    }
   }
   
   private var confirmButton: some View {
@@ -87,9 +83,7 @@ struct SectionSelectView: View {
             tracksId: tracksId,
             oldSectionId: sectionId
           )
-          // 캐시에 업데이트되었으므로 뒤로 가면 자동 반영됨
-          NotificationCenter.post(.showEditToast, object: nil)
-          dismiss()
+          await MainActor.run { dismiss() }
         }
       }
     )

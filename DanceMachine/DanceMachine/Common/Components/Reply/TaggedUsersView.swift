@@ -22,7 +22,7 @@ struct TaggedUsersView: View {
       HStack(spacing: 4) {
         if isAllTagged {
           // @All 태그 표시
-          HStack(spacing: 4) {
+          HStack(spacing: 0) {
             Text("@")
               .font(.headline2Medium)
               .foregroundStyle(.accentBlueStrong)
@@ -33,6 +33,7 @@ struct TaggedUsersView: View {
               onRemoveAll()
             } label: {
               Image(systemName: "xmark.circle.fill")
+                .symbolRenderingMode(.hierarchical)
                 .font(.system(size: 16))
                 .foregroundStyle(Color.labelAssitive)
             }
@@ -41,7 +42,7 @@ struct TaggedUsersView: View {
         } else {
           // 개별 태그 표시
           ForEach(taggedUsers, id: \.userId) { user in
-            HStack(spacing: 3) {
+            HStack(spacing: 0) {
               Text("@")
                 .font(.headline2Medium)
                 .foregroundStyle(.accentBlueStrong)
@@ -52,6 +53,7 @@ struct TaggedUsersView: View {
                 onRemove(user.userId)
               } label: {
                 Image(systemName: "xmark.circle.fill")
+                  .symbolRenderingMode(.hierarchical)
                   .font(.system(size: 16))
                   .foregroundStyle(Color.labelAssitive)
               }
@@ -61,6 +63,5 @@ struct TaggedUsersView: View {
         }
       }
     }
-    .padding(.vertical, 8)
   }
 }

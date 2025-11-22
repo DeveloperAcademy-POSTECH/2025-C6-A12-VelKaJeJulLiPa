@@ -28,7 +28,6 @@ extension SectionSelectViewModel {
       self.isLoading = true
       self.errorMsg = nil
     }
-    
     do {
       try await store.deleteFromSubSubcollection(
         in: .tracks,
@@ -65,14 +64,16 @@ extension SectionSelectViewModel {
         self.isLoading = false
         self.showAlert = true
         self.errorMsg = "영상 이동에 성공했습니다!"
+        NotificationCenter.post(.video(.videoEdit))
         print("track 이동 성공")
       }
       
-    } catch { // TODO: 에러처리
+    } catch {
       await MainActor.run {
         self.isLoading = false
         self.showAlert = true
-        self.errorMsg = "영상 이동에 실패했습니다"
+        self.errorMsg = "동영상을 옮기는 중에 문제가 발생했습니다."
+        NotificationCenter.post(.video(.videoEditFailed))
       }
     }
   }

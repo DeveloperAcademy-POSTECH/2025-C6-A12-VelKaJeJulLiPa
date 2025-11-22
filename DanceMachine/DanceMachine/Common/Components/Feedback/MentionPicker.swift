@@ -17,16 +17,21 @@ struct MentionPicker: View { // FIXME: 디자인 필요
   
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
-      ScrollView {
-        LazyVStack(alignment: .leading, spacing: 4) {
-          allButton
-          memberButton
+      if filteredMembers.isEmpty {
+        emptyView
+      } else {
+        ScrollView {
+          LazyVStack(alignment: .leading, spacing: 4) {
+            allButton
+            memberButton
+          }
+          .padding(.horizontal, 8)
+          .padding(.vertical, 8)
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 8)
+        .frame(maxHeight: 170)
       }
-      .frame(height: 170)
     }
+    .frame(height: filteredMembers.isEmpty ? nil : calculateHeight())
     .background(
       RoundedRectangle(cornerRadius: 16)
         .fill(.backgroundElevated)
@@ -34,6 +39,23 @@ struct MentionPicker: View { // FIXME: 디자인 필요
     .padding(.horizontal, 8)
     .contentShape(Rectangle())
 //    .transition(.move(edge: .bottom).combined(with: .opacity))
+  }
+
+  private var emptyView: some View {
+    Text("팀원이 없습니다. 팀원을 초대해 주세요")
+      .font(.headline2Medium)
+      .foregroundStyle(.labelAssitive)
+      .frame(maxWidth: .infinity)
+      .padding(.vertical, 20)
+  }
+
+  private func calculateHeight() -> CGFloat {
+    let itemHeight: CGFloat = 44 // 패딩 포함한 각 항목 높이
+    let padding: CGFloat = 16 // 상하 패딩
+    let itemCount = filteredMembers.count + 1 // @All 버튼 포함
+    let contentHeight = CGFloat(itemCount) * itemHeight + padding
+
+    return min(contentHeight, 170) // 최대 170, 최소는 컨텐츠 높이
   }
   
   private var allButton: some View {
@@ -83,34 +105,7 @@ struct MentionPicker: View { // FIXME: 디자인 필요
 
 #Preview {
   let mock = [
-    User(
-      userId: "1",
-      email: "",
-      name: "2",
-      loginType: LoginType.apple,
-      fcmToken: "",
-      termsAgreed: true,
-      privacyAgreed: true
-    ),
-    User(
-      userId: "2",
-      email: "",
-      name: "2",
-      loginType: LoginType.apple,
-      fcmToken: "",
-      termsAgreed: true,
-      privacyAgreed: true
-    ),
-    User(
-      userId: "3",
-      email: "",
-      name: "2",
-      loginType: LoginType.apple,
-      fcmToken: "",
-      termsAgreed: true,
-      privacyAgreed: true
-    ),
-    User(
+      User(
       userId: "4",
       email: "",
       name: "2",
@@ -121,7 +116,7 @@ struct MentionPicker: View { // FIXME: 디자인 필요
     )]
   
   MentionPicker(
-    filteredMembers: mock,
+    filteredMembers: [],
     action: {_ in },
     selectAll: {},
     taggedUsers: mock

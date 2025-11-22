@@ -12,14 +12,15 @@ struct VideoListView: View {
   @EnvironmentObject private var router: MainRouter
   
   @State var vm: VideoListViewModel
-
+  
   @State private var isScrollDown: Bool = false
-  @State private var isRefreshing: Bool = false
-
+  //  @State private var isRefreshing: Bool = false
+  
   @State private var showDeleteToast: Bool = false
   @State private var showEditToast: Bool = false
   @State private var showEditVideoTitleToast: Bool = false
   @State private var showCreateReportSuccessToast: Bool = false
+  @State private var showVideoEditFailedToast: Bool = false
   
   @State private var pickerViewModel = VideoPickerViewModel()
   
@@ -27,33 +28,60 @@ struct VideoListView: View {
     vm: VideoListViewModel = .init(),
     tracksId: String,
     sectionId: String,
-    trackName: String
+    trackName: String,
+    onBackButtonTap: (() -> Void)? = nil
   ) {
     self.vm = vm
     self.tracksId = tracksId
     self.sectionId = sectionId
     self.trackName = trackName
+    self.onBackButtonTap = onBackButtonTap
   }
 
   let tracksId: String
   let sectionId: String
   let trackName: String
+  let onBackButtonTap: (() -> Void)?
   
   var body: some View {
-    VStack(spacing: 0) {
-      if vm.filteredVideos.isEmpty && vm.isLoading != true && !pickerViewModel.isUploading {
-        emptyView
-      } else {
-        listView
+    GeometryReader { geometry in
+      ScrollView {
+        if vm.showErrorView {
+          errorView(g: geometry)
+        } else if vm.filteredVideos.isEmpty && vm.isLoading != true && !pickerViewModel.isUploading {
+          emptyContent(g: geometry)
+        } else {
+          VideoListContent(
+            geometry: geometry,
+            tracksId: tracksId,
+            videos: vm.filteredVideos,
+            track: vm.track,
+            section: vm.section,
+            pickerViewModel: pickerViewModel,
+            vm: $vm
+          )
+        }
       }
+      .scrollDisabled(vm.isLoading && !vm.isRefreshing)
+      .refreshable {
+        await vm.refresh(tracksId: tracksId)
+      }
+      .background(.backgroundNormal)
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(.backgroundNormal)
-    .safeAreaInset(edge: .top) { sectionView }
+    .safeAreaInset(edge: .top) {
+      SectionContent(
+        vm: $vm,
+        tracksId: tracksId,
+        trackName: trackName,
+        sectionId: sectionId
+      )
+    }
     .navigationBarTitleDisplayMode(.inline)
-    .toolbar(.hidden, for: .tabBar)
+//    .toolbar(.hidden, for: .tabBar)
     .toolbar {
-      ToolbarLeadingBackButton(icon: .chevron)
+      ToolbarLeadingBackButton(icon: .chevron, action: onBackButtonTap)
       ToolbarCenterTitle(text: trackName)
       ToolbarUploadButton {
         Task {
@@ -84,63 +112,65 @@ struct VideoListView: View {
       )
     }
     .toast(
-      isPresented: $showDeleteToast,
+      isPresented: $vm.showVideoTitleEditErrorToast,
       duration: 2,
       position: .bottom,
-      bottomPadding: 63,
+      bottomPadding: 16,
       content: {
         ToastView(
-          text: "동영상이 삭제되었습니다.",
-          icon: .check
+          text: vm.errorMsg ?? "동영상 이름 수정을 실패했습니다.",
+          icon: .warning
         )
       }
     )
     .toast(
-      isPresented: $showEditToast,
+      isPresented: $vm.showDeleteErrorToast,
       duration: 2,
       position: .bottom,
-      bottomPadding: 63,
+      bottomPadding: 16,
       content: {
-        ToastView(text: "영상이 이동되었습니다.", icon: .check)
+        ToastView(
+          text: vm.errorMsg ?? "동영상 삭제를 실패했습니다.",
+          icon: .warning
+        )
       }
     )
-    .toast(
+    .notificationToast(
+      isPresented: $showVideoEditFailedToast,
+      text: "동영상 이동을 실패했습니다.",
+      icon: .warning,
+      for: .video(.videoEditFailed),
+      bottomPadding: 16
+    )
+    .notificationToast(
+      isPresented: $showDeleteToast,
+      text: "동영상이 삭제되었습니다.",
+      icon: .check,
+      for: .video(.videoDelete),
+      bottomPadding: 16
+    )
+    .notificationToast(
       isPresented: $showEditVideoTitleToast,
-      duration: 2,
-      position: .bottom,
-      bottomPadding: 63,
-      content: {
-        ToastView(text: "영상 이름이 수정되었습니다.", icon: .check)
-      }
+      text: "영상 이름이 수정되었습니다.",
+      icon: .check,
+      for: .video(.videoTitleEdit),
+      bottomPadding: 16
     )
-    .toast(
+    .notificationToast(
+      isPresented: $showEditToast,
+      text: "영상이 이동되었습니다.",
+      icon: .check,
+      for: .video(.videoEdit),
+      bottomPadding: 16
+    )
+    .notificationToast(
       isPresented: $showCreateReportSuccessToast,
-      duration: 3,
-      position: .bottom,
-      bottomPadding: 63, // FIXME: 신고하기 - 하단 공백 조정 필요
-      content: {
-        ToastView(text: "신고가 접수되었습니다.\n조치사항은 이메일로 안내해드리겠습니다.", icon: .check)
-      }
+      text: "신고가 접수되었습니다.\n조치사항은 이메일로 안내해드리겠습니다.",
+      icon: .check,
+      for: .toast(.reportSuccess),
+      bottomPadding: 16,
+      targetViewType: .videoListView
     )
-    // MARK: 영상 삭제 토스트 리시버
-    .onReceive(NotificationCenter.default.publisher(for: .showDeleteToast)) { _ in
-      self.showDeleteToast = true
-    }
-    // MARK: 영상 이름 수정 토스트 리시버
-    .onReceive(NotificationCenter.default.publisher(for: .showEditVideoTitleToast, object: nil)) { _ in
-      self.showEditVideoTitleToast = true
-    }
-    // MARK: 영상 섹션 이동 토스트 리시버
-    .onReceive(NotificationCenter.default.publisher(for: .showEditToast)) { _ in
-      self.showEditToast = true
-    }
-    // MARK: 신고 완료 토스트 리시버
-    .onReceive(NotificationCenter.default.publisher(for: .showCreateReportSuccessToast)) { notification in
-      if let toastViewName = notification.userInfo?["toastViewName"] as? ReportToastReceiveViewType,
-         toastViewName == .videoListView {
-        showCreateReportSuccessToast = true
-      }
-    }
     .overlay(alignment: .center) {
       if vm.showPermissionModal {
         PhotoLibraryPermissionView(
@@ -151,112 +181,44 @@ struct VideoListView: View {
     }
   }
   
-  private var emptyView: some View {
-    GeometryReader { geometry in
+  private func errorView(g: GeometryProxy) -> some View {
+    ErrorStateView(
+      message: "동영상 불러오기를 실패했습니다.\n네트워크를 확인해 주세요.",
+      action: {
+        Task {
+          await vm.refresh(tracksId: tracksId)
+        }
+      }
+    )
+    .frame(width: g.size.width, height: g.size.height)
+    .position(
+      x: g.size.width / 2,
+      y: g.size.height / 2 - 40
+    )
+  }
+  
+  private func emptyContent(g: GeometryProxy) -> some View {
+    Button {
+      Task { await vm.requestPermissionAndFetch() }
+    } label: {
       VStack(spacing: 24) {
-        Image(systemName: "movieclapper.fill")
+        Image(systemName: "video.fill.badge.plus")
+          .symbolRenderingMode(.hierarchical)
           .font(.system(size: 75))
-          .foregroundStyle(.labelAssitive)
-        Text("비디오가 없습니다.")
+          .foregroundStyle(.secondaryNormal)
+        Text("비디오를 추가해 보세요.")
           .font(.headline2Medium)
-          .foregroundStyle(.labelAssitive)
+          .foregroundStyle(.secondaryAssitive)
       }
-      .frame(maxWidth: .infinity)
-      .position(
-        x: geometry.size.width / 2,
-        y: geometry.size.height / 2 - 40
-      )
     }
-  }
-  // MARK: 영상 그리드 뷰
-  private var listView: some View {
-    GeometryReader { g in
-      let horizontalPadding: CGFloat = 16
-      let spacing: CGFloat = 16
-      let columns = 2
-      
-      let totalSpacing = spacing * CGFloat(columns - 1)
-      let availableWidth = g.size.width - (horizontalPadding * 2) - totalSpacing
-      let itemSize = availableWidth / CGFloat(columns)
-      
-      ScrollView {
-        VideoGrid(
-          size: itemSize,
-          columns: columns,
-          spacing: spacing,
-          tracksId: tracksId,
-          videos: vm.filteredVideos,
-          track: vm.track,
-          section: vm.section,
-          pickerViewModel: pickerViewModel,
-          vm: $vm
-        )
-        .padding(.horizontal, horizontalPadding)
-      }
-      .scrollDisabled(vm.isLoading && !isRefreshing)
-      .onScrollGeometryChange(for: CGFloat.self) { geometry in
-        geometry.contentOffset.y
-      } action: { oldValue, newValue in
-        withAnimation(.spring()) {
-          isScrollDown = newValue > 50
-        }
-      }
-      .refreshable {
-        isRefreshing = true
-        await vm.forceRefreshFromServer(tracksId: tracksId)
-        isRefreshing = false
-      }
-      .background(.backgroundNormal)
-    }
-  }
-  
-  
-  // MARK: 섹션 칩 뷰
-  private var sectionView: some View {
-    ScrollView(.horizontal, showsIndicators: false) {
-      //      GlassEffectContainer {
-      HStack {
-        SectionChipIcon(
-          vm: $vm,
-          action: {
-            router.push(
-              to: .video(
-                .section(
-                  section: vm.section,
-                  tracksId: tracksId,
-                  trackName: trackName,
-                  sectionId: sectionId
-                )
-              )
-            )
-          }
-        )
-        if vm.isLoading {
-          ForEach(0..<5, id: \.self) { _ in
-            SkeletonChipVIew()
-          }
-        } else {
-          ForEach(vm.section, id: \.sectionId) { section in
-            CustomSectionChip(
-              vm: $vm,
-              action: { vm.selectedSection = section },
-              title: section.sectionTitle,
-              id: section.sectionId
-            )
-          }
-        }
-      }
-      .padding(.horizontal, 16)
-      .padding(.top, 24)
-      .padding(.bottom, 16)
-    }
-//    .environment(\.colorScheme, .light)
-    .scrollDisabled(vm.isLoading)
+    .buttonStyle(.plain)
+    .frame(width: g.size.width, height: g.size.height)
+    .position(
+      x: g.size.width / 2,
+      y: g.size.height / 2 - 40
+    )
   }
 }
-
-
-
 
 #Preview {
   @Previewable @State var vm: VideoListViewModel = .preview
@@ -264,11 +226,4 @@ struct VideoListView: View {
     VideoListView(vm: vm, tracksId: "", sectionId: "", trackName: "벨코의 리치맨")
   }
   .environmentObject(MainRouter())
-}
-
-struct ScrollOffsetPreferenceKey: PreferenceKey {
-  static var defaultValue: CGFloat = 0
-  static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-    value = nextValue()
-  }
 }

@@ -45,6 +45,7 @@ struct CustomTextField: View {
           .font(.system(size: 19))
           .foregroundStyle(content.isEmpty ? .fillAssitive : .secondaryStrong)
       }
+      .disabled(content.trimmingCharacters(in: .whitespaces).isEmpty)
       .frame(width: 18, height: 18)
       .padding(.trailing, 20)
     }

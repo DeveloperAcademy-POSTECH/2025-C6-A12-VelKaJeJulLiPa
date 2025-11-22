@@ -89,7 +89,7 @@ struct VideoTitleEditView: View {
       
       Spacer().frame(height: 16)
       
-      Text("20자 이하로 입력해주세요.")
+      Text("20자 이하로 입력해 주세요.")
         .font(.footnoteMedium)
         .foregroundStyle(.accentRedNormal)
         .opacity(videoTitle.count < 21 ? 0 : 1)
@@ -109,7 +109,6 @@ struct VideoTitleEditView: View {
           newTitle: videoTitle,
           tracksId: tracksId
         )
-        NotificationCenter.post(.showEditVideoTitleToast, object: nil)
         await MainActor.run { dismiss() }
       }
     }

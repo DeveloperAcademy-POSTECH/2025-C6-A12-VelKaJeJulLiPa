@@ -10,28 +10,33 @@ import PencilKit
 import AVFoundation
 
 /// iOS 26 미만 대체용 드로잉 오버레이
-/// - image: 반드시 받아야 하는 원본 배경 이미지
-/// - onDone: 합성 완료 이미지 콜백
-/// - onCancel: 취소 콜백(선택)
+/// - 새 드로잉: initialDrawing이 nil이면 빈 캔버스 생성
+/// - 편집 모드: initialDrawing이 있으면 기존 드로잉 로드
+/// - Parameters:
+///   - image: 반드시 받아야 하는 원본 배경 이미지
+///   - initialDrawing: 편집 모드일 때 기존 PKDrawing 데이터
+///   - onDone: 합성 완료 이미지 콜백 (합성 이미지, 드로잉 데이터)
+///   - onCancel: 취소 시 콜백(선택)
 struct FeedbackPencilDrawingView: View {
-  
+
   @Environment(\.dismiss) private var dismiss
   
   @Binding var image: UIImage?
-  
-  var onDone: (UIImage) -> Void = { _ in }
+  var initialDrawing: Data? = nil // 편집 모드일 때 기존 드로잉 데이터
+
+  var onDone: (UIImage, Data?) -> Void = { _, _ in }
   var onCancel: (() -> Void)? = nil
-  
+
   @State private var canvasView = PKCanvasView()
   @State private var selectedTool: PKTool = PKInkingTool(.pen, color: UIColor(Color.labelStrong), width: 5) // 초기 팬슬 설정
   @State private var showsToolPicker: Bool = false
-  
+
   private let toolPicker = PKToolPicker()
   
   var body: some View {
     GeometryReader { geo in
       ZStack {
-        Color.backgroundNormal.ignoresSafeArea()
+        Color.black.ignoresSafeArea()
         VStack(spacing: 4) {
           drawingToolbar.padding(.horizontal, 16)
           PencilCanvasView(
@@ -47,6 +52,13 @@ struct FeedbackPencilDrawingView: View {
     .onAppear {
       configureToolPicker()
       updateToolPickerVisibility(showsToolPicker)
+
+      // 편집 모드: 저장된 드로잉 데이터 로드
+      if let data = initialDrawing,
+         let drawing = try? PKDrawing(data: data) {
+        canvasView.drawing = drawing
+      }
+      // 새 드로잉: canvasView.drawing은 기본값(빈 캔버스) 사용
     }
     // 토글될 때마다 실제로 툴피커 갱신
     .onChange(of: showsToolPicker) { old, visible in
@@ -94,79 +106,72 @@ struct FeedbackPencilDrawingView: View {
   
   // MARK: - 탑 타이틀
   private var drawingToolbar: some View {
-    LabeledContent {
-      HStack(spacing: 16) {
-        // 되돌리기
-        Button {
-          undoDrawing()
-        } label: {
-          Image(systemName: "arrow.uturn.backward")
-            .resizable()
-            .scaledToFit()
-            .frame(width: 24, height: 24)
-            .foregroundStyle(Color.labelStrong)
-        }
-        
-        /// 앞으로 가기
-        Button {
-          redoDrawing()
-        } label: {
-          Image(systemName: "arrow.uturn.forward")
-            .resizable()
-            .scaledToFit()
-            .frame(width: 24, height: 24)
-            .foregroundStyle(Color.labelStrong)
-        }
-        
-        
-        // 팬슬 툴
-        Button {
-          showsToolPicker.toggle()
-        } label: {
-          if showsToolPicker {
-            Image(systemName: "pencil.circle.fill")
-              .resizable()
-              .scaledToFit()
-              .frame(width: 24, height: 24)
-              .foregroundStyle(Color.labelStrong)
-          }
-          else {
-            Image(systemName: "pencil.circle")
-              .resizable()
-              .scaledToFit()
-              .frame(width: 24, height: 24)
-              .foregroundStyle(Color.labelStrong)
-          }
-        }
-        
-        
-        // 완료 버튼
-        Button {
-          if let merged = exportMergedImageOnscreenSize() {
-            onDone(merged)
-            dismiss()
-          }
-        } label: {
-          Image(systemName: "checkmark.circle.fill")
-            .resizable()
-            .scaledToFit()
-            .frame(width: 24, height: 24)
-            .foregroundStyle(Color.labelStrong)
-        }
-        
-      }
-    } label: {
+    HStack(spacing: 12) {
+      // X 버튼
       Button {
         dismiss()
       } label: {
-        Image(systemName: "xmark.circle.fill")
-          .resizable()
-          .frame(width: 24, height: 24) // FIXME: - 크기 수정
+        Image(systemName: "xmark")
+          .font(.system(size: 22, weight: .medium))
           .foregroundStyle(Color.labelStrong)
       }
+      .frame(width: 44, height: 44)
+      .drawingButton()
+
+      Spacer()
+
+      // 버튼 그룹들
+      HStack(spacing: 12) {
+        // 그룹 1: Undo/Redo
+        HStack(spacing: 0) {
+          Button {
+            undoDrawing()
+          } label: {
+            Image(systemName: "arrow.uturn.backward")
+              .font(.system(size: 22, weight: .medium))
+              .foregroundStyle(Color.labelStrong)
+          }
+          .frame(width: 44, height: 44)
+
+          Button {
+            redoDrawing()
+          } label: {
+            Image(systemName: "arrow.uturn.forward")
+              .font(.system(size: 22, weight: .medium))
+              .foregroundStyle(Color.labelStrong)
+          }
+          .frame(width: 44, height: 44)
+        }
+        .padding(.horizontal, 4)
+        .drawingButtonGroup()
+
+        // 그룹 2: Pencil Tool
+        Button {
+          showsToolPicker.toggle()
+        } label: {
+          Image(systemName: showsToolPicker ? "pencil.tip.crop.circle.fill" : "pencil.tip.crop.circle")
+            .font(.system(size: 22, weight: .medium))
+            .foregroundStyle(Color.labelStrong)
+        }
+        .frame(width: 44, height: 44)
+        .drawingButton()
+
+        // 그룹 3: 완료
+        Button {
+          if let merged = exportMergedImageOnscreenSize() {
+            let drawingData = canvasView.drawing.dataRepresentation()
+            onDone(merged, drawingData)
+            dismiss()
+          }
+        } label: {
+          Image(systemName: "checkmark")
+            .font(.system(size: 22, weight: .semibold))
+            .foregroundStyle(Color.white)
+        }
+        .frame(width: 44, height: 44)
+        .drawingSubmitButton()
+      }
     }
-    .font(.headline)
-    .foregroundStyle(.black)
   }
   
   /// 팬슬 이전 그림 취소하는 기능입니다.

@@ -22,6 +22,13 @@ final class VideoListViewModel {
   var isLoading: Bool = false
   var errorMsg: String? = nil
 
+  // 에러 뷰 관련
+  var isRefreshing: Bool = false
+  var showErrorView: Bool = false
+  var showDeleteErrorToast: Bool = false
+  var showVideoTitleEditErrorToast: Bool = false
+  
+
   var selectedSection: Section?
 
   var photoLibraryStatus: PHAuthorizationStatus = .notDetermined
@@ -39,8 +46,21 @@ extension VideoListViewModel {
       $0.sectionId == selectedSection.sectionId
     }
     let videoIds = Set(sectionTracks.map { $0.videoId })
-    
+
     return videos.filter { videoIds.contains($0.videoId.uuidString) }
+  }
+
+  /// 리프레시 재사용 함수
+  /// 땡겨서 새로고침 or 에러뷰에서 탭으로 새로고침에 재사용 되는 메서드 입니다.
+  func refresh(tracksId: String) async {
+    await MainActor.run {
+      self.isRefreshing = true
+    }
+    await self.forceRefreshFromServer(tracksId: tracksId)
+
+    await MainActor.run {
+      self.isRefreshing = false
+    }
   }
 }
 // MARK: - 서버 메서드
@@ -161,16 +181,10 @@ extension VideoListViewModel {
       await TaskTimeUtility.waitForMinimumLoadingTime(
         startTime: startTime
       )
-      
+
       await MainActor.run {
         self.isLoading = false
-        // 동작 중 일부 videoId가 누락되어도 전체를 중단하지 않도록,
-        // 이미 로딩된 비디오가 없다면에만 에러 메시지를 표시
-        if self.videos.isEmpty {
-          self.errorMsg = VideoError.fetchFailed.userMsg
-        }
-        print("비디오 에러: \(VideoError.fetchFailed.debugMsg)")
-        print("상세 에러: \(error)")
+        self.showErrorView = true // 에러처리 뷰로 보여주기
       }
     }
   }
@@ -201,8 +215,9 @@ extension VideoListViewModel {
     await MainActor.run {
       self.isLoading = true
       self.errorMsg = nil
+      self.showErrorView = false
     }
-    
+
     // 캐시 무시하고 무조건 서버에서 로드
     do {
       print("강제 서버 새로고침 시작")
@@ -265,18 +280,17 @@ extension VideoListViewModel {
         }
 
         self.isLoading = false
+        self.showErrorView = false
         print("강제 새로고침 완료")
       }
     } catch {
       await TaskTimeUtility.waitForMinimumLoadingTime(
         startTime: startTime
       )
-      
+
       await MainActor.run {
         self.isLoading = false
-        if self.videos.isEmpty {
-          self.errorMsg = VideoError.fetchFailed.userMsg
-        }
+        self.showErrorView = true
         print("강제 새로고침 실패: \(error)")
       }
     }
@@ -304,7 +318,6 @@ extension VideoListViewModel {
       )
       print("\(videoId)의 영상 제목 \(newTitle)로 변경 완료")
       
-      // TODO: 캐시도 업데이트 해야함. #37 브랜치 머지 된 이후
       await dataCacheManager.updateVideoTitle(
         videoId: video.videoId.uuidString,
         newTitle: newTitle,
@@ -317,17 +330,19 @@ extension VideoListViewModel {
           var updatedVideo = self.videos[index]
           updatedVideo.videoTitle = newTitle
           self.videos[index] = updatedVideo
+          self.errorMsg = "동영상 이름 수정을 실패했습니다."
         }
         self.isLoading = false
       }
       
       // 제목 수정 완료 토스트 알림
-      NotificationCenter.default.post(name: .showEditVideoTitleToast, object: nil)
+      NotificationCenter.post(.video(.videoTitleEdit))
       print("비디오 제목 업데이트 성공: \(newTitle)")
     } catch {
       await MainActor.run {
         self.isLoading = false
-        self.errorMsg = "영상 제목 수정에 실패했습니다. 다시 시도해 주세요."
+        self.errorMsg = "동영상 이름 수정을 실패했습니다."
+        self.showVideoTitleEditErrorToast = true
       }
       print("영상 제목 수정 실패: \(error)")
     }
@@ -386,16 +401,17 @@ extension VideoListViewModel {
       }
       
       // 삭제 완료 토스트 알림
-      NotificationCenter.default.post(name: .showDeleteToast, object: nil)
+      NotificationCenter.post(.video(.videoDelete))
     } catch {
       // 최소 로딩 시간 보장 (스켈레톤 뷰 1.5초)
       await TaskTimeUtility.waitForMinimumLoadingTime(
         startTime: startTime
       )
       
-      await MainActor.run { // TODO: 에러 처리
+      await MainActor.run {
         self.isLoading = false
-        self.errorMsg = "영상 삭제에 실패했습니다. 다시 시도해 주세요."
+        self.errorMsg = "동영상 삭제를 실패했습니다."
+        self.showDeleteErrorToast = true
       }
       print("영상 삭제 실패")
     }
