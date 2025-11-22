@@ -76,16 +76,31 @@ struct TeamspaceSettingView: View {
         title: NameSpace.Top.inviteTitle,
         color: Color.secondaryStrong,
         height: 47,
-        isEnabled: viewModel.dataState.memberListMode == .browsing ? true : false
+        isEnabled: viewModel.dataState.memberListMode == .browsing
       ) {
         Task {
           guard let item = await viewModel.makeInviteShareItem() else { return }
           await MainActor.run {
-            let viewController = UIActivityViewController(
+            guard let topVC = UIApplication.shared.topMostViewController() else { return }
+            
+            let activityVC = UIActivityViewController(
               activityItems: [item],
               applicationActivities: nil
             )
-            UIApplication.shared.topMostViewController()?.present(viewController, animated: true)
+            
+            // iPad popover 앵커 지정 (없으면 크래시)
+            if let popover = activityVC.popoverPresentationController {
+              popover.sourceView = topVC.view
+              popover.sourceRect = CGRect(
+                x: topVC.view.bounds.midX,
+                y: topVC.view.bounds.minY + 1,
+                width: 0,
+                height: 0
+              )
+              popover.permittedArrowDirections = [.up]
+            }
+            
+            topVC.present(activityVC, animated: true)
           }
         }
       }
