@@ -167,11 +167,7 @@ struct CreateReportView: View {
           description: description
         )
         
-        NotificationCenter.default.post(
-          name: .showCreateReportSuccessToast,
-          object: nil,
-          userInfo: ["toastViewName": toastReceiveView]
-        )
+        NotificationCenter.post(.system(.showCreateReportSuccessToast), object: nil, userInfo: ["toastViewName": toastReceiveView])
         
         dismiss()
       } catch {

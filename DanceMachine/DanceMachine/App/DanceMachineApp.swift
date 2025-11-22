@@ -73,7 +73,7 @@ struct DanceMachineApp: App {
             }
           
           // 포그라운드 상태에서 푸시 눌렀을 때 링크 처리
-            .onReceive(NotificationCenter.default.publisher(for: .didReceiveDeeplink)) { note in
+            .onReceive(NotificationCenter.publisher(for: .system(.deeplink))) { note in
               if let url = note.object as? URL {
                 handleIncomingURL(url)
               }
@@ -86,7 +86,7 @@ struct DanceMachineApp: App {
                   if let pendingDeeplinkURL = AppDelegate.pendingDeeplinkURL {
                     handleIncomingURL(pendingDeeplinkURL)
                     AppDelegate.pendingDeeplinkURL = nil
-          
+                    
                   }
                   
                   if let pendingNotificationId = AppDelegate.pendingNotificationId,

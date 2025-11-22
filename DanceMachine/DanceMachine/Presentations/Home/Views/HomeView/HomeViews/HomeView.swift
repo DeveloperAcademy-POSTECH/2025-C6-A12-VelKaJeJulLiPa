@@ -18,6 +18,8 @@ struct HomeView: View {
   @State private var projectListViewModel: ProjectListViewModel = .init()
   @State private var tracksViewModel: TracksListViewModel? = nil
   
+  var onTrackSelect: ((Tracks) -> Void)? = nil
+  
   //  init(viewModel: HomeViewModel? = nil) {
   //    // 외부에서 주입 가능, 없으면 환경값으로 생성
   //    _viewModel = State(initialValue: viewModel ?? HomeViewModel(cache: CacheStoreKey.defaultValue))
@@ -57,7 +59,8 @@ struct HomeView: View {
           ProjectListView(
             homeViewModel: homeViewModel,
             projectListViewModel: projectListViewModel,
-            tracksViewModel: $tracksViewModel
+            tracksViewModel: $tracksViewModel,
+            onTrackSelect : onTrackSelect
           )
         }
       }

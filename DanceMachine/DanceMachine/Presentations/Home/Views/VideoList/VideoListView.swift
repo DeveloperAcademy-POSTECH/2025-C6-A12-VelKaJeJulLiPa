@@ -184,8 +184,7 @@ struct VideoListView: View {
   private func errorView(g: GeometryProxy) -> some View {
     ErrorStateView(
       message: "동영상 불러오기를 실패했습니다.\n네트워크를 확인해 주세요.",
-      isAnimating: true,
-      onRetry: {
+      action: {
         Task {
           await vm.refresh(tracksId: tracksId)
         }

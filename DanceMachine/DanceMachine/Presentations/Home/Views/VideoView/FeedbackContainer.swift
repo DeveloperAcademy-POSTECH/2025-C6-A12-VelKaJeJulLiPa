@@ -48,8 +48,7 @@ struct FeedbackContainer: View {
       if vm.feedbackVM.showErrorView {
         ErrorStateView(
           message: vm.feedbackVM.errorMsg ?? "Fatal Error 404",
-          isAnimating: true,
-          onRetry: {
+          action: {
             Task {
               await vm.feedbackVM.loadFeedbacks(for: videoId)
             }

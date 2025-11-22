@@ -88,12 +88,14 @@ enum SystemEvent {
   case deeplink
   case markAsRead
   case projectCollapse
+  case showCreateReportSuccessToast
 
   var name: Foundation.Notification.Name {
     switch self {
     case .deeplink: Foundation.Notification.Name("didReceiveDeeplink")
     case .markAsRead: Foundation.Notification.Name("needToMarkAsRead")
     case .projectCollapse: Foundation.Notification.Name("projectDidCollapse")
+    case .showCreateReportSuccessToast: Foundation.Notification.Name("showCreateReportSuccessToast")
     }
   }
 }
