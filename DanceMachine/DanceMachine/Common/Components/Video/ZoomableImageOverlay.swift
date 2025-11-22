@@ -16,6 +16,7 @@ struct ZoomableImageOverlay<Content: View>: View {
   @State private var baseScale: CGFloat = 1.0
   @State private var offset: CGSize = .zero
   @State private var baseOffset: CGSize = .zero
+  @State private var dismissDragOffset: CGFloat = 0
 
   var body: some View {
     GeometryReader { proxy in
@@ -45,22 +46,31 @@ struct ZoomableImageOverlay<Content: View>: View {
 
             let drag = DragGesture()
               .onChanged { value in
-                guard scale > 1.0 else {
-                  offset = .zero
-                  return
+                if scale > 1.0 {
+                  // 확대된 상태: 이미지 팬 가능
+                  let newOffset = CGSize(
+                    width: baseOffset.width + value.translation.width,
+                    height: baseOffset.height + value.translation.height
+                  )
+                  offset = newOffset
+                } else {
+                  // 확대 안 된 상태: 위아래 드래그로 dismiss
+                  dismissDragOffset = value.translation.height
                 }
-                let newOffset = CGSize(
-                  width: baseOffset.width + value.translation.width,
-                  height: baseOffset.height + value.translation.height
-                )
-                offset = newOffset
               }
-              .onEnded { _ in
+              .onEnded { value in
                 if scale > 1.0 {
                   baseOffset = offset
                 } else {
-                  offset = .zero
-                  baseOffset = .zero
+                  // 위아래로 150pt 이상 드래그하면 dismiss
+                  if abs(dismissDragOffset) > 150 {
+                    close()
+                  } else {
+                    // 원위치
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                      dismissDragOffset = 0
+                    }
+                  }
                 }
               }
 
@@ -74,7 +84,8 @@ struct ZoomableImageOverlay<Content: View>: View {
               )
               .clipShape(RoundedRectangle(cornerRadius: 12))
               .scaleEffect(scale)
-              .offset(offset)
+              .offset(x: offset.width, y: offset.height + dismissDragOffset)
+              .opacity(1.0 - Double(abs(dismissDragOffset)) / 500.0) // 드래그하면 살짝 투명해짐
               .gesture(
                 magnification.simultaneously(with: drag)
               )
@@ -108,6 +119,7 @@ struct ZoomableImageOverlay<Content: View>: View {
       baseScale = 1.0
       offset = .zero
       baseOffset = .zero
+      dismissDragOffset = 0
     }
   }
 }
