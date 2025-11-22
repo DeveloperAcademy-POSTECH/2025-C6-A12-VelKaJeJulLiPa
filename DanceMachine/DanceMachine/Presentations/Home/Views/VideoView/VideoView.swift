@@ -67,7 +67,7 @@ struct VideoView: View {
                 .retry(maxCount: 2, interval: .seconds(2))
                 .cacheOriginalImage()
                 .resizable()
-                .aspectRatio(contentMode: .fill)
+                .aspectRatio(contentMode: .fit)
                 .matchedGeometryEffect(id: urlString, in: feedbackImageNamespace)
             }
         }
