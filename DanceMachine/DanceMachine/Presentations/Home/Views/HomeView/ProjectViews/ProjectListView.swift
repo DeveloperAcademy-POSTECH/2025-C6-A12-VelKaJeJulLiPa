@@ -479,7 +479,7 @@ struct ProjectListView: View {
         },
         rowTapAction: {
           if let onTrackSelect = onTrackSelect {
-            onTrackSelect(track)
+            onTrackSelect(track) //
           } else {
             Task {
               let section = try await tracksVM.fetchSection(tracks: track)

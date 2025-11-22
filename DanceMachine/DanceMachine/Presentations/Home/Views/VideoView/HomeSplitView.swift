@@ -12,7 +12,7 @@ import SwiftUI
 struct HomeSplitView: View {
   @State private var vm: HomeViewModel = .init()
   @State private var selectedTrack: SelectedTrackInfo?
-  @State private var tracksViewModel: TracksListViewModel? = nil
+  @State private var tracksViewModel: TracksListViewModel = .init()
   @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
   @State private var sectionId: String = ""
@@ -23,8 +23,8 @@ struct HomeSplitView: View {
         Task {
           // FIXME: - check
           do {
-            let section = try await tracksViewModel?.fetchSection(tracks: track)
-            guard let first = section?.first else {
+            let section = try await tracksViewModel.fetchSection(tracks: track)
+            guard let first = section.first else {
               print("section 없음")
               return
             }
