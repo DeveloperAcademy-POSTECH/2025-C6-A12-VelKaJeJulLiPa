@@ -99,6 +99,13 @@ struct VideoView: View {
                   state.showFeedbackPanel = true
                 }
               }
+
+              // iPad 전체화면일 때 전체화면 나가기
+              if UIDevice.current.userInterfaceIdiom == .pad && state.iPadShowFullScreen {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                  state.iPadShowFullScreen = false
+                }
+              }
             }
           },
           initialMarkupData: state.isEditingExistingDrawing ? state.savedMarkupData : nil // 편집 모드면 기존 데이터 로드
@@ -131,6 +138,13 @@ struct VideoView: View {
                 if state.forceShowLandscape && !state.showFeedbackPanel {
                   withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                     state.showFeedbackPanel = true
+                  }
+                }
+
+                // iPad 전체화면일 때 전체화면 나가기
+                if UIDevice.current.userInterfaceIdiom == .pad && state.iPadShowFullScreen {
+                  withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    state.iPadShowFullScreen = false
                   }
                 }
               }

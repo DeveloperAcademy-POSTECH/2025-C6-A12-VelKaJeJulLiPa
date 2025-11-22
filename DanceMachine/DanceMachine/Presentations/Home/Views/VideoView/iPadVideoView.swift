@@ -23,7 +23,6 @@ struct iPadVideoView: View {
   let editExistingDrawing: () -> Void
   
   @State private var columnVisibility: NavigationSplitViewVisibility = .all
-  @State private var showFullScreen: Bool = false
   @State private var isDeviceLandscape: Bool = false
   @State private var lastSize: CGSize = .zero
 
@@ -39,10 +38,10 @@ struct iPadVideoView: View {
           portraitView
         }
       }
-      .opacity(showFullScreen ? 0 : 1)
+      .opacity(state.iPadShowFullScreen ? 0 : 1)
 
       // 전체화면 레이아웃
-      if showFullScreen {
+      if state.iPadShowFullScreen {
         fullScreenView
           .transition(.opacity)
       }
@@ -78,7 +77,7 @@ struct iPadVideoView: View {
     .animation(.spring(response: 0.3, dampingFraction: 0.7), value: state.showSpeedSheet)
     .toolbarTitleDisplayMode(.inline)
     .toolbar {
-      if !showFullScreen {
+      if !state.iPadShowFullScreen {
         ToolbarLeadingBackButton(icon: .chevron)
         ToolbarCenterTitle(text: videoTitle)
       }
@@ -119,7 +118,7 @@ struct iPadVideoView: View {
           onDrawingAction: onCaptureFrame,
           onFullscreenToggle: {
             withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-              showFullScreen.toggle()
+              state.iPadShowFullScreen.toggle()
             }
           },
           onToggleFeedbackPanel: {},
@@ -128,9 +127,9 @@ struct iPadVideoView: View {
           },
           onDragEnded: { value in
             // iPad: 위로 드래그(-80 이하)하면 전체화면
-            if !showFullScreen && value.translation.height < -80 {
+            if !state.iPadShowFullScreen && value.translation.height < -80 {
               withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                showFullScreen = true
+                state.iPadShowFullScreen = true
               }
             }
 
@@ -178,7 +177,7 @@ struct iPadVideoView: View {
           onDrawingAction: onCaptureFrame,
           onFullscreenToggle: {
             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-              showFullScreen.toggle()
+              state.iPadShowFullScreen.toggle()
             }
           },
           onToggleFeedbackPanel: {},
@@ -187,9 +186,9 @@ struct iPadVideoView: View {
           },
           onDragEnded: { value in
             // iPad: 위로 드래그(-80 이하)하면 전체화면
-            if !showFullScreen && value.translation.height < -80 {
+            if !state.iPadShowFullScreen && value.translation.height < -80 {
               withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                showFullScreen = true
+                state.iPadShowFullScreen = true
               }
             }
 
@@ -235,7 +234,7 @@ struct iPadVideoView: View {
         onDrawingAction: onCaptureFrame,
         onFullscreenToggle: {
           withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-            showFullScreen.toggle()
+            state.iPadShowFullScreen.toggle()
           }
         },
         onToggleFeedbackPanel: {},
@@ -246,7 +245,7 @@ struct iPadVideoView: View {
           // 전체화면에서 아래로 드래그(80 이상)하면 나가기
           if value.translation.height > 80 {
             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-              showFullScreen = false
+              state.iPadShowFullScreen = false
             }
           }
 

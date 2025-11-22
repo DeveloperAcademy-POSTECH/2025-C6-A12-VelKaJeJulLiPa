@@ -28,6 +28,7 @@ final class VideoViewState {
   // MARK: - Orientation
   var forceShowLandscape: Bool = false // 전체 화면 버튼으로 가는 가로모드
   var showFeedbackPanel: Bool = false
+  var iPadShowFullScreen: Bool = false // iPad 전체화면 상태
   var dragOffset: CGFloat = 0
   
   // MARK: - Drawing
