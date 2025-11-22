@@ -23,9 +23,17 @@ struct VideoPlayerContainer: View {
   let onDragChanged: ((DragGesture.Value) -> Void)?
   let onDragEnded: ((DragGesture.Value) -> Void)?
   
-  private var isIPad: Bool {
+  var isIPad: Bool {
     UIDevice.current.userInterfaceIdiom == .pad
   }
+  
+  @State var zoomScale: CGFloat = 1.0 // 최종 줌 스케일
+  @State var currentZoom: CGFloat = 1.0 // 제스처 중 임시 줌
+  @State var offset: CGSize = .zero
+  @State var lastOffset: CGSize = .zero
+  @State var showZoomIndicator: Bool = false
+  @State var hasTriggeredMinHaptic: Bool = false // 최소 줌 햅틱 트리거 여부
+  @State var hasTriggeredMaxHaptic: Bool = false // 최대 줌 햅틱 트리거 여부
   
   var body: some View {
     ZStack {
@@ -37,6 +45,8 @@ struct VideoPlayerContainer: View {
             maxWidth: isLandscapeMode ? .infinity : nil,
             maxHeight: isLandscapeMode ? .infinity : nil
           )
+          .scaleEffect(zoomScale * currentZoom)
+          .offset(offset)
       } else {
         Color.black
           .aspectRatio(aspectRatio ?? 16/9, contentMode: .fit)
@@ -49,46 +59,29 @@ struct VideoPlayerContainer: View {
             self.handleTap(location: location, width: g.size.width)
           }
       }
-      .gesture(
-        DragGesture(minimumDistance: 30)
-          .onChanged { value in
-            // iPad: 양방향 모두 허용, iPhone: 방향별 제한
-            if isIPad {
-              onDragChanged?(value)
-            } else {
-              // iPhone: Landscape는 아래로만, Portrait는 위로만
-              if isLandscapeMode {
-                // 아래로 드래그 (양수)만 허용
-                if value.translation.height > 0 {
-                  onDragChanged?(value)
-                }
-              } else {
-                // 위로 드래그 (음수)만 허용
-                if value.translation.height < 0 {
-                  onDragChanged?(value)
-                }
-              }
-            }
-          }
-          .onEnded { value in
-            // iPad: 양방향 모두 허용, iPhone: 방향별 제한
-            if isIPad {
-              onDragEnded?(value)
-            } else {
-              // iPhone: 같은 방향 체크
-              if isLandscapeMode {
-                if value.translation.height > 0 {
-                  onDragEnded?(value)
-                }
-              } else {
-                if value.translation.height < 0 {
-                  onDragEnded?(value)
-                }
-              }
-            }
-          }
-      )
+      .gesture(magnificationGesture)
+      .simultaneousGesture(dragGesture)
       
+      // 줌 배율 인디케이터
+      if showZoomIndicator {
+        VStack {
+          Text(String(format: "%.1fx", zoomScale * currentZoom))
+            .font(.system(size: 16, weight: .semibold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(
+              Capsule()
+                .fill(Color.black.opacity(0.7))
+            )
+            .padding(.top, 20)
+
+          Spacer()
+        }
+        .allowsHitTesting(false)
+        .transition(.opacity)
+      }
+
       // 더블탭 Seek 인디케이터
       HStack(spacing: 0) {
         // 왼쪽 (뒤로가기)
@@ -97,8 +90,8 @@ struct VideoPlayerContainer: View {
             isForward: false,
             tapCount: vm.videoVM.leftSeekCount
           )
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.leading, isLandscapeMode ? 80 : 60)
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .padding(.leading, isLandscapeMode ? 80 : 60)
         }
 
         Spacer()
@@ -109,8 +102,8 @@ struct VideoPlayerContainer: View {
             isForward: true,
             tapCount: vm.videoVM.rightSeekCount
           )
-            .frame(maxWidth: .infinity, alignment: .trailing)
-            .padding(.trailing, isLandscapeMode ? 80 : 60)
+          .frame(maxWidth: .infinity, alignment: .trailing)
+          .padding(.trailing, isLandscapeMode ? 80 : 60)
         }
       }
       .allowsHitTesting(false)
