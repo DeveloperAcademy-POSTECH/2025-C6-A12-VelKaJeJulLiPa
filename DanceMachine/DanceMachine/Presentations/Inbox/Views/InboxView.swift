@@ -15,10 +15,20 @@ struct InboxView: View {
     ZStack {
       Color.backgroundNormal.ignoresSafeArea()
       
-      VStack(spacing: 0) {
-        if viewModel.isLoading && viewModel.inboxNotifications.isEmpty {
-          LoadingSpinner()
-            .frame(maxWidth: 28, maxHeight: 28, alignment: .center)
+      VStack {
+        if viewModel.showError {
+          ErrorStateView(
+            mainSymbol: "exclamationmark.triangle.fill",
+            message: "알림 불러오기를 실패했습니다.\n네트워크를 확인해주세요",
+          ) {
+            Task { await viewModel.refresh() }
+          }
+        } else if viewModel.isLoading && viewModel.inboxNotifications.isEmpty {
+          ScrollView{
+            ForEach(0..<4, id: \.self) { _ in
+              SkeletonInboxNotificationRow()
+            }
+          }
         } else if viewModel.inboxNotifications.isEmpty {
           GeometryReader { geometry in
             ScrollView {
@@ -68,7 +78,7 @@ struct InboxView: View {
                       )
                     }
                   }
-                  // 가져온 알림 중에 마지막 알림일 떄, 다음 알림 목록 정보 로드 트리거
+                // 가져온 알림 중에 마지막 알림일 떄, 다음 알림 목록 정보 로드 트리거
                   .task(id: notification.notificationId) {
                     if notification == viewModel.inboxNotifications.last {
                       await viewModel.loadNotifications()
@@ -77,15 +87,15 @@ struct InboxView: View {
               }
             }
           }
+          .overlay(alignment: .bottom) {
+            if viewModel.isPaginationLoading {
+              LoadingSpinner()
+                .frame(width: 28, height: 28)
+                .padding(.bottom, 19)
+            }
+          }
           .refreshable {
             await viewModel.refresh()
-          }
-          
-          if !viewModel.isRefreshing && viewModel.isLoading {
-            LoadingSpinner()
-              .frame(maxWidth: 28, maxHeight: 28, alignment: .center)
-              .padding(.top, 7)
-              .padding(.bottom, 19)
           }
         }
       }

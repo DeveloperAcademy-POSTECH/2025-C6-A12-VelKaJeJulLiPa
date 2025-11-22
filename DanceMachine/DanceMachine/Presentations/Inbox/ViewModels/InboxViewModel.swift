@@ -16,22 +16,33 @@ final class InboxViewModel: ObservableObject {
   @Published var inboxNotifications: [InboxNotification] = []
   @Published var isLoading = false
   @Published var isRefreshing = false
+  @Published var isPaginationLoading = false
+  @Published var showError = false
   
   private var lastDocument: DocumentSnapshot? = nil
   private var canLoadMore = true
   
   // MARK: - Public Methods
   func loadNotifications(reset: Bool = false) async {
-    guard !isLoading else { return }
+    // 이미 로딩 중이면 무시
+    if isLoading || isPaginationLoading { return }
     
+    // 로딩 상태 설정
     if reset {
+      isLoading = true
       prepareForInitialLoad()
-    } else if !canLoadMore {
-      return
+    } else {
+      if !canLoadMore { return }
+      isPaginationLoading = true
     }
     
-    isLoading = true
-    defer { isLoading = false }
+    defer {
+      if reset {
+        isLoading = false
+      } else {
+        isPaginationLoading = false
+      }
+    }
     
     do {
       let userId = FirebaseAuthManager.shared.userInfo?.userId ?? ""
@@ -46,7 +57,10 @@ final class InboxViewModel: ObservableObject {
       
       try await appendInboxNotifications(from: fetched, reset: reset)
       try await NotificationManager.shared.refreshBadge(for: userId)
+      
+      showError = false
     } catch {
+      showError = true
       print("❌ Failed to load notifications: \(error)")
     }
   }
