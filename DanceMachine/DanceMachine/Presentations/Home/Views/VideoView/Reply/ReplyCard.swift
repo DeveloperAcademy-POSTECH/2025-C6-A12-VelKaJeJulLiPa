@@ -20,37 +20,22 @@ struct ReplyCard: View {
   @State private var showMenu: Bool = false
   
   var body: some View {
-    ZStack(alignment: .topTrailing) {
-      HStack(alignment: .top, spacing: 8) {
-        Image(systemName: "arrowshape.turn.up.right")
-          .font(.system(size: 14))
-          .rotationEffect(.degrees(180))
-          .scaleEffect(x: -1, y: 1)
-          .foregroundStyle(.labelNormal)
-        VStack(alignment: .leading, spacing: 12) {
-          topRow
-          taggedUserRow
-          replyButton
-        }
-        Spacer()
+    HStack(alignment: .top, spacing: 8) {
+      Image(systemName: "arrowshape.turn.up.right")
+        .font(.system(size: 14))
+        .rotationEffect(.degrees(180))
+        .scaleEffect(x: -1, y: 1)
+        .foregroundStyle(.labelNormal)
+      VStack(alignment: .leading, spacing: 12) {
+        topRow
+        taggedUserRow
+        replyButton
       }
-      .frame(maxWidth: .infinity)
-      .padding(.vertical, 10)
-      .padding(.horizontal, 25)
-
-      Menu {
-        contextRow
-      } label: {
-        Image(systemName: "ellipsis")
-          .font(.system(size: 14))
-          .foregroundStyle(.labelStrong)
-      }
-      .frame(width: 22, height: 22)
-      .contentShape(Rectangle())
-      .tint(Color.accentRedStrong)
-      .padding(.horizontal, 25)
-      .padding(.top, 10)
+      Spacer()
     }
+    .frame(maxWidth: .infinity)
+    .padding(.vertical, 10)
+    .padding(.horizontal, 25)
     .contentShape(Rectangle())
     .onLongPressGesture(perform: {
       showMenu.toggle()
@@ -75,6 +60,20 @@ struct ReplyCard: View {
           .foregroundStyle(.labelAssitive)
       }
       Spacer()
+    }
+    .overlay(alignment: .trailing) {
+      Menu {
+        contextRow
+      } label: {
+        Image(systemName: "ellipsis")
+          .font(.system(size: 14))
+          .foregroundStyle(.labelStrong)
+          .frame(width: 22, height: 22)
+      }
+      .frame(width: 44, height: 44)
+      .contentShape(Rectangle())
+      .offset(x: 11)  // 터치 영역 확장으로 인한 오른쪽 offset
+      .tint(Color.accentRedStrong)
     }
   }
   

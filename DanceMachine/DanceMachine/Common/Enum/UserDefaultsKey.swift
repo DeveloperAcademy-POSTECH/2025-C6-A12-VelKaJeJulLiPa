@@ -10,4 +10,5 @@ import Foundation
 enum UserDefaultsKey: String, CaseIterable {
   case hasLaunchedBefore = "hasLaunchedBefore"
   case fcmToken = "fcmToken"
+  case didCompleteAuthFlow = "didCompleteAuthFlow"
 }

@@ -25,3 +25,16 @@ struct OnboardingView: View {
   OnboardingView()
     .environmentObject(AuthRouter())
 }
+
+
+// OnBoardingView (Auth Router) 에서 스와이프해서 이전 화면으로 이동 방지
+struct DisableSwipeBackGesture: UIViewControllerRepresentable {
+    func makeUIViewController(context: Context) -> UIViewController {
+        let controller = UIViewController()
+        DispatchQueue.main.async {
+            controller.navigationController?.interactivePopGestureRecognizer?.isEnabled = false
+        }
+        return controller
+    }
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
+}

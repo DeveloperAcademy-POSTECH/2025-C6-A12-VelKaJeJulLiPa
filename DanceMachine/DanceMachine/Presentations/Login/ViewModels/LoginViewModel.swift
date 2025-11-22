@@ -13,24 +13,25 @@ import FirebaseAuth
 
 final class LoginViewModel: ObservableObject {
   @Published var isLoading = false
+  @Published var isNewUser = false
+  @Published var showError = false
   
   /// 애플 로그인을 담담하는 메서드
   /// - SigninwithAppleHelper 파일에서 소셜 로그인 플로우를 담당
-  /// - 애플에서 제공해주는 사용자 정보로 Firebase Authentication 연동
-  /// - 사용자 정보 DB에 저장 (재로그인시, 최근 로그인 시점을 함께 저장)
-  func signInApple() async {
+  /// - 애플에서 제공해주는 사용자 정보로 Firebase Authentication 계정 생성
+  /// - DB에 사용자 정보가 있으면, 사용자 정보를 세팅하고 authenticated 상태로 전환
+  /// - DB에 사용자 정보가 없으면, 신규 회원이므로, 이용약관으로 화면 이동
+  func signInApple() async throws {
     isLoading = true
     FirebaseAuthManager.shared.isSigningIn = true
     
-    defer {
-      isLoading = false
-      FirebaseAuthManager.shared.isSigningIn = false
-    }
+    defer { isLoading = false }
     
     do {
       let helper = SignInAppleHelper()
       let tokens = try await helper.startSignInWithAppleFlow()
       let authDataResult = try await FirebaseAuthManager.shared.signInWithApple(tokens: tokens)
+      FirebaseAuthManager.shared.user = Auth.auth().currentUser
       
       let fcmToken = UserDefaults.standard.string(forKey: UserDefaultsKey.fcmToken.rawValue) ?? "Unknown"
       
@@ -43,8 +44,9 @@ final class LoginViewModel: ObservableObject {
                       termsAgreed: true,
                       privacyAgreed: true)
       
-      
-      if let existingUser: User = try? await FirestoreManager.shared.get(user.userId, from: .users) {
+      let existingUser: User? = try? await FirestoreManager.shared.get(user.userId, from: .users)
+      if existingUser != nil {
+        isNewUser = false
         try await FirestoreManager.shared.updateFields(
           collection: .users,
           documentId: user.userId,
@@ -53,18 +55,17 @@ final class LoginViewModel: ObservableObject {
         let userInfo: User = try await FirestoreManager.shared.get(user.userId, from: .users)
         try await FirestoreManager.shared.updateUserLastLogin(userInfo)
         FirebaseAuthManager.shared.userInfo = userInfo
-        FirebaseAuthManager.shared.needsNameSetting = false
+        FirebaseAuthManager.shared.didCompleteAuthFlow = true
+        FirebaseAuthManager.shared.isSigningIn = false
+        FirebaseAuthManager.shared.authenticationState = .authenticated
       } else {
-        try await FirestoreManager.shared.createUser(user)
         FirebaseAuthManager.shared.userInfo = user
-        FirebaseAuthManager.shared.needsNameSetting = true
+        isNewUser = true
       }
-      
-      FirebaseAuthManager.shared.authenticationState = .authenticated
-      try await NotificationManager.shared.refreshBadge(for: user.userId)
       print("signInApple done with authenticationState updated")
     } catch {
-      print("signInApple error: \(error.localizedDescription)")
+      showError = true
+      throw error
     }
   }
 }

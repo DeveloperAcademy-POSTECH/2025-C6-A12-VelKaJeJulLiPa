@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import MessageUI
 
 struct CreateReportView: View {
   @Environment(\.dismiss) private var dismiss
@@ -27,15 +28,13 @@ struct CreateReportView: View {
   var toastReceiveView: ReportToastReceiveViewType
   
   var maxLength: Int = 100 // 최대 글자수
-  var isInvalid: Bool { description.count == maxLength ? true : false }
+  var isInvalid: Bool { description.count == maxLength }
   var inputHelperText: String {
     isInvalid ? "100자 미만으로 입력해주세요." : "\(description.count)/\(maxLength)"
   }
   
   let username = FirebaseAuthManager.shared.userInfo?.name ?? "Unknown"
-  var subject: String {
-    return "[신고] - \(username)님의 신고"
-  }
+  var subject: String { "[신고] - \(username)님의 신고" }
   var targetContentId: String {
     switch reportContentType {
     case .feedback:
@@ -46,20 +45,21 @@ struct CreateReportView: View {
       return video?.id ?? ""
     }
   }
+  
   var mailBody: String {
-                                """
-                                신고자 정보
-                                • 사용자 ID: \(FirebaseAuthManager.shared.userInfo?.userId ?? "Unknown")
-                                • 이메일: \(FirebaseAuthManager.shared.userInfo?.email ?? "이메일을 입력해주세요")
-                                
-                                신고정보
-                                • 신고유형: \(reportContentType.rawValue)
-                                • 콘텐츠 ID: \(targetContentId)                          
-                                • 신고 사유: \(description)
-                                """
+    """
+    신고자 정보
+    • 사용자 ID: \(FirebaseAuthManager.shared.userInfo?.userId ?? "Unknown")
+    • 이메일: \(FirebaseAuthManager.shared.userInfo?.email ?? "이메일을 입력해주세요")
+    
+    신고정보
+    • 신고유형: \(reportContentType.rawValue)
+    • 콘텐츠 ID: \(targetContentId)
+    • 신고 사유: \(description)
+    """
   }
   
-  
+  // MARK: - Body
   var body: some View {
     VStack(spacing: 0) {
       Text("신고 사유를 작성해주세요.")
@@ -72,7 +72,6 @@ struct CreateReportView: View {
         .padding(.horizontal, 16)
       
       Spacer().frame(height: 16)
-
       Text(inputHelperText)
         .font(.headline2Medium)
         .foregroundStyle(isInvalid ? Color.accentRedNormal : Color.secondaryNormal)
@@ -89,30 +88,8 @@ struct CreateReportView: View {
       isPresented: $showMailSheet,
       onDismiss: {
         if showMailSendFailedAlert { return }
-        
         if needToCreateReport {
-          Task {
-            do {
-              try await viewModel.createReport(
-                reportedId: reportedId,
-                video: video,
-                feedback: feedback,
-                reply: reply,
-                type: ReportType.other,
-                reportContentType: reportContentType,
-                description: description
-              )
-              
-              NotificationCenter.default.post(
-                name: .showCreateReportSuccessToast,
-                object: nil,
-                userInfo: ["toastViewName": toastReceiveView]
-              )
-              
-            } catch {
-              showCreateReportFailedAlert = true
-            }
-          }
+          submitReport()
         }
         dismiss()
       },
@@ -128,7 +105,7 @@ struct CreateReportView: View {
     .toolbar {
       ToolbarLeadingBackButton(icon: .xmark) {
         if !description.isEmpty {
-          self.showExitAlert = true
+          showExitAlert = true
         } else {
           dismiss()
         }
@@ -143,37 +120,66 @@ struct CreateReportView: View {
       }
     )
     .alert(
-        "신고 메일을 보내는데 실패했습니다.",
-        isPresented: $showMailSendFailedAlert
+      "신고 메일을 보내는데 실패했습니다.",
+      isPresented: $showMailSendFailedAlert
     ) {
-        Button("확인", role: .cancel) {}
+      Button("확인", role: .cancel) {}
     } message: {
-        Text("잠시 후 다시 시도해주세요.")
+      Text("잠시 후 다시 시도해주세요.")
     }
     .alert(
-        "신고 정보를 서버에 저장하는데 실패했습니다.",
-        isPresented: $showCreateReportFailedAlert
+      "신고 정보를 서버에 저장하는데 실패했습니다.",
+      isPresented: $showCreateReportFailedAlert
     ) {
-        Button("확인", role: .cancel) {}
+      Button("확인", role: .cancel) {}
     } message: {
-        Text("잠시 후 다시 시도해주세요.")
+      Text("잠시 후 다시 시도해주세요.")
     }
   }
 
-  
   // MARK: - 하단 신고하기 버튼 뷰
   private var bottomButtonView: some View {
     ActionButton(
       title: "확인",
       color: description.isEmpty ? Color.fillAssitive : Color.secondaryStrong,
       height: 47,
-      isEnabled: description.isEmpty ? false : true
+      isEnabled: !description.isEmpty
     ) {
-      showMailSheet = true
+      if MFMailComposeViewController.canSendMail() {
+        showMailSheet = true
+      } else {
+        submitReport()
+      }
+    }
+  }
+
+  // MARK: - 신고 저장하기
+  private func submitReport() {
+    Task {
+      do {
+        try await viewModel.createReport(
+          reportedId: reportedId,
+          video: video,
+          feedback: feedback,
+          reply: reply,
+          type: ReportType.other,
+          reportContentType: reportContentType,
+          description: description
+        )
+        
+        NotificationCenter.default.post(
+          name: .showCreateReportSuccessToast,
+          object: nil,
+          userInfo: ["toastViewName": toastReceiveView]
+        )
+        
+        dismiss()
+      } catch {
+        showCreateReportFailedAlert = true
+      }
     }
   }
 }
-
 
 #Preview {
   @Previewable let video = Video(
@@ -186,7 +192,12 @@ struct CreateReportView: View {
   )
   
   NavigationStack {
-    CreateReportView(reportedId: "", reportContentType: .video, video: video, toastReceiveView: ReportToastReceiveViewType.videoListView)
+    CreateReportView(
+      reportedId: "",
+      reportContentType: .video,
+      video: video,
+      toastReceiveView: ReportToastReceiveViewType.videoListView
+    )
   }
 }
 
@@ -200,7 +211,6 @@ struct MultilineTextField: View {
   
   var body: some View {
     ZStack {
-      // MARK: - 텍스트필드
       TextField(
         text.isEmpty && !isFocused ? "신고 사유를 입력해주세요." : "",
         text: $text,
@@ -213,14 +223,10 @@ struct MultilineTextField: View {
       .lineSpacing(8)
       .padding(.all, 16)
       .focused($isFocused)
-      .onChange(of: text) { oldValue, newValue in
+      .onChange(of: text) { _, newValue in
         let updated = newValue.sanitized(limit: maxLength)
-        if updated != text {
-          text = updated
-        }
+        if updated != text { text = updated }
       }
-      
-      // MARK: - 텍스트필드 배경 + border
       .background(
         RoundedRectangle(cornerRadius: cornerRadius)
           .fill(Color.fillStrong)
@@ -228,47 +234,21 @@ struct MultilineTextField: View {
             RoundedRectangle(cornerRadius: cornerRadius)
               .stroke(
                 text.count >= maxLength ? Color.accentRedNormal : Color.secondaryStrong,
-                lineWidth: isFocused ? 1 : 0)
+                lineWidth: isFocused ? 1 : 0
+              )
           )
       )
-      
-      // MARK: - 텍스트필드 초기화 버튼
       .overlay(alignment: .bottomTrailing) {
         if !text.isEmpty {
           Button {
             text = ""
           } label: {
             Image(systemName: "xmark.circle.fill")
-              .frame(width: 44,   height: 44)
+              .frame(width: 44, height: 44)
               .foregroundStyle(Color.labelNormal)
           }
         }
       }
-      
-      //FIXME: 텍스트 필드 내부 글자수 인디케이터 - 디자인 논의 후 처리하기
-      //      .overlay(alignment: .bottom) {
-      //        ZStack {
-      //          Text("\(text.count)/\(maxLength)")
-      //            .font(.headline2Medium)
-      //            .foregroundStyle(Color.secondaryStrong)
-      //
-      //          HStack {
-      //            Spacer()
-      //            if !text.isEmpty {
-      //              Button {
-      //                text = ""
-      //              } label: {
-      //                Image(systemName: "xmark.circle.fill")
-      //                  .font(.system(size: 16))
-      //                  .foregroundStyle(Color.labelNormal)
-      //              }
-      //              .frame(width: 44, height: 44)
-      //            }
-      //          }
-      //        }
-      //        .frame(maxWidth: .infinity)
-      //      }
-      
     }
   }
 }

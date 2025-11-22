@@ -1,11 +1,11 @@
 {
   "images" : [
     {
+      "filename" : "partEdit.pdf",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "appIcon.png",
       "idiom" : "universal",
       "scale" : "2x"
     },

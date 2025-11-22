@@ -155,7 +155,7 @@ actor ListDataCacheManager {
 
       // 캐시 만료 확인 (5분 = 300초)
       let cacheAge = Date().timeIntervalSince(data.lastUpdated)
-      let cacheExpirationTime: TimeInterval = 300 // 5분
+      let cacheExpirationTime: TimeInterval = 1800 // 30분으로 변경
 
       if cacheAge > cacheExpirationTime {
         print("캐시 만료됨: \(tracksId) - 마지막 업데이트: \(Int(cacheAge))초 전")

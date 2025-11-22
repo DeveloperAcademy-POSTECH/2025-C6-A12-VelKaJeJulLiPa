@@ -13,10 +13,8 @@ struct SectionEditRow: View {
   let section: Section
   let isEditing: Bool
   let onEditStart: () -> Void
-  let sheetAction: () -> Void
   let onDeleteIfEmpty: () -> Void
-  
-  @State private var showDeleteModal: Bool = false
+
   @Binding var editText: String
   @Binding var showToast: Bool
   @FocusState private var isFocused: Bool
@@ -29,16 +27,6 @@ struct SectionEditRow: View {
       .overlay {
         sectionRow
       }
-      .alert(
-        "\(section.sectionTitle)파트를 삭제하시겠어요?",
-        isPresented: $showDeleteModal) {
-          Button("취소", role: .cancel) {}
-          Button("삭제", role: .destructive) {
-            sheetAction()
-          }
-        } message: {
-          Text("삭제하면 복구할 수 없습니다.")
-        }
   }
   
   private var sectionRow: some View {
@@ -91,20 +79,6 @@ struct SectionEditRow: View {
           .font(.headline2Medium)
           .foregroundStyle(.labelStrong)
         Spacer()
-        Button {
-          onEditStart()
-        } label: {
-          Text("수정")
-            .font(.headline2Medium)
-            .foregroundStyle(.accentBlueNormal)
-        }
-        Button {
-          self.showDeleteModal = true
-        } label: {
-          Text("삭제")
-            .font(.headline2Medium)
-            .foregroundStyle(.accentRedNormal)
-        }
       }
     }
     .padding(.horizontal, 16)
@@ -117,7 +91,6 @@ struct SectionEditRow: View {
     section: Section(sectionId: "", sectionTitle: "dd"),
     isEditing: true,
     onEditStart: {},
-    sheetAction: {},
     onDeleteIfEmpty: {},
     editText: .constant("dd"), showToast: .constant(true)
   )

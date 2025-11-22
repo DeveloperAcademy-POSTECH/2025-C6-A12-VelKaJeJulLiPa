@@ -19,6 +19,7 @@ struct FeedbackListView: View {
 
   let filteredFeedbacks: [Feedback]
   let userId: String
+  let videoId: String
 
   // 가로모드 네비게이션용 콜백
   var onFeedbackNavigate: ((Feedback) -> Void)? = nil
@@ -154,6 +155,9 @@ struct FeedbackListView: View {
           }
         }
       }
+    }
+    .refreshable {
+      Task { try await vm.feedbackVM.loadFeedbacks(for: videoId) }
     }
     .scrollIndicators(.hidden)
   }

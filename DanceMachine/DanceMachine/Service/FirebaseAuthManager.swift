@@ -21,11 +21,11 @@ final class FirebaseAuthManager: ObservableObject {
   private let firebaseAuth = Auth.auth()
   
   @AppStorage(UserDefaultsKey.hasLaunchedBefore.rawValue) var hasLaunchedBefore: Bool = false
+  @AppStorage(UserDefaultsKey.didCompleteAuthFlow.rawValue) var didCompleteAuthFlow = false
   
   @Published var user: FirebaseAuth.User?
   @Published var userInfo: User?
   @Published var authenticationState: AuthenticationState = .unauthenticated
-  @Published var needsNameSetting: Bool = false
   
   private var authStateHandler: AuthStateDidChangeListenerHandle?
   private var currentNonce: String?
@@ -37,18 +37,21 @@ final class FirebaseAuthManager: ObservableObject {
   private init() {
     // 앱을 다시 다운로드했는데, 자동으로 로그인되지 않게 하기 위한 로그아웃
     if !hasLaunchedBefore {
-      Task {
-        do {
-          try firebaseAuth.signOut()
-        }
-      }
+      Task { try firebaseAuth.signOut() }
       hasLaunchedBefore = true
     }
     
-    // 현재 사용자 인증 상태 확인 + 사용자 데이터 가져오기
+    // 현재 사용자 인증 상태 확인
     if let user = firebaseAuth.currentUser {
-      self.user = user
-      self.authenticationState = .authenticated
+      if !didCompleteAuthFlow {
+        // 로그인 플로우가 완료하지 않았는데 currentUser가 있는 상태 → 비정상 로그인 -> 로그아웃
+        Task { try? firebaseAuth.signOut() }
+        self.authenticationState = .unauthenticated
+      } else {
+        // 정상 로그인 완료된 상태
+        self.user = user
+        self.authenticationState = .authenticated
+      }
     } else {
       self.authenticationState = .unauthenticated
     }
@@ -71,10 +74,16 @@ final class FirebaseAuthManager: ObservableObject {
       } else {
         print("user == nil 이어서 userInfo 도 nil 로 세팅됨")
         self.userInfo = nil
-        self.needsNameSetting = false
         self.authenticationState = .unauthenticated
       }
     }
+  }
+  
+  
+  func completeAuthFlow() {
+    self.isSigningIn = false
+    self.didCompleteAuthFlow = true
+    self.authenticationState = .authenticated
   }
   
   
@@ -87,10 +96,8 @@ final class FirebaseAuthManager: ObservableObject {
     do {
       if let user: User = try await FirestoreManager.shared.get(uid, from: .users) {
         self.userInfo = user
-        self.needsNameSetting = false
       } else {
         self.userInfo = nil
-        self.needsNameSetting = true
       }
     } catch {
       self.authenticationState = .unauthenticated
@@ -136,7 +143,7 @@ final class FirebaseAuthManager: ObservableObject {
   func displayName(from fullName: String?, locale: Locale = .current) -> String {
     guard let fullName = fullName,
           let nameComponents = PersonNameComponentsFormatter().personNameComponents(from: fullName) else {
-      return "Unknown"
+      return ""
     }
     
     let formatter = PersonNameComponentsFormatter()
@@ -166,6 +173,10 @@ final class FirebaseAuthManager: ObservableObject {
     
     //Firebase 로그아웃
     try firebaseAuth.signOut()
+    
+    //로그인 플로우 초기화
+    didCompleteAuthFlow = false
+    
     print("✅ Firebase 로그아웃 완료, currentUser: \(String(describing: firebaseAuth.currentUser))")
   }
   
@@ -250,6 +261,9 @@ final class FirebaseAuthManager: ObservableObject {
       }
       
       try await group.waitForAll()
+      
+      //로그인 플로우 초기화
+      didCompleteAuthFlow = false
     }
   }
 }

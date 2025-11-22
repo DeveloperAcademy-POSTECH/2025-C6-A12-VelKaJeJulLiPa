@@ -83,7 +83,7 @@ struct FeedbackButtons: View {
           Text(landScape ? "구간" : "구간 피드백")
             .font(.headline1Medium)
             .foregroundStyle(.primitiveButton)
-          Image(.feedbackButtons)
+          Image(.feedbackButton)
             .foregroundStyle(.primitiveButton)
         }
       }
