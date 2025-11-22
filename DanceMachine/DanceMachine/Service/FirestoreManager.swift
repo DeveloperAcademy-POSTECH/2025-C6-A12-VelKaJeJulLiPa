@@ -125,7 +125,7 @@ final class FirestoreManager {
     asDictionary: [String: Any]
   ) async throws {
     var asDictionary = asDictionary
-    asDictionary[WriteStrategy.userStrategy.rawValue] = FieldValue.serverTimestamp() // 업데이트 시간을 포함
+    asDictionary[WriteStrategy.userStrategy.rawValue] = FieldValue.serverTimestamp() // 마지막 로그인 시점 시간을 포함
     
     try await db
       .collection(collection.rawValue)
