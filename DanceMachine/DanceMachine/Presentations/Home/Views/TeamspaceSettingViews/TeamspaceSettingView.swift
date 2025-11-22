@@ -197,7 +197,7 @@ struct TeamspaceSettingView: View {
       if viewModel.dataState.teamspaceRole == .owner,
          user.userId != viewModel.currentTeamspace?.ownerId {
         
-        Button {
+        let baseButton = Button {
           viewModel.teamspaceSettingPresentationState.selectedUserForRemoval = user
           viewModel.teamspaceSettingPresentationState.isPresentingMemberManagementSheet = true
         } label: {
@@ -211,9 +211,21 @@ struct TeamspaceSettingView: View {
           }
           .frame(width: 44, height: 44)
         }
-        .buttonStyle(.plain)
-        .contentShape(Rectangle())
+          .buttonStyle(.plain)
+          .contentShape(Rectangle())
         
+        if #available(iOS 26.0, *) {
+          baseButton
+        } else {
+          baseButton
+            .simultaneousGesture(
+              TapGesture()
+                .onEnded {
+                  viewModel.teamspaceSettingPresentationState.selectedUserForRemoval = user
+                  viewModel.teamspaceSettingPresentationState.isPresentingMemberManagementSheet = true
+                }
+            )
+        }
       } else {
         EmptyView()
       }
