@@ -38,31 +38,31 @@ struct ProjectListView: View {
   // 곡 수정 권한 체크
   private func canCurrentUserEdit(track: Tracks) -> Bool {
     guard let currentUserId = homeViewModel.currentUserId else { return false }
-
+    
     let ownerId = homeViewModel.currentTeamspace?.ownerId
     let creatorId = track.creatorId
-
+    
     return ownerId == currentUserId || creatorId == currentUserId
   }
   
   /// 프로젝트 삭제 권한 판별 변수 (삭제 Alert에서 사용)
   private var canCurrentUserDeletePendingProject: Bool {
     guard let currentUserId = homeViewModel.currentUserId else { return false }
-
+    
     let ownerId = homeViewModel.currentTeamspace?.ownerId
     let creatorId = projectListViewModel.presentationState
       .pendingDeleteProject?.creatorId ?? ""
-
+    
     return ownerId == currentUserId || creatorId == currentUserId
   }
-
+  
   /// 프로젝트 수정/삭제 권한 체크 (row/스와이프에서 사용)
   private func canCurrentUserEdit(project: Project) -> Bool {
     guard let currentUserId = homeViewModel.currentUserId else { return false }
-
+    
     let ownerId = homeViewModel.currentTeamspace?.ownerId
     let creatorId = project.creatorId
-
+    
     return ownerId == currentUserId || creatorId == currentUserId
   }
   
@@ -93,16 +93,16 @@ struct ProjectListView: View {
     }
     .task { await projectListViewModel.onAppear(cacheStore: cacheStore) }
     .projectListModals(
-        homeViewModel: homeViewModel,
-        projectListViewModel: projectListViewModel,
-        tracksViewModel: $tracksViewModel,
-        failDeleteTrack: $failDeleteTrack,
-        failEditTrack: $failEditTrack,
-        failDeleteProject: $failDeleteProject,
-        failEditProject: $failEditProject,
-        canDeletePendingTrack: { canCurrentUserDeletePendingTrack },
-        canDeletePendingProject: { canCurrentUserDeletePendingProject }
-      )
+      homeViewModel: homeViewModel,
+      projectListViewModel: projectListViewModel,
+      tracksViewModel: $tracksViewModel,
+      failDeleteTrack: $failDeleteTrack,
+      failEditTrack: $failEditTrack,
+      failDeleteProject: $failDeleteProject,
+      failEditProject: $failEditProject,
+      canDeletePendingTrack: { canCurrentUserDeletePendingTrack },
+      canDeletePendingProject: { canCurrentUserDeletePendingProject }
+    )
     // 곡 삭제 Alert
     .alert(
       "\(tracksViewModel?.alertState.pendingDeleteTrack?.trackName ?? "") 곡을 삭제하시겠어요?",
@@ -361,11 +361,15 @@ struct ProjectListView: View {
     isLoading: Bool,
     errorText: String?
   ) -> some View {
-    ZStack {
+    
+    // 빈 상태인지
+    let isEmptyTracks = !hasTracks && !isLoading && errorText == nil
+    
+    return ZStack {
       Color.fillNormal
       
       TrackAddButtonRow(
-        isEmptyTracks: !hasTracks && !isLoading && errorText == nil
+        isEmptyTracks: isEmptyTracks
       ) {
         tracksVM.alertState.presentingCreateTrackSheet = true
       }
@@ -378,8 +382,8 @@ struct ProjectListView: View {
     .clipShape(
       UnevenRoundedRectangle(
         topLeadingRadius: 15,
-        bottomLeadingRadius: (hasTracks || isLoading || errorText != nil) ? 0 : 15,
-        bottomTrailingRadius: (hasTracks || isLoading || errorText != nil) ? 0 : 15,
+        bottomLeadingRadius: (hasTracks || isLoading || errorText != nil || isEmptyTracks) ? 0 : 15,
+        bottomTrailingRadius: (hasTracks || isLoading || errorText != nil || isEmptyTracks) ? 0 : 15,
         topTrailingRadius: 15
       )
     )
@@ -441,14 +445,46 @@ struct ProjectListView: View {
     _ tracks: [Tracks],
     tracksVM: TracksListViewModel
   ) -> some View {
-    ForEach(Array(tracks.enumerated()), id: \.element.tracksId) { index, track in
-      trackRow(
-        track,
-        index: index,
-        totalCount: tracks.count,
-        tracksVM: tracksVM
-      )
+    // 트랙이 비어져있는 경우
+    if tracks.isEmpty {
+      emptyTracksRow()
+    } else {
+      ForEach(Array(tracks.enumerated()), id: \.element.tracksId) { index, track in
+        trackRow(
+          track,
+          index: index,
+          totalCount: tracks.count,
+          tracksVM: tracksVM
+        )
+      }
     }
+  }
+  
+  // MARK: - 빈 트랙 row (리스트 row 느낌으로 자연스럽게)
+  private func emptyTracksRow() -> some View {
+    ZStack {
+      Color.fillNormal
+      
+      HStack {
+        Spacer()
+        Text("곡이 없습니다. 추가해 보세요")
+          .font(.headline2Medium)
+          .foregroundStyle(Color.labelAssitive)
+        Spacer()
+      }
+      .padding(.bottom, 4)
+    }
+    .listRowInsets(.init(top: 0, leading: 40, bottom: 0, trailing: 22))
+    .listRowSeparator(.hidden)
+    .listRowBackground(Color.clear)
+    .clipShape(
+      UnevenRoundedRectangle(
+        topLeadingRadius: 0,
+        bottomLeadingRadius: 15,
+        bottomTrailingRadius: 15,
+        topTrailingRadius: 0
+      )
+    )
   }
   
   // MARK: - 트랙 개별 row
