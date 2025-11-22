@@ -9,6 +9,7 @@ import Foundation
 import Combine
 import AuthenticationServices
 import FirebaseAuth
+import FirebaseFirestore
 
 
 final class LoginViewModel: ObservableObject {
@@ -47,13 +48,15 @@ final class LoginViewModel: ObservableObject {
       let existingUser: User? = try? await FirestoreManager.shared.get(user.userId, from: .users)
       if existingUser != nil {
         isNewUser = false
-        try await FirestoreManager.shared.updateFields(
+        try await FirestoreManager.shared.updateLastLoginFields(
           collection: .users,
           documentId: user.userId,
-          asDictionary: [User.CodingKeys.fcmToken.rawValue: fcmToken]
+          asDictionary: [
+            User.CodingKeys.fcmToken.rawValue: fcmToken,
+            User.CodingKeys.updatedAt.rawValue: FieldValue.serverTimestamp()
+          ]
         )
         let userInfo: User = try await FirestoreManager.shared.get(user.userId, from: .users)
-        try await FirestoreManager.shared.updateUserLastLogin(userInfo)
         FirebaseAuthManager.shared.userInfo = userInfo
         FirebaseAuthManager.shared.didCompleteAuthFlow = true
         FirebaseAuthManager.shared.isSigningIn = false
