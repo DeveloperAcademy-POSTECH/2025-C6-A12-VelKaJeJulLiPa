@@ -66,6 +66,7 @@ struct DanceMachineApp: App {
             .environmentObject(inviteRouter)
             .transition(.move(edge: .trailing))
             .environment(\.cacheStore, cacheStore)
+          
           // URL Scheme 또는 Universal Link로 들어온 경우 처리
             .onOpenURL { url in
               handleIncomingURL(url)
