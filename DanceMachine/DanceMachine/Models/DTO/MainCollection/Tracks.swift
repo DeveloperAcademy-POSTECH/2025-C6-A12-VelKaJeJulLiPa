@@ -11,7 +11,7 @@ struct Tracks: Codable {
     let tracksId: UUID
     let projectId: String
     let creatorId: String
-    let trackName: String
+    var trackName: String
 
     init(
         tracksId: UUID,

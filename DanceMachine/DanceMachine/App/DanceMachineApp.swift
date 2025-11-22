@@ -9,6 +9,7 @@ import SwiftUI
 import FirebaseCore
 import FirebaseFirestore
 import AuthenticationServices
+import SwiftData
 
 
 @main
@@ -22,11 +23,21 @@ struct DanceMachineApp: App {
   @StateObject private var authManager = FirebaseAuthManager.shared
   @StateObject private var inviteRouter = InviteRouter()
   
+  let container: ModelContainer
+  let cacheStore: CacheStore
+  
   init() {
     Task {
       await ListDataCacheManager.shared.cleanupOldCache()
       await VideoCacheManager.shared.cleanupOldCache()
     }
+    
+    let container = try! ModelContainer(
+      for: ProjectCache.self,
+      TracksCache.self
+    )
+    self.container = container
+    self.cacheStore = CacheStore(container: container)
     
     let tabBarAppearance = UITabBarAppearance()
     let itemAppearance = tabBarAppearance.stackedLayoutAppearance
@@ -54,6 +65,7 @@ struct DanceMachineApp: App {
             .environmentObject(mainRouter)
             .environmentObject(inviteRouter)
             .transition(.move(edge: .trailing))
+            .environment(\.cacheStore, cacheStore)
           
           // URL Scheme 또는 Universal Link로 들어온 경우 처리
             .onOpenURL { url in
@@ -74,6 +86,7 @@ struct DanceMachineApp: App {
                   if let pendingDeeplinkURL = AppDelegate.pendingDeeplinkURL {
                     handleIncomingURL(pendingDeeplinkURL)
                     AppDelegate.pendingDeeplinkURL = nil
+          
                   }
                   
                   if let pendingNotificationId = AppDelegate.pendingNotificationId,

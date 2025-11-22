@@ -7,25 +7,74 @@
 
 import Foundation
 
+// 프로젝트 이름 검증 결과
+struct ProjectNameValidationResult {
+  let text: String       // 실제로 사용할 텍스트
+  let overText: Bool     // 20자를 넘겨서 잘린 적이 있는지 여부
+}
+
 @Observable
 final class CreateProjectViewModel {
-    
-    var currentTeamspace: Teamspace? { FirebaseAuthManager.shared.currentTeamspace }
-    
-    /// 해당 팀스페이스의 프로젝트를 생성하는 메서드입니다.
-    /// - Parameters:
-    ///     - projectName: 프로젝트 이름 설정
-    func createProject(projectName: String) async throws {
-        do {
-            let project: Project = .init(
-                projectId: UUID(),
-                teamspaceId: self.currentTeamspace?.teamspaceId.uuidString ?? "",
-                creatorId: FirebaseAuthManager.shared.userInfo?.userId ?? "",
-                projectName: projectName
-            )
-            try await FirestoreManager.shared.create(project)
-        } catch {
-            print("error: \(error.localizedDescription)") // FIXME: - 적절한 에러 분기 처리
-        }
+  
+  var currentTeamspace: Teamspace? { FirebaseAuthManager.shared.currentTeamspace }
+  
+  /// 프로젝트 이름 입력값을 정제/검증하는 헬퍼
+   /// - Parameters:
+   ///   - oldValue: 기존 값
+   ///   - newValue: 새로 입력된 값
+   /// - Returns: 정제된 텍스트 + overText 플래그
+   func validateTeamspaceName(oldValue: String, newValue: String) -> ProjectNameValidationResult {
+     var updated = newValue
+     var overText = false
+     
+     // 1) 첫 글자 공백 막기
+     if let first = updated.first, first == " " {
+       updated = String(updated.drop(while: { $0 == " " }))
+     }
+     
+     // 2) 20자 초과 여부 체크
+     if updated.count > 20 {
+       // 기존 로직 유지
+       if updated.count == 21 {
+         overText = true
+       }
+       // 앞 20자만 유지
+       let limited = String(updated.prefix(20))
+       updated = limited
+     }
+     
+     return ProjectNameValidationResult(
+       text: updated,
+       overText: overText
+     )
+   }
+  
+  
+  /// 해당 팀스페이스의 프로젝트를 생성하는 메서드입니다.
+  /// - Parameters:
+  ///     - projectName: 프로젝트 이름 설정
+  func createProject(projectName: String) async throws {
+    do {
+      // FIXME: - batch 추가하기
+      /// 프로젝트 생성
+      let project: Project = .init(
+        projectId: UUID(),
+        teamspaceId: self.currentTeamspace?.teamspaceId.uuidString ?? "",
+        creatorId: FirebaseAuthManager.shared.userInfo?.userId ?? "",
+        projectName: projectName
+      )
+      try await FirestoreManager.shared.create(project)
+      
+      /// 팀 스페이스 updated_at 갱신
+      // TODO: 프로젝트 생성은 updated_at 갱신 완료했고, 프로젝트 수정,삭제 될 때도 갱신되게 하기
+      try await FirestoreManager.shared.updateTimestampField(
+        field: .update,
+        in: .teamspace,
+        documentId: self.currentTeamspace?.teamspaceId.uuidString ?? ""
+      )
+      
+    } catch {
+      print("error: \(error.localizedDescription)") // FIXME: - 적절한 에러 분기 처리
     }
+  }
 }

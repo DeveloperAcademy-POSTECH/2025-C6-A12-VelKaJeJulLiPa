@@ -1,0 +1,119 @@
+//
+//  ContentView.swift
+//  DanceMachine
+//
+//  Created by 김진혁 on 9/29/25.
+//
+
+import SwiftUI
+import FirebaseAuth
+import SwiftData
+
+struct HomeView: View {
+  @Environment(\.cacheStore) private var cache
+  @EnvironmentObject private var router: MainRouter
+  @EnvironmentObject private var inviteRouter: InviteRouter
+  
+  @State private var homeViewModel: HomeViewModel = .init()
+  @State private var projectListViewModel: ProjectListViewModel = .init()
+  @State private var tracksViewModel: TracksListViewModel? = nil
+  
+  //  init(viewModel: HomeViewModel? = nil) {
+  //    // 외부에서 주입 가능, 없으면 환경값으로 생성
+  //    _viewModel = State(initialValue: viewModel ?? HomeViewModel(cache: CacheStoreKey.defaultValue))
+  //  }
+  
+  fileprivate struct Layout {
+    enum CommonView {
+      static let horizontalSpacing: CGFloat = 16
+    }
+    
+    enum EmptyTeamspaceView {
+      static let imageName: String = "person.2.fill"
+      static let imageSize: CGFloat = 110
+      static let vstackSpacing: CGFloat = 10
+      static let titleText: String = "팀 스페이스를 만들어주세요."
+    }
+  }
+  
+  var body: some View {
+    ZStack {
+      Color.backgroundNormal.ignoresSafeArea()
+      
+      VStack {
+        TeamspaceTitleView(
+          viewModel: homeViewModel,
+          projectListViewModel: projectListViewModel,
+          tracksViewModel: $tracksViewModel
+        )
+        .padding(.horizontal, Layout.CommonView.horizontalSpacing)
+        
+        Spacer().frame(height: 24)
+        
+        if homeViewModel.state.teamspaceState == .empty {
+          emptyTeamspaceView
+            .padding(.horizontal, Layout.CommonView.horizontalSpacing)
+        } else {
+          ProjectListView(
+            homeViewModel: homeViewModel,
+            projectListViewModel: projectListViewModel,
+            tracksViewModel: $tracksViewModel
+          )
+        }
+      }
+    }
+    .overlay { if homeViewModel.state.isLoading { LoadingView() } }
+    .task {
+      // 알림
+      await homeViewModel.setupNotificationAuthorizationIfNeeded()
+    }
+    .task {
+      // 데이터 로딩
+      if ProcessInfo.isRunningInPreviews { return } // 프리뷰 전용
+      
+      guard FirebaseAuthManager.shared.user != nil else {
+        print("🚫 HomeView.task 중간: 로그인 상태 아님")
+        return
+      }
+      
+      homeViewModel.state.isLoading = true
+      
+      defer { homeViewModel.state.isLoading = false }
+      
+      print("🔥 HomeViewLoding...")
+      do {
+        if homeViewModel.isFirstAppear == false {
+          if homeViewModel.cacheStore == nil { homeViewModel.setCacheStore(cache) }
+          await homeViewModel.onAppear()
+        }
+        try await NotificationManager.shared.refreshBadge(for: FirebaseAuthManager.shared.user?.uid ?? "")
+      } catch {
+        
+      }
+    }
+  }
+  
+  // MARK: - 팀 스페이스가 비어져있을때 보이는 뷰
+  private var emptyTeamspaceView: some View {
+    VStack(spacing: Layout.EmptyTeamspaceView.vstackSpacing) {
+      Spacer()
+      Image(systemName: Layout.EmptyTeamspaceView.imageName)
+        .font(.system(size: Layout.EmptyTeamspaceView.imageSize))
+        .foregroundStyle(Color.fillAlternative)
+        .frame(maxWidth: .infinity)
+      Text(Layout.EmptyTeamspaceView.titleText)
+        .font(.headline2Medium)
+        .foregroundStyle(Color.labelAssitive)
+      Spacer()
+    }
+  }
+}
+
+#Preview("HomeView · 프리뷰 목 데이터") {
+  NavigationStack {
+    HomeView()
+      .environmentObject(MainRouter())
+      .environmentObject(InviteRouter())
+  }
+}
+

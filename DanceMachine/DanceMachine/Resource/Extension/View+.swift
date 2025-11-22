@@ -199,4 +199,43 @@ extension View {
         .clipShape(RoundedRectangle(cornerRadius: 1000))
     }
   }
+  
+  
+  /// 앱 공통 시트 스타일
+  /// - drag indicator: 보이게
+  /// - detent: 화면 1.0 (풀 높이)
+  /// - corner radius: 16
+  func appSheetStyle() -> some View {
+    self
+      .presentationDragIndicator(.visible)
+      .presentationDetents([.fraction(1.0)])
+      .presentationCornerRadius(16)
+  }
+  
+  
+  /// 앱 공통 시트 스타일
+  /// - drag indicator: 보이게
+  /// - detent: 화면 0.4 (풀 높이)
+  /// - corner radius: 16
+  func appHalfSheetStyle() -> some View {
+    self
+      .presentationDragIndicator(.visible)
+      .presentationDetents([.fraction(0.4)])
+      .presentationCornerRadius(16)
+  }
+  
+  /// 수정중일때, 스와이프 기능을 막는 로직입니다.
+  @ViewBuilder
+  func conditionalSwipeActions<Actions: View>(
+    enabled: Bool,
+    edge: HorizontalEdge = .trailing,
+    allowsFullSwipe: Bool = true,
+    @ViewBuilder actions: () -> Actions
+  ) -> some View {
+    if enabled {
+      self.swipeActions(edge: edge, allowsFullSwipe: allowsFullSwipe, content: actions)
+    } else {
+      self
+    }
+  }
 }

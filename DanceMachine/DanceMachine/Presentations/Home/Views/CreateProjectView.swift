@@ -21,6 +21,11 @@ struct CreateProjectView: View {
   
   var onCreated: () -> Void = {}
   
+  @State private var isCreatingProject: Bool = false
+  @State var overText: Bool = false
+  // 애니메이션 용도 변수 (drawOn)
+  @State private var checkEffectActive: Bool = false //애니메이션 트리거 + 표시 조건
+  
   var body: some View {
     ZStack {
       Color.backgroundElevated.ignoresSafeArea()
@@ -50,7 +55,6 @@ struct CreateProjectView: View {
     }
   }
   
-  
   // MARK: - 탑 타이틀
   private var topTitleView: some View {
     ZStack { // TODO: 서치
@@ -73,103 +77,175 @@ struct CreateProjectView: View {
     }
   }
   
-  // MARK: - 팀 스페이스 텍스트 필드 뷰 ("프로젝트 이름" + 텍스트 필드)
+  // MARK: - 프로젝트 텍스트 필드 뷰 ("프로젝트 이름" + 텍스트 필드)
   private var inputProjectNameView: some View {
     VStack {
       Text("프로젝트 이름을 입력하세요.")
         .font(.title2SemiBold)
         .foregroundStyle(Color.labelStrong)
-      
       Spacer().frame(height: 32)
-      
-      RoundedRectangle(cornerRadius: 15)
-        .fill(Color.fillStrong)
-        .overlay(
-          RoundedRectangle(cornerRadius: 15)
-            .stroke(
-              isFocusTextField ? Color.secondaryStrong : Color.clear,
-              lineWidth: isFocusTextField ? 1 : 0
-            )
-        )
-        .frame(maxWidth: .infinity)
-        .frame(height: 51)
-        .overlay {
-          HStack {
-            TextField("예시: 학교 축제", text: $projectNameText)
-              .font(.headline2Medium)
-              .foregroundStyle(Color.labelStrong)
-              .multilineTextAlignment(.center)
-              .padding(.vertical, 15)
-              .overlay(alignment: .trailing) { textFieldItem() }
-              .overlay(alignment: .trailing) {
-                XmarkButton { self.projectNameText = "" }
-                  .padding(.trailing, 8)
-              }
-              .onChange(of: projectNameText) { oldValue, newValue in
-                var updated = newValue
-                
-                if updated.first == " " {
-                  updated = String(updated.drop(while: { $0 == " " })) // ❗️공백 금지
-                }
-                
-                if updated.count > 20 {
-                  updated = String(updated.prefix(20)) // ❗️20글자 초과 금지
-                }
-                
-                if updated != projectNameText {
-                  projectNameText = updated
-                }
-              }
-          }
-        }
-        .overlay(
-          RoundedRectangle(cornerRadius: 15)
-            .stroke(
-              projectNameText.count > 19 ? Color.accentRedNormal : Color.clear,
-              lineWidth: 1
-            )
-        )
-        .focused($isFocusTextField)
-      
+      textFieldView()
       Spacer().frame(height: 16)
-      
+      textFieldItem()
+    }
+  }
+  
+  // MARK: - 텍스트 필드 뷰
+  @ViewBuilder
+  private func textFieldView() -> some View {
+    // 가운데 정렬 텍스트 필드 + 배경
+    TextField("(예시) 대동제", text: $projectNameText)
+      .font(.headline2Medium)
+      .foregroundStyle(Color.labelStrong)
+      .tint(Color.labelStrong)
+      .multilineTextAlignment(.center)
+      .onChange(of: projectNameText) { oldValue, newValue in
+        // 1) 삭제 방향이면 검증 로직은 태우지 않고, 경고만 정리
+        if newValue.count < oldValue.count {
+          // 20자 미만이면 경고 끔
+          if newValue.count < 20 {
+            overText = false
+          }
+          return
+        }
+        
+        // 2) 입력(길이 증가)일 때만 검증
+        let result = viewModel.validateTeamspaceName(
+          oldValue: oldValue,
+          newValue: newValue
+        )
+        
+        // 3) 자른 텍스트 반영 (무한 onChange 방지용 체크)
+        if projectNameText != result.text {
+          projectNameText = result.text
+        }
+        
+        // 4) 경고 플래그 반영
+        overText = result.overText
+      }
+      .frame(maxWidth: .infinity)
+      .frame(height: 51)
+      .overlay(alignment: .trailing) {
+        XmarkButton {
+          self.projectNameText = ""
+        }
+          .padding(.trailing, 8)
+      }
+      .background(
+        RoundedRectangle(cornerRadius: 15)
+          .fill(Color.fillStrong)
+          .overlay(
+            RoundedRectangle(cornerRadius: 15)
+              .stroke(
+                isFocusTextField ? Color.secondaryStrong : Color.clear,
+                lineWidth: isFocusTextField ? 1 : 0
+              )
+          )
+      )
+      .overlay(
+        RoundedRectangle(cornerRadius: 15)
+          .stroke(self.overText ? Color.accentRedNormal : Color.clear, lineWidth: 1)
+      )
+      .focused($isFocusTextField)
+  }
+  
+  
+  // MARK: - 텍스트 필드 아이템 (글자수 라벨, x 버튼)
+  @ViewBuilder
+  private func textFieldItem() -> some View {
+    if self.overText == false {
+      Text("\(projectNameText.count)/20")
+        .font(.headline2Medium)
+        .foregroundStyle(Color.secondaryNormal)
+    } else {
       Text("20자 이내로 입력해주세요.")
         .font(.footnoteMedium)
         .foregroundStyle(Color.accentRedNormal)
-        .opacity(projectNameText.count < 20 ? 0 : 1)
+        .opacity(self.overText ? 1 : 0)
     }
   }
   
   // MARK: - 바텀 팀 스페이스 만들기 뷰
   private var bottomButtonView: some View {
-    ActionButton(
-      title: "새 프로젝트 만들기",
-      color: self.projectNameText.isEmpty ? Color.fillAssitive : Color.secondaryStrong,
-      height: 47,
-      isEnabled: self.projectNameText.isEmpty ? false : true
-    ) {
-      Task {
-        try await viewModel.createProject(projectName: self.projectNameText)
-        self.onCreated()
-        await MainActor.run { dismiss() }
+    ZStack {
+      ActionButton(
+        title: "새 프로젝트 만들기",
+        color: projectNameText.isEmpty ? Color.fillAssitive : Color.secondaryStrong,
+        height: 47,
+        isEnabled: !projectNameText.isEmpty && !isCreatingProject
+      ) {
+        Task {
+          guard !projectNameText.isEmpty else { return }
+          
+          isCreatingProject = true
+          
+          defer {
+            isCreatingProject = false
+          }
+          
+          try await viewModel.createProject(projectName: self.projectNameText)
+          
+          await MainActor.run {
+            onCreated()
+            checkEffectActive = true
+          }
+          
+          try? await Task.sleep(for: .seconds(2)) // 애니메이션 2초 효과
+          
+          await MainActor.run { dismiss() }
+        }
       }
+      .disabled(isCreatingProject)
+      
+      // 로딩 오버레이
+      if isCreatingProject {
+        // 버튼 영역을 꽉 채우는 배경
+        RoundedRectangle(cornerRadius: 15)
+          .fill(Color.fillAssitive)
+          .frame(height: 47)
+        
+        LoadingSpinner()
+          .frame(width: 28, height: 28)
+      }
+      
+      // 생성 완료 됐을 시, 보여지는 뷰
+      completedButtonView
     }
     .padding(.bottom, 16)
   }
   
-  // MARK: - 텍스트 필드 아이템 (글자수 라벨, x 버튼)
-  @ViewBuilder
-  func textFieldItem() -> some View {
-    HStack(spacing: 9) {
-      Text("\(projectNameText.count)/20")
-        .font(.headline2Medium)
-        .foregroundStyle(Color.secondaryNormal)
-      
-      XmarkButton { self.projectNameText = "" }
-        .padding(.trailing, 8)
-    }
-  }
   
+  // MARK: - 프로젝트 생성 시, 완료 뷰
+  private var completedButtonView: some View {
+    RoundedRectangle(cornerRadius: 15)
+      .fill(Color.fillAssitive)
+      .frame(height: 47)
+      .opacity(checkEffectActive ? 1 : 0)
+      .overlay {
+        HStack(spacing: 10) {
+          if #available(iOS 26.0, *) {
+            Image(systemName: "checkmark.circle")
+              .font(.system(size: 24, weight: .medium))
+              .foregroundStyle(Color.secondaryNormal)
+              .symbolEffect(
+                .drawOn,
+                options: .nonRepeating,
+                isActive: !checkEffectActive
+              )
+          } else {
+            Image(systemName: "checkmark.circle")
+              .font(.system(size: 24, weight: .medium))
+              .foregroundStyle(Color.secondaryNormal)
+              .opacity(checkEffectActive ? 1 : 0)
+          }
+          
+          Text("프로젝트를 생성했습니다.")
+            .font(.headline2SemiBold)
+            .foregroundStyle(Color.secondaryNormal)
+            .opacity(checkEffectActive ? 1 : 0)
+        }
+      }
+  }
 }
 
 #Preview {

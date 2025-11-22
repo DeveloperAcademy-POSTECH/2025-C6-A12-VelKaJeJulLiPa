@@ -21,7 +21,7 @@ struct LoginView: View {
         Spacer()
         
         VStack(spacing: 0) {
-          Image("AppLogo")
+          Image("appLogo")
           
           Spacer().frame(height: 40)
           
