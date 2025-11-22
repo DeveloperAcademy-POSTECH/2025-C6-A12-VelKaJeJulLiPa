@@ -174,7 +174,6 @@ struct iPadVideoView: View {
           videoURL: videoURL,
           aspectRatio: 16/9,
           isLandscapeMode: false,
-          iPad: true,
           showFeedbackPanel: false,
           onDrawingAction: onCaptureFrame,
           onFullscreenToggle: {
