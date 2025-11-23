@@ -20,11 +20,11 @@ struct CustomTextField: View {
   var body: some View {
     ZStack(alignment: .trailing) {
       TextField(placeHolder, text: $content, axis: .vertical)
+        .autocorrectionDisabled(true)
+        .textInputAutocapitalization(.never)
         .focused($isFocused)
         .font(.headline2Medium)
         .foregroundStyle(Color.labelStrong)
-        .textInputAutocapitalization(.sentences)
-        .autocorrectionDisabled(false)
         .padding(.leading, 16)
         .padding(.vertical, 12)
         .padding(.trailing, 40)
