@@ -14,8 +14,9 @@ struct SectionEditView: View {
   @State private var showExitAlert: Bool = false
   @State private var showDeleteAlert: Bool = false
   @State private var sectionToDelete: Section? = nil
-  
+
   @State private var showCRUDToast: Bool = false
+  @State private var checkEffectActive: Bool = false
   
   let tracksId: String
   let trackName: String
@@ -133,15 +134,21 @@ struct SectionEditView: View {
   private var emptyView: some View {
     GeometryReader { geometry in
       VStack {
-        Button {
-          vm.addNewSection()
-        } label: {
-          VStack(spacing: 24) {
-            Image(.sectionAdd)
-            Text("파트를 추가해 보세요.")
-              .font(.headline2Medium)
-              .foregroundStyle(.secondaryAssitive)
+        if vm.isLoading {
+          LoadingSpinner()
+            .frame(width: 40, height: 40)
+        } else {
+          Button {
+            vm.addNewSection()
+          } label: {
+            VStack(spacing: 24) {
+              Image(.sectionAdd)
+              Text("파트를 추가해 보세요.")
+                .font(.headline2Medium)
+                .foregroundStyle(.secondaryAssitive)
+            }
           }
+          .disabled(vm.isEditing)
         }
       }
       .frame(maxWidth: .infinity)
@@ -162,14 +169,20 @@ struct SectionEditView: View {
         vm.addNewSection()
       } label: {
         HStack(spacing: 4) {
-          Image(systemName: "plus")
-            .font(.headline2SemiBold)
-            .foregroundStyle(.secondaryNormal)
-          Text("추가")
-            .font(.headline2SemiBold)
-            .foregroundStyle(.secondaryNormal)
+          if vm.isLoading {
+            LoadingSpinner()
+              .frame(width: 17, height: 17)
+          } else {
+            Image(systemName: "plus")
+              .font(.headline2SemiBold)
+              .foregroundStyle(vm.isEditing ? .fillAssitive : .secondaryNormal)
+            Text("추가")
+              .font(.headline2SemiBold)
+              .foregroundStyle(vm.isEditing ? .fillAssitive : .secondaryNormal)
+          }
         }
       }
+      .disabled(vm.isEditing || vm.isLoading)
     }
     .padding(.top, 32)
   }
@@ -217,21 +230,72 @@ struct SectionEditView: View {
   }
   
   private var bottomButton: some View {
-    ActionButton(
-      title: "확인",
-      color: vm.editText.isEmpty || vm.isLoading ? .fillAssitive : .secondaryStrong,
-      height: 47,
-      isEnabled: !vm.editText.isEmpty || vm.isLoading,
-      isLoading: vm.isLoading
-    ) {
-      if let sectionId = vm.editingSectionid,
-         let section = vm.sections.first(where: { $0.sectionId == sectionId }) {
-        Task {
-          await vm.updateSection(tracksId: tracksId, section: section)
+    ZStack {
+      ActionButton(
+        title: "확인",
+        color: vm.editText.isEmpty || vm.isLoading ? .fillAssitive : .secondaryStrong,
+        height: 47,
+        isEnabled: !vm.editText.isEmpty && !vm.isLoading,
+        isLoading: vm.isLoading
+      ) {
+        if let sectionId = vm.editingSectionid,
+           let section = vm.sections.first(where: { $0.sectionId == sectionId }) {
+          Task {
+            await vm.updateSection(tracksId: tracksId, section: section)
+
+            // 업데이트 성공 시에만 체크 애니메이션 표시
+            if !vm.isLoading { // isLoading이 false면 성공한 것
+              await MainActor.run {
+                checkEffectActive = true
+              }
+
+              try? await Task.sleep(for: .seconds(2.5))
+
+              await MainActor.run {
+                checkEffectActive = false
+              }
+            }
+          }
         }
       }
+      .opacity(checkEffectActive ? 0 : 1)
+
+      // 완료 체크 뷰
+      completedButtonView
     }
     .padding(.bottom, 8)
+  }
+
+  // MARK: - 섹션 저장 완료 뷰
+  private var completedButtonView: some View {
+    RoundedRectangle(cornerRadius: 15)
+      .fill(Color.fillAssitive)
+      .frame(height: 47)
+      .opacity(checkEffectActive ? 1 : 0)
+      .overlay {
+        HStack(spacing: 10) {
+          if #available(iOS 26.0, *) {
+            Image(systemName: "checkmark.circle")
+              .font(.system(size: 24, weight: .medium))
+              .foregroundStyle(Color.secondaryNormal)
+              .symbolEffect(
+                .drawOn,
+                options: .nonRepeating,
+                isActive: !checkEffectActive
+              )
+          } else {
+            Image(systemName: "checkmark.circle")
+              .font(.system(size: 24, weight: .medium))
+              .foregroundStyle(Color.secondaryNormal)
+              .opacity(checkEffectActive ? 1 : 0)
+          }
+
+          Text("파트를 저장했습니다.")
+            .font(.headline2SemiBold)
+            .foregroundStyle(Color.secondaryNormal)
+            .opacity(checkEffectActive ? 1 : 0)
+        }
+      }
   }
 }
 
