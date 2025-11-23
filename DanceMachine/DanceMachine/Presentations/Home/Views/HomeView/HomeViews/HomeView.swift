@@ -93,6 +93,15 @@ struct HomeView: View {
         
       }
     }
+    
+    // 여기 추가
+    .onChange(of: inviteRouter.lastInviteAcceptedAt) { _, _ in
+      if ProcessInfo.isRunningInPreviews { return }
+      Task {
+        print("🎉 초대 링크 성공! 화면에 반영합니다.")
+        await homeViewModel.onAppear()
+      }
+    }
   }
   
   // MARK: - 팀 스페이스가 비어져있을때 보이는 뷰
