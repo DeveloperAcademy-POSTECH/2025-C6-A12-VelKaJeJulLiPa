@@ -17,7 +17,6 @@ struct ToolbarCenterTitle: ToolbarContent {
         .font(.heading1Medium)
         .foregroundStyle(.labelStrong)
         .allowsHitTesting(false)
-        .frame(maxWidth: .infinity)
     }
   }
 }
