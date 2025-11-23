@@ -288,7 +288,7 @@ extension View {
         .background {
           Circle()
             .fill(Color.secondaryStrong)
-            .shadow(color: .white.opacity(0.3), radius: 2, x: 0, y: 1)
+            .shadow(color: .white.opacity(0.25), radius: 2, x: 0, y: 1)
         }
     }
   }
