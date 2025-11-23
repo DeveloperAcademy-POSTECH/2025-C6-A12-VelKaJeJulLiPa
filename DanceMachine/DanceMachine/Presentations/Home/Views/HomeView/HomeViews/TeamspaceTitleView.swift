@@ -54,13 +54,19 @@ struct TeamspaceTitleView: View {
           Text(Layout.EmptyTeamspaceViewLayout.titleText)
             .font(.heading1SemiBold)
             .foregroundStyle(Color.labelStrong)
-          
+
           Image(systemName: Layout.EmptyTeamspaceViewLayout.imageName)
             .font(.system(size: Layout.EmptyTeamspaceViewLayout.imageFontSize, weight: .medium))
             .foregroundStyle(Color.labelStrong)
         }
         .padding(.vertical, 6.5)
       }
+      .simultaneousGesture(
+        TapGesture()
+          .onEnded {
+            self.router.push(to: .teamspace(.create))
+          }
+      )
     }
   }
   
@@ -83,6 +89,12 @@ struct TeamspaceTitleView: View {
             Image(systemName: Layout.NonEmptyTeamspaceViewLayout.imageName)
               .font(.system(size: Layout.NonEmptyTeamspaceViewLayout.imageFontSize, weight: .medium))
               .foregroundStyle(Color.labelStrong)
+              .simultaneousGesture(
+                TapGesture()
+                  .onEnded {
+                    router.push(to: .teamspace(.setting))
+                  }
+              )
           }
           .clearGlassButtonIfAvailable()
         }

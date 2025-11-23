@@ -210,6 +210,12 @@ struct VideoListView: View {
           .font(.headline2Medium)
           .foregroundStyle(.secondaryAssitive)
       }
+      .simultaneousGesture(
+        TapGesture()
+          .onEnded {
+            Task { await vm.requestPermissionAndFetch() }
+          }
+      )
     }
     .buttonStyle(.plain)
     .frame(width: g.size.width, height: g.size.height)

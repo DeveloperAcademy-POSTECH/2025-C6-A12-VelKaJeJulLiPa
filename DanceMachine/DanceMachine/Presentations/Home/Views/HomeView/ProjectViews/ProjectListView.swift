@@ -147,6 +147,12 @@ struct ProjectListView: View {
           .font(.system(size: Layout.EmptyProjectView.imageSize))
           .foregroundStyle(Color.secondaryNormal)
           .frame(maxWidth: .infinity)
+          .simultaneousGesture(
+            TapGesture()
+              .onEnded {
+                projectListViewModel.presentationState.presentingCreateProjectSheet = true
+              }
+          )
       }
       Text(Layout.EmptyProjectView.titleText)
         .font(.headline2Medium)
