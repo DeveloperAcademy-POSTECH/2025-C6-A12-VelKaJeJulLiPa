@@ -42,6 +42,8 @@ struct AccountSettingView: View {
           Text("회원탈퇴")
             .foregroundStyle(.accentRedStrong)
         }
+        .padding(.top, 8)
+        .padding(.bottom, 16)
       }
     }
     .toolbar {
