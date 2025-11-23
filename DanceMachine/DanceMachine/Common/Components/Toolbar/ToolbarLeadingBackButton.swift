@@ -27,6 +27,16 @@ struct ToolbarLeadingBackButton: ToolbarContent {
         Image(systemName: icon.toolIcon)
           .foregroundStyle(.labelStrong)
           .frame(width: 22, height: 22)
+          .simultaneousGesture(
+            TapGesture()
+              .onEnded {
+                if let action = action {
+                  action()
+                } else {
+                  dismiss()
+                }
+              }
+          )
       }
     }
   }
