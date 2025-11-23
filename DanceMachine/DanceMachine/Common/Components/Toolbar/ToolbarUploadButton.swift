@@ -12,14 +12,39 @@ struct ToolbarUploadButton: ToolbarContent {
 
   var body: some ToolbarContent {
     ToolbarItem(placement: .topBarTrailing) {
-      Button {
-        action()
-      } label: {
-        Image(.videoUpload)
+      if #available(iOS 26.0, *) {
+        Button {
+          action()
+        } label: {
+          Image(.videoUpload)
+            .simultaneousGesture(
+              TapGesture()
+                .onEnded {
+                  action()
+                }
+            )
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(.secondaryAlternativeGlass)
+        .environment(\.colorScheme, .light)
+      } else {
+        Button {
+          action()
+        } label: {
+          ZStack {
+            Circle().fill(Color.secondaryNormal)
+              .frame(width: 44, height: 44)
+            Image(.videoUpload)
+          }
+          .simultaneousGesture(
+            TapGesture()
+              .onEnded {
+                action()
+              }
+          )
+        }
+        .environment(\.colorScheme, .light)
       }
-      .buttonStyle(.borderedProminent)
-      .tint(.secondaryAlternativeGlass)
-      .environment(\.colorScheme, .light)
     }
   }
 }
