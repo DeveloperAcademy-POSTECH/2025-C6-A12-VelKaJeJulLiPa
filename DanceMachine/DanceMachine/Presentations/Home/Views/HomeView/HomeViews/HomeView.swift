@@ -85,10 +85,9 @@ struct HomeView: View {
       
       print("🔥 HomeViewLoding...")
       do {
-        if homeViewModel.isFirstAppear == false {
-          if homeViewModel.cacheStore == nil { homeViewModel.setCacheStore(cache) }
-          await homeViewModel.onAppear()
-        }
+        if homeViewModel.cacheStore == nil { homeViewModel.setCacheStore(cache) }
+        await homeViewModel.onAppear()
+        
         try await NotificationManager.shared.refreshBadge(for: FirebaseAuthManager.shared.user?.uid ?? "")
       } catch {
         
