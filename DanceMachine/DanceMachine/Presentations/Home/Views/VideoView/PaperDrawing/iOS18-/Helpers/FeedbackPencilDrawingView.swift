@@ -38,7 +38,7 @@ struct FeedbackPencilDrawingView: View {
       ZStack {
         Color.black.ignoresSafeArea()
         VStack(spacing: 4) {
-          drawingToolbar.padding(.horizontal, 16)
+          drawingToolbar
           PencilCanvasView(
             canvasView: $canvasView,
             tool: selectedTool,
@@ -106,7 +106,7 @@ struct FeedbackPencilDrawingView: View {
   
   // MARK: - 탑 타이틀
   private var drawingToolbar: some View {
-    HStack(spacing: 12) {
+    HStack {
       // X 버튼
       Button {
         dismiss()
@@ -117,13 +117,12 @@ struct FeedbackPencilDrawingView: View {
       }
       .frame(width: 44, height: 44)
       .drawingButton()
-
-      Spacer()
+      
 
       // 버튼 그룹들
-      HStack(spacing: 12) {
+      HStack {
         // 그룹 1: Undo/Redo
-        HStack(spacing: 0) {
+        HStack(spacing: 12) {
           Button {
             undoDrawing()
           } label: {
@@ -155,6 +154,8 @@ struct FeedbackPencilDrawingView: View {
         }
         .frame(width: 44, height: 44)
         .drawingButton()
+        
+        Spacer()
 
         // 그룹 3: 완료
         Button {
@@ -165,13 +166,14 @@ struct FeedbackPencilDrawingView: View {
           }
         } label: {
           Image(systemName: "checkmark")
-            .font(.system(size: 22, weight: .semibold))
-            .foregroundStyle(Color.white)
+            .font(.system(size: 22, weight: .medium))
+            .foregroundStyle(Color.labelStrong)
         }
         .frame(width: 44, height: 44)
         .drawingSubmitButton()
       }
     }
+    .padding(.horizontal, 16)
   }
   
   /// 팬슬 이전 그림 취소하는 기능입니다.
