@@ -59,6 +59,8 @@ struct VideoTitleEditView: View {
         .frame(height: 47)
         .overlay {
           TextField("비디오 제목", text: $videoTitle)
+            .autocorrectionDisabled(true)
+            .textInputAutocapitalization(.never)
             .padding([.leading, .vertical], 16)
             .padding(.trailing, videoTitle.count >= 21 ? 20 : 16) // X버튼(44pt) 공간 확보
             .font(.headline2Medium)

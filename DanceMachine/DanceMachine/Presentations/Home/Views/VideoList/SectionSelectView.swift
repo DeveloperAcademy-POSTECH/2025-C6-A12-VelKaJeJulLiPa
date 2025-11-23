@@ -87,6 +87,7 @@ struct SectionSelectView: View {
         }
       }
     )
+    .padding(.bottom, 8)
   }
 }
 
