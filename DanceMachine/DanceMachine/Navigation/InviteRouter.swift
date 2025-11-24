@@ -17,8 +17,19 @@ import FirebaseFirestore
 ///   3) 현재 팀스페이스 갱신 및 화면 리로드 트리거(`lastInviteAcceptedAt`)
 @MainActor
 final class InviteRouter: ObservableObject {
-    @Published var lastInviteAcceptedAt = Date.distantPast
-    @Published private(set) var isProcessing = false
+  @Published var lastInviteAcceptedAt = Date.distantPast
+  @Published private(set) var isProcessing = false
+  
+  private var pendingToken: String?
+  
+  private(set) var invitedTeamspaceName: String?
+  
+  // MARK: - URL 수신 처리
+  func handleIncoming(url: URL) {
+    guard let token = extractToken(from: url) else {
+      print("❗️[InviteRouter] 토큰을 찾지 못했습니다:", url.absoluteString)
+      return
+    }
     
     private var pendingToken: String?
     
@@ -38,13 +49,32 @@ final class InviteRouter: ObservableObject {
         }
     }
     
-    // MARK: - 인증 완료 후 호출
-    func processPendingIfPossible() {
-        guard let token = pendingToken else { return }
-        guard isReadyForAccept() else { return }
-        print("▶️[InviteRouter] 보류된 초대 토큰 처리 시작")
-        pendingToken = nil
-        Task { await accept(token: token) }
+    do {
+      guard let userId = FirebaseAuthManager.shared.userInfo?.userId, !userId.isEmpty else {
+        print("❌[InviteRouter] userId 비어있음 → Firestore 접근 중단")
+        return
+      }
+      
+      print("🚀[InviteRouter] 초대 수락 시도. token:", token, "userId:", userId)
+      let teamspaceId = try await InviteAcceptService().acceptInvite(token: token, currentUserId: userId)
+      print("✅[InviteRouter] 초대 수락 성공. teamspaceId:", teamspaceId)
+      
+      let teamspace: Teamspace = try await FirestoreManager.shared.get(teamspaceId, from: .teamspace)
+      FirebaseAuthManager.shared.currentTeamspace = teamspace
+      print("🔧[InviteRouter] currentTeamspace 갱신:", teamspace.teamspaceId)
+      
+      // 여기 추가: lastAccessedTeamspaceId를 초대된 팀으로 갱신
+      UserDefaults.standard.set(
+        teamspaceId,
+        forKey: AppStorageKey.lastAccessedTeamspaceId.rawValue
+      )
+      print("💾[InviteRouter] lastAccessedTeamspaceId 저장:", teamspaceId)
+      
+      self.lastInviteAcceptedAt = Date()
+      self.invitedTeamspaceName = teamspace.teamspaceName
+      print("🔁[InviteRouter] lastInviteAcceptedAt 갱신:", self.lastInviteAcceptedAt)
+    } catch {
+      print("❌[InviteRouter] 초대 수락 실패:", error)
     }
     
     // MARK: - 준비 상태 체크
