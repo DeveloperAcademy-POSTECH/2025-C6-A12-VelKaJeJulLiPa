@@ -222,6 +222,16 @@ extension VideoViewModel {
     }
   }
   
+  // MARK: - 정지 메서드
+  func pause() {
+    if isPlaying {
+      player?.pause()
+      // 일시정지 시 자동 숨김 타이머 취소
+      autoHideControlsTask?.cancel()
+      isPlaying = false
+    }
+  }
+  
   // MARK: 컨트롤 자동 숨김 타이머
   func startAutoHideControls() {
     // 기존 타이머 취소

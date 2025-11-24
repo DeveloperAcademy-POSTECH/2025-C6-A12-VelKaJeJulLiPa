@@ -81,7 +81,10 @@ fileprivate struct PaperControllerView: UIViewControllerRepresentable {
 
 #Preview {
   if #available(iOS 26.0, *) {
-    FeedbackPaperDrawingView(image: .constant(nil))
+    FeedbackPaperDrawingView(
+      image: .constant(nil),
+      drawingPause: .constant(false)
+    )
   } else {
     // Fallback on earlier versions
   }

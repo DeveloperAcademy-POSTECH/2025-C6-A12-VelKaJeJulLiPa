@@ -25,6 +25,7 @@ struct VideoController: UIViewControllerRepresentable {
     context: Context
   ) {
     uiViewController.player = player
+    
   }
 }
 
