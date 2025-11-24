@@ -19,7 +19,6 @@ struct VideoView: View {
   @State private var showCreateReportSuccessToast: Bool = false
   @State var drawingPause: Bool = false
   @State private var showIntervalWarning: Bool = false
-  @State var drawingPause: Bool = false
   
   // 🔥 전체 화면 프리뷰용 상태 & 네임스페이스 //
   @Namespace private var drawingImageNamespace
