@@ -22,6 +22,9 @@ struct TeamspaceSettingViewToolbar: ToolbarContent {
       static let createTeamspaceTitle: String = "새 팀 스페이스 만들기"
       static let hstackSpacing: CGFloat = 4
       static let sheetTitle: String = "팀 스페이스 선택"
+
+      // 가운데 제목이 차지할 수 있는 최대 너비 비율
+      static let titleMaxWidthRatio: CGFloat = 0.55
     }
 
     enum TopBarTrailing {
@@ -39,8 +42,6 @@ struct TeamspaceSettingViewToolbar: ToolbarContent {
   var body: some ToolbarContent {
 
     if #available(iOS 26.0, *) {
-
-      // iOS 26: 기존 Menu 유지
       ToolbarItem(placement: .principal) {
         Menu {
           if viewModel.teamspaceChoiceState.loading == true {
@@ -55,9 +56,7 @@ struct TeamspaceSettingViewToolbar: ToolbarContent {
               } label: {
                 HStack {
                   Text(teamspace.teamspaceName)
-
                   Spacer()
-
                   if viewModel.currentTeamspace?.teamspaceId == teamspace.teamspaceId {
                     Image(systemName: Layout.Principal.checkImageName)
                   }
@@ -82,10 +81,17 @@ struct TeamspaceSettingViewToolbar: ToolbarContent {
             Task { await viewModel.loadUserTeamspace() }
           } label: {
             HStack(spacing: Layout.Principal.hstackSpacing) {
+
               Text(viewModel.dataState.selectedTeamspaceName)
                 .font(.heading1Medium)
                 .foregroundStyle(Color.labelStrong)
                 .lineLimit(Layout.Principal.navigationTextLinelimit)
+                .truncationMode(.tail)
+                .allowsTightening(true)
+                .frame(
+                  maxWidth: UIScreen.main.bounds.width * Layout.Principal.titleMaxWidthRatio,
+                  alignment: .center
+                )
 
               Image(systemName: Layout.Principal.navigationImageName)
                 .resizable()
@@ -95,14 +101,13 @@ struct TeamspaceSettingViewToolbar: ToolbarContent {
                   height: Layout.Principal.navigationImageHeight
                 )
                 .foregroundStyle(Color.labelAssitive)
+                .layoutPriority(1)
             }
           }
         }
       }
 
     } else {
-
-      // iOS 18: sheet 기반 선택 UI
       ToolbarItem(placement: .principal) {
         TeamspacePickerPrincipalButton(viewModel: viewModel)
       }
@@ -150,7 +155,6 @@ struct TeamspaceSettingViewToolbar: ToolbarContent {
 private struct TeamspacePickerPrincipalButton: View {
 
   @Bindable var viewModel: TeamspaceSettingViewModel
-
   @State private var isPresentingPicker: Bool = false
 
   fileprivate enum Layout {
@@ -159,11 +163,10 @@ private struct TeamspacePickerPrincipalButton: View {
       static let navigationImageWidth: CGFloat = 22
       static let navigationImageHeight: CGFloat = 21
       static let navigationTextLinelimit: Int = 1
-      static let checkImageName: String = "checkmark"
-      static let createTeamspaceImageName: String = "plus.circle"
-      static let createTeamspaceTitle: String = "새 팀 스페이스 만들기"
       static let hstackSpacing: CGFloat = 4
-      static let sheetTitle: String = "팀 스페이스 선택"
+
+      // iOS 18에서도 동일하게 적용
+      static let titleMaxWidthRatio: CGFloat = 0.55
     }
   }
 
@@ -175,10 +178,17 @@ private struct TeamspacePickerPrincipalButton: View {
       }
     } label: {
       HStack(spacing: Layout.Principal.hstackSpacing) {
+
         Text(viewModel.dataState.selectedTeamspaceName)
           .font(.heading1Medium)
           .foregroundStyle(Color.labelStrong)
           .lineLimit(Layout.Principal.navigationTextLinelimit)
+          .truncationMode(.tail)
+          .allowsTightening(true)
+          .frame(
+            maxWidth: UIScreen.main.bounds.width * Layout.Principal.titleMaxWidthRatio,
+            alignment: .center
+          )
 
         Image(systemName: Layout.Principal.navigationImageName)
           .resizable()
@@ -188,6 +198,7 @@ private struct TeamspacePickerPrincipalButton: View {
             height: Layout.Principal.navigationImageHeight
           )
           .foregroundStyle(Color.labelAssitive)
+          .layoutPriority(1)
       }
       .contentShape(Rectangle())
     }
