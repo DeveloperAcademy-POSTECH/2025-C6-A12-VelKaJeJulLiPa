@@ -49,7 +49,7 @@ struct CustomSlider: View {
               x: progressWidth(g.size.width) -
               (isDragging ? 10 : 5)
             )
-            .gesture(
+            .simultaneousGesture(
               DragGesture()
                 .onChanged({ value in
                   isDragging = true
@@ -69,12 +69,23 @@ struct CustomSlider: View {
             )
         }
         .contentShape(Rectangle())
-        .onTapGesture { location in
-          let p = location.x / g.size.width
-          let new = p * duration
-          onSeek(new)
-        }
-        .animation(.easeIn(duration: 0.1), value: isDragging)
+        .simultaneousGesture(
+          DragGesture(minimumDistance: 0)
+            .onChanged { value in
+              isDragging = true
+              let p = min(max(0, value.location.x / g.size.width), 1)
+              let new = p * duration
+              onDragChanged(new)
+            }
+            .onEnded { value in
+              let p = min(max(0, value.location.x / g.size.width), 1)
+              let new = p * duration
+              onSeek(new)
+              DispatchQueue.main.asyncAfter(deadline: .now()) {
+                isDragging = false
+              }
+            }
+        )
       }
       .frame(height: 25)
       .contentShape(Rectangle())

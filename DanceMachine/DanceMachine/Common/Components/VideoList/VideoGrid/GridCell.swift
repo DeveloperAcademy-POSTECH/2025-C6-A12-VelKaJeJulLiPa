@@ -41,6 +41,12 @@ struct GridCell: View {
     )
     .sensoryFeedback(.success, trigger: showMenu)
     .onTapGesture { videoAction() }
+    .simultaneousGesture(
+      TapGesture()
+        .onEnded {
+          videoAction()
+        }
+    )
     .overlay(alignment: .topTrailing) {
       Menu {
         contextRows
@@ -49,6 +55,12 @@ struct GridCell: View {
           .foregroundStyle(.labelStrong)
           .rotationEffect(.degrees(90))
           .frame(width: 33, height: 33)
+          .simultaneousGesture(
+            TapGesture()
+              .onEnded {
+                showMenu.toggle()
+              }
+          )
       }
     }
     .contextMenu {

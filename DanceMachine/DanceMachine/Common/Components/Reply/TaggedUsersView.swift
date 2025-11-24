@@ -36,6 +36,12 @@ struct TaggedUsersView: View {
                 .symbolRenderingMode(.hierarchical)
                 .font(.system(size: 16))
                 .foregroundStyle(Color.labelAssitive)
+                .simultaneousGesture(
+                  TapGesture()
+                    .onEnded {
+                      onRemoveAll()
+                    }
+                )
             }
           }
           .animation(nil, value: taggedUsers)
@@ -56,6 +62,12 @@ struct TaggedUsersView: View {
                   .symbolRenderingMode(.hierarchical)
                   .font(.system(size: 16))
                   .foregroundStyle(Color.labelAssitive)
+                  .simultaneousGesture(
+                    TapGesture()
+                      .onEnded {
+                        onRemove(user.userId)
+                      }
+                  )
               }
             }
             .animation(nil, value: taggedUsers)

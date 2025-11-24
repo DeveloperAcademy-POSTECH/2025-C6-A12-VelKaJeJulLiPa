@@ -83,7 +83,7 @@ struct ReplySheet: View {
         onBottomReplyTap: {
           self.inputMode = .reply
         },
-        imageNamespace: imageNamespace,
+        imageNamespace: nil,
         onImageTap: { url in
           onImageTap(url)
           dismiss()
@@ -92,11 +92,19 @@ struct ReplySheet: View {
       replyList
     }
     .contentShape(Rectangle())
-    .onTapGesture {
-      /// 키보드 내리면서 들어가있는 모든 내용들을 초기화 하는 내용입니다.
-      self.inputMode = .none
-      mM.dismissKeyboardAndClear()
-    }
+    .simultaneousGesture(
+      TapGesture()
+        .onEnded {
+          /// 키보드 내리면서 들어가있는 모든 내용들을 초기화 하는 내용입니다.
+          self.inputMode = .none
+          mM.dismissKeyboardAndClear()
+        }
+    )
+//    .onTapGesture {
+//      /// 키보드 내리면서 들어가있는 모든 내용들을 초기화 하는 내용입니다.
+//      self.inputMode = .none
+//      mM.dismissKeyboardAndClear()
+//    }
     .animation(.easeInOut(duration: 0.2), value: mM.showPicker)
     .safeAreaInset(edge: .bottom) {
       switch inputMode {

@@ -38,10 +38,9 @@ enum VideoEvent {
   case videoEdit // 영상 이동
   case videoDelete // 영상 삭제 완료
   case videoTitleEdit // 비디오 제목 업데이트 완료
-  
   case videoEditFailed // 영상 이동 실패
-  
   case refreshView
+  case showIntervalWarning // 구간피드백 에러
 
   var name: Foundation.Notification.Name {
     switch self {
@@ -49,8 +48,9 @@ enum VideoEvent {
     case .videoDelete: Foundation.Notification.Name("showDeleteToast")
     case .videoTitleEdit: Foundation.Notification.Name("showEditVideoTitleToast")
     case .videoEditFailed: Foundation.Notification.Name("videoEditFailed")
-  
     case .refreshView: Foundation.Notification.Name("refreshVideoView")
+    case .showIntervalWarning:
+      Foundation.Notification.Name("showIntervalWarning")
     }
   }
 }

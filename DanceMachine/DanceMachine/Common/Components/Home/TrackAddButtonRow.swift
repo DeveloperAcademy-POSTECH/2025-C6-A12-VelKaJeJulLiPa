@@ -19,7 +19,7 @@ struct TrackAddButtonRow: View {
           .resizable()
           .scaledToFit()
           .frame(width: 17, height: 17)
-        
+
         Text("곡 추가하기")
           .font(.headline2Medium)
           .foregroundStyle(Color.labelStrong)
@@ -29,6 +29,12 @@ struct TrackAddButtonRow: View {
       .background(
         RoundedRectangle(cornerRadius: 15)
           .fill(isEmptyTracks ? Color.secondaryStrong : Color.fillAssitive)
+      )
+      .simultaneousGesture(
+        TapGesture()
+          .onEnded {
+            action()
+          }
       )
     }
     .buttonStyle(.plain)

@@ -69,12 +69,21 @@ struct FeedbackContainer: View {
     }
     .background(Color.backgroundNormal)
     .contentShape(Rectangle())
-    .onTapGesture {
-      if state.showFeedbackInput {
-        state.showFeedbackInput = false
-        dismissKeyboard()
-      }
-    }
+    .simultaneousGesture(
+      TapGesture()
+        .onEnded {
+          if state.showFeedbackInput {
+            state.showFeedbackInput = false
+            dismissKeyboard()
+          }
+        }
+    )
+//    .onTapGesture {
+//      if state.showFeedbackInput {
+//        state.showFeedbackInput = false
+//        dismissKeyboard()
+//      }
+//    }
     .safeAreaInset(edge: .bottom) {
       if state.isImageOverlayPresented {
         EmptyView()
@@ -149,14 +158,24 @@ struct FeedbackContainer: View {
           }
         },
         intervalAction: {
+          // 두 번째 버튼일 때 (녹화 중)
           if vm.feedbackVM.isRecordingInterval {
+            // 끝시간이 시작시간보다 전이면 토스트만
+            if let startTime = vm.feedbackVM.intervalStartTime,
+               vm.videoVM.currentTime < startTime {
+              NotificationCenter.post(.video(.showIntervalWarning))
+              return
+            }
+            // 정상 종료
             state.feedbackType = .interval
             state.intervalTime = vm.videoVM.currentTime
             state.showFeedbackInput = true
+            _ = vm.feedbackVM.handleIntervalButtonType(currentTime: vm.videoVM.currentTime)
             if vm.videoVM.isPlaying {
               vm.videoVM.togglePlayPause()
             }
           } else {
+            // 첫 번째 버튼 (시작)
             state.feedbackType = .interval
             state.pointTime = vm.videoVM.currentTime
             _ = vm.feedbackVM.handleIntervalButtonType(currentTime: vm.videoVM.currentTime)

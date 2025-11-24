@@ -35,7 +35,7 @@ struct FeedbackPaperDrawingView: View {
     ZStack {
       Color.black.ignoresSafeArea()
       VStack {
-        topTitleView.padding(.horizontal, 16)
+        topTitleView
         drawingView
       }
     }
@@ -62,7 +62,7 @@ struct FeedbackPaperDrawingView: View {
   
   // MARK: - 탑 타이틀
   private var topTitleView: some View {
-    HStack(spacing: 12) {
+    HStack {
       // X 버튼
       Button {
         dismiss()
@@ -73,13 +73,12 @@ struct FeedbackPaperDrawingView: View {
       }
       .frame(width: 44, height: 44)
       .drawingButton()
-
-      Spacer()
+      
 
       // 버튼 그룹들
-      HStack(spacing: 12) {
+      HStack {
         // 그룹 1: Undo/Redo
-        HStack(spacing: 0) {
+        HStack(spacing: 12) {
           Button {
             self.feedbackPaperDrawingData.undo()
           } label: {
@@ -144,7 +143,7 @@ struct FeedbackPaperDrawingView: View {
         }
         .padding(.horizontal, 4)
         .drawingButtonGroup()
-
+        Spacer()
         // 그룹 3: 완료
         Button {
           Task { @MainActor in

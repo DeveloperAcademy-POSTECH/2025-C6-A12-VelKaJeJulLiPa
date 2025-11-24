@@ -20,6 +20,12 @@ struct SectionChipIcon: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 5)
         .sectionIcon()
+        .simultaneousGesture(
+          TapGesture()
+            .onEnded {
+              action()
+            }
+        )
     }
   }
 }
@@ -39,6 +45,12 @@ struct CustomSectionChip: View {
         .foregroundStyle(.labelStrong)
         .padding(.horizontal, 10)
         .padding(.vertical, 7)
+        .simultaneousGesture(
+          TapGesture()
+            .onEnded {
+              action()
+            }
+        )
         .sectionChip(isSelected: vm.selectedSection?.sectionId == id)
     }
   }

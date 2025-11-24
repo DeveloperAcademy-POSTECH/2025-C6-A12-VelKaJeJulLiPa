@@ -76,7 +76,7 @@ struct iPadVideoView: View {
       }
     }
     .animation(.spring(response: 0.3, dampingFraction: 0.7), value: state.showSpeedSheet)
-    .toolbarTitleDisplayMode(.inline)
+//    .toolbarTitleDisplayMode(.inline)
     .toolbar {
       if !state.iPadShowFullScreen {
         ToolbarLeadingBackButton(icon: .chevron)
@@ -105,8 +105,6 @@ struct iPadVideoView: View {
   @ViewBuilder
   private var landscapeView: some View {
     NavigationSplitView(columnVisibility: $columnVisibility) {
-      ZStack {
-//        Color.black.ignoresSafeArea(edges: .top, .bottom)
 
         VideoPlayerContainer(
           vm: vm,
@@ -141,9 +139,9 @@ struct iPadVideoView: View {
           }
         )
         .offset(y: state.dragOffset * 0.5)
-      }
-      .ignoresSafeArea(.all, edges: .top)
-      .navigationSplitViewColumnWidth(min: 600, ideal: 800, max: 1000)
+//        .contentShape(.interaction, Rectangle())
+//        .ignoresSafeArea(.all, edges: .top)
+        .navigationSplitViewColumnWidth(min: 600, ideal: 800, max: 1000)
     } detail: {
         FeedbackContainer(
           vm: vm,
@@ -151,7 +149,7 @@ struct iPadVideoView: View {
           videoId: videoId,
           userId: userId,
           filteredFeedbacks: filteredFeedbacks,
-          iPadLandscape: true,
+          iPadLandscape: false,
           drawingImageNamespace: drawingImageNamespace,
           feedbackImageNamespace: feedbackImageNamespace,
           onDrawingAction: onCaptureFrame,
@@ -159,7 +157,8 @@ struct iPadVideoView: View {
           onFeedbackSelect: nil,
           isSidebarVisible: columnVisibility == .all
         )
-        .ignoresSafeArea(.all, edges: .top)
+//        .contentShape(.interaction, Rectangle())
+//        .ignoresSafeArea(.all, edges: .top)
         .navigationSplitViewColumnWidth(min: 350, ideal: 450, max: 600)
     }
     .navigationSplitViewStyle(.balanced)

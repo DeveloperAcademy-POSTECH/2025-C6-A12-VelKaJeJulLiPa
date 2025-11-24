@@ -33,6 +33,8 @@ struct SectionEditRow: View {
     HStack {
       if isEditing {
         TextField("파트 이름", text: $editText)
+          .autocorrectionDisabled(true)
+          .textInputAutocapitalization(.never)
           .textFieldStyle(.plain)
           .font(.headline2Medium)
           .foregroundStyle(.labelStrong)

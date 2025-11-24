@@ -11,24 +11,29 @@ struct DoubleTapSeekIndicator: View {
   let isForward: Bool
   let tapCount: Int
 
-  @State private var animatedIndices: Set<Int> = []
+  @State private var offset: CGFloat = 0
+  @State private var opacity: Double = 0
 
   var body: some View {
     VStack(spacing: 8) {
       // 아이콘 영역
       ZStack {
-        Circle()
-          .fill(Color.black.opacity(0.6))
-          .frame(width: 80, height: 80)
+//        Circle()
+//          .fill(Color.black.opacity(0.6))
+//          .frame(width: 80, height: 80)
 
         HStack(spacing: 4) {
           if !isForward {
             chevrons
           }
-
-          Text("\(tapCount * 3)")
-            .font(.system(size: 16, weight: .semibold))
-            .foregroundStyle(.labelStrong)
+          HStack(spacing: 1) {
+            Text(isForward ? "+" : "-")
+              .font(.headline1Medium)
+              .foregroundStyle(.labelStrong)
+            Text("\(tapCount * 3)")
+              .font(.headline1Medium)
+              .foregroundStyle(.labelStrong)
+          }
 
           if isForward {
             chevrons
@@ -51,29 +56,25 @@ struct DoubleTapSeekIndicator: View {
 
   private var chevrons: some View {
     HStack(spacing: -4) {
-      ForEach(0..<3, id: \.self) { index in
-        Image(systemName: isForward ? "chevron.right" : "chevron.left")
+      ForEach(0..<1, id: \.self) { index in
+        Image(systemName: isForward ? "forward.fill" : "backward.fill")
           .font(.system(size: 14, weight: .semibold))
           .foregroundStyle(.white)
-          .opacity(animatedIndices.contains(index) ? 1.0 : 0.0)
-          .scaleEffect(animatedIndices.contains(index) ? 1.0 : 0.5)
+          .opacity(opacity)
+          .offset(x: offset)
       }
     }
   }
 
   private func playAppearAnimation() {
-    animatedIndices = []
+    // 초기 상태 설정
+    offset = isForward ? -8 : 8
+    opacity = 0
 
-    // 나타날 순서 결정 (왼쪽 방향이면 역순으로)
-    let appearOrder = isForward ? [0, 1, 2] : [2, 1, 0]
-
-    // 각 셰브론을 차례로 나타나게 함
-    for (delay, index) in appearOrder.enumerated() {
-      DispatchQueue.main.asyncAfter(deadline: .now() + Double(delay) * 0.1) {
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-          _ = animatedIndices.insert(index)
-        }
-      }
+    // 애니메이션 시작 - 마지막 위치에서 유지
+    withAnimation(.easeOut(duration: 0.3)) {
+      offset = isForward ? 4 : -4
+      opacity = 1
     }
   }
 }

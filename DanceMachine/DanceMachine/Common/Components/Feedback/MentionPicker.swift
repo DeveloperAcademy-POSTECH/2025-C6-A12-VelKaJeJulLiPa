@@ -75,6 +75,12 @@ struct MentionPicker: View { // FIXME: 디자인 필요
         )
         .clipShape(RoundedRectangle(cornerRadius: 10))
         .contentShape(Rectangle())
+        .simultaneousGesture(
+          TapGesture()
+            .onEnded {
+              selectAll()
+            }
+        )
     }
     .buttonStyle(.plain)
   }
@@ -97,6 +103,12 @@ struct MentionPicker: View { // FIXME: 디자인 필요
           )
           .clipShape(RoundedRectangle(cornerRadius: 10))
           .contentShape(Rectangle())
+          .simultaneousGesture(
+            TapGesture()
+              .onEnded {
+                action(user)
+              }
+          )
       }
       .buttonStyle(.plain)
     }

@@ -33,6 +33,12 @@ struct OverlayController: View {
       Image(systemName: "gobackward.5")
         .font(.system(size: 30))
         .foregroundStyle(.labelStrong)
+        .simultaneousGesture(
+          TapGesture()
+            .onEnded {
+              leftAction()
+            }
+        )
     }
     .frame(width: 55, height: 55)
     .overlayController()
@@ -47,6 +53,12 @@ struct OverlayController: View {
       )
       .font(.system(size: 44))
       .foregroundStyle(.labelStrong)
+      .simultaneousGesture(
+        TapGesture()
+          .onEnded {
+            centerAction()
+          }
+      )
     }
     .frame(width: 70, height: 70)
     .overlayController()
@@ -59,6 +71,12 @@ struct OverlayController: View {
       Image(systemName: "goforward.5")
         .font(.system(size: 30))
         .foregroundStyle(.labelStrong)
+        .simultaneousGesture(
+          TapGesture()
+            .onEnded {
+              rightAction()
+            }
+        )
     }
     .frame(width: 55, height: 55)
     .overlayController()

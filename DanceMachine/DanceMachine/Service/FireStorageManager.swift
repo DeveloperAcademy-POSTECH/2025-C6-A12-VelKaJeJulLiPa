@@ -30,7 +30,7 @@ final class FireStorageManager {
     data: Data,
     type: StorageType,
     progressHandler: ((Double) -> Void)? = nil,
-    timeout: TimeInterval = 60.0
+    timeout: TimeInterval = 300.0 // 5분 경과 시 네트워크 에러 throw
   ) async throws -> String {
     
     let path = type.path

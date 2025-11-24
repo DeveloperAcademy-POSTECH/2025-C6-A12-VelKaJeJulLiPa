@@ -17,12 +17,12 @@ struct FeedbackSection: View {
         .foregroundStyle(.labelStrong)
       Spacer()
       Button {
-        switch feedbackFilter {
-        case .all:
-          self.feedbackFilter = .mine
-        case .mine:
-          self.feedbackFilter = .all
-        }
+//        switch feedbackFilter {
+//        case .all:
+//          self.feedbackFilter = .mine
+//        case .mine:
+//          self.feedbackFilter = .all
+//        }
       } label: {
         Text("마이피드백")
           .foregroundStyle(feedbackFilter == .all ? .secondaryAssitive : .labelStrong)
@@ -32,6 +32,17 @@ struct FeedbackSection: View {
             RoundedRectangle(cornerRadius: 10)
               .fill(feedbackFilter == .all ? .backgroundElevated : .secondaryStrong)
               .stroke(feedbackFilter == .all ? .secondaryAssitive : .secondaryNormal)
+          )
+          .simultaneousGesture(
+            TapGesture()
+              .onEnded {
+                switch feedbackFilter {
+                case .all:
+                  self.feedbackFilter = .mine
+                case .mine:
+                  self.feedbackFilter = .all
+                }
+              }
           )
       }
     }

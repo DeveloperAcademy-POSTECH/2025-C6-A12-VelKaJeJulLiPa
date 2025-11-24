@@ -35,6 +35,14 @@ struct ProjectListHeaderView: View {
               }
               .foregroundStyle(Color.secondaryNormal)
               .transition(.move(edge: .bottom).combined(with: .opacity))
+              .simultaneousGesture(
+                TapGesture()
+                  .onEnded {
+                    if !isEditing {
+                      viewModel.presentationState.presentingCreateProjectSheet = true
+                    }
+                  }
+              )
             } else {
               CheckmarkButton(disable: isPrimaryDisabled) {
                 onPrimaryUpdate()
