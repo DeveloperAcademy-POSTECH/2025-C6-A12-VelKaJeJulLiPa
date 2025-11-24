@@ -71,13 +71,21 @@ struct CustomSlider: View {
         .contentShape(Rectangle())
         .simultaneousGesture(
           DragGesture(minimumDistance: 0)
+            .onChanged { value in
+              isDragging = true
+              let p = min(max(0, value.location.x / g.size.width), 1)
+              let new = p * duration
+              onDragChanged(new)
+            }
             .onEnded { value in
-              let p = value.location.x / g.size.width
+              let p = min(max(0, value.location.x / g.size.width), 1)
               let new = p * duration
               onSeek(new)
+              DispatchQueue.main.asyncAfter(deadline: .now()) {
+                isDragging = false
+              }
             }
         )
-        .animation(.easeIn(duration: 0.1), value: isDragging)
       }
       .frame(height: 25)
       .contentShape(Rectangle())
