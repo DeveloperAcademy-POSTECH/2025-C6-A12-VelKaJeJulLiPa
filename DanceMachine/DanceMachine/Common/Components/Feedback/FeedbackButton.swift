@@ -61,6 +61,12 @@ struct FeedbackButtons: View {
           .font(.system(size: 20))
           .foregroundStyle(.labelStrong)
       }
+      .simultaneousGesture(
+        TapGesture()
+          .onEnded {
+            pointAction()
+          }
+      )
       .padding(.horizontal, 4)
       .padding(.vertical, 14)
       .frame(maxWidth: .infinity)
@@ -87,6 +93,12 @@ struct FeedbackButtons: View {
             .foregroundStyle(.primitiveButton)
         }
       }
+      .simultaneousGesture(
+        TapGesture()
+          .onEnded {
+            intervalAction()
+          }
+      )
       .padding(.horizontal, 4)
       .padding(.vertical, 14)
       .frame(maxWidth: .infinity)

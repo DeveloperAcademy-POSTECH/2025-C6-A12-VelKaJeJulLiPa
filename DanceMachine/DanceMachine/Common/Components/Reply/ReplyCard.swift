@@ -108,6 +108,12 @@ struct ReplyCard: View {
       Text("답글달기")
         .font(.caption1Medium)
         .foregroundStyle(.labelNormal)
+        .simultaneousGesture(
+          TapGesture()
+            .onEnded {
+              replyAction()
+            }
+        )
     }
     .buttonStyle(.plain)
   }

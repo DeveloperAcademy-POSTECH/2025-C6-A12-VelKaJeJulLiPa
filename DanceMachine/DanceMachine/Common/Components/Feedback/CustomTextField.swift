@@ -20,11 +20,11 @@ struct CustomTextField: View {
   var body: some View {
     ZStack(alignment: .trailing) {
       TextField(placeHolder, text: $content, axis: .vertical)
+        .autocorrectionDisabled(true)
+        .textInputAutocapitalization(.never)
         .focused($isFocused)
         .font(.headline2Medium)
         .foregroundStyle(Color.labelStrong)
-        .textInputAutocapitalization(.sentences)
-        .autocorrectionDisabled(false)
         .padding(.leading, 16)
         .padding(.vertical, 12)
         .padding(.trailing, 40)
@@ -38,12 +38,17 @@ struct CustomTextField: View {
         )
       
       Button {
-        submitAction()
-        isFocused = false
       } label: {
         Image(systemName: "paperplane.fill")
           .font(.system(size: 19))
           .foregroundStyle(content.isEmpty ? .fillAssitive : .secondaryStrong)
+          .simultaneousGesture(
+            TapGesture()
+              .onEnded {
+                submitAction()
+                isFocused = false
+              }
+          )
       }
       .disabled(content.trimmingCharacters(in: .whitespaces).isEmpty)
       .frame(width: 18, height: 18)

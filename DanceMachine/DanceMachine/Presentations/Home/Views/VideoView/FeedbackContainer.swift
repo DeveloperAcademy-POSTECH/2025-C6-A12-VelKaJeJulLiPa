@@ -69,12 +69,21 @@ struct FeedbackContainer: View {
     }
     .background(Color.backgroundNormal)
     .contentShape(Rectangle())
-    .onTapGesture {
-      if state.showFeedbackInput {
-        state.showFeedbackInput = false
-        dismissKeyboard()
-      }
-    }
+    .simultaneousGesture(
+      TapGesture()
+        .onEnded {
+          if state.showFeedbackInput {
+            state.showFeedbackInput = false
+            dismissKeyboard()
+          }
+        }
+    )
+//    .onTapGesture {
+//      if state.showFeedbackInput {
+//        state.showFeedbackInput = false
+//        dismissKeyboard()
+//      }
+//    }
     .safeAreaInset(edge: .bottom) {
       if state.isImageOverlayPresented {
         EmptyView()

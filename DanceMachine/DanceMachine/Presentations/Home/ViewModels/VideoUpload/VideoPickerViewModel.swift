@@ -164,7 +164,7 @@ extension VideoPickerViewModel {
             let duration = try await self.getDuration(from: urlAsset)
 
             await MainActor.run {
-              self.progressManager.startCompressing()
+              self.progressManager.startCompressing(tracksId: tracksId, sectionId: sectionId)
             }
             // 압축
             let compressionURL = try await self.compressionManager.compressIfNeeded(
@@ -176,7 +176,7 @@ extension VideoPickerViewModel {
               }
 
             await MainActor.run {
-              self.progressManager.startUpload()
+              self.progressManager.startUpload(tracksId: tracksId, sectionId: sectionId)
             }
 
             let (video, track) = try await self.generateVideo(
@@ -457,7 +457,7 @@ extension VideoPickerViewModel {
 
     await MainActor.run {
       self.isLoading = true
-      self.progressManager.startCompressing()
+      self.progressManager.startCompressing(tracksId: context.tracksId, sectionId: context.sectionId)
     }
 
     // 기존 데이터 정리
@@ -481,7 +481,7 @@ extension VideoPickerViewModel {
         }
       
       await MainActor.run {
-        self.progressManager.startUpload()
+        self.progressManager.startUpload(tracksId: context.tracksId, sectionId: context.sectionId)
       }
 
       let (video, track) = try await generateVideo(

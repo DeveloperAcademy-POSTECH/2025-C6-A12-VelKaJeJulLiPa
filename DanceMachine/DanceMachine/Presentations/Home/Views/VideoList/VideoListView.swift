@@ -54,6 +54,7 @@ struct VideoListView: View {
           VideoListContent(
             geometry: geometry,
             tracksId: tracksId,
+            sectionId: vm.selectedSection?.sectionId ?? sectionId,
             videos: vm.filteredVideos,
             track: vm.track,
             section: vm.section,
@@ -210,6 +211,12 @@ struct VideoListView: View {
           .font(.headline2Medium)
           .foregroundStyle(.secondaryAssitive)
       }
+      .simultaneousGesture(
+        TapGesture()
+          .onEnded {
+            Task { await vm.requestPermissionAndFetch() }
+          }
+      )
     }
     .buttonStyle(.plain)
     .frame(width: g.size.width, height: g.size.height)

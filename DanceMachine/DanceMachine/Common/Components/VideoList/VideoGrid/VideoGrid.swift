@@ -14,6 +14,7 @@ struct VideoGrid: View {
   let columns: Int
   let spacing: CGFloat
   let tracksId: String
+  let sectionId: String
 
   let videos: [Video]
   let track: [Track]
@@ -36,22 +37,25 @@ struct VideoGrid: View {
       ),
       spacing: spacing
     ) {
-      switch progressManager.uploadState {
-      case .compressing, .uploading, .failed, .fileToLarge:
-        UploadProgressCard(
-          cardSize: size,
-          progressManager: progressManager,
-          onRetry: { await pickerViewModel.retryUpload() },
-          onCancel: { await pickerViewModel.cancelUpload() }
-        )
-      case .idle:
-        EmptyView()
-      }
       if vm.isLoading {
         ForEach(0..<6, id: \.self) { _ in
           SkeletonCardView(cardSize: size)
         }
       } else {
+        if progressManager.currentTracksId == tracksId &&
+           progressManager.currentSectionId == sectionId {
+          switch progressManager.uploadState {
+          case .compressing, .uploading, .failed, .fileToLarge:
+            UploadProgressCard(
+              cardSize: size,
+              progressManager: progressManager,
+              onRetry: { await pickerViewModel.retryUpload() },
+              onCancel: { await pickerViewModel.cancelUpload() }
+            )
+          case .idle:
+            EmptyView()
+          }
+        }
         ForEach(videos, id: \.videoId) { video in
           if let track = track.first(where: { $0.videoId == video.videoId.uuidString }) {
             let currentUserId = FirebaseAuthManager.shared.userInfo?.userId ?? ""
@@ -169,6 +173,7 @@ extension Video: Identifiable {
     columns: 2,
     spacing: 16,
     tracksId: "",
+    sectionId: "",
     videos: [Video(
       videoId: UUID(),
       videoTitle: "벨코의 리치맨",
