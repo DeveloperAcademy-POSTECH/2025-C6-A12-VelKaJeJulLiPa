@@ -17,6 +17,7 @@ struct VideoView: View {
   
   // MARK: 신고하기 관련
   @State private var showCreateReportSuccessToast: Bool = false
+  @State var drawingPause: Bool = false
   @State private var showIntervalWarning: Bool = false
   @State var drawingPause: Bool = false
   
