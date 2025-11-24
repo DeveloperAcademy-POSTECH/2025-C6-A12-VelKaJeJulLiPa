@@ -54,6 +54,7 @@ struct VideoListView: View {
           VideoListContent(
             geometry: geometry,
             tracksId: tracksId,
+            sectionId: vm.selectedSection?.sectionId ?? sectionId,
             videos: vm.filteredVideos,
             track: vm.track,
             section: vm.section,
