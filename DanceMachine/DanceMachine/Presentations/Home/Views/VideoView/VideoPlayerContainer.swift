@@ -55,9 +55,16 @@ struct VideoPlayerContainer: View {
       GeometryReader { g in
         Color.clear
           .contentShape(Rectangle())
-          .onTapGesture { location in
-            self.handleTap(location: location, width: g.size.width)
-          }
+          .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+              .onEnded { value in
+                self.handleTap(
+                  location: value.location,
+                  width: g.size.width,
+                  height: g.size.height
+                )
+              }
+          )
       }
       .gesture(magnificationGesture)
       .simultaneousGesture(dragGesture)
@@ -161,7 +168,7 @@ struct VideoPlayerContainer: View {
           showFeedbackPanel: showFeedbackPanel,
           drawingAction: onDrawingAction
         )
-        .padding(.vertical, isIPad && isLandscapeMode ? 40 : 0)
+//        .padding(.vertical, isIPad && isLandscapeMode ? 55 : 0)
         .padding(.horizontal, isLandscapeMode && !showFeedbackPanel ? 24 : 0)
         .onChange(of: vm.videoVM.currentTime) { _, newValue in
           if !state.isDragging {
@@ -206,7 +213,13 @@ struct VideoPlayerContainer: View {
     }
   }
   
-  private func handleTap(location: CGPoint, width: CGFloat) {
+  private func handleTap(location: CGPoint, width: CGFloat, height: CGFloat) {
+    // iPad 가로모드에서 상단 버튼 영역 제외 (VideoSettingButtons, FeedbackSection)
+    let isIPadLandscape = UIDevice.current.userInterfaceIdiom == .pad && isLandscapeMode
+    if isIPadLandscape && location.y < 100 {
+      return // 상단 100pt는 버튼 영역이므로 탭 무시
+    }
+
     if location.x < width / 3 {
       vm.videoVM.leftTab()
     } else if location.x > width * 2 / 3 {

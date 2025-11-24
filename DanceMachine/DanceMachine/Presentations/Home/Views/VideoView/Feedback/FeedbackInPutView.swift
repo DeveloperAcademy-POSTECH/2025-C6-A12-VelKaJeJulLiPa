@@ -138,6 +138,12 @@ struct FeedbackInPutView: View {
               .font(.footnoteMedium)
               .foregroundStyle(.labelStrong)
           }
+          .simultaneousGesture(
+            TapGesture()
+              .onEnded {
+                drawingButtonTapped()
+              }
+          )
           .padding(.vertical, 7)
           .padding(.horizontal, 10)
         }
@@ -159,6 +165,12 @@ struct FeedbackInPutView: View {
       Image(systemName: "xmark")
         .font(.system(size: 17))
         .foregroundStyle(.labelNormal)
+        .simultaneousGesture(
+          TapGesture()
+            .onEnded {
+              refresh()
+            }
+        )
     }
   }
   
@@ -172,12 +184,21 @@ struct FeedbackInPutView: View {
           .frame(width: 30, height: 30)
           .clipShape(RoundedRectangle(cornerRadius: 100))
           .matchedGeometryEffect(id: "feedbackImage", in: imageNamespace)
-          .onTapGesture {
-            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-//              showImageFull = true
-              self.editDrawingTapped() // 기존 이미지를 시트에 전달
-            }
-          }
+          .simultaneousGesture(
+            TapGesture()
+              .onEnded {
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+    //              showImageFull = true
+                  self.editDrawingTapped() // 기존 이미지를 시트에 전달
+                }
+              }
+          )
+//          .onTapGesture {
+//            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+////              showImageFull = true
+//              self.editDrawingTapped() // 기존 이미지를 시트에 전달
+//            }
+//          }
       }
     }
   }

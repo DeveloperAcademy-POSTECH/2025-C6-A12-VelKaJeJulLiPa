@@ -55,7 +55,26 @@ struct VideoPickerView: View {
         }
         if vm.photoLibraryStatus == .authorized || vm.photoLibraryStatus == .limited {
           ToolbarItemGroup(placement: .topBarTrailing) {
-            trailingToolbar
+            VideoUploadButton(
+              isDisabled: vm.selectedAsset == nil,
+              action: {
+                if vm.selectedAsset == nil {
+                  self.showEmptyVideoAlert = true
+                  return
+                } else if vm.videoTitle == "" {
+                  self.isFocused = true
+                  return
+                } else if vm.videoTitle.count > 19 {
+                  self.showToast = true
+                  return
+                }
+                self.isFocused = false
+                // iCloud 다운로드 완료 후 피커 닫기
+                vm.exportVideo(tracksId: tracksId, sectionId: sectionId) {
+                  dismiss()
+                }
+              }
+            )
           }
         }
       }
@@ -78,17 +97,18 @@ struct VideoPickerView: View {
       let spacing: CGFloat = 1
       let totalSpacing = spacing * 2
       let itemWidth = (g.size.width - totalSpacing) / 4
-      
+      let previewHeight = g.size.width * 9 / 16
+
       ScrollViewReader { proxy in
         ScrollView {
           VStack(spacing: 16) {
             Color.clear
               .frame(height: 0)
               .id("TOP")
-            
+
             VideoPreview(
               vm: vm,
-              size: 224
+              size: previewHeight
             )
             
             textField
@@ -231,35 +251,6 @@ struct VideoPickerView: View {
         .font(.caption1Medium)
         .foregroundStyle(.labelNormal)
     }
-  }
-  // 커스텀 툴바 트레일링 버튼
-  // 영상 선택, 영상 제목 비어있을 때, 글자 수 케이스
-  private var trailingToolbar: some View {
-    Button {
-      if vm.selectedAsset == nil {
-        self.showEmptyVideoAlert = true
-        return
-      } else if vm.videoTitle == "" {
-        self.isFocused = true
-        return
-      } else if vm.videoTitle.count > 19 {
-        self.showToast = true
-        return
-      }
-      self.isFocused = false
-      // iCloud 다운로드 완료 후 피커 닫기
-      vm.exportVideo(tracksId: tracksId, sectionId: sectionId) {
-        dismiss()
-      }
-    } label: {
-      Image(systemName: "arrow.up")
-        .foregroundStyle(
-          vm.selectedAsset == nil ? Color.labelAssitive : Color.labelStrong
-        )
-    }
-    .disabled(vm.selectedAsset == nil)
-    .buttonStyle(.borderedProminent)
-    .tint(Color.secondaryStrong)
   }
 }
 
