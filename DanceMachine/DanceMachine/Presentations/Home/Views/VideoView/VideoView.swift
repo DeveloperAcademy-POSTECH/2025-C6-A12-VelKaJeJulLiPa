@@ -17,6 +17,7 @@ struct VideoView: View {
   
   // MARK: 신고하기 관련
   @State private var showCreateReportSuccessToast: Bool = false
+  @State private var showIntervalWarning: Bool = false
   
   // 🔥 전체 화면 프리뷰용 상태 & 네임스페이스 //
   @Namespace private var drawingImageNamespace
@@ -195,6 +196,13 @@ struct VideoView: View {
       content: {
         ToastView(text: "신고가 접수되었습니다.\n조치사항은 이메일로 안내해드리겠습니다.", icon: .check)
       }
+    )
+    .notificationToast(
+      isPresented: $showIntervalWarning,
+      text: "시작 시점 이후에서 생성해 주세요!",
+      icon: .warning,
+      for: .video(.showIntervalWarning),
+      bottomPadding: 80
     )
     .alert(
       vm.errorMsg,
