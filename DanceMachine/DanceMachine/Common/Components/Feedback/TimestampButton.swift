@@ -10,19 +10,19 @@ import SwiftUI
 struct TimestampButton: View {
   let text: String
   let timeSeek: () -> Void
-  
+
   var body: some View {
-    Button {
+    HStack(spacing: 4) {
+      Image(systemName: "clock")
+        .font(.system(size: 18))
+        .foregroundStyle(.secondaryNormal)
+      Text(text)
+        .font(.headline2Medium)
+        .foregroundStyle(.secondaryNormal)
+    }
+    .contentShape(Rectangle())
+    .onTapGesture {
       timeSeek()
-    } label: {
-      HStack(spacing: 4) {
-        Image(systemName: "clock")
-          .font(.system(size: 18))
-          .foregroundStyle(.secondaryNormal)
-        Text(text)
-          .font(.headline2Medium)
-          .foregroundStyle(.secondaryNormal)
-      }
     }
   }
 }
@@ -30,26 +30,26 @@ struct TimestampButton: View {
 struct TimestampInput: View {
   let text: String
   let timeSeek: () -> Void
-  
+
   var body: some View {
-    Button {
-      timeSeek()
-    } label: {
-      HStack(spacing: 4) {
-        Image(systemName: "clock")
-          .font(.footnoteMedium)
-          .foregroundStyle(.labelStrong)
-        Text(text)
-          .font(.footnoteMedium)
-          .foregroundStyle(.labelStrong)
-      }
-      .padding(.vertical, 6)
-      .padding(.horizontal, 8)
+    HStack(spacing: 4) {
+      Image(systemName: "clock")
+        .font(.footnoteMedium)
+        .foregroundStyle(.labelStrong)
+      Text(text)
+        .font(.footnoteMedium)
+        .foregroundStyle(.labelStrong)
     }
+    .padding(.vertical, 6)
+    .padding(.horizontal, 8)
     .background {
       RoundedRectangle(cornerRadius: 1000)
         .fill(Color.secondaryStrong)
         .stroke(Color.labelStrong, lineWidth: 1)
+    }
+    .contentShape(Rectangle())
+    .onTapGesture {
+      timeSeek()
     }
   }
 }

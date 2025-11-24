@@ -38,12 +38,17 @@ struct CustomTextField: View {
         )
       
       Button {
-        submitAction()
-        isFocused = false
       } label: {
         Image(systemName: "paperplane.fill")
           .font(.system(size: 19))
           .foregroundStyle(content.isEmpty ? .fillAssitive : .secondaryStrong)
+          .simultaneousGesture(
+            TapGesture()
+              .onEnded {
+                submitAction()
+                isFocused = false
+              }
+          )
       }
       .disabled(content.trimmingCharacters(in: .whitespaces).isEmpty)
       .frame(width: 18, height: 18)

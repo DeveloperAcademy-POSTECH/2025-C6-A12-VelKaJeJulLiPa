@@ -70,9 +70,15 @@ struct FeedbackCard: View {
       }
     }
     .contentShape(Rectangle())
-    .onTapGesture {
-      action()
-    }
+    .gesture(
+      TapGesture()
+        .onEnded {
+          action()
+        }
+    )
+//    .onTapGesture {
+//      action()
+//    }
     .onLongPressGesture(perform: {
       action()
     })
@@ -186,6 +192,12 @@ struct FeedbackCard: View {
           .font(.system(size: 12))
           .foregroundStyle(.primitiveAssitive)
       }
+      .simultaneousGesture(
+        TapGesture()
+          .onEnded {
+            showReplySheet()
+          }
+      )
     }
     .buttonStyle(.plain)
     .frame(maxWidth: .infinity, alignment: .trailing)
@@ -232,9 +244,15 @@ struct FeedbackCard: View {
             .frame(width: 100, height: 100)
             .clipShape(RoundedRectangle(cornerRadius: 8))
             .matchedGeometryEffect(id: urlString, in: ns)   // 🔥 hero 연결
-            .onTapGesture {
-              onImageTap?(urlString)
-            }
+            .simultaneousGesture(
+              TapGesture()
+                .onEnded {
+                  onImageTap?(urlString)
+                }
+            )
+//            .onTapGesture {
+//              onImageTap?(urlString)
+//            }
         } else {
           // 기존 동작(히어로 없이)도 유지
           KFImage(url)
@@ -252,9 +270,15 @@ struct FeedbackCard: View {
             .scaledToFill()
             .frame(width: 100, height: 100)
             .clipShape(RoundedRectangle(cornerRadius: 8))
-            .onTapGesture {
-              onImageTap?(urlString)
-            }
+            .simultaneousGesture(
+              TapGesture()
+                .onEnded {
+                  onImageTap?(urlString)
+                }
+            )
+//            .onTapGesture {
+//              onImageTap?(urlString)
+//            }
         }
       }
     }

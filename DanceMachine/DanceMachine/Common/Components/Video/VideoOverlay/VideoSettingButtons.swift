@@ -45,11 +45,16 @@ struct VideoSettingButtons: View {
   
   private var drawingButton: some View {
     Button {
-      drawingAction()
     } label: {
       Image(systemName: "scribble.variable")
         .font(.system(size: 20))
         .foregroundStyle(.labelStrong)
+        .simultaneousGesture(
+          TapGesture()
+            .onEnded {
+              drawingAction()
+            }
+        )
     }
     .frame(width: 44, height: 44)
     .contentShape(Rectangle())
@@ -58,13 +63,18 @@ struct VideoSettingButtons: View {
 
   private var feedbackToggleButton: some View {
     Button {
-      toggleFeedbackPanel?()
     } label: {
       Image(
         systemName: showFeedbackPanel ? "chevron.right" : "chevron.left"
       )
         .font(.system(size: 20))
         .foregroundStyle(.labelStrong)
+        .simultaneousGesture(
+          TapGesture()
+            .onEnded {
+              toggleFeedbackPanel?()
+            }
+        )
     }
     .frame(width: 44, height: 44)
     .contentShape(Rectangle())
@@ -73,11 +83,16 @@ struct VideoSettingButtons: View {
 
   private var timeButton: some View {
     Button {
-      action()
     } label: {
       Image(.speedometer)
         .font(.system(size: 20))
         .foregroundStyle(.labelStrong)
+        .simultaneousGesture(
+          TapGesture()
+            .onEnded {
+              action()
+            }
+        )
     }
     .frame(width: 44, height: 44)
     .contentShape(Rectangle())
@@ -87,11 +102,16 @@ struct VideoSettingButtons: View {
   // 아래쪽 버튼: 항상 전체화면 토글
   private var orientationButton: some View {
     Button {
-      toggleOrientations()
     } label: {
       Image(systemName: isLandscapeMode ? "arrow.up.right.and.arrow.down.left.rectangle" : "arrow.down.left.and.arrow.up.right.rectangle")
         .font(.system(size: 20))
         .foregroundStyle(.labelStrong)
+        .simultaneousGesture(
+          TapGesture()
+            .onEnded {
+              toggleOrientations()
+            }
+        )
     }
     .frame(width: 44, height: 44)
     .contentShape(Rectangle())

@@ -61,17 +61,6 @@ struct VideoPreview: View {
     })
     .ignoresSafeArea()
   }
-  
-  private var loadingView: some View {
-    VStack {
-      ProgressView()
-        .tint(.white)
-        .scaleEffect(1.5)
-      Text("로딩 중...")
-        .foregroundStyle(.white)
-        .padding(.top)
-    }
-  }
 }
 //#Preview {
 //  NavigationStack {
