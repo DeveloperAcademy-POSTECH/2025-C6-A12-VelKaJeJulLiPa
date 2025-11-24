@@ -82,17 +82,21 @@ struct UploadProgressCard: View {
   }
   
   private var topSkeletonView: some View {
-    SkeletonView(
-      RoundedCorner(radius: 10, corners: [.topLeft, .topRight]),
-      Color.fillNormal
-    )
+//    SkeletonView(
+//      RoundedCorner(radius: 10, corners: [.topLeft, .topRight]),
+//      Color.fillNormal
+//    )
+    RoundedCorner(radius: 10, corners: [.topLeft, .topRight])
+      .fill(Color.fillNormal)
   }
   
   private var bottomSkeletonView: some View {
-    SkeletonView(
-      RoundedRectangle(cornerRadius: 5),
-      Color.fillNormal
-    )
+//    SkeletonView(
+//      RoundedRectangle(cornerRadius: 5),
+//      Color.fillNormal
+//    )
+    RoundedRectangle(cornerRadius: 5)
+      .fill(Color.fillNormal)
   }
   
   // MARK: fileTooLarge
@@ -108,6 +112,14 @@ struct UploadProgressCard: View {
           Image(systemName: "xmark")
             .font(.system(size: 30, weight: .semibold))
             .foregroundStyle(Color.secondaryNormal)
+            .simultaneousGesture(
+              TapGesture()
+                .onEnded {
+                  Task {
+                    await onCancel()
+                  }
+                }
+            )
         }
       }
     }
@@ -222,6 +234,14 @@ struct UploadProgressCard: View {
             .font(.system(size: cardSize * 0.2, weight: .bold))
             .foregroundStyle(Color.secondaryNormal)
         }
+        .simultaneousGesture(
+          TapGesture()
+            .onEnded {
+              Task {
+                await onRetry()
+              }
+            }
+        )
       }
     }
     .padding(.horizontal, cardSize * 0.1)
@@ -251,6 +271,14 @@ struct UploadProgressCard: View {
         Text("취소")
           .font(.caption1Medium)
           .foregroundStyle(.accentRedNormal)
+          .simultaneousGesture(
+            TapGesture()
+              .onEnded {
+                Task {
+                  await onCancel()
+                }
+              }
+          )
       }
       Spacer().frame(height: 16)
     }
