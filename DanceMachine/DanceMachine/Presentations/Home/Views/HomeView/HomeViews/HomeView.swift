@@ -85,13 +85,21 @@ struct HomeView: View {
       
       print("🔥 HomeViewLoding...")
       do {
-        if homeViewModel.isFirstAppear == false {
-          if homeViewModel.cacheStore == nil { homeViewModel.setCacheStore(cache) }
-          await homeViewModel.onAppear()
-        }
+        if homeViewModel.cacheStore == nil { homeViewModel.setCacheStore(cache) }
+        await homeViewModel.onAppear()
+        
         try await NotificationManager.shared.refreshBadge(for: FirebaseAuthManager.shared.user?.uid ?? "")
       } catch {
         
+      }
+    }
+    
+    // 여기 추가
+    .onChange(of: inviteRouter.lastInviteAcceptedAt) { _, _ in
+      if ProcessInfo.isRunningInPreviews { return }
+      Task {
+        print("🎉 초대 링크 성공! 화면에 반영합니다.")
+        await homeViewModel.onAppear()
       }
     }
   }
