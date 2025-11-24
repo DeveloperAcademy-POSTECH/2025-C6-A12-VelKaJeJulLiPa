@@ -22,6 +22,8 @@ final class InviteRouter: ObservableObject {
   
   private var pendingToken: String?
   
+  private(set) var invitedTeamspaceName: String?
+  
   // MARK: - URL 수신 처리
   func handleIncoming(url: URL) {
     guard let token = extractToken(from: url) else {
@@ -81,6 +83,7 @@ final class InviteRouter: ObservableObject {
       print("💾[InviteRouter] lastAccessedTeamspaceId 저장:", teamspaceId)
       
       self.lastInviteAcceptedAt = Date()
+      self.invitedTeamspaceName = teamspace.teamspaceName
       print("🔁[InviteRouter] lastInviteAcceptedAt 갱신:", self.lastInviteAcceptedAt)
     } catch {
       print("❌[InviteRouter] 초대 수락 실패:", error)

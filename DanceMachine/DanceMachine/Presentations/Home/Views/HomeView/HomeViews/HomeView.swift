@@ -18,6 +18,8 @@ struct HomeView: View {
   @State private var projectListViewModel: ProjectListViewModel = .init()
   @State private var tracksViewModel: TracksListViewModel? = nil
   
+  @State private var showInviteToastMessage: Bool = false // 초대 관련 토스트 메세지
+  
   var onTrackSelect: ((Tracks) -> Void)? = nil
   
   //  init(viewModel: HomeViewModel? = nil) {
@@ -93,15 +95,19 @@ struct HomeView: View {
         
       }
     }
-    
-    // 여기 추가
-    .onChange(of: inviteRouter.lastInviteAcceptedAt) { _, _ in
+    // 초대 링크 관련
+    .onChange(of: inviteRouter.lastInviteAcceptedAt) {
       if ProcessInfo.isRunningInPreviews { return }
       Task {
         print("🎉 초대 링크 성공! 화면에 반영합니다.")
         await homeViewModel.onAppear()
+        self.showInviteToastMessage = true
       }
     }
+    .toast(
+      isPresented: $showInviteToastMessage) {
+        ToastView(text: "\(inviteRouter.invitedTeamspaceName ?? "")팀에 입장하셨습니다.", icon: .check)
+      }
   }
   
   // MARK: - 팀 스페이스가 비어져있을때 보이는 뷰
