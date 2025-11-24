@@ -83,7 +83,7 @@ struct ReplySheet: View {
         onBottomReplyTap: {
           self.inputMode = .reply
         },
-        imageNamespace: imageNamespace,
+        imageNamespace: nil,
         onImageTap: { url in
           onImageTap(url)
           dismiss()
