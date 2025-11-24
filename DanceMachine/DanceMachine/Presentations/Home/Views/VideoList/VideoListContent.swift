@@ -10,6 +10,7 @@ import SwiftUI
 struct VideoListContent: View {
   let geometry: GeometryProxy
   let tracksId: String
+  let sectionId: String
   let videos: [Video]
   let track: [Track]
   let section: [Section]
@@ -30,6 +31,7 @@ struct VideoListContent: View {
       columns: columns,
       spacing: spacing,
       tracksId: tracksId,
+      sectionId: sectionId,
       videos: videos,
       track: track,
       section: section,
