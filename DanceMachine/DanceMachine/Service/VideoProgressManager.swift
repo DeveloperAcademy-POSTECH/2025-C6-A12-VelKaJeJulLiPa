@@ -26,8 +26,13 @@ final class VideoProgressManager {
   }
 
   var uploadState: UploadState = .idle
-  
-  func startCompressing() {
+
+  var currentTracksId: String?
+  var currentSectionId: String?
+
+  func startCompressing(tracksId: String, sectionId: String) {
+    self.currentTracksId = tracksId
+    self.currentSectionId = sectionId
     uploadState = .compressing(progress: 0.0)
   }
   
@@ -36,7 +41,9 @@ final class VideoProgressManager {
     uploadState = .compressing(progress: progress)
   }
 
-  func startUpload() {
+  func startUpload(tracksId: String, sectionId: String) {
+    self.currentTracksId = tracksId
+    self.currentSectionId = sectionId
     uploadState = .uploading(progress: 0.0)
   }
 
@@ -47,6 +54,8 @@ final class VideoProgressManager {
 
   func finishUpload() {
     uploadState = .idle
+    currentTracksId = nil
+    currentSectionId = nil
   }
 
   func failUpload(message: String) {
@@ -55,5 +64,7 @@ final class VideoProgressManager {
 
   func reset() {
     uploadState = .idle
+    currentTracksId = nil
+    currentSectionId = nil
   }
 }
