@@ -18,6 +18,7 @@ struct FeedbackPaperDrawingView: View {
   @State private var feedbackPaperDrawingData: FeedbackPaperDrawingData = .init()
   
   @Binding var image: UIImage?
+  @Binding var drawingPause: Bool
   
   @State private var showTools: Bool = false
   
@@ -40,6 +41,7 @@ struct FeedbackPaperDrawingView: View {
     }
     .onAppear {
       self.showTools = true
+      self.drawingPause = true
     }
     .photosPicker(isPresented: $showImagePicker, selection: $photoItem)
     .onChange(of: photoItem) { oldValue, newValue in
@@ -52,6 +54,9 @@ struct FeedbackPaperDrawingView: View {
         self.feedbackPaperDrawingData.insertImage(image, rect: .init(origin: .zero, size: .init(width: 200, height: 200)))
         photoItem = nil
       }
+    }
+    .onDisappear {
+      self.drawingPause = false
     }
   }
   
@@ -185,7 +190,10 @@ struct FeedbackPaperDrawingView: View {
 #Preview {
   if #available(iOS 26.0, *) {
     NavigationStack {
-      FeedbackPaperDrawingView(image: .constant(nil))
+      FeedbackPaperDrawingView(
+        image: .constant(nil),
+        drawingPause: .constant(false)
+      )
     }
   } else {
     // Fallback on earlier versions

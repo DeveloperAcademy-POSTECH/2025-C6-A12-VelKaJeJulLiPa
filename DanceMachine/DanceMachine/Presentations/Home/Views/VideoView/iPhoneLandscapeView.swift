@@ -15,6 +15,7 @@ struct iPhoneLandscapeView: View {
   
   //  @State private var showSpeedModal: Bool = false
   @State private var selectedFeedbackForReply: Feedback? = nil
+  @Binding var drawingPause: Bool
   
   let filteredFeedback: [Feedback]
   let userId: String
@@ -41,6 +42,7 @@ struct iPhoneLandscapeView: View {
             aspectRatio: 16/9,
             isLandscapeMode: true,
             showFeedbackPanel: state.showFeedbackPanel,
+            drawingPause: $drawingPause,
             onDrawingAction: onCaptureFrame,
             onFullscreenToggle: {
               withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {

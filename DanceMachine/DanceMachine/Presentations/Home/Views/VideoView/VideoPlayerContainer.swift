@@ -17,6 +17,7 @@ struct VideoPlayerContainer: View {
   let aspectRatio: CGFloat?
   let isLandscapeMode: Bool
   let showFeedbackPanel: Bool
+  @Binding var drawingPause: Bool // 드로잉 시, 일시 정지
   let onDrawingAction: () -> Void
   let onFullscreenToggle: () -> Void
   let onToggleFeedbackPanel: () -> Void
@@ -75,13 +76,13 @@ struct VideoPlayerContainer: View {
                 .fill(Color.black.opacity(0.7))
             )
             .padding(.top, 20)
-
+          
           Spacer()
         }
         .allowsHitTesting(false)
         .transition(.opacity)
       }
-
+      
       // 더블탭 Seek 인디케이터
       HStack(spacing: 0) {
         // 왼쪽 (뒤로가기)
@@ -93,9 +94,9 @@ struct VideoPlayerContainer: View {
           .frame(maxWidth: .infinity, alignment: .leading)
           .padding(.leading, isLandscapeMode ? 80 : 60)
         }
-
+        
         Spacer()
-
+        
         // 오른쪽 (앞으로가기)
         if vm.videoVM.showRightSeekIndicator {
           DoubleTapSeekIndicator(
@@ -202,6 +203,12 @@ struct VideoPlayerContainer: View {
             VideoLottieView()
           }
         }
+      }
+    }
+    // 드로잉 시, 일시 정지
+    .onChange(of: drawingPause) { oldValue, newValue in
+      if let _ = vm.videoVM.player {
+        vm.videoVM.pause()
       }
     }
   }

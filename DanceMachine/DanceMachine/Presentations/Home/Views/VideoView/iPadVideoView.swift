@@ -25,6 +25,7 @@ struct iPadVideoView: View {
   @State private var columnVisibility: NavigationSplitViewVisibility = .all
   @State private var isDeviceLandscape: Bool = false
   @State private var lastSize: CGSize = .zero
+  @Binding var drawingPause: Bool
 
   var body: some View {
     ZStack {
@@ -115,6 +116,7 @@ struct iPadVideoView: View {
           aspectRatio: nil,
           isLandscapeMode: true,
           showFeedbackPanel: true,
+          drawingPause: $drawingPause,
           onDrawingAction: onCaptureFrame,
           onFullscreenToggle: {
             withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
@@ -174,6 +176,7 @@ struct iPadVideoView: View {
           aspectRatio: 16/9,
           isLandscapeMode: false,
           showFeedbackPanel: false,
+          drawingPause: $drawingPause,
           onDrawingAction: onCaptureFrame,
           onFullscreenToggle: {
             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
@@ -231,6 +234,7 @@ struct iPadVideoView: View {
         aspectRatio: nil,
         isLandscapeMode: isDeviceLandscape,
         showFeedbackPanel: false,
+        drawingPause: $drawingPause,
         onDrawingAction: onCaptureFrame,
         onFullscreenToggle: {
           withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {

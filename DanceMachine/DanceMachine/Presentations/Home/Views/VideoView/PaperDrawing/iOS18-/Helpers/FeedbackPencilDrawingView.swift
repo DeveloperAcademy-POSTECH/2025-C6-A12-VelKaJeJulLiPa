@@ -22,6 +22,8 @@ struct FeedbackPencilDrawingView: View {
   @Environment(\.dismiss) private var dismiss
   
   @Binding var image: UIImage?
+  @Binding var drawingPause: Bool
+  
   var initialDrawing: Data? = nil // 편집 모드일 때 기존 드로잉 데이터
 
   var onDone: (UIImage, Data?) -> Void = { _, _ in }
@@ -50,6 +52,7 @@ struct FeedbackPencilDrawingView: View {
       }
     }
     .onAppear {
+      self.drawingPause = true
       configureToolPicker()
       updateToolPickerVisibility(showsToolPicker)
 
@@ -59,6 +62,9 @@ struct FeedbackPencilDrawingView: View {
         canvasView.drawing = drawing
       }
       // 새 드로잉: canvasView.drawing은 기본값(빈 캔버스) 사용
+    }
+    .onDisappear {
+      self.drawingPause = false
     }
     // 토글될 때마다 실제로 툴피커 갱신
     .onChange(of: showsToolPicker) { old, visible in

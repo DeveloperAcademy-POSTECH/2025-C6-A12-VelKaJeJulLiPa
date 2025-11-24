@@ -17,11 +17,14 @@ struct VideoView: View {
   
   // MARK: 신고하기 관련
   @State private var showCreateReportSuccessToast: Bool = false
+  @State var drawingPause: Bool = false
   
   // 🔥 전체 화면 프리뷰용 상태 & 네임스페이스 //
   @Namespace private var drawingImageNamespace
+  
   // 🔥 피드백 카드 이미지 풀스크린용 상태
   @Namespace private var feedbackImageNamespace
+  
   
   // MARK: 전역으로 관리되는 ID
   let userId: String = FirebaseAuthManager.shared.userInfo?.userId ?? ""
@@ -95,6 +98,7 @@ struct VideoView: View {
       if #available(iOS 26.0, *) {
         FeedbackPaperDrawingView(
           image: $state.capturedImage,
+          drawingPause: $drawingPause,
           onComplete: { finalImage, markupData in
             // 완료 시: 합성 이미지 + 마크업 데이터 저장
             state.editedOverlayImage = finalImage // 배경 + 드로잉 합성 이미지
@@ -133,7 +137,9 @@ struct VideoView: View {
       else {
         FeedbackPencilDrawingView(
           image: $state.capturedImage,
-          initialDrawing: state.isEditingExistingDrawing ? state.savedDrawingData : nil, // 편집 모드면 기존 데이터 로드
+          drawingPause: $drawingPause,
+          initialDrawing: state.isEditingExistingDrawing ? state.savedDrawingData : nil,
+          // 편집 모드면 기존 데이터 로드
           onDone: { merged, drawingData in
             DispatchQueue.main.async {
               // 완료 시: 합성 이미지 + 드로잉 데이터 저장
@@ -250,7 +256,8 @@ struct VideoView: View {
         drawingImageNamespace: drawingImageNamespace,
         feedbackImageNamespace: feedbackImageNamespace,
         onCaptureFrame: { self.captureCurrentFrame() },
-        editExistingDrawing: { self.editExistingDrawing() }
+        editExistingDrawing: { self.editExistingDrawing() },
+        drawingPause: $drawingPause
       )
     } else {
       // iPhone
@@ -258,12 +265,14 @@ struct VideoView: View {
         iPhoneLandscapeView(
           vm: vm,
           state: state,
+          drawingPause: $drawingPause,
           filteredFeedback: filteredFeedbacks,
           userId: userId,
           proxy: proxy,
           videoId: videoId,
           videoURL: videoURL,
-          onCaptureFrame: { self.captureCurrentFrame() },
+          onCaptureFrame: { self.captureCurrentFrame()
+          },
           editExistingDrawing: { self.editExistingDrawing() },
           drawingImageNamespace: drawingImageNamespace,
           feedbackImageNamespace: feedbackImageNamespace
@@ -272,6 +281,7 @@ struct VideoView: View {
         iPhonePortraitView(
           vm: vm,
           state: state,
+          drawingPause: $drawingPause,
           filteredFeedback: filteredFeedbacks,
           userId: userId,
           proxy: proxy,
@@ -280,7 +290,8 @@ struct VideoView: View {
           videoURL: videoURL,
           drawingImageNamespace: drawingImageNamespace,
           feedbackImageNamespace: feedbackImageNamespace,
-          onCaptureFrame: { self.captureCurrentFrame() },
+          onCaptureFrame: { self.captureCurrentFrame()
+          },
           editExistingDrawing: { self.editExistingDrawing() }
         )
       }
