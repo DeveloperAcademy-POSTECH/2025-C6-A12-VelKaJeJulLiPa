@@ -128,7 +128,9 @@ struct FeedbackListView: View {
         showReplySheet: { navigate(f) },
         currentTime: state.pointTime,
         startTime: state.intervalTime,
-        timeSeek: { vm.videoVM.seekToTime(to: f.startTime ?? state.pointTime ) },
+        timeSeek: {
+          vm.videoVM.seekToTime(to: f.startTime ?? state.pointTime)
+        },
         currentUserId: userId,
         onDelete: { Task { await vm.feedbackVM.deleteFeedback(f) } },
         onReport: { }, // 가로모드에서는 신고 비활성화
@@ -151,7 +153,9 @@ struct FeedbackListView: View {
         showReplySheet: { self.selectedFeedback = f },
         currentTime: state.pointTime,
         startTime: state.intervalTime,
-        timeSeek: { vm.videoVM.seekToTime(to: f.startTime ?? state.pointTime ) },
+        timeSeek: {
+          vm.videoVM.seekToTime(to: f.startTime ?? state.pointTime)
+        },
         currentUserId: userId,
         onDelete: { Task { await vm.feedbackVM.deleteFeedback(f) } },
         onReport: {

@@ -31,9 +31,10 @@ struct FeedbackCard: View {
   var imageNamespace: Namespace.ID? = nil // 애니메이션 용
   
   var onImageTap: ((String) -> Void)? = nil
-  
+
   @State private var showMenu: Bool = false
-  
+  @State private var isReplyPressed: Bool = false
+
   var body: some View {
     ZStack(alignment: .topTrailing) {
       VStack(alignment: .leading) {
@@ -175,7 +176,7 @@ struct FeedbackCard: View {
   
   private var replyButton: some View {
     Button {
-//      showReplySheet()
+      // 액션 비워둠 (simultaneousGesture에서 처리)
     } label: {
       HStack(spacing: 4) {
         Image(systemName: "message")
@@ -186,15 +187,29 @@ struct FeedbackCard: View {
           .font(.system(size: 12))
           .foregroundStyle(.primitiveAssitive)
       }
-      .simultaneousGesture(
-        TapGesture()
-          .onEnded {
-            showReplySheet()
-          }
-      )
     }
-    .buttonStyle(.plain)
+    .scaleEffect(isReplyPressed ? 1.3 : 1.0)
     .frame(maxWidth: .infinity, alignment: .trailing)
+    .simultaneousGesture(
+      TapGesture()
+        .onEnded {
+          // 햅틱 피드백
+          let impact = UIImpactFeedbackGenerator(style: .light)
+          impact.impactOccurred()
+
+          // 애니메이션
+          withAnimation(.easeInOut(duration: 0.1)) {
+            isReplyPressed = true
+          }
+          DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            withAnimation(.easeInOut(duration: 0.3)) {
+              isReplyPressed = false
+            }
+          }
+
+          showReplySheet()
+        }
+    )
   }
   
   private var contextRow: some View {
