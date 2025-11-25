@@ -264,23 +264,37 @@ final class ProjectListViewModel {
   }
   
   func confirmDelete() async {
+    guard let teamspaceId = currentTeamspace?.teamspaceId.uuidString else {
+      print("🙅🏻‍♂️팀 스페이스 오류")
+      return
+    }
+    guard let project = presentationState.pendingDeleteProject else { return }
+
+    
+    let removingId = project.projectId
+    let backupProjects = dataState.projects
+
+    if let idx = dataState.projects.firstIndex(where: { $0.projectId == removingId }) {
+      dataState.projects.remove(at: idx)
+    }
+
+   
+    if editingState.expandedId == removingId {
+      editingState.expandedId = nil
+      editingState.headerTitle = "프로젝트 목록"
+    }
+
+ 
+    presentationState.isPresentingDeleteAlert = false
+    presentationState.pendingDeleteProject = nil
+
     do {
-      guard let teamspaceId = currentTeamspace?.teamspaceId.uuidString else {
-        print("🙅🏻‍♂️팀 스페이스 오류")
-        return
-      }
-      guard let project = presentationState.pendingDeleteProject else { return }
-      
-      try await deleteProject(projectId: project.projectId.uuidString)
+      try await deleteProject(projectId: removingId.uuidString)
       try await renewalTeamspaceUpdateAt(teamspaceId: teamspaceId)
-      
-      // 서버 기준 최신으로 다시 로딩(캐시 주입돼 있으면 캐싱 로직이 알아서 동작)
-      await onAppear()
-      
-      presentationState.isPresentingDeleteAlert = false
-      presentationState.pendingDeleteProject    = nil
-      
-      // 캐시도 최신 projects로 교체
+
+
+      bumpLocalTeamspaceUpdatedAt()
+
       if let cacheStore,
          let currentTeamspace,
          let updatedAt = currentTeamspace.updatedAt {
@@ -291,13 +305,24 @@ final class ProjectListViewModel {
           teamspaceUpdatedAt: updatedAt,
           project: dataState.projects
         )
-
-        print("🧪 commit 후 캐시 교체됨")
-        cacheStore.debugPrintProjectCache(teamspaceId: tid, prefix: "🧪(after commit)")
+        print("🧪 delete 후 캐시 교체됨")
+        cacheStore.debugPrintProjectCache(teamspaceId: tid, prefix: "🧪(after delete)")
       }
-      
     } catch {
-      print("🙅🏻‍♂️프로젝트 삭제에 실패했습니다. error: \(error.localizedDescription)")
+      // 6) 실패하면 롤백 ✅ NEW
+      dataState.projects = backupProjects
+      presentationState.showNameUpdateFailToast = true
+      print("🙅🏻‍♂️프로젝트 삭제 실패. rollback 수행:", error.localizedDescription)
+    }
+  }
+
+  // currentTeamspace.updatedAt을 로컬에서도 맞춰주는 유틸 ✅ NEW
+  private func bumpLocalTeamspaceUpdatedAt() {
+    // 서버 timestamp와 1:1로 맞출 순 없지만,
+    // 캐시 비교용으로 “로컬도 최신이라고” 동기화해주는 목적
+    if var ts = FirebaseAuthManager.shared.currentTeamspace {
+      ts.updatedAt = Date()
+      FirebaseAuthManager.shared.currentTeamspace = ts
     }
   }
 }

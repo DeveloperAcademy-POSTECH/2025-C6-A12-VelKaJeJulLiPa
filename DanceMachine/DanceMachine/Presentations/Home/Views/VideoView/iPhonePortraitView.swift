@@ -12,7 +12,7 @@ import AVFoundation
 struct iPhonePortraitView: View {
   @Bindable var vm: VideoDetailViewModel
   @Bindable var state: VideoViewState
-  
+  @Binding var drawingPause: Bool
   let filteredFeedback: [Feedback]
   let userId: String
   let proxy: GeometryProxy
@@ -37,7 +37,9 @@ struct iPhonePortraitView: View {
         aspectRatio: 16/9,
         isLandscapeMode: false,
         showFeedbackPanel: false,
-        onDrawingAction: onCaptureFrame, // TODO: 여기도 위에 수정하면서 같이 수정하기
+        drawingPause: $drawingPause,
+        onDrawingAction: onCaptureFrame,
+        // TODO: 여기도 위에 수정하면서 같이 수정하기
         onFullscreenToggle: {
           withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
             state.enterLandscapeMode()
