@@ -31,6 +31,8 @@ struct TimestampInput: View {
   let text: String
   let timeSeek: () -> Void
 
+  @State private var isPressed: Bool = false
+
   var body: some View {
     HStack(spacing: 4) {
       Image(systemName: "clock")
@@ -47,10 +49,27 @@ struct TimestampInput: View {
         .fill(Color.secondaryStrong)
         .stroke(Color.labelStrong, lineWidth: 1)
     }
+    .scaleEffect(isPressed ? 1.2 : 1.0)
     .contentShape(Rectangle())
-    .onTapGesture {
-      timeSeek()
-    }
+    .highPriorityGesture(
+      TapGesture()
+        .onEnded {
+          // 햅틱 피드백
+          let impact = UIImpactFeedbackGenerator(style: .light)
+          impact.impactOccurred()
+
+          // 애니메이션
+          withAnimation(.easeInOut(duration: 0.1)) {
+            isPressed = true
+          }
+          DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            withAnimation(.easeInOut(duration: 0.2)) {
+              isPressed = false
+            }
+          }
+          timeSeek()
+        }
+    )
   }
 }
 
