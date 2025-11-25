@@ -90,7 +90,11 @@ struct HomeView: View {
         if homeViewModel.cacheStore == nil { homeViewModel.setCacheStore(cache) }
         await homeViewModel.onAppear()
         
-        try await NotificationManager.shared.refreshBadge(for: FirebaseAuthManager.shared.user?.uid ?? "")
+        guard let userId = FirebaseAuthManager.shared.user?.uid else {
+          return
+        }
+        
+        try await NotificationManager.shared.refreshBadge(for: userId)
       } catch {
         
       }

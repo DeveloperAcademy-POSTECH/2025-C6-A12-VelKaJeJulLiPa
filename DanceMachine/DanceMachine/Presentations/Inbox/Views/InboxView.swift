@@ -16,14 +16,17 @@ struct InboxView: View {
       Color.backgroundNormal.ignoresSafeArea()
       
       VStack {
-        if viewModel.showError {
-          ErrorStateView(
-            mainSymbol: "exclamationmark.triangle.fill",
-            message: "알림 불러오기를 실패했습니다.\n네트워크를 확인해주세요",
-          ) {
-            Task { await viewModel.refresh() }
-          }
-        } else if viewModel.isLoading && viewModel.inboxNotifications.isEmpty {
+//        FIXME: 리젝사유 회피용 임시 주석처리
+//        if viewModel.showError {
+//          ErrorStateView(
+//            mainSymbol: "exclamationmark.triangle.fill",
+//            message: "알림 불러오기를 실패했습니다.\n네트워크를 확인해주세요",
+//          ) {
+//            Task { await viewModel.refresh() }
+//          }
+//        } else
+        
+        if viewModel.isLoading && viewModel.inboxNotifications.isEmpty {
           ScrollView{
             ForEach(0..<4, id: \.self) { _ in
               SkeletonInboxNotificationRow()
@@ -56,9 +59,10 @@ struct InboxView: View {
               ForEach(viewModel.inboxNotifications, id: \.notificationId) { notification in
                 InboxNotificationRow(notification: notification)
                   .onTapGesture {
+                    guard let userId = FirebaseAuthManager.shared.userInfo?.userId else { return }
                     Task {
                       try await viewModel.markAsRead(
-                        userId: FirebaseAuthManager.shared.userInfo?.userId ?? "",
+                        userId: userId,
                         notificationId: notification.notificationId
                       )
                       

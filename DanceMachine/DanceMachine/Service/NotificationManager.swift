@@ -43,6 +43,11 @@ final class NotificationManager: ObservableObject {
   
   /// 서버에서 안 읽은 알림 개수를 받아 앱 아이콘 뱃지와 동기화
   func refreshBadge(for userId: String) async throws {
+    guard !userId.isEmpty else {
+      print("⚠️ refreshBadge: userId가 비어있음")
+      return
+    }
+
     do {
       let count = try await FirestoreManager.shared.fetchUnreadNotificationCount(for: userId)
       try await updateAppBadgeCount(to: count)
@@ -91,9 +96,14 @@ final class NotificationManager: ObservableObject {
   
   /// 특정 유저의 내 읽지 않은 알림 개수를 가져오는 메서드
   func fetchUnreadNotificationCount(userId: String) async throws  {
+    guard !userId.isEmpty else {
+      print("⚠️ fetchUnreadNotificationCount: userId가 비어있음")
+      return
+    }
+
     let oneMonthAgo = Calendar.current.date(byAdding: .month, value: -1, to: Date.now)!
     let oneMonthAgoTimestamp = Timestamp(date: oneMonthAgo)
-    
+
     do {
       let snapshot = try await Firestore.firestore()
         .collection(CollectionType.users.rawValue)
@@ -102,7 +112,7 @@ final class NotificationManager: ObservableObject {
         .whereField(UserNotification.CodingKeys.createdAt.rawValue, isGreaterThanOrEqualTo: oneMonthAgoTimestamp)
         .whereField(UserNotification.CodingKeys.isRead.rawValue, isEqualTo: false)
         .getDocuments()
-      
+
       try await updateAppBadgeCount(to: snapshot.documents.count)
     } catch {
       throw NotificationError.fetchUnreadCountFailed(underlying: error)
