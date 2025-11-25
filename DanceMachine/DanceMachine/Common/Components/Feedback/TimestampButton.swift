@@ -48,9 +48,12 @@ struct TimestampInput: View {
         .stroke(Color.labelStrong, lineWidth: 1)
     }
     .contentShape(Rectangle())
-    .onTapGesture {
-      timeSeek()
-    }
+    .highPriorityGesture(
+      TapGesture()
+        .onEnded {
+          timeSeek()
+        }
+    )
   }
 }
 

@@ -70,12 +70,6 @@ struct FeedbackCard: View {
       }
     }
     .contentShape(Rectangle())
-    .gesture(
-      TapGesture()
-        .onEnded {
-          action()
-        }
-    )
 //    .onTapGesture {
 //      action()
 //    }
@@ -181,7 +175,7 @@ struct FeedbackCard: View {
   
   private var replyButton: some View {
     Button {
-      showReplySheet()
+//      showReplySheet()
     } label: {
       HStack(spacing: 4) {
         Image(systemName: "message")
@@ -244,7 +238,7 @@ struct FeedbackCard: View {
             .frame(width: 100, height: 100)
             .clipShape(RoundedRectangle(cornerRadius: 8))
             .matchedGeometryEffect(id: urlString, in: ns)   // 🔥 hero 연결
-            .simultaneousGesture(
+            .highPriorityGesture(
               TapGesture()
                 .onEnded {
                   onImageTap?(urlString)
@@ -270,7 +264,7 @@ struct FeedbackCard: View {
             .scaledToFill()
             .frame(width: 100, height: 100)
             .clipShape(RoundedRectangle(cornerRadius: 8))
-            .simultaneousGesture(
+            .highPriorityGesture(
               TapGesture()
                 .onEnded {
                   onImageTap?(urlString)
