@@ -190,6 +190,8 @@ struct VideoView: View {
         videoURL: videoURL,
         teamspaceId: teamspaceId
       )
+      // 비디오 로드 후 자동 재생
+      vm.videoVM.togglePlayPause()
     }
     .onDisappear {
       vm.videoVM.cleanPlayer()
