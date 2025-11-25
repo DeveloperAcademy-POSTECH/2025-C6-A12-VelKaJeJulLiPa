@@ -45,7 +45,11 @@ final class InboxViewModel: ObservableObject {
     }
     
     do {
-      let userId = FirebaseAuthManager.shared.userInfo?.userId ?? ""
+      guard let userId = FirebaseAuthManager.shared.userInfo?.userId else {
+        print("알림함 유저 아이디 없음")
+        return
+      }
+//      let userId = FirebaseAuthManager.shared.userInfo?.userId ?? ""
       let (fetched, lastDoc): ([Notification], DocumentSnapshot?) = try await FirestoreManager.shared.fetchNotificationList(
         userId: userId,
         lastDocument: reset ? nil : lastDocument
@@ -82,7 +86,11 @@ final class InboxViewModel: ObservableObject {
   
   /// notification 정보를 InboxNotification으로 병렬로 변환하는 메서드
   private func appendInboxNotifications(from notifications: [Notification], reset: Bool) async throws {
-    let userId = FirebaseAuthManager.shared.userInfo?.userId ?? ""
+    guard let userId = FirebaseAuthManager.shared.userInfo?.userId else {
+      print("알림함 유저 아이디 없음")
+      return
+    }
+//    let userId = FirebaseAuthManager.shared.userInfo?.userId ?? ""
     
     let transformed: [InboxNotification] = await withTaskGroup(of: InboxResult.self) { group in
       for notification in notifications {

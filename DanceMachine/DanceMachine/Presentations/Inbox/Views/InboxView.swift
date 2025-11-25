@@ -56,9 +56,10 @@ struct InboxView: View {
               ForEach(viewModel.inboxNotifications, id: \.notificationId) { notification in
                 InboxNotificationRow(notification: notification)
                   .onTapGesture {
+                    guard let userId = FirebaseAuthManager.shared.userInfo?.userId else { return }
                     Task {
                       try await viewModel.markAsRead(
-                        userId: FirebaseAuthManager.shared.userInfo?.userId ?? "",
+                        userId: userId,
                         notificationId: notification.notificationId
                       )
                       
