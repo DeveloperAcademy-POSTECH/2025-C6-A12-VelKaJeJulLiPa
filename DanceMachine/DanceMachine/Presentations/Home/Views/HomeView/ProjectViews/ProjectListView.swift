@@ -86,7 +86,7 @@ struct ProjectListView: View {
           emptyView
         } else {
           projectListHeaderView
-            .padding(.horizontal, 24)
+            .padding(.horizontal, 16)
           projectListView
         }
       }

@@ -75,7 +75,7 @@ struct TeamspaceTitleView: View {
   @ViewBuilder
   private var nonEmptyTeamspaceView: some View {
     if !(projectListViewModel.editingState.rowState == .editing || tracksViewModel?.editingState.rowState == .editing) {
-      HStack(spacing: 8) {
+      HStack {
         Group {
           Text(viewModel.currentTeamspace?.teamspaceName ?? Layout.NonEmptyTeamspaceViewLayout.teamspaceEmptyTitleText)
             .font(.heading1SemiBold)
