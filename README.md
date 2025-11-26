@@ -14,7 +14,7 @@ DirAct는 댄스 팀을 위한 협업 도구입니다.
 
 ## 🍎 구성원
 
-| [벨코]() | [카단]() | [제이콥]() | [줄리앤]() | [리비]() | [파이디온]() |
+| [벨코](https://github.com/Velko716) | [카단](https://github.com/jHoon99) | [제이콥](https://github.com/Gimgang00) | [줄리앤](https://github.com/Julianne0101) | [리비](https://github.com/ykbeeee) | [파이디온](https://github.com/devPaidion) |
 | :--: | :--: | :--: | :--: | :--: | :--: |
 | <img width="160" alt="벨코" src="https://github.com/user-attachments/assets/805bb857-878f-4eb6-a303-072d2167e2c3" /> | <img width="160" alt="카단" src="https://github.com/user-attachments/assets/da9f6d27-3604-488d-8ead-5045625f6e01" /> | <img width="160" alt="제이콥" src="https://github.com/user-attachments/assets/7cbdf86d-b3d0-45d4-9cc1-984c7ec68c19" /> | <img width="160" alt="줄리앤" src="https://github.com/user-attachments/assets/771c299f-0ae0-45cd-9fc0-6f8c687acfd6" /> | <img width="160" alt="리비" src="https://github.com/user-attachments/assets/211ffd92-605a-4f57-b728-a10f132c1b5c" /> | <img width="160" alt="파이디온" src="https://github.com/user-attachments/assets/17b10351-fcce-4a13-a26b-81061ab019ab" /> |
 | <p align="center">Developer</p> | <p align="center">Developer</p> | <p align="center">Designer</p> | <p align="center">Designer</p> | <p align="center">PM</p> | <p align="center">Developer</p> |
@@ -28,11 +28,11 @@ DirAct는 댄스 팀을 위한 협업 도구입니다.
 
 ## 📚 DirAct의 여정
 
-**추가 예정**
+[DirAct의 여정을 살펴보세요](https://www.figma.com/design/cnhKICzxCT5wdRBHsQ7SDT/DirAct%EC%9D%98-%EC%97%AC%EC%A0%95?node-id=0-1&p=f&t=shxJx6is4XsyJ8gA-0)
 
 ---
 
-## ♻️ 최소 버젼 
+## ♻️ 최소 버전 
 
 <div align="left">
   <img src="https://img.shields.io/badge/iOS-18%2B-black?style=for-the-badge&logo=apple&logoColor=white" />
