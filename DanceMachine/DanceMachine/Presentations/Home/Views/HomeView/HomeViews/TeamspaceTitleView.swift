@@ -80,8 +80,11 @@ struct TeamspaceTitleView: View {
           Text(viewModel.currentTeamspace?.teamspaceName ?? Layout.NonEmptyTeamspaceViewLayout.teamspaceEmptyTitleText)
             .font(.heading1SemiBold)
             .foregroundStyle(Color.labelStrong)
+            .lineLimit(1)
+            .truncationMode(.tail)
+            .frame(maxWidth: .infinity, alignment: .leading)
           
-          Spacer()
+          Spacer().frame(width: 8)
           
           Button {
             router.push(to: .teamspace(.setting))
