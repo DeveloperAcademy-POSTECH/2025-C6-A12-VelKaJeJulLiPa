@@ -8,9 +8,9 @@
 import SwiftUI
 
 struct TeamspaceSettingViewToolbar: ToolbarContent {
-
+  
   @Bindable var viewModel: TeamspaceSettingViewModel
-
+  
   fileprivate enum Layout {
     enum Principal {
       static let navigationImageName: String = "chevron.down.circle.fill"
@@ -22,11 +22,11 @@ struct TeamspaceSettingViewToolbar: ToolbarContent {
       static let createTeamspaceTitle: String = "새 팀 스페이스 만들기"
       static let hstackSpacing: CGFloat = 4
       static let sheetTitle: String = "팀 스페이스 선택"
-
+      
       // 가운데 제목이 차지할 수 있는 최대 너비 비율
       static let titleMaxWidthRatio: CGFloat = 0.55
     }
-
+    
     enum TopBarTrailing {
       static let menuImageName: String = "ellipsis"
       static let menuImageNameWidth: CGFloat = 24
@@ -38,9 +38,9 @@ struct TeamspaceSettingViewToolbar: ToolbarContent {
       static let removeTeamMemberImage: String = "person.fill.badge.minus"
     }
   }
-
+  
   var body: some ToolbarContent {
-
+    
     if #available(iOS 26.0, *) {
       ToolbarItem(placement: .principal) {
         Menu {
@@ -64,9 +64,9 @@ struct TeamspaceSettingViewToolbar: ToolbarContent {
               }
             }
           }
-
+          
           Divider()
-
+          
           Button {
             viewModel.teamspaceSettingPresentationState.isPresentingCreateTeamspaceSheet = true
           } label: {
@@ -75,13 +75,13 @@ struct TeamspaceSettingViewToolbar: ToolbarContent {
               systemImage: Layout.Principal.createTeamspaceImageName
             )
           }
-
+          
         } label: {
           Button {
             Task { await viewModel.loadUserTeamspace() }
           } label: {
             HStack(spacing: Layout.Principal.hstackSpacing) {
-
+              
               Text(viewModel.dataState.selectedTeamspaceName)
                 .font(.heading1Medium)
                 .foregroundStyle(Color.labelStrong)
@@ -92,7 +92,7 @@ struct TeamspaceSettingViewToolbar: ToolbarContent {
                   maxWidth: UIScreen.main.bounds.width * Layout.Principal.titleMaxWidthRatio,
                   alignment: .center
                 )
-
+              
               Image(systemName: Layout.Principal.navigationImageName)
                 .resizable()
                 .scaledToFit()
@@ -106,13 +106,13 @@ struct TeamspaceSettingViewToolbar: ToolbarContent {
           }
         }
       }
-
+      
     } else {
       ToolbarItem(placement: .principal) {
         TeamspacePickerPrincipalButton(viewModel: viewModel)
       }
     }
-
+    
     if viewModel.dataState.teamspaceRole == .owner {
       ToolbarItem(placement: .topBarTrailing) {
         Menu {
@@ -124,9 +124,9 @@ struct TeamspaceSettingViewToolbar: ToolbarContent {
               systemImage: Layout.TopBarTrailing.nameUpdateImageName
             )
           }
-
+          
           Divider()
-
+          
           Button(role: .destructive) {
             viewModel.dataState.memberListMode = .removing
           } label: {
@@ -135,7 +135,7 @@ struct TeamspaceSettingViewToolbar: ToolbarContent {
               systemImage: Layout.TopBarTrailing.removeTeamMemberImage
             )
           }
-
+          
         } label: {
           Image(systemName: Layout.TopBarTrailing.menuImageName)
             .resizable()
@@ -153,10 +153,15 @@ struct TeamspaceSettingViewToolbar: ToolbarContent {
 }
 
 private struct TeamspacePickerPrincipalButton: View {
-
+  
   @Bindable var viewModel: TeamspaceSettingViewModel
   @State private var isPresentingPicker: Bool = false
-
+  
+  // 아이패드 여부
+  private var isPad: Bool {
+    UIDevice.current.userInterfaceIdiom == .pad
+  }
+  
   fileprivate enum Layout {
     enum Principal {
       static let navigationImageName: String = "chevron.down.circle.fill"
@@ -164,12 +169,12 @@ private struct TeamspacePickerPrincipalButton: View {
       static let navigationImageHeight: CGFloat = 21
       static let navigationTextLinelimit: Int = 1
       static let hstackSpacing: CGFloat = 4
-
+      
       // iOS 18에서도 동일하게 적용
       static let titleMaxWidthRatio: CGFloat = 0.55
     }
   }
-
+  
   var body: some View {
     Button {
       Task {
@@ -178,7 +183,7 @@ private struct TeamspacePickerPrincipalButton: View {
       }
     } label: {
       HStack(spacing: Layout.Principal.hstackSpacing) {
-
+        
         Text(viewModel.dataState.selectedTeamspaceName)
           .font(.heading1Medium)
           .foregroundStyle(Color.labelStrong)
@@ -189,7 +194,7 @@ private struct TeamspacePickerPrincipalButton: View {
             maxWidth: UIScreen.main.bounds.width * Layout.Principal.titleMaxWidthRatio,
             alignment: .center
           )
-
+        
         Image(systemName: Layout.Principal.navigationImageName)
           .resizable()
           .scaledToFit()
@@ -202,7 +207,26 @@ private struct TeamspacePickerPrincipalButton: View {
       }
       .contentShape(Rectangle())
     }
-    .sheet(isPresented: $isPresentingPicker) {
+    // 아이패드: Popover
+    .popover(
+      isPresented: Binding(
+        get: { isPad && isPresentingPicker },
+        set: { isPresentingPicker = $0 }
+      )
+    ) {
+      TeamspacePickerPopoverView(
+        viewModel: viewModel,
+        isPresented: $isPresentingPicker
+      )
+      .frame(width: 320, height: 340)
+    }
+    // 아이폰: Sheet (기존 동작)
+    .sheet(
+      isPresented: Binding(
+        get: { !isPad && isPresentingPicker },
+        set: { isPresentingPicker = $0 }
+      )
+    ) {
       TeamspacePickerSheet(
         viewModel: viewModel,
         isPresented: $isPresentingPicker
@@ -211,11 +235,12 @@ private struct TeamspacePickerPrincipalButton: View {
   }
 }
 
-private struct TeamspacePickerSheet: View {
-
+// MARK: - iOS 18 iPad
+private struct TeamspacePickerPopoverView: View {
+  
   @Bindable var viewModel: TeamspaceSettingViewModel
   @Binding var isPresented: Bool
-
+  
   fileprivate enum Layout {
     enum Principal {
       static let sheetTitle: String = "팀 스페이스 선택"
@@ -224,10 +249,11 @@ private struct TeamspacePickerSheet: View {
       static let createTeamspaceTitle: String = "새 팀 스페이스 만들기"
     }
   }
-
+  
   var body: some View {
     VStack(spacing: 0) {
-
+      
+      // 헤더
       HStack {
         Text(Layout.Principal.sheetTitle)
           .font(.headline2SemiBold)
@@ -237,7 +263,96 @@ private struct TeamspacePickerSheet: View {
       .padding(.horizontal, 16)
       .padding(.top, 16)
       .padding(.bottom, 8)
+      
+      // 본문
+      if viewModel.teamspaceChoiceState.loading == true {
+        VStack {
+          Spacer()
+          ProgressView()
+          Spacer()
+        }
+      } else {
+        ScrollView {
+          VStack(spacing: 0) {
+            ForEach(viewModel.teamspaceChoiceState.teamspace, id: \.teamspaceId) { teamspace in
+              Button {
+                viewModel.selectTeamspace(teamspace)
+                Task { await viewModel.onAppear() }
+                isPresented = false
+              } label: {
+                HStack {
+                  Text(teamspace.teamspaceName)
+                    .foregroundStyle(Color.labelStrong)
+                  
+                  Spacer()
+                  
+                  if viewModel.currentTeamspace?.teamspaceId == teamspace.teamspaceId {
+                    Image(systemName: Layout.Principal.checkImageName)
+                      .foregroundStyle(Color.labelAssitive)
+                  }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+              }
+              
+              Divider()
+                .padding(.leading, 16)
+            }
+          }
+        }
+      }
+      
+      Divider()
+      
+      // 하단 "새 팀 스페이스 만들기" 버튼
+      Button {
+        isPresented = false
+        viewModel.teamspaceSettingPresentationState.isPresentingCreateTeamspaceSheet = true
+      } label: {
+        HStack(spacing: 8) {
+          Image(systemName: Layout.Principal.createTeamspaceImageName)
+          Text(Layout.Principal.createTeamspaceTitle)
+        }
+        .font(.headline2Medium)
+        .foregroundStyle(Color.secondaryStrong)
+        .padding(.vertical, 14)
+        .frame(maxWidth: .infinity)
+      }
+      .padding(.horizontal, 16)
+      .padding(.bottom, 16)
+    }
+  }
+}
 
+
+// MARK: - iOS 18 iPhone
+private struct TeamspacePickerSheet: View {
+  
+  @Bindable var viewModel: TeamspaceSettingViewModel
+  @Binding var isPresented: Bool
+  
+  fileprivate enum Layout {
+    enum Principal {
+      static let sheetTitle: String = "팀 스페이스 선택"
+      static let checkImageName: String = "checkmark"
+      static let createTeamspaceImageName: String = "plus.circle"
+      static let createTeamspaceTitle: String = "새 팀 스페이스 만들기"
+    }
+  }
+  
+  var body: some View {
+    VStack(spacing: 0) {
+      
+      HStack {
+        Text(Layout.Principal.sheetTitle)
+          .font(.headline2SemiBold)
+          .foregroundStyle(Color.labelStrong)
+        Spacer()
+      }
+      .padding(.horizontal, 16)
+      .padding(.top, 16)
+      .padding(.bottom, 8)
+      
       if viewModel.teamspaceChoiceState.loading == true {
         VStack {
           Spacer()
@@ -255,9 +370,9 @@ private struct TeamspacePickerSheet: View {
               HStack {
                 Text(teamspace.teamspaceName)
                   .foregroundStyle(Color.labelStrong)
-
+                
                 Spacer()
-
+                
                 if viewModel.currentTeamspace?.teamspaceId == teamspace.teamspaceId {
                   Image(systemName: Layout.Principal.checkImageName)
                     .foregroundStyle(Color.labelAssitive)
@@ -268,9 +383,9 @@ private struct TeamspacePickerSheet: View {
         }
         .listStyle(.plain)
       }
-
+      
       Divider()
-
+      
       Button {
         isPresented = false
         viewModel.teamspaceSettingPresentationState.isPresentingCreateTeamspaceSheet = true
