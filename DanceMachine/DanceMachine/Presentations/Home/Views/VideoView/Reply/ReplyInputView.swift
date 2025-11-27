@@ -109,7 +109,7 @@ struct ReplyRecycle: View {
   
   private var clearButton: some View {
     Button {
-      refresh()
+//      refresh()
     } label: {
       Image(systemName: "xmark")
         .font(.system(size: 17))

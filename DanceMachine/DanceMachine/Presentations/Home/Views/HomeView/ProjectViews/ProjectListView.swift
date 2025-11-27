@@ -141,7 +141,7 @@ struct ProjectListView: View {
     VStack(spacing: Layout.EmptyProjectView.vstackSpacing) {
       Spacer()
       Button {
-        projectListViewModel.presentationState.presentingCreateProjectSheet = true
+//        projectListViewModel.presentationState.presentingCreateProjectSheet = true
       } label: {
         Image(systemName: Layout.EmptyProjectView.imageName)
           .font(.system(size: Layout.EmptyProjectView.imageSize))

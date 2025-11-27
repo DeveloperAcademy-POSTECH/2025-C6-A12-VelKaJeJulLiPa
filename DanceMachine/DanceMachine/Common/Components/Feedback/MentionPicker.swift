@@ -60,7 +60,7 @@ struct MentionPicker: View { // FIXME: 디자인 필요
   
   private var allButton: some View {
     Button {
-      selectAll()
+//      selectAll()
     } label: {
       Text("@All")
         .font(.headline2Medium)
@@ -88,7 +88,7 @@ struct MentionPicker: View { // FIXME: 디자인 필요
   private var memberButton: some View {
     ForEach(filteredMembers, id: \.userId) { user in
       Button {
-        action(user)
+//        action(user)
       } label: {
         Text(user.name)
           .font(.headline2Medium)

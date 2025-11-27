@@ -47,7 +47,7 @@ struct TeamspaceTitleView: View {
   // MARK: - 팀 스페이스가 없을 때 보이는 뷰
   private var emptyTeamspaceView: some View {
     Button {
-      self.router.push(to: .teamspace(.create))
+//      self.router.push(to: .teamspace(.create))
     } label: {
       HStack(spacing: Layout.EmptyTeamspaceViewLayout.hstackSpacing) {
         Group {
@@ -87,7 +87,7 @@ struct TeamspaceTitleView: View {
           Spacer().frame(width: 8)
           
           Button {
-            router.push(to: .teamspace(.setting))
+//            router.push(to: .teamspace(.setting))
           } label: {
             Image(systemName: Layout.NonEmptyTeamspaceViewLayout.imageName)
               .font(.system(size: Layout.NonEmptyTeamspaceViewLayout.imageFontSize, weight: .medium))

@@ -30,7 +30,7 @@ struct TaggedUsersView: View {
               .font(.headline2Medium)
               .foregroundStyle(.accentBlueStrong)
             Button {
-              onRemoveAll()
+//              onRemoveAll()
             } label: {
               Image(systemName: "xmark.circle.fill")
                 .symbolRenderingMode(.hierarchical)
@@ -56,7 +56,7 @@ struct TaggedUsersView: View {
                 .font(.headline2Medium)
                 .foregroundStyle(.accentBlueStrong)
               Button {
-                onRemove(user.userId)
+//                onRemove(user.userId)
               } label: {
                 Image(systemName: "xmark.circle.fill")
                   .symbolRenderingMode(.hierarchical)

@@ -17,7 +17,7 @@ struct PlaybackSpeedSheet: View {
   private let maxSpeed: Float = 2.0
   private let speedStep: Float = 0.25
 
-  private let presetSpeeds: [Float] = [0.3, 0.5, 0.9, 0.8, 1.0]
+  private let presetSpeeds: [Float] = [0.3, 0.5, 0.8, 0.9, 1.0]
 
   @State private var tempSpeed: Float = 1.0
 

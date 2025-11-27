@@ -51,7 +51,7 @@ struct FeedbackButtons: View {
   
   private var pointButton: some View {
     Button {
-      pointAction()
+//      pointAction()
     } label: {
       HStack {
         Text("시점 피드백")
@@ -76,7 +76,7 @@ struct FeedbackButtons: View {
   
   private var intervalButton: some View {
     Button {
-      intervalAction()
+//      intervalAction()
     } label: {
       HStack {
         if isRecordingInterval {

@@ -107,7 +107,7 @@ struct UploadProgressCard: View {
           .stroke(Color.fillAssitive, lineWidth: 4)
           .frame(width: cardSize / 3, height: cardSize / 3)
         Button {
-          Task { await onCancel() }
+//          Task { await onCancel() }
         } label: {
           Image(systemName: "xmark")
             .font(.system(size: 30, weight: .semibold))
@@ -224,7 +224,7 @@ struct UploadProgressCard: View {
     VStack(spacing: cardSize * 0.08) {
       // 재시도 버튼
       Button {
-        Task { await onRetry() }
+//        Task { await onRetry() }
       } label: {
         ZStack {
           Circle()
@@ -266,7 +266,7 @@ struct UploadProgressCard: View {
       Spacer().frame(height: 4)
       // 취소 버튼
       Button {
-        Task { await onCancel() }
+//        Task { await onCancel() }
       } label: {
         Text("취소")
           .font(.caption1Medium)

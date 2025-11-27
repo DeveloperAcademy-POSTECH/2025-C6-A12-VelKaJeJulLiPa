@@ -14,7 +14,7 @@ struct ToolbarUploadButton: ToolbarContent {
     ToolbarItem(placement: .topBarTrailing) {
       if #available(iOS 26.0, *) {
         Button {
-          action()
+//          action()
         } label: {
           Image(.videoUpload)
             .simultaneousGesture(
@@ -29,7 +29,7 @@ struct ToolbarUploadButton: ToolbarContent {
         .environment(\.colorScheme, .light)
       } else {
         Button {
-          action()
+//          action()
         } label: {
           ZStack {
             Circle().fill(Color.secondaryNormal)

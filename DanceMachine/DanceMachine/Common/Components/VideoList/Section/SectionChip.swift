@@ -13,7 +13,7 @@ struct SectionChipIcon: View {
   
   var body: some View {
     Button {
-      action()
+//      action()
     } label: {
       Image(.partEdit)
         .foregroundStyle(.primitiveStrong)
@@ -38,7 +38,7 @@ struct CustomSectionChip: View {
   
   var body: some View {
     Button {
-      action()
+//      action()
     } label: {
       Text(title)
         .font(.headline1Medium)

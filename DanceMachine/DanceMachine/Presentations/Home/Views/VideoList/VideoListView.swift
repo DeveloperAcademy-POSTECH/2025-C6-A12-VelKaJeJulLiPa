@@ -200,7 +200,7 @@ struct VideoListView: View {
   
   private func emptyContent(g: GeometryProxy) -> some View {
     Button {
-      Task { await vm.requestPermissionAndFetch() }
+//      Task { await vm.requestPermissionAndFetch() }
     } label: {
       VStack(spacing: 24) {
         Image(systemName: "video.fill.badge.plus")
