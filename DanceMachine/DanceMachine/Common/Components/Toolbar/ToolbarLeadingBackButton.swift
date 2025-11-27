@@ -19,9 +19,9 @@ struct ToolbarLeadingBackButton: ToolbarContent {
     ToolbarItem(placement: .topBarLeading) {
       Button {
         if let action = action {
-          action()
+//          action()
         } else {
-          dismiss()
+//          dismiss()
         }
       } label: {
         Image(systemName: icon.toolIcon)

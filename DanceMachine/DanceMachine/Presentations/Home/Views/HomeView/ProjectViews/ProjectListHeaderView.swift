@@ -21,9 +21,9 @@ struct ProjectListHeaderView: View {
       HStack(spacing: 16) {
         Button {
           // viewing일 때만 + 동작
-          if !isEditing {
-            viewModel.presentationState.presentingCreateProjectSheet = true
-          }
+//          if !isEditing {
+//            viewModel.presentationState.presentingCreateProjectSheet = true
+//          }
         } label: {
           Group {
             if !isEditing {

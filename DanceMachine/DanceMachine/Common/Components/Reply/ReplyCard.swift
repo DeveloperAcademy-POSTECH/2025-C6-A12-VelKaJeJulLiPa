@@ -103,7 +103,7 @@ struct ReplyCard: View {
   
   private var replyButton: some View {
     Button {
-      replyAction()
+//      replyAction()
     } label: {
       Text("답글달기")
         .font(.caption1Medium)

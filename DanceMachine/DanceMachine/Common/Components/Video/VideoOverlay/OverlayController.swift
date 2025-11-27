@@ -28,7 +28,7 @@ struct OverlayController: View {
 
   private var leftButton: some View {
     Button {
-      leftAction()
+//      leftAction()
     } label: {
       Image(systemName: "gobackward.5")
         .font(.system(size: 30))
@@ -46,7 +46,7 @@ struct OverlayController: View {
 
   private var centerButton: some View {
     Button {
-      centerAction()
+//      centerAction()
     } label: {
       Image(
         systemName: hasFinished ? "arrow.clockwise" : (isPlaying ? "pause.fill" : "play.fill")
@@ -66,7 +66,7 @@ struct OverlayController: View {
   
   private var rightButton: some View {
     Button {
-      rightAction()
+//      rightAction()
     } label: {
       Image(systemName: "goforward.5")
         .font(.system(size: 30))

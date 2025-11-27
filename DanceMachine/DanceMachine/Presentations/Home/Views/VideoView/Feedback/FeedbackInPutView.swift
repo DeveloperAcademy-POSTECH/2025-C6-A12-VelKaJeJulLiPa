@@ -128,7 +128,7 @@ struct FeedbackInPutView: View {
       }
       if self.feedbackDrawingImage == nil {
         Button {
-          drawingButtonTapped()
+//          drawingButtonTapped()
         } label: {
           HStack(spacing: 4) {
             Image(systemName: "scribble.variable")
@@ -160,7 +160,7 @@ struct FeedbackInPutView: View {
   
   private var clearButton: some View {
     Button {
-      refresh()
+//      refresh()
     } label: {
       Image(systemName: "xmark")
         .font(.system(size: 17))
