@@ -27,7 +27,7 @@ struct InboxView: View {
 //        } else
         
         if viewModel.isLoading && viewModel.inboxNotifications.isEmpty {
-          ScrollView{
+          ScrollView {
             ForEach(0..<4, id: \.self) { _ in
               SkeletonInboxNotificationRow()
             }
