@@ -59,26 +59,21 @@ struct DanceMachineApp: App {
           OnboardingView()
             .environmentObject(authRouter)
             .transition(.opacity)
-          
+
         case .authenticated:
           RootView()
             .environmentObject(mainRouter)
             .environmentObject(inviteRouter)
             .transition(.move(edge: .trailing))
             .environment(\.cacheStore, cacheStore)
-          
-          // URL Scheme 또는 Universal Link로 들어온 경우 처리
-            .onOpenURL { url in
-              handleIncomingURL(url)
-            }
-          
+
           // 포그라운드 상태에서 푸시 눌렀을 때 링크 처리
             .onReceive(NotificationCenter.publisher(for: .system(.deeplink))) { note in
               if let url = note.object as? URL {
                 handleIncomingURL(url)
               }
             }
-          
+
           // 백그라운드 상태에서 푸시 눌렀을 때 링크 처리 + 알림 읽음 처리
             .onChange(of: scenePhase) { oldPhase, newPhase in
               if newPhase == .active && authManager.currentTeamspace != nil {
@@ -86,9 +81,9 @@ struct DanceMachineApp: App {
                   if let pendingDeeplinkURL = AppDelegate.pendingDeeplinkURL {
                     handleIncomingURL(pendingDeeplinkURL)
                     AppDelegate.pendingDeeplinkURL = nil
-                    
+
                   }
-                  
+
                   if let pendingNotificationId = AppDelegate.pendingNotificationId,
                      let userId = FirebaseAuthManager.shared.userInfo?.userId {
                     do {
@@ -111,8 +106,8 @@ struct DanceMachineApp: App {
                 }
               }
             }
-          
-          
+
+
           // 앱 종료된 상태에서 푸시 눌렀을 때,
           // currentTeamspace 세팅되고 변화 감지해서 화면 링크 처리
             .onChange(of: authManager.currentTeamspace != nil) { oldState, newState in
@@ -122,7 +117,7 @@ struct DanceMachineApp: App {
                     handleIncomingURL(pendingDeeplinkURL)
                     AppDelegate.pendingDeeplinkURL = nil
                   }
-                  
+
                   if let pendingNotificationId = AppDelegate.pendingNotificationId,
                      let userId = FirebaseAuthManager.shared.userInfo?.userId {
                     do {
@@ -142,6 +137,22 @@ struct DanceMachineApp: App {
         }
       }
       .animation(.easeInOut, value: authManager.authenticationState)
+      // URL Scheme 또는 Universal Link로 들어온 경우 처리 (인증 상태와 무관하게 수신)
+      .onOpenURL { url in
+        handleIncomingURL(url)
+      }
+      // 인증 완료 시 보류된 초대 토큰 처리
+      .onChange(of: authManager.authenticationState) { oldState, newState in
+        if newState == .authenticated {
+          inviteRouter.processPendingIfPossible()
+        }
+      }
+      // userInfo 로드 완료 시 보류된 초대 토큰 처리 (cold start 대응)
+      .onChange(of: authManager.userInfo?.userId) { oldValue, newValue in
+        if let userId = newValue, !userId.isEmpty {
+          inviteRouter.processPendingIfPossible()
+        }
+      }
     }
   }
 }
