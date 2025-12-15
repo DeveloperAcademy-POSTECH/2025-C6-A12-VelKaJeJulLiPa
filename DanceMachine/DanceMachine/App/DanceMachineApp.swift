@@ -22,6 +22,7 @@ struct DanceMachineApp: App {
   
   @StateObject private var authManager = FirebaseAuthManager.shared
   @StateObject private var inviteRouter = InviteRouter()
+  @StateObject private var forceUpdateManager = ForceUpdateManager.shared
   
   let container: ModelContainer
   let cacheStore: CacheStore
@@ -66,11 +67,6 @@ struct DanceMachineApp: App {
             .environmentObject(inviteRouter)
             .transition(.move(edge: .trailing))
             .environment(\.cacheStore, cacheStore)
-          
-          // URL Scheme 또는 Universal Link로 들어온 경우 처리
-            .onOpenURL { url in
-              handleIncomingURL(url)
-            }
           
           // 포그라운드 상태에서 푸시 눌렀을 때 링크 처리
             .onReceive(NotificationCenter.publisher(for: .system(.deeplink))) { note in
@@ -141,7 +137,38 @@ struct DanceMachineApp: App {
             }
         }
       }
+      .task {
+        // 앱 시작 시 강제 업데이트 체크
+        await forceUpdateManager.checkForUpdate()
+      }
+      .alert("업데이트가 필요합니다", isPresented: $forceUpdateManager.needsForceUpdate) {
+        Button("App Store에서 업데이트") {
+          forceUpdateManager.openAppStore()
+          // Alert 닫힌 후 다시 표시하도록 설정
+          DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            forceUpdateManager.needsForceUpdate = true
+          }
+        }
+      } message: {
+        Text(forceUpdateManager.updateMessage)
+      }
       .animation(.easeInOut, value: authManager.authenticationState)
+      // URL Scheme 또는 Universal Link로 들어온 경우 처리 (인증 상태와 무관하게 수신)
+      .onOpenURL { url in
+        handleIncomingURL(url)
+      }
+      // 인증 완료 시 보류된 초대 토큰 처리
+      .onChange(of: authManager.authenticationState) { oldState, newState in
+        if newState == .authenticated {
+          inviteRouter.processPendingIfPossible()
+        }
+      }
+      // userInfo 로드 완료 시 보류된 초대 토큰 처리 (cold start 대응)
+      .onChange(of: authManager.userInfo?.userId) { oldValue, newValue in
+        if let userId = newValue, !userId.isEmpty {
+          inviteRouter.processPendingIfPossible()
+        }
+      }
     }
   }
 }
