@@ -34,7 +34,7 @@ struct TermsAgreeView: View {
         HStack {
           VStack(spacing: 27) {
             HStack(spacing: 13) {
-              Image("appLogo")
+              Image(.appLogo)
                 .resizable()
                 .scaledToFit()
                 .frame(width: 68, height: 52)
