@@ -19,23 +19,22 @@ struct TermsAgreeView: View {
   }
   
   private func agreeAll() {
-      let newValue = !isAllTermsAgreed   // 전체동의 상태 반전
-      isPrivacyAgreed = newValue
-      isTermsOfUseAgreed = newValue
-      isAgeValid = newValue
+    let newValue = !isAllTermsAgreed // 전체동의 상태 반전
+    isPrivacyAgreed = newValue
+    isTermsOfUseAgreed = newValue
+    isAgeValid = newValue
   }
-  
   
   var body: some View {
     ZStack {
       Color.backgroundNormal.ignoresSafeArea()
       
       VStack(spacing: 0) {
-        //앱로고 및 안내 문구
+        // 앱로고 및 안내 문구
         HStack {
-          VStack(spacing:27) {
+          VStack(spacing: 27) {
             HStack(spacing: 13) {
-              Image("AppLogo")
+              Image(.appLogo)
                 .resizable()
                 .scaledToFit()
                 .frame(width: 68, height: 52)
@@ -45,7 +44,7 @@ struct TermsAgreeView: View {
               Spacer()
             }
             
-            HStack(spacing:0) {
+            HStack(spacing: 0) {
               Text("서비스 이용을 위해\n이용약관 동의가 필요합니다.")
                 .font(.title2SemiBold)
                 .foregroundStyle(.labelNormal)
@@ -54,11 +53,11 @@ struct TermsAgreeView: View {
           }
         }
         
-        Spacer() //중간 공백
+        Spacer() // 중간 공백
         
-        //약관 동의
+        // 약관 동의
         VStack(spacing: 0) {
-          //전체 동의
+          // 전체 동의
           HStack {
             Text("전체동의")
               .font(.title2SemiBold)
@@ -71,7 +70,8 @@ struct TermsAgreeView: View {
                 .resizable()
                 .foregroundStyle(
                   isAllTermsAgreed ? .labelStrong : .labelAssitive,
-                  isAllTermsAgreed ? .secondaryStrong : .fillAssitive)
+                  isAllTermsAgreed ? .secondaryStrong : .fillAssitive
+                )
                 .overlay(
                   Circle()
                     .stroke(
@@ -111,7 +111,8 @@ struct TermsAgreeView: View {
                   .resizable()
                   .foregroundStyle(
                     isPrivacyAgreed ? .labelStrong : .labelAssitive,
-                    isPrivacyAgreed ? .secondaryStrong : .fillAssitive)
+                    isPrivacyAgreed ? .secondaryStrong : .fillAssitive
+                  )
                   .overlay(
                     Circle()
                       .stroke(
@@ -122,7 +123,6 @@ struct TermsAgreeView: View {
                   .frame(width: 23, height: 23)
               }
             }
-            
             
             HStack {
               Text("서비스 이용 약관 동의")
@@ -144,7 +144,8 @@ struct TermsAgreeView: View {
                   .resizable()
                   .foregroundStyle(
                     isTermsOfUseAgreed ? .labelStrong : .labelAssitive,
-                    isTermsOfUseAgreed ? .secondaryStrong : .fillAssitive)
+                    isTermsOfUseAgreed ? .secondaryStrong : .fillAssitive
+                  )
                   .overlay(
                     Circle()
                       .stroke(
@@ -172,7 +173,8 @@ struct TermsAgreeView: View {
                   .resizable()
                   .foregroundStyle(
                     isAgeValid ? .labelStrong : .labelAssitive,
-                    isAgeValid ? .secondaryStrong : .fillAssitive)
+                    isAgeValid ? .secondaryStrong : .fillAssitive
+                  )
                   .overlay(
                     Circle()
                       .stroke(
@@ -196,7 +198,6 @@ struct TermsAgreeView: View {
     )
   }
   
-  
   private var bottomButton: some View {
     ActionButton(
       title: "확인",
@@ -207,7 +208,6 @@ struct TermsAgreeView: View {
       router.push(to: .initialNameSetting)
     }
   }
-  
 }
 
 #Preview {
