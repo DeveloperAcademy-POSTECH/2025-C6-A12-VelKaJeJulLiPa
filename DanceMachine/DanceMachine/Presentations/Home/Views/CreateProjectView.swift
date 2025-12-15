@@ -153,15 +153,16 @@ struct CreateProjectView: View {
   // MARK: - 텍스트 필드 아이템 (글자수 라벨, x 버튼)
   @ViewBuilder
   private func textFieldItem() -> some View {
-    if self.overText == false {
+    ZStack {
       Text("\(projectNameText.count)/20")
         .font(.headline2Medium)
         .foregroundStyle(Color.secondaryNormal)
-    } else {
+        .opacity(overText ? 0 : 1)
+
       Text("20자 이내로 입력해주세요.")
         .font(.footnoteMedium)
         .foregroundStyle(Color.accentRedNormal)
-        .opacity(self.overText ? 1 : 0)
+        .opacity(overText ? 1 : 0)
     }
   }
   
