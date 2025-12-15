@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		7177D6BC2EC1142A00F5522C /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = 7177D6BB2EC1142A00F5522C /* Lottie */; };
+		C955F2662EF0407200C76220 /* FirebaseRemoteConfig in Frameworks */ = {isa = PBXBuildFile; productRef = C955F2652EF0407200C76220 /* FirebaseRemoteConfig */; };
 		C9990D602E8BEB4E00A6C7CC /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = C9990D5F2E8BEB4E00A6C7CC /* FirebaseAuth */; };
 		C9990D622E8BEB4E00A6C7CC /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = C9990D612E8BEB4E00A6C7CC /* FirebaseCore */; };
 		C9990D642E8BEB4E00A6C7CC /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = C9990D632E8BEB4E00A6C7CC /* FirebaseFirestore */; };
@@ -47,6 +48,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C955F2662EF0407200C76220 /* FirebaseRemoteConfig in Frameworks */,
 				C9990D622E8BEB4E00A6C7CC /* FirebaseCore in Frameworks */,
 				7177D6BC2EC1142A00F5522C /* Lottie in Frameworks */,
 				C9990D602E8BEB4E00A6C7CC /* FirebaseAuth in Frameworks */,
@@ -105,6 +107,7 @@
 				C9990D692E8BEB4E00A6C7CC /* FirebaseStorage */,
 				7177D6BB2EC1142A00F5522C /* Lottie */,
 				C9E73FD82EC3BC3C009BA54D /* Kingfisher */,
+				C955F2652EF0407200C76220 /* FirebaseRemoteConfig */,
 			);
 			productName = DanceMachine;
 			productReference = C999091A2E8A9CC100A6C7CC /* DanceMachine.app */;
@@ -437,6 +440,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7177D6BA2EC1142A00F5522C /* XCRemoteSwiftPackageReference "lottie-spm" */;
 			productName = Lottie;
+		};
+		C955F2652EF0407200C76220 /* FirebaseRemoteConfig */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C9990D5E2E8BEB4E00A6C7CC /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseRemoteConfig;
 		};
 		C9990D5F2E8BEB4E00A6C7CC /* FirebaseAuth */ = {
 			isa = XCSwiftPackageProductDependency;
