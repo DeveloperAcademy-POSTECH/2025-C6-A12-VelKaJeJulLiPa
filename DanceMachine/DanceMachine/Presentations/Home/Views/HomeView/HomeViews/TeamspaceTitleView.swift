@@ -47,14 +47,14 @@ struct TeamspaceTitleView: View {
   // MARK: - 팀 스페이스가 없을 때 보이는 뷰
   private var emptyTeamspaceView: some View {
     Button {
-//      self.router.push(to: .teamspace(.create))
+      //      self.router.push(to: .teamspace(.create))
     } label: {
       HStack(spacing: Layout.EmptyTeamspaceViewLayout.hstackSpacing) {
         Group {
           Text(Layout.EmptyTeamspaceViewLayout.titleText)
             .font(.heading1SemiBold)
             .foregroundStyle(Color.labelStrong)
-
+          
           Image(systemName: Layout.EmptyTeamspaceViewLayout.imageName)
             .font(.system(size: Layout.EmptyTeamspaceViewLayout.imageFontSize, weight: .medium))
             .foregroundStyle(Color.labelStrong)
@@ -99,7 +99,9 @@ struct TeamspaceTitleView: View {
                   }
               )
           }
-          .clearGlassButtonIfAvailable()
+          .padding(.horizontal, 10)
+          .padding(.vertical, 7)
+          .teamspaceSettingButton()
         }
         .padding(.vertical, 6.5)
       }
