@@ -10,6 +10,7 @@ import FirebaseCore
 import FirebaseFirestore
 import AuthenticationServices
 import SwiftData
+import TipKit
 
 
 @main
@@ -28,6 +29,15 @@ struct DanceMachineApp: App {
   let cacheStore: CacheStore
   
   init() {
+#if DEBUG
+    try? Tips.resetDatastore()
+#endif
+    
+    try? Tips.configure([
+      .displayFrequency(.immediate),
+      .datastoreLocation(.applicationDefault)
+    ])
+    
     Task {
       await ListDataCacheManager.shared.cleanupOldCache()
       await VideoCacheManager.shared.cleanupOldCache()
