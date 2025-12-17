@@ -8,6 +8,7 @@
 import SwiftUI
 import FirebaseAuth
 import SwiftData
+import TipKit
 
 struct HomeView: View {
   @Environment(\.cacheStore) private var cache
@@ -19,6 +20,8 @@ struct HomeView: View {
   @State private var tracksViewModel: TracksListViewModel? = nil
   
   @State private var showInviteToastMessage: Bool = false // 초대 관련 토스트 메세지
+  
+  @State private var projectTipRefreshTrigger = 0 // 프로젝트 팁 렌더링 트리거
   
   var onTrackSelect: ((Tracks) -> Void)? = nil
   
@@ -34,7 +37,7 @@ struct HomeView: View {
     
     enum EmptyTeamspaceView {
       static let imageName: String = "person.2.fill"
-      static let imageSize: CGFloat = 110
+      static let imageSize: CGFloat = 75
       static let vstackSpacing: CGFloat = 10
       static let titleText: String = "팀 스페이스를 만들어주세요."
     }
@@ -64,10 +67,21 @@ struct HomeView: View {
             tracksViewModel: $tracksViewModel,
             onTrackSelect : onTrackSelect
           )
+          .id(projectTipRefreshTrigger)
         }
       }
     }
     .overlay { if homeViewModel.state.isLoading { LoadingView() } }
+    .onChange(of: homeViewModel.state.teamspaceState) { oldValue, newValue in
+      // empty → nonEmpty로 변경될 때만 (팀스페이스 처음 생성)
+      if oldValue == .empty && newValue == .nonEmpty {
+        Task {
+          try? await Task.sleep(for: .milliseconds(500))
+          AddProjectTip.isHomeViewReady = true
+          projectTipRefreshTrigger += 1
+        }
+      }
+    }
     .task {
       // 알림
       await homeViewModel.setupNotificationAuthorizationIfNeeded()
@@ -89,6 +103,9 @@ struct HomeView: View {
       do {
         if homeViewModel.cacheStore == nil { homeViewModel.setCacheStore(cache) }
         await homeViewModel.onAppear()
+        
+        // 팀스페이스 상태가 empty일 때만 팁 활성화
+        TeamspaceTip.shouldshow = (homeViewModel.state.teamspaceState == .empty)
         
         guard let userId = FirebaseAuthManager.shared.user?.uid else {
           return

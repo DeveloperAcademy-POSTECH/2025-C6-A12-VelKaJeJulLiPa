@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import TipKit
 
 struct TeamspaceTitleView: View {
   @EnvironmentObject private var router: MainRouter
@@ -37,6 +38,7 @@ struct TeamspaceTitleView: View {
       case .empty:
         emptyTeamspaceView
           .frame(maxWidth: .infinity, alignment: .leading)
+          .id(viewModel.state.teamspaceState)
       case .nonEmpty:
         nonEmptyTeamspaceView
           .frame(maxWidth: .infinity, alignment: .leading)
@@ -61,6 +63,7 @@ struct TeamspaceTitleView: View {
         }
         .padding(.vertical, 6.5)
       }
+      .popoverTip(TeamspaceTip(), arrowEdge: .top)
       .simultaneousGesture(
         TapGesture()
           .onEnded {
