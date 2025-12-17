@@ -73,23 +73,35 @@ extension View {
     }
   }
   
+  @ViewBuilder
+  func teamspaceSettingButton() -> some View {
+    if #available(iOS 26.0, *) {
+      self
+        .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: 1000))
+    } else {
+      self
+        .background(
+          Capsule()
+            .fill(Color.black.opacity(0.25))
+            .shadow(color: .white.opacity(0.3), radius: 2, x: 0, y: 1)
+        )
+    }
+  }
+  
   /// 커스텀 섹션 글래스 이펙트 버전 분기 뷰빌더 입니다.
   @ViewBuilder
   func sectionChip(isSelected: Bool) -> some View {
     if #available(iOS 26.0, *) {
       self
-      //        .buttonStyle(.glass)
         .glassEffect(
           isSelected ? .clear.tint(Color(red: 0x7E/255, green: 0x7C/255, blue: 0xFF/255)).interactive() : .clear.tint(.clear).interactive(), in: Capsule()
         )
-      //        .environment(\.colorScheme, .light)
     } else {
       self
         .background(
           Capsule()
             .fill(isSelected ? .secondaryNormal : Color.fillNormal)
         )
-      //        .background(isSelected ? .secondaryNormal : Color.fillNormal)
     }
   }
   
@@ -98,7 +110,6 @@ extension View {
   func sectionIcon() -> some View {
     if #available(iOS 26.0, *) {
       self
-      //        .buttonStyle(.glass)
         .glassEffect(.clear.interactive(), in: RoundedRectangle(cornerRadius: 1000))
     } else {
       self
@@ -106,7 +117,6 @@ extension View {
           Capsule()
             .fill(Color.fillNormal)
         )
-      //        .background(Color.fillNormal)
     }
   }
   
@@ -256,7 +266,7 @@ extension View {
         }
     }
   }
-
+  
   @ViewBuilder
   func drawingButtonGroup() -> some View {
     if #available(iOS 26.0, *) {
@@ -274,7 +284,7 @@ extension View {
         }
     }
   }
-
+  
   @ViewBuilder
   func drawingSubmitButton() -> some View {
     if #available(iOS 26.0, *) {
