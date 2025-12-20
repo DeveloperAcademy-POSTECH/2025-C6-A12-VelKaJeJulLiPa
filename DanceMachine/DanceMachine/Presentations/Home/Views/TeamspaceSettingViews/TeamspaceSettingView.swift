@@ -176,6 +176,7 @@ struct TeamspaceSettingView: View {
         memberRowLeadingView(for: user)    // 왼쪽(이름/팀장 뱃지) 영역
       }
       .teamMemberRowStyle()
+      .listRowSeparator(.hidden, edges: .top)
     }
     .listStyle(.plain)
   }
