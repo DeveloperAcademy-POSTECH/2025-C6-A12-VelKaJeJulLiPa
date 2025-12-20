@@ -248,13 +248,6 @@ struct ProjectListView: View {
         await vm.loadTracks(forceRefresh: true)
       }
     }
-    .overlay(alignment: .top) {
-      if isRefreshing {
-        LoadingSpinner()
-          .frame(width: 24, height: 24)
-          .padding(.top, 8)
-      }
-    }
   }
   
   // MARK: - 프로젝트 row
