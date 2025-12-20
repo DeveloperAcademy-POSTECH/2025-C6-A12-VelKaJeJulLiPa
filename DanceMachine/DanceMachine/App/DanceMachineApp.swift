@@ -11,20 +11,22 @@ import FirebaseFirestore
 import AuthenticationServices
 import SwiftData
 import TipKit
+import StoreKit
 
 
 @main
 struct DanceMachineApp: App {
   @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
   @Environment(\.scenePhase) private var scenePhase
+  @Environment(\.requestReview) private var requestReview
   @StateObject private var authRouter = AuthRouter()
   @StateObject private var mainRouter = MainRouter()
-  
-  
+
+
   @StateObject private var authManager = FirebaseAuthManager.shared
   @StateObject private var inviteRouter = InviteRouter()
   @StateObject private var forceUpdateManager = ForceUpdateManager.shared
-  
+
   @State private var isLaunch: Bool = true
   
   let container: ModelContainer

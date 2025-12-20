@@ -6,9 +6,11 @@
 //
 
 import SwiftUI
+import StoreKit
 
 /// 피드백 타이틀 + 리스트 + 입력 버튼을 담당하는 컴포넌트 입니다.
 struct FeedbackContainer: View {
+  @Environment(\.requestReview) private var requestReview
   @Bindable var vm: VideoDetailViewModel
   @Bindable var state: VideoViewState
 
@@ -126,7 +128,10 @@ struct FeedbackContainer: View {
               )
             }
             state.showFeedbackInput = false
-            
+
+            // 피드백 작성 완료 후 리뷰 요청
+            ReviewRequestHelper.requestReviewIfNeeded(requestReview: requestReview)
+
             // 피드백 제출 후 스크롤 최상단 이동
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
               withAnimation {
