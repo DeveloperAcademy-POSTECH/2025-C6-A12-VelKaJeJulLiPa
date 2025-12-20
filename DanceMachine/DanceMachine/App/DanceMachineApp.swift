@@ -25,6 +25,8 @@ struct DanceMachineApp: App {
   @StateObject private var inviteRouter = InviteRouter()
   @StateObject private var forceUpdateManager = ForceUpdateManager.shared
   
+  @State private var isLaunch: Bool = true
+  
   let container: ModelContainer
   let cacheStore: CacheStore
   
@@ -67,84 +69,102 @@ struct DanceMachineApp: App {
       Group {
         switch authManager.authenticationState {
         case .unauthenticated:
-          OnboardingView()
-            .environmentObject(authRouter)
-            .transition(.opacity)
+          if isLaunch {
+            LaunchScreenView()
+              .onAppear {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                  self.isLaunch = false
+                }
+              }
+          } else {
+            OnboardingView()
+              .environmentObject(authRouter)
+              .transition(.opacity)
+          }
           
         case .authenticated:
-          RootView()
-            .environmentObject(mainRouter)
-            .environmentObject(inviteRouter)
-            .transition(.move(edge: .trailing))
-            .environment(\.cacheStore, cacheStore)
-          
-          // 포그라운드 상태에서 푸시 눌렀을 때 링크 처리
-            .onReceive(NotificationCenter.publisher(for: .system(.deeplink))) { note in
-              if let url = note.object as? URL {
-                handleIncomingURL(url)
+          if isLaunch {
+            LaunchScreenView()
+              .onAppear {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                  self.isLaunch = false
+                }
               }
-            }
-          
-          // 백그라운드 상태에서 푸시 눌렀을 때 링크 처리 + 알림 읽음 처리
-            .onChange(of: scenePhase) { oldPhase, newPhase in
-              if newPhase == .active && authManager.currentTeamspace != nil {
-                Task {
-                  if let pendingDeeplinkURL = AppDelegate.pendingDeeplinkURL {
-                    handleIncomingURL(pendingDeeplinkURL)
-                    AppDelegate.pendingDeeplinkURL = nil
+          } else {
+            RootView()
+              .environmentObject(mainRouter)
+              .environmentObject(inviteRouter)
+              .transition(.move(edge: .trailing))
+              .environment(\.cacheStore, cacheStore)
+            
+            // 포그라운드 상태에서 푸시 눌렀을 때 링크 처리
+              .onReceive(NotificationCenter.publisher(for: .system(.deeplink))) { note in
+                if let url = note.object as? URL {
+                  handleIncomingURL(url)
+                }
+              }
+            
+            // 백그라운드 상태에서 푸시 눌렀을 때 링크 처리 + 알림 읽음 처리
+              .onChange(of: scenePhase) { oldPhase, newPhase in
+                if newPhase == .active && authManager.currentTeamspace != nil {
+                  Task {
+                    if let pendingDeeplinkURL = AppDelegate.pendingDeeplinkURL {
+                      handleIncomingURL(pendingDeeplinkURL)
+                      AppDelegate.pendingDeeplinkURL = nil
+                      
+                    }
                     
+                    if let pendingNotificationId = AppDelegate.pendingNotificationId,
+                       let userId = FirebaseAuthManager.shared.userInfo?.userId {
+                      do {
+                        try await NotificationManager.shared.markNotificationAsRead(
+                          userId: userId,
+                          notificationId: pendingNotificationId
+                        )
+                        AppDelegate.pendingNotificationId = nil
+                        print("✅ 보류된 알림 읽음 처리 완료")
+                      } catch {
+                        print("❌ 알림 읽음 처리 실패:", error.localizedDescription)
+                      }
+                    }
                   }
-                  
-                  if let pendingNotificationId = AppDelegate.pendingNotificationId,
-                     let userId = FirebaseAuthManager.shared.userInfo?.userId {
-                    do {
-                      try await NotificationManager.shared.markNotificationAsRead(
-                        userId: userId,
-                        notificationId: pendingNotificationId
-                      )
-                      AppDelegate.pendingNotificationId = nil
-                      print("✅ 보류된 알림 읽음 처리 완료")
-                    } catch {
-                      print("❌ 알림 읽음 처리 실패:", error.localizedDescription)
+                }
+                if newPhase == .background {
+                  Task {
+                    await ListDataCacheManager.shared.cleanupOldCache()
+                    await VideoCacheManager.shared.cleanupOldCache()
+                  }
+                }
+              }
+            
+            
+            // 앱 종료된 상태에서 푸시 눌렀을 때,
+            // currentTeamspace 세팅되고 변화 감지해서 화면 링크 처리
+              .onChange(of: authManager.currentTeamspace != nil) { oldState, newState in
+                if newState {
+                  Task {
+                    if let pendingDeeplinkURL = AppDelegate.pendingDeeplinkURL {
+                      handleIncomingURL(pendingDeeplinkURL)
+                      AppDelegate.pendingDeeplinkURL = nil
+                    }
+                    
+                    if let pendingNotificationId = AppDelegate.pendingNotificationId,
+                       let userId = FirebaseAuthManager.shared.userInfo?.userId {
+                      do {
+                        try await NotificationManager.shared.markNotificationAsRead(
+                          userId: userId,
+                          notificationId: pendingNotificationId
+                        )
+                        AppDelegate.pendingNotificationId = nil
+                        print("✅ 보류된 알림 읽음 처리 완료")
+                      } catch {
+                        print("❌ 알림 읽음 처리 실패:", error.localizedDescription)
+                      }
                     }
                   }
                 }
               }
-              if newPhase == .background {
-                Task {
-                  await ListDataCacheManager.shared.cleanupOldCache()
-                  await VideoCacheManager.shared.cleanupOldCache()
-                }
-              }
-            }
-          
-          
-          // 앱 종료된 상태에서 푸시 눌렀을 때,
-          // currentTeamspace 세팅되고 변화 감지해서 화면 링크 처리
-            .onChange(of: authManager.currentTeamspace != nil) { oldState, newState in
-              if newState {
-                Task {
-                  if let pendingDeeplinkURL = AppDelegate.pendingDeeplinkURL {
-                    handleIncomingURL(pendingDeeplinkURL)
-                    AppDelegate.pendingDeeplinkURL = nil
-                  }
-                  
-                  if let pendingNotificationId = AppDelegate.pendingNotificationId,
-                     let userId = FirebaseAuthManager.shared.userInfo?.userId {
-                    do {
-                      try await NotificationManager.shared.markNotificationAsRead(
-                        userId: userId,
-                        notificationId: pendingNotificationId
-                      )
-                      AppDelegate.pendingNotificationId = nil
-                      print("✅ 보류된 알림 읽음 처리 완료")
-                    } catch {
-                      print("❌ 알림 읽음 처리 실패:", error.localizedDescription)
-                    }
-                  }
-                }
-              }
-            }
+          }
         }
       }
       .task {
