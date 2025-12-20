@@ -26,176 +26,80 @@ struct TermsAgreeView: View {
   }
   
   var body: some View {
-    ZStack {
-      Color.backgroundNormal.ignoresSafeArea()
-      
-      VStack(spacing: 0) {
-        // 앱로고 및 안내 문구
-        HStack {
-          VStack(spacing: 27) {
-            HStack(spacing: 13) {
-              Image(.appLogo)
-                .resizable()
-                .scaledToFit()
-                .frame(width: 68, height: 52)
-              Text("DirAct")
-                .font(Font.establishRetrosans(.regular, size: 44))
-                .foregroundStyle(.secondaryAssitive)
-              Spacer()
-            }
-            
-            HStack(spacing: 0) {
-              Text("서비스 이용을 위해\n이용약관 동의가 필요합니다.")
-                .font(.title2SemiBold)
-                .foregroundStyle(.labelNormal)
-              Spacer()
-            }
-          }
-        }
-        
-        Spacer() // 중간 공백
-        
-        // 약관 동의
-        VStack(spacing: 0) {
-          // 전체 동의
-          HStack {
-            Text("전체동의")
-              .font(.title2SemiBold)
-              .foregroundStyle(.labelStrong)
-            Spacer()
-            Button {
-              agreeAll()
-            } label: {
-              Image(systemName: "checkmark.circle.fill")
-                .resizable()
-                .foregroundStyle(
-                  isAllTermsAgreed ? .labelStrong : .labelAssitive,
-                  isAllTermsAgreed ? .secondaryStrong : .fillAssitive
-                )
-                .overlay(
-                  Circle()
-                    .stroke(
-                      isAllTermsAgreed ? .secondaryNormal : .labelAssitive,
-                      lineWidth: 1
-                    )
-                )
-                .frame(width: 23, height: 23)
-            }
-          }
-          
-          Spacer().frame(height: 16)
-          
-          Divider().foregroundStyle(.strokeStrong)
-          
-          Spacer().frame(height: 22)
-          
-          // 약관 동의 항목들
-          VStack(spacing: 22) {
-            HStack {
-              Text("개인정보 처리 방침 동의")
-                .underline()
-                .font(.headline2SemiBold)
-                .foregroundStyle(.labelNormal)
-                .onTapGesture {
-                  router.push(to: .privacyPolicy)
-                }
-              Text("(필수)")
-                .font(.headline2SemiBold)
-                .foregroundStyle(.labelNormal)
-              
-              Spacer()
-              Button {
-                isPrivacyAgreed.toggle()
-              } label: {
-                Image(systemName: "checkmark.circle.fill")
-                  .resizable()
-                  .foregroundStyle(
-                    isPrivacyAgreed ? .labelStrong : .labelAssitive,
-                    isPrivacyAgreed ? .secondaryStrong : .fillAssitive
-                  )
-                  .overlay(
-                    Circle()
-                      .stroke(
-                        isPrivacyAgreed ? .secondaryNormal : .labelAssitive,
-                        lineWidth: 1
-                      )
-                  )
-                  .frame(width: 23, height: 23)
-              }
-            }
-            
-            HStack {
-              Text("서비스 이용 약관 동의")
-                .underline()
-                .font(.headline2SemiBold)
-                .foregroundStyle(.labelNormal)
-                .onTapGesture {
-                  router.push(to: .termsOfUse)
-                }
-              Text("(필수)")
-                .font(.headline2SemiBold)
-                .foregroundStyle(.labelNormal)
-              
-              Spacer()
-              Button {
-                isTermsOfUseAgreed.toggle()
-              } label: {
-                Image(systemName: "checkmark.circle.fill")
-                  .resizable()
-                  .foregroundStyle(
-                    isTermsOfUseAgreed ? .labelStrong : .labelAssitive,
-                    isTermsOfUseAgreed ? .secondaryStrong : .fillAssitive
-                  )
-                  .overlay(
-                    Circle()
-                      .stroke(
-                        isTermsOfUseAgreed ? .secondaryNormal : .labelAssitive,
-                        lineWidth: 1
-                      )
-                  )
-                  .frame(width: 23, height: 23)
-              }
-            }
-            
-            HStack {
-              Text("만 14세 이상 확인")
-                .font(.headline2SemiBold)
-                .foregroundStyle(.labelNormal)
-              Text("(필수)")
-                .font(.headline2SemiBold)
-                .foregroundStyle(.labelNormal)
-              
-              Spacer()
-              Button {
-                isAgeValid.toggle()
-              } label: {
-                Image(systemName: "checkmark.circle.fill")
-                  .resizable()
-                  .foregroundStyle(
-                    isAgeValid ? .labelStrong : .labelAssitive,
-                    isAgeValid ? .secondaryStrong : .fillAssitive
-                  )
-                  .overlay(
-                    Circle()
-                      .stroke(
-                        isAgeValid ? .secondaryNormal : .labelAssitive,
-                        lineWidth: 1
-                      )
-                  )
-                  .frame(width: 23, height: 23)
-              }
-            }
-          }
-        }
-        Spacer().frame(height: 114)
-        bottomButton
-      }
-      .padding()
+    VStack {
+      Spacer().frame(height: 40)
+      appText
+      Spacer()
+      temrsTitle
+      Spacer().frame(height: 16)
+      Divider().foregroundStyle(.strokeNormal)
+      Spacer().frame(height: 24)
+      termsRow
+      Spacer().frame(height: 48)
+      bottomButton
+      Spacer().frame(height: 16)
     }
-    .background(
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .padding(.horizontal, 16)
+    .background {
+      Color.backgroundNormal.ignoresSafeArea()
       DisableSwipeBackGesture()
         .allowsHitTesting(false)
-    )
+    }
+  }
+  
+  private var appText: some View {
+    VStack(alignment: .leading, spacing: 24) {
+      Text("DirAct")
+        .font(Font.establishRetrosans(.regular, size: 44))
+        .foregroundStyle(.secondaryAssitive)
+      Text("서비스 이용을 위해\n약관에 동의해 주세요.")
+        .font(.title2SemiBold)
+        .foregroundStyle(.labelNormal)
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+  }
+  
+  private var temrsTitle: some View {
+    HStack {
+      Text("전체동의")
+        .font(.title2SemiBold)
+        .foregroundStyle(.labelStrong)
+      Spacer()
+      TermsAgreeCheckButton(
+        action: agreeAll,
+        isAllTermsAgreed: isAllTermsAgreed
+      )
+    }
+  }
+  
+  private var termsRow: some View {
+    // 약관 동의 항목들
+    VStack(spacing: 22) {
+      TermsRow(
+        text: "개인정보 처리 방침 동의",
+        tapAction: { router.push(to: .privacyPolicy) },
+        toggleAction: { isPrivacyAgreed.toggle() },
+        isAgreed: isPrivacyAgreed,
+        isUnderline: true
+      )
+      
+      TermsRow(
+        text: "서비스 이용 약관 동의",
+        tapAction: { router.push(to: .termsOfUse) },
+        toggleAction: { isTermsOfUseAgreed.toggle() },
+        isAgreed: isTermsOfUseAgreed,
+        isUnderline: true
+      )
+      
+      TermsRow(
+        text: "저는 14세 이상 입니다.",
+        tapAction: {},
+        toggleAction: { isAgeValid.toggle() },
+        isAgreed: isAgeValid,
+        isUnderline: false
+      )
+    }
   }
   
   private var bottomButton: some View {
