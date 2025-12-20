@@ -26,20 +26,20 @@ final class InviteShareItem: NSObject, UIActivityItemSource {
     }
 
     /// 공유 시트가 표시되기 전에 사용되는 플레이스홀더(미리보기용) 아이템을 반환합니다.
-    /// 보통 실제 공유 본문과 동일한 형식의 문자열을 돌려줍니다.
+    /// URL 객체만 반환하여 메타데이터(링크 카드)에 의존합니다.
     func activityViewControllerPlaceholderItem(
         _ activityViewController: UIActivityViewController
     ) -> Any {
-        return "\(teamName) 팀스페이스에서 초대하였습니다.\n초대링크: \(url.absoluteString)"
+        return url
     }
 
     /// 실제 공유 대상 앱(카톡/메시지/메일 등)에 전달할 아이템을 반환합니다.
-    /// 대부분의 앱은 문자열 내 URL을 링크로 인식합니다.
+    /// URL 객체만 반환하여 링크 메타데이터(카드)를 우선 사용하도록 합니다.
     func activityViewController(
         _ activityViewController: UIActivityViewController,
         itemForActivityType activityType: UIActivity.ActivityType?
     ) -> Any? {
-        return "\(teamName) 팀스페이스에서 초대하였습니다.\n초대링크: \(url.absoluteString)"
+        return url
     }
 
     /// 메일 공유 등에서 제목(Subject)으로 사용될 텍스트를 제공합니다.
@@ -56,7 +56,8 @@ final class InviteShareItem: NSObject, UIActivityItemSource {
         _ activityViewController: UIActivityViewController
     ) -> LPLinkMetadata? {
         let md = LPLinkMetadata()
-        md.title = "[\(teamName)] 팀 초대"
+        // 제목에 설명 포함
+        md.title = "DirAct - [\(teamName)] 팀 초대"
         md.originalURL = url
         md.url = url
         return md

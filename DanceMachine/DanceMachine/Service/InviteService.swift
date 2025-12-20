@@ -23,7 +23,7 @@ struct InviteService {
         ttlHours: Int = 24
     ) async throws -> URL {
         
-        let token = UUID().uuidString + UUID().uuidString // TODO: token을 UUID로 만들어도 괜찮은가? 이야기
+        let token = UUID().uuidString // 초대 링크 토큰 (36자)
         let inviteId = UUID().uuidString
 
         let invite: Invite = .init(

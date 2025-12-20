@@ -8,10 +8,11 @@
 import SwiftUI
 
 struct TeamspaceSettingView: View {
-  
+
   @EnvironmentObject private var rotuer: MainRouter
-  
+
   @State private var viewModel: TeamspaceSettingViewModel = .init()
+  @State private var toastMessage: String? = nil
 
   fileprivate enum NameSpace {
     enum Top {
@@ -67,6 +68,23 @@ struct TeamspaceSettingView: View {
       viewModel.teamspaceSettingPresentationState.selectedUserForRemoval = nil
     }
     .teamspaceModals(viewModel, router: rotuer) // 모달
+    .toast(
+      isPresented: .constant(toastMessage != nil),
+      duration: 2.0,
+      position: .bottom,
+      tapToDismiss: true,
+      bottomPadding: 16,
+      content: {
+        ToastView(text: toastMessage ?? "", icon: .check)
+      }
+    )
+    .onChange(of: toastMessage) { oldValue, newValue in
+      if newValue != nil {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+          toastMessage = nil
+        }
+      }
+    }
   }
   
   // MARK: - 탑 팀 멤버 초대하기
@@ -87,7 +105,21 @@ struct TeamspaceSettingView: View {
               activityItems: [item],
               applicationActivities: nil
             )
-            
+
+            // 복사 또는 카카오톡 공유 완료 시 햅틱 & 토스트
+            activityVC.completionWithItemsHandler = { activityType, completed, _, _ in
+              if completed {
+                if activityType == .copyToPasteboard {
+                  HapticManager.shared.trigger(.success)
+                  toastMessage = "링크가 복사되었습니다."
+                } else if let rawValue = activityType?.rawValue,
+                          rawValue.lowercased().contains("kakao") {
+                  HapticManager.shared.trigger(.success)
+                  toastMessage = "카카오톡으로 공유되었습니다."
+                }
+              }
+            }
+
             // iPad popover 앵커 지정 (없으면 크래시)
             if let popover = activityVC.popoverPresentationController {
               popover.sourceView = topVC.view
@@ -99,7 +131,7 @@ struct TeamspaceSettingView: View {
               )
               popover.permittedArrowDirections = [.up]
             }
-            
+
             topVC.present(activityVC, animated: true)
           }
         }
