@@ -66,7 +66,8 @@ struct LoginView: View {
         .foregroundStyle(.labelAssitive)
         .opacity(showContent ? 1 : 0)
       Spacer().frame(height: 56)
-      LoadingSpinner()                               .frame(width: 28, height: 28)
+      LoadingSpinner()
+        .frame(width: 28, height: 28)
         .opacity(viewModel.isLoading ? 1 : 0)
       Spacer().frame(height: 56)
       appleLogginButton
