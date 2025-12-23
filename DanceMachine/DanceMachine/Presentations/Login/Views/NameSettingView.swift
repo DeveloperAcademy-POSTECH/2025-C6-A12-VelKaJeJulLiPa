@@ -14,11 +14,11 @@ struct NameSettingView: View {
   @State private var name: String = ""
   @State private var showToastMessage: Bool = false
   @FocusState private var isFocused: Bool
-  
+
   let placeholder = "이름을 입력하세요"
   let fontSize: CGFloat = 32
   let maxLength = 10
-  
+
   var displayText: String { name.isEmpty ? placeholder : name }
   var underlineColor: Color {
     displayText.count >= maxLength ? Color.accentRedNormal : isFocused ? Color.secondaryNormal : Color.labelNormal
@@ -27,21 +27,19 @@ struct NameSettingView: View {
     let textCount = displayText.count
     let base: CGFloat = fontSize * 0.8
     let minimumWidth = name.isEmpty ? CGFloat(placeholder.count) * base : base
-    
+
     return max(CGFloat(textCount) * base, minimumWidth)
   }
-  
-  
+
   var body: some View {
     ZStack {
       Color.backgroundNormal.ignoresSafeArea()
-      
       VStack {
         Spacer()
         Text("만나서 반가워요!")
           .font(.title2SemiBold)
           .foregroundStyle(Color.labelNormal)
-        
+
         TextField(
           text: $name,
           prompt: Text(displayText).foregroundStyle(.labelAssitive)
@@ -63,30 +61,28 @@ struct NameSettingView: View {
             .foregroundStyle(underlineColor)
             .animation(.easeInOut(duration: 0.1), value: underlineWidth)
         }
-        .onChange(of: name) { oldValue, newValue in
+        .onChange(of: name) { _, newValue in
           var updated = newValue
-          
+
           if updated.first == " " {
             updated = String(updated.drop(while: { $0 == " " }))
           }
-          
+
           if updated.count > maxLength {
             updated = String(updated.prefix(maxLength))
             showToastMessage = true
             HapticManager.shared.trigger(.medium)
           }
-          
+
           if updated != name {
             name = updated
           }
         }
-        
         Spacer()
-        
         Text("이름이 정확한가요?")
           .font(.headline2Medium)
           .foregroundStyle(Color.labelNormal)
-        
+
         ActionButton(
           title: "확인",
           color: Color.secondaryNormal,

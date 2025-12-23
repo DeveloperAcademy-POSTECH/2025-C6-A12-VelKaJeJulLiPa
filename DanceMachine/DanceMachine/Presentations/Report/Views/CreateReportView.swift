@@ -22,9 +22,9 @@ struct CreateReportView: View {
   
   var reportedId: String
   var reportContentType: ReportContentType
-  var video: Video? = nil
-  var feedback: Feedback? = nil
-  var reply: Reply? = nil
+  var video: Video?
+  var feedback: Feedback?
+  var reply: Reply?
   var toastReceiveView: ReportToastReceiveViewType
   
   var maxLength: Int = 100 // 최대 글자수
@@ -167,7 +167,11 @@ struct CreateReportView: View {
           description: description
         )
         
-        NotificationCenter.post(.system(.showCreateReportSuccessToast), object: nil, userInfo: ["toastViewName": toastReceiveView])
+        NotificationCenter.post(
+          .system(.showCreateReportSuccessToast),
+          object: nil,
+          userInfo: ["toastViewName": toastReceiveView]
+        )
         
         dismiss()
       } catch {
@@ -196,7 +200,6 @@ struct CreateReportView: View {
     )
   }
 }
-
 
 struct MultilineTextField: View {
   @Binding var text: String

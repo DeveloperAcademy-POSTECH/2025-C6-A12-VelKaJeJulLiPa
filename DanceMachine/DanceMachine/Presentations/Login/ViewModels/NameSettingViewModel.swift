@@ -39,7 +39,6 @@ final class NameSettingViewModel {
     }
   }
   
-  
   func createNewuser() async throws {
     isLoading = true
     defer { isLoading = false }
@@ -55,7 +54,6 @@ final class NameSettingViewModel {
       throw FirestoreError.addFailed(underlying: error)
     }
   }
-  
   
   ///  - FirebaseAuthManager 의 authenticationState이 true가 되면 RootView 로 화면이 전환됩니다.
   func completeNameSetting() {

@@ -11,7 +11,6 @@ import AuthenticationServices
 import FirebaseAuth
 import FirebaseFirestore
 
-
 final class LoginViewModel: ObservableObject {
   @Published var isLoading = false
   @Published var isNewUser = false
@@ -29,7 +28,7 @@ final class LoginViewModel: ObservableObject {
     defer { isLoading = false }
     
     do {
-      let helper = SignInAppleHelper()
+      let helper = SignInWithAppleHelper()
       let tokens = try await helper.startSignInWithAppleFlow()
       let authDataResult = try await FirebaseAuthManager.shared.signInWithApple(tokens: tokens)
       FirebaseAuthManager.shared.user = Auth.auth().currentUser

@@ -7,9 +7,7 @@
 
 import Foundation
 
-
 final class CreateReportViewModel {
-  
   /// 신고 기능 메서드
   /// - 영상 / 피드백 / 답글 모두 신고 가능합니다. 각각 필요한 정보만 메서드에 넣어서 신고합니다.
   /// - 예를 들어, 영상만 있다면, 영상 정보만 메서드로 넘겨주어서 처리합니다.
@@ -22,6 +20,7 @@ final class CreateReportViewModel {
   ///   - type: 신고 유형
   ///   - reportContentType: 신고 콘텐츠 유형 (영상, 피드백, 답글)
   ///   - description: 신고 사유
+  // swiftlint:disable:next function_parameter_count
   func createReport(
     reportedId: String,
     video: Video?,
@@ -29,8 +28,7 @@ final class CreateReportViewModel {
     reply: Reply?,
     type: ReportType = .other,
     reportContentType: ReportContentType,
-    description: String,
-    
+    description: String
   ) async throws {
     do {
       try await ReportManager.shared.createReport(
@@ -48,4 +46,3 @@ final class CreateReportViewModel {
     }
   }
 }
-

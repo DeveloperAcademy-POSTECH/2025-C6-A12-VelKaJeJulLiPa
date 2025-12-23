@@ -7,7 +7,6 @@
 
 import Foundation
 
-
 enum ReportError: LocalizedError {
     case reportFailed(underlying: Swift.Error)
     case unknown(underlying: Swift.Error)

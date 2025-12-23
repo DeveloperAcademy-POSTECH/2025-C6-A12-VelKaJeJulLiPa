@@ -8,14 +8,10 @@
 import SwiftUI
 
 struct AccountSettingView: View {
-  
   @EnvironmentObject private var router: MainRouter
-  
   @State private var viewModel = AccountSettingViewModel()
-  
   @State private var isSignOutAlertPresented: Bool = false
   @State private var isDeleteUserAlertPresented: Bool = false
-  
   
   var body: some View {
     ZStack {
@@ -80,7 +76,6 @@ struct AccountSettingView: View {
     }
   }
 }
-
 
 #Preview {
   NavigationStack {

@@ -43,31 +43,30 @@ import FirebaseFirestore
 /// ```
 ///
 final class BatchManager {
+  static let shared = BatchManager()
+  private init() {}
+  
+  private let database = Firestore.firestore()
+  
+  /// Firestore WriteBatch를 실행하는 메서드입니다.
+  ///
+  /// - Parameter block:
+  ///   Batch 작업을 구성하는 클로저.
+  ///   전달된 `WriteBatch` 객체를 사용해 set/update/delete 작업을 추가합니다.
+  ///
+  /// - Throws:
+  ///   batch 내부에서 발생한 오류 또는 commit 시 발생한 오류.
+  ///
+  /// - Note:
+  ///   Batch는 읽기 작업을 지원하지 않으며, 모든 쓰기 작업은 commit 시점에 한 번에 처리됩니다.
+  func perform(_ block: (WriteBatch) throws -> Void) async throws {
+    let batch = database.batch()
     
-    static let shared = BatchManager()
-    private init() {}
-    
-    private let db = Firestore.firestore()
-    
-    /// Firestore WriteBatch를 실행하는 메서드입니다.
-    ///
-    /// - Parameter block:
-    ///   Batch 작업을 구성하는 클로저.
-    ///   전달된 `WriteBatch` 객체를 사용해 set/update/delete 작업을 추가합니다.
-    ///
-    /// - Throws:
-    ///   batch 내부에서 발생한 오류 또는 commit 시 발생한 오류.
-    ///
-    /// - Note:
-    ///   Batch는 읽기 작업을 지원하지 않으며, 모든 쓰기 작업은 commit 시점에 한 번에 처리됩니다.
-    func perform(_ block: (WriteBatch) throws -> Void) async throws {
-        let batch = db.batch()
-        
-        do {
-            try block(batch)         // 여러 문서의 쓰기 작업 추가
-            try await batch.commit() // 모두 성공하거나, 하나라도 실패하면 전체 실패
-        } catch {
-            throw error
-        }
+    do {
+      try block(batch)         // 여러 문서의 쓰기 작업 추가
+      try await batch.commit() // 모두 성공하거나, 하나라도 실패하면 전체 실패
+    } catch {
+      throw error
     }
+  }
 }

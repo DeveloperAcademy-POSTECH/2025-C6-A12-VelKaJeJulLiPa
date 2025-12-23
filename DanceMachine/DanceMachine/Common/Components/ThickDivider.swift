@@ -9,7 +9,6 @@ import SwiftUI
 
 /// 두꺼운 구분선
 struct ThickDivider: View {
-  
   var body: some View {
     Rectangle()
       .foregroundStyle(.strokeNormal)

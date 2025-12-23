@@ -34,7 +34,6 @@ struct LaunchScreenView: View {
   }
 }
 
-
 #Preview("로그인 온보딩") {
   OnboardingView()
     .environmentObject(AuthRouter())
@@ -43,7 +42,6 @@ struct LaunchScreenView: View {
 #Preview("런치 스크린") {
   LaunchScreenView()
 }
-
 
 // OnBoardingView (Auth Router) 에서 스와이프해서 이전 화면으로 이동 방지
 struct DisableSwipeBackGesture: UIViewControllerRepresentable {

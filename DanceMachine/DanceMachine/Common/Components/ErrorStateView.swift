@@ -15,18 +15,17 @@ struct ErrorStateView: View {
   @State private var isRotating: Bool = false
   
   init(
-     mainSymbol: String? = nil,
-     message: String,
-     action: @escaping () -> Void
-   ) {
-     self.mainSymbol = mainSymbol
-     self.message = message
-     self.action = action
-   }
+    mainSymbol: String? = nil,
+    message: String,
+    action: @escaping () -> Void
+  ) {
+    self.mainSymbol = mainSymbol
+    self.message = message
+    self.action = action
+  }
   
   var body: some View {
     VStack(spacing: 16) {
-      
       if let mainSymbol {
         Image(systemName: mainSymbol)
           .font(.system(size: 75))
@@ -46,11 +45,12 @@ struct ErrorStateView: View {
             isActive: isRotating
           )
           .onTapGesture {
-             isRotating.toggle()
-             DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-               action()
-             }
-           }      }
+            isRotating.toggle()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+              action()
+            }
+          }
+      }
     }
   }
 }
@@ -69,4 +69,3 @@ struct ErrorStateView: View {
     action: { print("action") }
   )
 }
-

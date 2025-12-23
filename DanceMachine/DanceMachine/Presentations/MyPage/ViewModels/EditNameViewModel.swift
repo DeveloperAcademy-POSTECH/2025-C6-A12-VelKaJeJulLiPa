@@ -9,7 +9,6 @@ import Foundation
 
 @Observable
 final class EditNameViewModel {
-  
   var isLoading: Bool = false
   var myName: String { FirebaseAuthManager.shared.userInfo?.name ?? "Unknown" }
   
@@ -33,7 +32,6 @@ final class EditNameViewModel {
       )
   
       return true
-
     } catch {
       showErrorMessage = true
       print("error: \(error.localizedDescription)")

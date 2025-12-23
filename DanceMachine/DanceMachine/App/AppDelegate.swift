@@ -12,8 +12,7 @@ import FirebaseCore
 import FirebaseAuth
 import FirebaseMessaging
 
-
-class AppDelegate: UIResponder, UIApplicationDelegate { // TODO: If necessary change UIResponder into NSObject
+class AppDelegate: UIResponder, UIApplicationDelegate {
   static var pendingDeeplinkURL: URL?
   static var pendingNotificationId: String?
   
@@ -21,10 +20,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate { // TODO: If necessary ch
   static var orientationMask: UIInterfaceOrientationMask = .portrait
 
   // 전역으로 회전 방지 설정
-  func application(_ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
+  func application(
+    _ application: UIApplication,
+    supportedInterfaceOrientationsFor window: UIWindow?
+  ) -> UIInterfaceOrientationMask {
       return AppDelegate.orientationMask
   }
   
+  // swiftlint:disable:next discouraged_optional_collection
   func application(_ application: UIApplication,
                    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
     FirebaseApp.configure()
@@ -33,14 +36,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate { // TODO: If necessary ch
     print("🔥 FirebaseApp configured")
     return true
   }
-  
-  
+
   func application(_ application: UIApplication,
                    didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
     Messaging.messaging().apnsToken = deviceToken
     print("✅ APNs 토큰 등록 성공:", deviceToken.map { String(format: "%02.2hhx", $0) }.joined())
   }
-  
   
   /// 푸시 알림 등록 실패 시 호출되는 메서드
   /// 푸시 알림 등록(registerForRemoteNotifications)은 현재 홈화면에서 최초 로그인 하면 실행하고 있음
@@ -50,17 +51,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate { // TODO: If necessary ch
   }
 }
 
-
 extension AppDelegate: UNUserNotificationCenterDelegate {
-
   /// 앱이 포그라운드에서 알림 올 때 작동함
   func userNotificationCenter(_ center: UNUserNotificationCenter,
                               willPresent notification: UNNotification) async
   -> UNNotificationPresentationOptions {
-    print("2️⃣ 2번: 포그라운드에서 알림 올 때 작동함") // FIXME: - 디버그 코드 제거
-    
     let userInfo = notification.request.content.userInfo
-    print("userInfo - 2: \(userInfo)") // FIXME: - 디버그 코드 제거
     
     if let aps = userInfo["aps"] as? [String: Any],
        let badge = aps["badge"] as? Int {
@@ -77,17 +73,11 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
   /// 백그라운드에서 푸시 눌렀을 때 작동함
   func userNotificationCenter(_ center: UNUserNotificationCenter,
                               didReceive response: UNNotificationResponse) async {
-    print("3️⃣ 3번: 백그라운드에서 푸시 눌렀을 때 작동함") // FIXME: - 디버그 코드 제거
-    
     let userInfo = response.notification.request.content.userInfo
-    print("userInfo - 3: \(userInfo)") // FIXME: - 디버그 코드 제거
-    
     
     // 딥링크 처리
     if let deeplinkString = userInfo["deeplink"] as? String,
        let deeplinkURL = URL(string: deeplinkString) {
-      print("🌐 Deeplink detected:", deeplinkURL.absoluteString) // FIXME: - 디버그 코드 제거
-            
       // 푸시 알림 눌러서 포그라운드되면 딥링크 알림(이벤트)를 전달
       // 종료 또는 백드라운드 상태이면, 나중에 처리할 수 있도록 링크 저장
       if UIApplication.shared.applicationState == .active {
@@ -102,13 +92,10 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
       print("No deeplink found in notification payload")
     }
     
-    
     // 푸시 알림 눌러서 포그라운드되면 딥링크 알림(이벤트)를 전달
     // 종료 또는 백드라운드 상태이면, 나중에 처리할 수 있도록 링크 저장
     if let notificationId = userInfo["notificationId"] as? String {
-      print("🌐 Notification need to markAsRead", notificationId) // FIXME: - 디버그 코드 제거
       if UIApplication.shared.applicationState == .active {
-        print("🔥 포그라운드 - 푸시 알림 읽음 처리")
         DispatchQueue.main.async {
           NotificationCenter.post(.system(.markAsRead), object: notificationId)
         }
@@ -118,7 +105,6 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
     }
   }
 }
-
 
 /// FCM 토큰이 갱신되면 사용자 정보에 업데이트
 extension AppDelegate: MessagingDelegate {

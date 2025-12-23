@@ -10,16 +10,14 @@ import Combine
 
 import FirebaseFirestore
 
-
 final class InboxViewModel: ObservableObject {
   @Published var notifications: [Notification] = []
   @Published var inboxNotifications: [InboxNotification] = []
   @Published var isLoading = false
   @Published var isRefreshing = false
   @Published var isPaginationLoading = false
-//  @Published var showError = false //FIXME: 리젝사유 회피용 임시 주석처리
-  
-  private var lastDocument: DocumentSnapshot? = nil
+
+  private var lastDocument: DocumentSnapshot?
   private var canLoadMore = true
   
   // MARK: - Public Methods
@@ -49,8 +47,8 @@ final class InboxViewModel: ObservableObject {
         print("알림함 유저 아이디 없음")
         return
       }
-//      let userId = FirebaseAuthManager.shared.userInfo?.userId ?? ""
-      let (fetched, lastDoc): ([Notification], DocumentSnapshot?) = try await FirestoreManager.shared.fetchNotificationList(
+      let (fetched, lastDoc): ([Notification], DocumentSnapshot?) =
+      try await FirestoreManager.shared.fetchNotificationList(
         userId: userId,
         lastDocument: reset ? nil : lastDocument
       )
@@ -62,9 +60,7 @@ final class InboxViewModel: ObservableObject {
       try await appendInboxNotifications(from: fetched, reset: reset)
       try await NotificationManager.shared.refreshBadge(for: userId)
       
-//      showError = false //FIXME: 리젝사유 회피용 임시 주석처리
     } catch {
-//      showError = true  //FIXME: 리젝사유 회피용 임시 주석처리
       print("❌ Failed to load notifications: \(error)")
     }
   }
@@ -75,7 +71,6 @@ final class InboxViewModel: ObservableObject {
     defer { isRefreshing = false }
     await loadNotifications(reset: true)
   }
-  
   
   // MARK: - Private: Notification Transform
   
@@ -156,21 +151,18 @@ final class InboxViewModel: ObservableObject {
       )
       
       return .success(inbox)
-      
     } catch {
-      print("⚠️ Error transforming notification into inboxNotification: \(notification.notificationId.uuidString) / error: \(error)")
       return .failure(notification.notificationId.uuidString)
     }
   }
   
-  
   /// 삭제된 영상에 대한 notification 문서 삭제 및  user_notification 문서 삭제
   /// BatchManager 를 사용해 두 문서를 모두 삭제 (모두 성공하거나 모두 실패)
   private func handleInvalidNotification(notificationId: String, userId: String) async {
-    let db = Firestore.firestore()
+    let database = Firestore.firestore()
     
-    let notificationRef = db.collection(CollectionType.notification.rawValue).document(notificationId)
-    let userNotificationRef = db.collection(CollectionType.users.rawValue)
+    let notificationRef = database.collection(CollectionType.notification.rawValue).document(notificationId)
+    let userNotificationRef = database.collection(CollectionType.users.rawValue)
       .document(userId)
       .collection(CollectionType.userNotification.rawValue)
       .document(notificationId)
@@ -186,7 +178,6 @@ final class InboxViewModel: ObservableObject {
     }
   }
 
-  
   private func getVideoDoc(from id: String) async throws -> Video {
     try await FirestoreManager.shared.get(id, from: .video)
   }
@@ -225,7 +216,6 @@ final class InboxViewModel: ObservableObject {
     }
   }
   
-  
   // MARK: - Notification Read State
   
   func markAsRead(userId: String, notificationId: String) async throws {
@@ -235,7 +225,6 @@ final class InboxViewModel: ObservableObject {
       print("error: \(error.localizedDescription)")
     }
   }
-  
   
   // MARK: - Helpers: Pagination & State
   
@@ -253,7 +242,6 @@ final class InboxViewModel: ObservableObject {
     }
   }
 }
-
 
 // MARK: - InboxNotification
 

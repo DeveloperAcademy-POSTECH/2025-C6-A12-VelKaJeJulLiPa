@@ -10,7 +10,7 @@ import SwiftUI
 /// 마이페이지에서 정보를 보여줄 수 있고 네비게이션이 있는 행
 struct MyPageNavigationRow: View {
   let title: String
-  var value: String? = nil
+  var value: String?
   var isDividerPresented: Bool = false
   let action: () -> Void
   
@@ -51,5 +51,4 @@ struct MyPageNavigationRow: View {
     Color.backgroundNormal.ignoresSafeArea()
     MyPageNavigationRow(title: "TItle", value: "value", action: { print("Click") })
   }
-  
 }

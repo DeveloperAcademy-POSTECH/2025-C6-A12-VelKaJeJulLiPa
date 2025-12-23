@@ -12,13 +12,15 @@ struct EditNameView: View {
   
   @State private var viewModel = EditNameViewModel()
   @State private var editedName = ""
-  @State private var isInvalid : Bool = false
+  @State private var isInvalid: Bool = false
   @State private var showInputLimittMessage: Bool = false
   @State private var isAlertPresented: Bool = false
   @FocusState private var isFocused: Bool
   private var isButtonEnabled: Bool {
     editedName
-      .trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || editedName == viewModel.myName || viewModel.isLoading ? false : true
+      .trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    || editedName == viewModel.myName
+    || viewModel.isLoading ? false : true
   }
   
   let placeholder = "이름을 입력하세요"
@@ -37,14 +39,11 @@ struct EditNameView: View {
     return max(CGFloat(textCount) * base, minimumWidth)
   }
   
-  
   var body: some View {
     ZStack {
       Color.backgroundNormal.ignoresSafeArea()
-      
       VStack {
         Spacer()
-        
         TextField(
           text: $editedName,
           prompt: Text(displayText).foregroundStyle(.labelAssitive)
@@ -66,7 +65,7 @@ struct EditNameView: View {
             .foregroundStyle(underlineColor)
             .animation(.easeInOut(duration: 0.1), value: underlineWidth)
         }
-        .onChange(of: editedName) { oldValue, newValue in
+        .onChange(of: editedName) { _, newValue in
           var updated = newValue
           
           // 1) 앞 공백 제거
@@ -134,7 +133,6 @@ struct EditNameView: View {
     }
     .dismissKeyboardOnTap()
   }
-  
   
   // MARK: - 이름 수정하기 버튼 뷰
   private var bottomButtonView: some View {

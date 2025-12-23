@@ -10,8 +10,19 @@ import AuthenticationServices
 
 /// Sign in with Apple 인증 UI가 표시될 window 반환
 extension UIViewController: @retroactive ASAuthorizationControllerPresentationContextProviding {
-    
-    public func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
-        return self.view.window!
+  public func presentationAnchor(
+    for controller: ASAuthorizationController
+  ) -> ASPresentationAnchor {
+    if let window = view.window {
+      return window
     }
+
+    // fallback: 현재 활성 UIWindow
+    return UIApplication.shared
+      .connectedScenes
+      .compactMap { $0 as? UIWindowScene }
+      .flatMap { $0.windows }
+      .first { $0.isKeyWindow }
+      ?? UIWindow()
+  }
 }

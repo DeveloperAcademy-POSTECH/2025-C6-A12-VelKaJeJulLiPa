@@ -1,5 +1,5 @@
 //
-//  MyPageRow.swift
+//  MyPageInfoRow.swift
 //  DanceMachine
 //
 //  Created by Paidion on 10/25/25.

@@ -37,7 +37,6 @@ struct TeamMemberRow: View {
   }
 }
 
-
 #Preview {
   ZStack {
     Color.backgroundNormal.ignoresSafeArea()

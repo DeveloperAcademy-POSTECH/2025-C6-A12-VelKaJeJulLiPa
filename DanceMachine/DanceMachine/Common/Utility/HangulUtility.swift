@@ -52,15 +52,18 @@ private func lastCharacter(_ text: String) -> Character? {
 }
 
 /// 한글 음절인지 판별 (가~힣)
-private func isHangulSyllable(_ ch: Character) -> Bool {
-    guard let scalar = ch.unicodeScalars.first?.value else { return false }
-    return (0xAC00...0xD7A3).contains(scalar)
+private func isHangulSyllable(_ character: Character) -> Bool {
+  guard let scalar = character.unicodeScalars.first?.value else { return false }
+  return (0xAC00...0xD7A3).contains(scalar)
 }
 
 /// 종성 여부 판단
-private func hasFinalConsonant(_ ch: Character) -> Bool {
-    let scalar = ch.unicodeScalars.first!.value
-    let diff = scalar - 0xAC00
-    let jong = diff % 28
-    return jong != 0
+private func hasFinalConsonant(_ character: Character) -> Bool {
+  guard let scalar = character.unicodeScalars.first?.value else {
+    return false
+  }
+
+  let diff = scalar - 0xAC00
+  let jong = diff % 28
+  return jong != 0
 }

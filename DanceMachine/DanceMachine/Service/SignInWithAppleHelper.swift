@@ -10,13 +10,11 @@ import SwiftUI
 import AuthenticationServices
 import CryptoKit
 
-
 /// 애플 로그인 로직을 담당
-final class SignInAppleHelper: NSObject {
-  
+final class SignInWithAppleHelper: NSObject {
   private var currentNonce: String?
-  private var completionHandler: ((Result<SignInWithAppleResult, Error>) -> Void)? = nil
-  
+  private var completionHandler: ((Result<SignInWithAppleResult, Error>) -> Void)?
+
   func startSignInWithAppleFlow() async throws -> SignInWithAppleResult {
     try await withCheckedThrowingContinuation { continuation in
       self.startSignInWithAppleFlow { result in
@@ -31,28 +29,31 @@ final class SignInAppleHelper: NSObject {
       }
     }
   }
-  
-  func startSignInWithAppleFlow(viewController: UIViewController? = nil, completion: @escaping (Result<SignInWithAppleResult, Error>) -> Void) {
+
+  func startSignInWithAppleFlow(
+    viewController: UIViewController? = nil,
+    completion: @escaping (Result<SignInWithAppleResult, Error>) -> Void
+  ) {
     guard let topVC = viewController ?? UIApplication.topViewController() else {
       completion(.failure(SignInWithAppleError.noViewController))
       return
     }
-    
+
     let nonce = randomNonceString()
     currentNonce = nonce
     completionHandler = completion
-    
+
     let appleIDProvider = ASAuthorizationAppleIDProvider()
     let request = appleIDProvider.createRequest()
     request.requestedScopes = [.fullName, .email]
     request.nonce = sha256(nonce)
-    
+
     let authorizationController = ASAuthorizationController(authorizationRequests: [request])
     authorizationController.delegate = self
     authorizationController.presentationContextProvider = topVC
     authorizationController.performRequests()
   }
-  
+
   func randomNonceString(length: Int = 32) -> String {
     precondition(length > 0)
     var randomBytes = [UInt8](repeating: 0, count: length)
@@ -60,25 +61,24 @@ final class SignInAppleHelper: NSObject {
     if errorCode != errSecSuccess {
       fatalError("Unable to generate nonce.")
     }
-    
+
     let charset = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
     return String(randomBytes.map { charset[Int($0) % charset.count] })
   }
-  
-  
+
   func sha256(_ input: String) -> String {
     let inputData = Data(input.utf8)
     let hashedData = SHA256.hash(data: inputData)
     return hashedData.map { String(format: "%02x", $0) }.joined()
   }
-  
+
   private enum SignInWithAppleError: LocalizedError {
     case noViewController
     case invalidCredential
     case badResponse
     case unableToFindNonce
     case failedToStartFlow
-    
+
     var errorDescription: String? {
       switch self {
       case .noViewController:
@@ -94,14 +94,14 @@ final class SignInAppleHelper: NSObject {
       }
     }
   }
-  
 }
 
-
 /// 애플 로그인 성공 및 실패 분기처리
-extension SignInAppleHelper: ASAuthorizationControllerDelegate {
-  
-  func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
+extension SignInWithAppleHelper: ASAuthorizationControllerDelegate {
+  func authorizationController(
+    controller: ASAuthorizationController,
+    didCompleteWithAuthorization authorization: ASAuthorization
+  ) {
     guard
       let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential,
       let appleIDToken = appleIDCredential.identityToken,
@@ -110,20 +110,24 @@ extension SignInAppleHelper: ASAuthorizationControllerDelegate {
       completionHandler?(.failure(SignInWithAppleError.badResponse))
       return
     }
-    
+
     let fullName = appleIDCredential.fullName
     let email = appleIDCredential.email
-    let tokens = SignInWithAppleResult(token: idTokenString, nonce: nonce,
-                                       appleIDCredential: appleIDCredential, fullName: fullName, email: email)
+    let tokens = SignInWithAppleResult(
+      token: idTokenString,
+      nonce: nonce,
+      appleIDCredential: appleIDCredential,
+      fullName: fullName,
+      email: email
+    )
     completionHandler?(.success(tokens))
   }
-  
+
   func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
     print("Sign in with Apple errored: \(error)")
     completionHandler?(.failure(URLError(.cannotFindHost)))
   }
 }
-
 
 /// 애플 로그인 후 애플이 제공해주는 정보
 struct SignInWithAppleResult {
@@ -136,15 +140,13 @@ struct SignInWithAppleResult {
 
 ///  애플 로그인 버튼
 struct SignInWithAppleButtonViewRepresentable: UIViewRepresentable {
-  
   let type: ASAuthorizationAppleIDButton.ButtonType
   let style: ASAuthorizationAppleIDButton.Style
-  
+
   func makeUIView(context: Context) -> ASAuthorizationAppleIDButton {
     ASAuthorizationAppleIDButton(authorizationButtonType: type, authorizationButtonStyle: style)
   }
-  
+
   func updateUIView(_ uiView: ASAuthorizationAppleIDButton, context: Context) {
   }
-  
 }

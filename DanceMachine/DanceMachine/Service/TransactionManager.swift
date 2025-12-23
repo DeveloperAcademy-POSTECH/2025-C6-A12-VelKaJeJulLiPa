@@ -46,14 +46,11 @@ import FirebaseFirestore
 ///
 ///
 final class TransactionManager {
-  
   static let shared = TransactionManager()
   private init() {}
-  
-  private let db = Firestore.firestore()
-  
+  private let database = Firestore.firestore()
+
   /// Firestore 트랜잭션을 실행하는 메서드입니다.
-  ///
   /// - Parameter updateBlock:
   ///   트랜잭션 내에서 실행할 로직.
   ///   전달되는 `Transaction` 객체를 사용해 읽기(get)과 쓰기(set/update/detete) 작업을 수행합니다.
@@ -64,7 +61,7 @@ final class TransactionManager {
   /// - Note:
   ///   Firestore는 충돌이 감지되면 트랜잭션을 자동으로 재시도합니다.
   func perform(_ updateBlock: @escaping (Transaction) throws -> Void) async throws {
-    _ = try await db.runTransaction { transaction, errorPointer in
+    _ = try await database.runTransaction { transaction, errorPointer in
       do {
         try updateBlock(transaction)
         return nil

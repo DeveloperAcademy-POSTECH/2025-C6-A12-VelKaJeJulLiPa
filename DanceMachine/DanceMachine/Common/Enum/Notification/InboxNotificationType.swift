@@ -7,7 +7,6 @@
 
 import Foundation
 
-
 enum InboxNotificationType {
     case feedback
     case reply

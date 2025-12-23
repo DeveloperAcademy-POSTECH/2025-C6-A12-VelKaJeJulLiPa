@@ -7,7 +7,6 @@
 
 import Foundation
 
-
 enum NotificationError: LocalizedError {
   case unauthorized
   case badgeUpdateFailed(underlying: Error)
