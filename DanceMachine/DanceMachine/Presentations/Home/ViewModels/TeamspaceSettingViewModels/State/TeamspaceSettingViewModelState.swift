@@ -40,4 +40,7 @@ struct TeamspaceSettingPresentationState {
   var isPresentingCreateTeamspaceSheet: Bool = false      // 새 팀 스페이스 만들기
   var isPresentingUpdateTeamspaceNameSheet: Bool = false  // 팀 스페이스 이름 수정
   var isPresentingMemberManagementSheet: Bool = false     // 멤버 관리 시트 (추방 + 팀장 위임)
+  
+  // Toast
+  var isChangedTeamspace: Bool = false     // 팀 스페이스 변경 토스트
 }
