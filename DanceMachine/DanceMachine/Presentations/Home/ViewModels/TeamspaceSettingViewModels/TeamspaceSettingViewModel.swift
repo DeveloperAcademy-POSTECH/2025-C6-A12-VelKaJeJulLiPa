@@ -165,6 +165,7 @@ final class TeamspaceSettingViewModel: TeamspaceSettingViewModelProtocol {
   func selectTeamspace(_ teamspace: Teamspace) {
     FirebaseAuthManager.shared.currentTeamspace = teamspace
     self.lastAccessedTeamspaceId = teamspace.teamspaceId.uuidString
+    self.teamspaceSettingPresentationState.isChangedTeamspace = true
   }
   
   /// 툴바 메뉴를 열 때, 현재 로그인 유저의 팀 스페이스 목록을 로드합니다.

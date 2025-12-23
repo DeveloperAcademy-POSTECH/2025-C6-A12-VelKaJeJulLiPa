@@ -78,6 +78,16 @@ struct TeamspaceSettingView: View {
         ToastView(text: toastMessage ?? "", icon: .check)
       }
     )
+    .toast(
+      isPresented: $viewModel.teamspaceSettingPresentationState.isChangedTeamspace,
+      duration: 2.0,
+      position: .bottom,
+      tapToDismiss: true,
+      bottomPadding: 16,
+      content: {
+        ToastView(text: "팀스페이스가 변경 되었습니다!", icon: .check)
+      }
+    )
     .onChange(of: toastMessage) { oldValue, newValue in
       if newValue != nil {
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
