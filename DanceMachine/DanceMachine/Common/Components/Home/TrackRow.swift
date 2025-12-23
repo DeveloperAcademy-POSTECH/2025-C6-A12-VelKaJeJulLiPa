@@ -111,9 +111,13 @@ struct TrackRow: View {
     }
     .contentShape(Rectangle())
     .simultaneousGesture(
-      TapGesture().onEnded {
-        if rowState == .viewing { rowTapAction() }
-      }
+      TapGesture()
+        .onEnded {
+          if rowState == .viewing {
+            HapticManager.shared.trigger(.light)
+            rowTapAction()
+          }
+        }
     )
   }
   

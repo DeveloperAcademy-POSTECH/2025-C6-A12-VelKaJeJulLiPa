@@ -117,7 +117,10 @@ struct ListCell: View {
     .simultaneousGesture(
       TapGesture()
         .onEnded {
-          if case .viewing = projectRowState { rowTapAction() }
+          if case .viewing = projectRowState {
+            HapticManager.shared.trigger(.light)
+            rowTapAction()
+          }
         }
     )
   }

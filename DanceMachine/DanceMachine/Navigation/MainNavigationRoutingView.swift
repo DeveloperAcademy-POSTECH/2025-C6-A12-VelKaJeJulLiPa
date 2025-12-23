@@ -39,7 +39,7 @@ struct MainNavigationRoutingView: View {
       case .teamspace(let route):
         switch route {
         case .create:
-          CreateTeamspaceView(presentationStyle: .navigation).toolbar(.hidden, for: .tabBar)
+          CreateTeamspaceView(presentationStyle: .navigation)
         case .setting:
           TeamspaceSettingView()
         }

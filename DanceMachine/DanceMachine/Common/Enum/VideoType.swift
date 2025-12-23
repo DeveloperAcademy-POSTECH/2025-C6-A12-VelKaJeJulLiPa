@@ -9,5 +9,5 @@ import Foundation
 
 enum VideoType: String, CaseIterable {
   case all = "전체"
-  case favorites = "즐겨찾기"
+  case favorites = "좋아요"
 }

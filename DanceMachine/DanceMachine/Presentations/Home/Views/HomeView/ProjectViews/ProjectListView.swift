@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import TipKit
 
 struct ProjectListView: View {
   
@@ -70,7 +71,7 @@ struct ProjectListView: View {
   fileprivate struct Layout {
     enum EmptyProjectView {
       static let imageName: String = "folder.fill.badge.plus"
-      static let imageSize: CGFloat = 110
+      static let imageSize: CGFloat = 75
       static let vstackSpacing: CGFloat = 24
       static let titleText: String = "프로젝트를 추가해보세요."
     }
@@ -141,12 +142,13 @@ struct ProjectListView: View {
     VStack(spacing: Layout.EmptyProjectView.vstackSpacing) {
       Spacer()
       Button {
-//        projectListViewModel.presentationState.presentingCreateProjectSheet = true
+        //        projectListViewModel.presentationState.presentingCreateProjectSheet = true
       } label: {
         Image(systemName: Layout.EmptyProjectView.imageName)
           .font(.system(size: Layout.EmptyProjectView.imageSize))
           .foregroundStyle(Color.secondaryNormal)
           .frame(maxWidth: .infinity)
+          .popoverTip(AddProjectTip(), arrowEdge: .top)
           .simultaneousGesture(
             TapGesture()
               .onEnded {
@@ -244,13 +246,6 @@ struct ProjectListView: View {
         }
         tracksViewModel = vm
         await vm.loadTracks(forceRefresh: true)
-      }
-    }
-    .overlay(alignment: .top) {
-      if isRefreshing {
-        LoadingSpinner()
-          .frame(width: 24, height: 24)
-          .padding(.top, 8)
       }
     }
   }
