@@ -2513,6 +2513,22 @@
         }
       }
     },
+    "일반" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "General"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일반"
+          }
+        }
+      }
+    },
     "일시적인 오류가 발생했습니다.\n잠시 후 다시 시도해 주세요." : {
       "localizations" : {
         "en" : {
@@ -3302,7 +3318,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Parts List"
+            "value" : "Part List"
           }
         },
         "ko" : {

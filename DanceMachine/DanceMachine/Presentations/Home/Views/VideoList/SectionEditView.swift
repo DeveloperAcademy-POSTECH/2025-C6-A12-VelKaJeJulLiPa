@@ -107,7 +107,7 @@ struct SectionEditView: View {
         }
       )
       .alert(
-        "\(sectionToDelete?.sectionTitle ?? String(localized: "파트"))을/를 삭제하시겠어요?",
+        "\(sectionToDelete?.localizedTitle ?? String(localized: "파트"))을/를 삭제하시겠어요?",
         isPresented: $showDeleteAlert
       ) {
         Button(String(localized: "취소"), role: .cancel) {

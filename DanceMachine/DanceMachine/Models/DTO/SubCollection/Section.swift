@@ -38,3 +38,15 @@ extension Section: EntityRepresentable {
         return dict
     }
 }
+
+extension Section {
+    /// UI에 표시할 때 사용하는 로컬라이즈된 섹션 타이틀
+    /// DB에는 "General"로 저장되지만, 사용자 언어로 번역하여 표시
+    /// 기존 "일반" 데이터와의 하위 호환성 유지
+    var localizedTitle: String {
+        if sectionTitle == "General" || sectionTitle == "일반" {
+            return String(localized: "일반")
+        }
+        return sectionTitle
+    }
+}

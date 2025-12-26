@@ -77,7 +77,7 @@ struct SectionEditRow: View {
             .foregroundStyle(.labelNormal)
         }
       } else { // 일반 모드
-        Text(section.sectionTitle)
+        Text(section.localizedTitle)
           .font(.headline2Medium)
           .foregroundStyle(.labelStrong)
         Spacer()

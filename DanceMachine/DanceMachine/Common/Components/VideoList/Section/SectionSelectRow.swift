@@ -25,7 +25,7 @@ struct SectionSelectRow: View {
   
   private var sectionRow: some View {
     HStack {
-      Text(section.sectionTitle)
+      Text(section.localizedTitle)
         .font(.headline2Medium)
         .foregroundStyle(.labelStrong)
       Spacer()

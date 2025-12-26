@@ -346,7 +346,8 @@ extension TracksListViewModel {
         subCollection: .section
       )
       print("섹션 목록 조회가 완료되었습니다. (fetchSection 종료)")
-      return secs.filter { $0.sectionTitle == "일반" }
+      // 기존 "일반" 데이터와의 하위 호환성 유지
+      return secs.filter { $0.sectionTitle == "General" || $0.sectionTitle == "일반" }
     } catch {
       print("섹션 목록 조회 중 오류가 발생했습니다. (fetchSection 실패): \(error.localizedDescription)")
       return []
