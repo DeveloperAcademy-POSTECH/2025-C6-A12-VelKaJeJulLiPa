@@ -19,22 +19,22 @@ struct TeamspaceSettingViewToolbar: ToolbarContent {
       static let navigationTextLinelimit: Int = 1
       static let checkImageName: String = "checkmark"
       static let createTeamspaceImageName: String = "plus.circle"
-      static let createTeamspaceTitle: String = "새 팀 스페이스 만들기"
+      static let createTeamspaceTitle: String = String(localized: "새 팀 스페이스 만들기")
       static let hstackSpacing: CGFloat = 4
-      static let sheetTitle: String = "팀 스페이스 선택"
-      
+      static let sheetTitle: String = String(localized: "팀 스페이스 선택")
+
       // 가운데 제목이 차지할 수 있는 최대 너비 비율
       static let titleMaxWidthRatio: CGFloat = 0.55
     }
-    
+
     enum TopBarTrailing {
       static let menuImageName: String = "ellipsis"
       static let menuImageNameWidth: CGFloat = 24
       static let menuImageNameHeight: CGFloat = 20
       static let menuImageFontSize: CGFloat = 17
-      static let nameUpdateTitle: String = "팀 스페이스 이름 수정"
+      static let nameUpdateTitle: String = String(localized: "팀 스페이스 이름 수정")
       static let nameUpdateImageName: String = "pencil"
-      static let removeTeamMemberTitle: String = "팀원 내보내기"
+      static let removeTeamMemberTitle: String = String(localized: "팀원 내보내기")
       static let removeTeamMemberImage: String = "person.fill.badge.minus"
     }
   }
@@ -45,7 +45,7 @@ struct TeamspaceSettingViewToolbar: ToolbarContent {
       ToolbarItem(placement: .principal) {
         Menu {
           if viewModel.teamspaceChoiceState.loading == true {
-            Text("팀 스페이스 불러오는 중...")
+            Text(String(localized: "팀 스페이스 불러오는 중..."))
               .font(.heading1SemiBold)
               .foregroundStyle(Color.labelStrong)
           } else {
@@ -243,16 +243,16 @@ private struct TeamspacePickerPopoverView: View {
   
   fileprivate enum Layout {
     enum Principal {
-      static let sheetTitle: String = "팀 스페이스 선택"
+      static let sheetTitle: String = String(localized: "팀 스페이스 선택")
       static let checkImageName: String = "checkmark"
       static let createTeamspaceImageName: String = "plus.circle"
-      static let createTeamspaceTitle: String = "새 팀 스페이스 만들기"
+      static let createTeamspaceTitle: String = String(localized: "새 팀 스페이스 만들기")
     }
   }
-  
+
   var body: some View {
     VStack(spacing: 0) {
-      
+
       // 헤더
       HStack {
         Text(Layout.Principal.sheetTitle)
@@ -333,16 +333,16 @@ private struct TeamspacePickerSheet: View {
   
   fileprivate enum Layout {
     enum Principal {
-      static let sheetTitle: String = "팀 스페이스 선택"
+      static let sheetTitle: String = String(localized: "팀 스페이스 선택")
       static let checkImageName: String = "checkmark"
       static let createTeamspaceImageName: String = "plus.circle"
-      static let createTeamspaceTitle: String = "새 팀 스페이스 만들기"
+      static let createTeamspaceTitle: String = String(localized: "새 팀 스페이스 만들기")
     }
   }
-  
+
   var body: some View {
     VStack(spacing: 0) {
-      
+
       HStack {
         Text(Layout.Principal.sheetTitle)
           .font(.headline2SemiBold)

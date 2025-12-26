@@ -152,7 +152,7 @@ struct ReplySheetInputView: View {
       )
     ],
     showMentionPicker: true,
-    placeholder: "답글을 입력하세요",
+    placeholder: String(localized: "답글을 입력하세요"),
     onSubmit: {},
     onContentChange: { _, _ in },
     onSelectMention: { _ in },

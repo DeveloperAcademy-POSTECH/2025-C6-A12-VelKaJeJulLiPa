@@ -209,7 +209,7 @@ struct LandscapeReplyView: View {
       teamMembers: teamMembers,
       filteredMembers: filteredMembers,
       showMentionPicker: mM.showPicker,
-      placeholder: "댓글을 입력해 주세요.",
+      placeholder: String(localized: "댓글을 입력해 주세요."),
       onSubmit: {
         onReplySubmit(content, mM.taggedUsers.map { $0.userId })
         self.content = ""

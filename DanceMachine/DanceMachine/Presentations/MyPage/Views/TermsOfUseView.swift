@@ -20,7 +20,7 @@ struct TermsOfUseView: View {
         .opacity(isLoading ? 0 : 1)
         .toolbar {
           ToolbarLeadingBackButton(icon: .chevron)
-          ToolbarCenterTitle(text: "서비스 이용약관")
+          ToolbarCenterTitle(text: String(localized: "서비스 이용약관"))
         }
       
       if isLoading {

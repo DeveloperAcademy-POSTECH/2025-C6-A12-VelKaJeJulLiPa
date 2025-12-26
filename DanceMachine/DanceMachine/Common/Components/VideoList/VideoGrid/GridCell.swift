@@ -157,7 +157,7 @@ struct GridCell: View {
       HStack {
         Image(systemName: "pencil")
           .tint(.labelStrong)
-        Text("이름 수정")
+        Text(String(localized: "이름 수정"))
           .font(.headline1Medium)
       }
     }
@@ -170,7 +170,7 @@ struct GridCell: View {
       HStack {
         Image(systemName: "arrow.up.and.down.and.arrow.left.and.right")
           .tint(sectionCount <= 1 ? Color.fillAssitive : Color.labelStrong)
-        Text("다른 파트로 이동")
+        Text(String(localized: "다른 파트로 이동"))
           .font(.headline1Medium)
       }
     }
@@ -183,7 +183,7 @@ struct GridCell: View {
       HStack {
         Image(systemName: "trash")
           .tint(.accentRedStrong)
-        Text("영상 삭제")
+        Text(String(localized: "영상 삭제"))
       }
     }
   }
@@ -195,7 +195,7 @@ struct GridCell: View {
       HStack {
         Image(systemName: "light.beacon.max")
           .tint(.accentRedStrong)
-        Text("신고하기")
+        Text(String(localized: "신고하기"))
       }
     }
   }

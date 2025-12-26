@@ -15,7 +15,7 @@ struct NameSettingView: View {
   @State private var showToastMessage: Bool = false
   @FocusState private var isFocused: Bool
   
-  let placeholder = "이름을 입력하세요"
+  let placeholder = String(localized: "이름을 입력하세요")
   let fontSize: CGFloat = 32
   let maxLength = 10
   
@@ -38,7 +38,7 @@ struct NameSettingView: View {
       
       VStack {
         Spacer()
-        Text("만나서 반가워요!")
+        Text(String(localized: "만나서 반가워요!"))
           .font(.title2SemiBold)
           .foregroundStyle(Color.labelNormal)
         
@@ -46,7 +46,7 @@ struct NameSettingView: View {
           text: $name,
           prompt: Text(displayText).foregroundStyle(.labelAssitive)
         ) {
-          Text("사용자 이름")
+          Text(String(localized: "사용자 이름"))
         }
         .focused($isFocused)
         .multilineTextAlignment(.center)
@@ -83,12 +83,12 @@ struct NameSettingView: View {
         
         Spacer()
         
-        Text("이름이 정확한가요?")
+        Text(String(localized: "이름이 정확한가요?"))
           .font(.headline2Medium)
           .foregroundStyle(Color.labelNormal)
         
         ActionButton(
-          title: "확인",
+          title: String(localized: "확인"),
           color: Color.secondaryNormal,
           height: 47,
           isEnabled: !name
@@ -116,7 +116,7 @@ struct NameSettingView: View {
       position: .bottom,
       bottomPadding: 16 + 47 + 16 // 아래 빈공간 + 버튼 크기 + 윗 빈공간
     ) {
-      ToastView(text: "이름은 10자 이내로 입력해 주세요.", icon: .warning)
+      ToastView(text: String(localized: "이름은 10자 이내로 입력해 주세요."), icon: .warning)
     }
     .toast(
       isPresented: $viewModel.showError,
@@ -124,7 +124,7 @@ struct NameSettingView: View {
       position: .bottom,
       bottomPadding: 16 + 47 + 16 // 아래 빈공간 + 버튼 크기 + 윗 빈공간
     ) {
-      ToastView(text: "문제가 발생했습니다.", icon: .warning)
+      ToastView(text: String(localized: "문제가 발생했습니다."), icon: .warning)
     }
     .dismissKeyboardOnTap()
     .background(

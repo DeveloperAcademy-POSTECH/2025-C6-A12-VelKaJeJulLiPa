@@ -18,15 +18,15 @@ struct TeamspaceTitleView: View {
   fileprivate struct Layout {
     enum EmptyTeamspaceViewLayout {
       static let hstackSpacing: CGFloat = 8
-      static let titleText: String = "팀 스페이스를 생성하세요"
+      static let titleText: String = String(localized: "팀 스페이스를 생성하세요")
       static let imageName: String = "chevron.right"
       static let imageFontSize: CGFloat = 15
     }
-    
+
     enum NonEmptyTeamspaceViewLayout {
       static let hstackSpacing: CGFloat = 8
-      static let titleText: String = "팀 스페이스를 생성하세요"
-      static let teamspaceEmptyTitleText: String = ""
+      static let titleText: String = String(localized: "팀 스페이스를 생성하세요")
+      static let teamspaceEmptyTitleText: String = String(localized: "")
       static let imageName: String = "person.2.badge.gearshape.fill"
       static let imageFontSize: CGFloat = 17
     }

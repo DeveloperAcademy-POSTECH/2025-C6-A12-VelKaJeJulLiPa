@@ -54,7 +54,7 @@ struct FeedbackButtons: View {
 //      pointAction()
     } label: {
       HStack {
-        Text("시점 피드백")
+        Text(String(localized: "시점 피드백"))
           .font(.headline1Medium)
           .foregroundStyle(.labelStrong)
         Image(systemName: "bubble.circle")
@@ -80,13 +80,13 @@ struct FeedbackButtons: View {
     } label: {
       HStack {
         if isRecordingInterval {
-          Text("구간 선택 중... \(startTime)~\(currentTime)")
+          Text(String(localized: "구간 선택 중... \(startTime)~\(currentTime)"))
             .font(.headline1Medium)
             .foregroundStyle(.primitiveButton)
           Image(systemName: "stop.circle")
             .foregroundStyle(.primitiveButton)
         } else {
-          Text("구간 피드백")
+          Text(String(localized: "구간 피드백"))
             .font(.headline1Medium)
             .foregroundStyle(.primitiveButton)
           Image(.feedbackButton)

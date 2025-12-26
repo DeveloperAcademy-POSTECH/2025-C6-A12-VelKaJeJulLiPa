@@ -19,13 +19,13 @@ struct OnboardingInviteView: View {
       static let imageName: String = "person.2.fill"
       static let imageSize: CGFloat = 110
       static let vstackSpacing: CGFloat = 27
-      static let titleText: String = "팀 스페이스에 팀원을 초대해 보세요."
-      static let subTitleText: String = "팀원 태그를 통해 피드백을 주고받을 수 있습니다."
+      static let titleText: String = String(localized: "팀 스페이스에 팀원을 초대해 보세요.")
+      static let subTitleText: String = String(localized: "팀원 태그를 통해 피드백을 주고받을 수 있습니다.")
     }
     enum BottomActionButtonView {
       static let bottomActionButtonViewVstackSpacing: CGFloat = 24
-      static let nextButtonText: String = "다음에 하기"
-      static let inviteButtonText: String = "팀에 멤버 초대하기"
+      static let nextButtonText: String = String(localized: "다음에 하기")
+      static let inviteButtonText: String = String(localized: "팀에 멤버 초대하기")
       static let inviteButtonHeight: CGFloat = 47
     }
   }

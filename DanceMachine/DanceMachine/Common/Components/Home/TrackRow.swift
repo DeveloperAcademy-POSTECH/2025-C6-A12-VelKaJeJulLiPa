@@ -52,7 +52,7 @@ struct TrackRow: View {
         HStack(spacing: 0) {
           VStack(spacing: 0) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
-              TextField("곡 이름", text: $editText)
+              TextField(String(localized: "곡 이름"), text: $editText)
                 .font(.headline2Medium)
                 .foregroundStyle(Color.labelStrong)
                 .textFieldStyle(.plain)

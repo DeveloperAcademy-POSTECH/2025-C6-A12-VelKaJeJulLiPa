@@ -56,7 +56,7 @@ struct SectionSelectView: View {
           dismiss()
         }
       }
-      ToolbarCenterTitle(text: "파트 선택")
+      ToolbarCenterTitle(text: String(localized: "파트 선택"))
     }
     .safeAreaInset(edge: .bottom) {
       confirmButton
@@ -70,7 +70,7 @@ struct SectionSelectView: View {
   
   private var confirmButton: some View {
     ActionButton(
-      title: "영상 이동하기",
+      title: String(localized: "영상 이동하기"),
       color:
         selectedSectionId == sectionId ? .fillAssitive : .secondaryStrong, // FIXME: 컬러 수정
       height: 47,

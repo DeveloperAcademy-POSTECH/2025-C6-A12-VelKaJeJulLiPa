@@ -43,7 +43,7 @@ struct VideoTitleEditView: View {
           dismiss()
         }
       }
-      ToolbarCenterTitle(text: "비디오 이름 수정")
+      ToolbarCenterTitle(text: String(localized: "비디오 이름 수정"))
     }
     .unsavedChangesAlert(
       isPresented: $showExitAlert,
@@ -58,7 +58,7 @@ struct VideoTitleEditView: View {
         .frame(maxWidth: .infinity)
         .frame(height: 47)
         .overlay {
-          TextField("비디오 제목", text: $videoTitle)
+          TextField(String(localized: "비디오 제목"), text: $videoTitle)
             .autocorrectionDisabled(true)
             .textInputAutocapitalization(.never)
             .padding([.leading, .vertical], 16)
@@ -91,7 +91,7 @@ struct VideoTitleEditView: View {
       
       Spacer().frame(height: 16)
       
-      Text("20자 이하로 입력해 주세요.")
+      Text(String(localized: "20자 이하로 입력해 주세요."))
         .font(.footnoteMedium)
         .foregroundStyle(.accentRedNormal)
         .opacity(videoTitle.count < 21 ? 0 : 1)
@@ -100,7 +100,7 @@ struct VideoTitleEditView: View {
   
   private var bottomButtonView: some View {
     ActionButton(
-      title: "확인",
+      title: String(localized: "확인"),
       color: self.videoTitle.isEmpty ? Color.fillAssitive : Color.secondaryStrong,
       height: 47,
       isEnabled: self.videoTitle.isEmpty ? false : true

@@ -131,7 +131,7 @@ struct UploadProgressCard: View {
       HStack {
         Image(systemName: "exclamationmark.circle")
           .foregroundStyle(.accentRedNormal)
-        Text("용량 초과")
+        Text(String(localized: "용량 초과"))
           .font(.headline2Medium)
           .foregroundStyle(.accentRedNormal)
       }
@@ -174,7 +174,7 @@ struct UploadProgressCard: View {
           Image(systemName: "video.fill")
             .font(.system(size: 16))
             .foregroundStyle(.secondaryNormal)
-          Text("압축중")
+          Text(String(localized: "압축중"))
             .font(.caption1Medium)
             .foregroundStyle(Color.secondaryNormal)
         }
@@ -254,7 +254,7 @@ struct UploadProgressCard: View {
       HStack {
         Image(systemName: "exclamationmark.circle")
           .foregroundStyle(.accentRedNormal)
-        Text("업로드 실패")
+        Text(String(localized: "업로드 실패"))
           .font(.headline2Medium)
           .foregroundStyle(.accentRedNormal)
       }
@@ -268,7 +268,7 @@ struct UploadProgressCard: View {
       Button {
 //        Task { await onCancel() }
       } label: {
-        Text("취소")
+        Text(String(localized: "취소"))
           .font(.caption1Medium)
           .foregroundStyle(.accentRedNormal)
           .simultaneousGesture(

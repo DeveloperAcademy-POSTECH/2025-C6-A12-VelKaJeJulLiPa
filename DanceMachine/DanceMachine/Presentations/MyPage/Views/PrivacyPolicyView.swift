@@ -23,7 +23,7 @@ struct PrivacyPolicyView: View {
         .opacity(isLoading ? 0 : 1)
         .toolbar {
           ToolbarLeadingBackButton(icon: .chevron)
-          ToolbarCenterTitle(text: "개인정보처리방침")
+          ToolbarCenterTitle(text: String(localized: "개인정보처리방침"))
         }
       
       if isLoading {

@@ -49,7 +49,7 @@ struct InboxNotificationRow: View {
                 .font(.heading1SemiBold)
                 .foregroundStyle(.labelStrong)
                 .multilineTextAlignment(.leading)
-              Text(notification.type == .feedback ? "피드백을 남겼어요" : "답글을 남겼어요" )
+              Text(notification.type == .feedback ? String(localized: "피드백을 남겼어요") : String(localized: "답글을 남겼어요"))
                 .font(.heading1Medium)
                 .foregroundStyle(.labelNormal)
                 .multilineTextAlignment(.leading)

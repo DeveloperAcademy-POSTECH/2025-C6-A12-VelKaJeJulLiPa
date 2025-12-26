@@ -34,7 +34,7 @@ struct VideoDownloadError: View {
             action()
           }
         }
-      Text("재시도")
+      Text(String(localized: "재시도"))
         .font(.headline2Medium)
         .foregroundStyle(.labelAssitive)
     }
@@ -45,7 +45,7 @@ struct VideoDownloadError: View {
       Image(systemName: "exclamationmark.circle.fill")
         .foregroundStyle(.accentRedNormal)
         .font(.footnoteMedium)
-      Text("동영상 다운로드를 실패했습니다.")
+      Text(String(localized: "동영상 다운로드를 실패했습니다."))
         .font(.footnoteMedium)
         .foregroundStyle(.accentRedNormal)
     }

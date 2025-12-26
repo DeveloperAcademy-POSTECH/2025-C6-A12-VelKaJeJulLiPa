@@ -45,13 +45,13 @@ struct CreateProjectView: View {
       .dismissKeyboardOnTap()
     }
     .alert(
-      "변경사항이 저장되지 않았습니다.\n종료하시겠어요?",
+      String(localized: "변경사항이 저장되지 않았습니다.\n종료하시겠어요?"),
       isPresented: $closeAlert
     ) {
-      Button("취소", role: .cancel) {}
-      Button("나가기", role: .destructive) { dismiss() }
+      Button(String(localized: "취소"), role: .cancel) {}
+      Button(String(localized: "나가기"), role: .destructive) { dismiss() }
     } message: {
-      Text("저장하지 않은 변경사항은 사라집니다.")
+      Text(String(localized: "저장하지 않은 변경사항은 사라집니다."))
     }
   }
   
@@ -59,7 +59,7 @@ struct CreateProjectView: View {
   private var topTitleView: some View {
     ZStack { // TODO: 서치
       // 가운데 정렬 타이틀
-      Text("새 프로젝트 만들기")
+      Text(String(localized: "새 프로젝트 만들기"))
         .font(.headline2SemiBold)
         .foregroundStyle(Color.labelStrong)
         .frame(maxWidth: .infinity, alignment: .center)
@@ -80,7 +80,7 @@ struct CreateProjectView: View {
   // MARK: - 프로젝트 텍스트 필드 뷰 ("프로젝트 이름" + 텍스트 필드)
   private var inputProjectNameView: some View {
     VStack {
-      Text("프로젝트 이름을 입력하세요.")
+      Text(String(localized: "프로젝트 이름을 입력하세요."))
         .font(.title2SemiBold)
         .foregroundStyle(Color.labelStrong)
       Spacer().frame(height: 32)
@@ -159,7 +159,7 @@ struct CreateProjectView: View {
         .foregroundStyle(Color.secondaryNormal)
         .opacity(overText ? 0 : 1)
 
-      Text("20자 이내로 입력해주세요.")
+      Text(String(localized: "20자 이내로 입력해주세요."))
         .font(.footnoteMedium)
         .foregroundStyle(Color.accentRedNormal)
         .opacity(overText ? 1 : 0)
@@ -170,7 +170,7 @@ struct CreateProjectView: View {
   private var bottomButtonView: some View {
     ZStack {
       ActionButton(
-        title: "새 프로젝트 만들기",
+        title: String(localized: "새 프로젝트 만들기"),
         color: projectNameText.isEmpty ? Color.fillAssitive : Color.secondaryStrong,
         height: 47,
         isEnabled: !projectNameText.isEmpty && !isCreatingProject
@@ -240,7 +240,7 @@ struct CreateProjectView: View {
               .opacity(checkEffectActive ? 1 : 0)
           }
           
-          Text("프로젝트를 생성했습니다.")
+          Text(String(localized: "프로젝트를 생성했습니다."))
             .font(.headline2SemiBold)
             .foregroundStyle(Color.secondaryNormal)
             .opacity(checkEffectActive ? 1 : 0)

@@ -73,7 +73,7 @@ struct ProjectListView: View {
       static let imageName: String = "folder.fill.badge.plus"
       static let imageSize: CGFloat = 75
       static let vstackSpacing: CGFloat = 24
-      static let titleText: String = "프로젝트를 추가해보세요."
+      static let titleText: String = String(localized: "프로젝트를 추가해보세요.")
     }
   }
   

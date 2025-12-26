@@ -7,7 +7,14 @@
 
 import Foundation
 
-enum VideoType: String, CaseIterable {
-  case all = "전체"
-  case favorites = "좋아요"
+enum VideoType: CaseIterable {
+  case all
+  case favorites
+
+  var localizedString: String {
+    switch self {
+    case .all: return String(localized: "전체")
+    case .favorites: return String(localized: "좋아요")
+    }
+  }
 }

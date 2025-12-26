@@ -41,7 +41,7 @@ struct InboxView: View {
                   .font(.system(size: 75))
                   .foregroundStyle(.fillAssitive)
                 Spacer().frame(height: 10)
-                Text("받은 알림이 없습니다.")
+                Text(String(localized: "받은 알림이 없습니다."))
                   .font(.headline2Medium)
                   .foregroundStyle(.labelAssitive)
                 Spacer()
@@ -109,7 +109,7 @@ struct InboxView: View {
     }
     .navigationBarTitleDisplayMode(.inline)
     .toolbar {
-      ToolbarCenterTitle(text: "수신함")
+      ToolbarCenterTitle(text: String(localized: "수신함"))
     }
   }
 }

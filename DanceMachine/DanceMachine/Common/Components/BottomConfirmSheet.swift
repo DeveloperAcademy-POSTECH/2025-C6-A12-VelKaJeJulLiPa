@@ -43,7 +43,7 @@ struct BottomConfirmSheet: View {
                 RoundedRectangle(cornerRadius: 16)
                     .fill(Color.gray) // FIXME: - 컬러 수정
                     .overlay {
-                        Text("취소")
+                        Text(String(localized: "취소"))
                             .font(Font.system(size: 21, weight: .semibold)) // FIXME: - 폰트 수정
                             .foregroundStyle(Color.black) // FIXME: - 컬러 수정
                     }

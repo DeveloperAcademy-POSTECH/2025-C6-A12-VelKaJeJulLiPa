@@ -31,12 +31,12 @@ struct LoginView: View {
         .ignoresSafeArea()
     )
     .alert(
-      "로그인 실패",
+      String(localized: "로그인 실패"),
       isPresented: $viewModel.showError
     ) {
-      Button("확인", role: .cancel) {}
+      Button(String(localized: "확인"), role: .cancel) {}
     } message: {
-      Text("로그인을 실패했습니다.\n다시 시도해주세요.")
+      Text(String(localized: "로그인을 실패했습니다.\n다시 시도해주세요."))
     }
     .onReceive(viewModel.$isNewUser) { isNewUser in
       if isNewUser {
@@ -61,7 +61,7 @@ struct LoginView: View {
         .foregroundStyle(.labelStrong)
         .opacity(showContent ? 1 : 0)
       Spacer().frame(height: 24)
-      Text("댄스팀을 위한 효과적인 피드백 앱")
+      Text(String(localized: "댄스팀을 위한 효과적인 피드백 앱"))
         .font(Font.pretendard(.medium, size: 18))
         .foregroundStyle(.labelAssitive)
         .opacity(showContent ? 1 : 0)

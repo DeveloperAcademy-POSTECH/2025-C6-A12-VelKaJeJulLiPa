@@ -48,7 +48,7 @@ struct MemberManagementView: View {
   
   private var topTitleView: some View {
     ZStack {
-      Text("팀원 관리")
+      Text(String(localized: "팀원 관리"))
         .font(.headline2SemiBold)
         .foregroundStyle(Color.labelStrong)
         .frame(maxWidth: .infinity, alignment: .center)
@@ -105,7 +105,7 @@ struct MemberManagementView: View {
           self.strokeColorTap = true
         } label: {
           HStack {
-            Text("팀장 권한주기")
+            Text(String(localized: "팀장 권한주기"))
               .font(.headline2Medium)
               .foregroundStyle(Color.labelStrong)
             
@@ -162,7 +162,7 @@ struct MemberManagementView: View {
         viewModel.teamspaceSettingPresentationState.isPresentingChoiceMemberRemovalAlert = true
         dismiss()
       } label: {
-        Text("팀에서 내보내기")
+        Text(String(localized: "팀에서 내보내기"))
           .font(.headline2Medium)
           .foregroundStyle(Color.accentRedNormal)
           .frame(maxWidth: .infinity, alignment: .center)

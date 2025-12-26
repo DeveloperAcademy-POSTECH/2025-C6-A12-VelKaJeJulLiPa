@@ -29,7 +29,7 @@ struct AccountSettingView: View {
         Spacer()
         
         ActionButton(
-          title: "로그아웃",
+          title: String(localized: "로그아웃"),
           color: .secondaryStrong,
           height: 47,
           action: { isSignOutAlertPresented = true }
@@ -39,7 +39,7 @@ struct AccountSettingView: View {
         Button {
           isDeleteUserAlertPresented = true
         } label: {
-          Text("회원탈퇴")
+          Text(String(localized: "회원탈퇴"))
             .foregroundStyle(.accentRedStrong)
         }
         .padding(.top, 8)
@@ -48,35 +48,35 @@ struct AccountSettingView: View {
     }
     .toolbar {
       ToolbarLeadingBackButton(icon: .chevron)
-      ToolbarCenterTitle(text: "계정 설정")
+      ToolbarCenterTitle(text: String(localized: "계정 설정"))
     }
     .alert(
-      "로그아웃",
+      String(localized: "로그아웃"),
       isPresented: $isSignOutAlertPresented
     ) {
-      Button("취소", role: .cancel) {}
-      Button("로그아웃", role: .destructive) {
+      Button(String(localized: "취소"), role: .cancel) {}
+      Button(String(localized: "로그아웃"), role: .destructive) {
         Task {
           try await viewModel.signOut()
           router.destination.removeAll()
         }
       }
     } message: {
-      Text("정말 로그아웃하시겠어요?")
+      Text(String(localized: "정말 로그아웃하시겠어요?"))
     }
     .alert(
-      "회원탈퇴",
+      String(localized: "회원탈퇴"),
       isPresented: $isDeleteUserAlertPresented
     ) {
-      Button("취소", role: .cancel) {}
-      Button("탈퇴", role: .destructive) {
+      Button(String(localized: "취소"), role: .cancel) {}
+      Button(String(localized: "탈퇴"), role: .destructive) {
         Task {
           try await viewModel.deleteUserAccount()
           router.destination.removeAll()
         }
       }
     } message: {
-      Text("회원 정보가 삭제되고 되돌릴 수 없습니다.")
+      Text(String(localized: "회원 정보가 삭제되고 되돌릴 수 없습니다."))
     }
   }
 }

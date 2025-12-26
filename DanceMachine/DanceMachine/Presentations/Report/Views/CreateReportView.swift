@@ -30,7 +30,7 @@ struct CreateReportView: View {
   var maxLength: Int = 100 // 최대 글자수
   var isInvalid: Bool { description.count == maxLength }
   var inputHelperText: String {
-    isInvalid ? "100자 미만으로 입력해 주세요." : "\(description.count)/\(maxLength)"
+    isInvalid ? String(localized: "100자 미만으로 입력해 주세요.") : "\(description.count)/\(maxLength)"
   }
   
   let username = FirebaseAuthManager.shared.userInfo?.name ?? "Unknown"
@@ -50,7 +50,7 @@ struct CreateReportView: View {
     """
     신고자 정보
     • 사용자 ID: \(FirebaseAuthManager.shared.userInfo?.userId ?? "Unknown")
-    • 이메일: \(FirebaseAuthManager.shared.userInfo?.email ?? "이메일을 입력해주세요")
+    • 이메일: \(FirebaseAuthManager.shared.userInfo?.email ?? String(localized: "이메일을 입력해주세요"))
     
     신고정보
     • 신고유형: \(reportContentType.rawValue)
@@ -62,7 +62,7 @@ struct CreateReportView: View {
   // MARK: - Body
   var body: some View {
     VStack(spacing: 0) {
-      Text("신고 사유를 작성해 주세요.")
+      Text(String(localized: "신고 사유를 작성해 주세요."))
         .font(.title2SemiBold)
         .foregroundStyle(Color.labelStrong)
       
@@ -110,7 +110,7 @@ struct CreateReportView: View {
           dismiss()
         }
       }
-      ToolbarCenterTitle(text: "신고하기")
+      ToolbarCenterTitle(text: String(localized: "신고하기"))
     }
     .unsavedChangesAlert(
       isPresented: $showExitAlert,
@@ -120,27 +120,27 @@ struct CreateReportView: View {
       }
     )
     .alert(
-      "신고 메일을 보내는데 실패했습니다.",
+      String(localized: "신고 메일을 보내는데 실패했습니다."),
       isPresented: $showMailSendFailedAlert
     ) {
-      Button("확인", role: .cancel) {}
+      Button(String(localized: "확인"), role: .cancel) {}
     } message: {
-        Text("잠시 후 다시 시도해 주세요.")
+        Text(String(localized: "잠시 후 다시 시도해 주세요."))
     }
     .alert(
-      "신고 정보를 서버에 저장하는데 실패했습니다.",
+      String(localized: "신고 정보를 서버에 저장하는데 실패했습니다."),
       isPresented: $showCreateReportFailedAlert
     ) {
-      Button("확인", role: .cancel) {}
+      Button(String(localized: "확인"), role: .cancel) {}
     } message: {
-        Text("잠시 후 다시 시도해 주세요.")
+        Text(String(localized: "잠시 후 다시 시도해 주세요."))
     }
   }
 
   // MARK: - 하단 신고하기 버튼 뷰
   private var bottomButtonView: some View {
     ActionButton(
-      title: "확인",
+      title: String(localized: "확인"),
       color: description.isEmpty ? Color.fillAssitive : Color.secondaryStrong,
       height: 47,
       isEnabled: !description.isEmpty
@@ -208,7 +208,7 @@ struct MultilineTextField: View {
   var body: some View {
     ZStack {
       TextField(
-        text.isEmpty && !isFocused ? "신고 사유를 입력해 주세요." : "",
+        text.isEmpty && !isFocused ? String(localized: "신고 사유를 입력해 주세요.") : "",
         text: $text,
         axis: .vertical
       )

@@ -34,12 +34,12 @@ struct HomeView: View {
     enum CommonView {
       static let horizontalSpacing: CGFloat = 16
     }
-    
+
     enum EmptyTeamspaceView {
       static let imageName: String = "person.2.fill"
       static let imageSize: CGFloat = 75
       static let vstackSpacing: CGFloat = 10
-      static let titleText: String = "팀 스페이스를 만들어주세요."
+      static let titleText: String = String(localized: "팀 스페이스를 만들어주세요.")
     }
   }
   
@@ -127,7 +127,7 @@ struct HomeView: View {
     }
     .toast(
       isPresented: $showInviteToastMessage) {
-        ToastView(text: "\(inviteRouter.invitedTeamspaceName ?? "")팀에 입장하셨습니다.", icon: .check)
+        ToastView(text: String(localized: "\(inviteRouter.invitedTeamspaceName ?? "")팀에 입장하셨습니다."), icon: .check)
       }
   }
   

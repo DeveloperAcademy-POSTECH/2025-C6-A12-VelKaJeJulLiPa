@@ -32,7 +32,7 @@ struct SectionEditRow: View {
   private var sectionRow: some View {
     HStack {
       if isEditing {
-        TextField("파트 이름", text: $editText)
+        TextField(String(localized: "파트 이름"), text: $editText)
           .autocorrectionDisabled(true)
           .textInputAutocapitalization(.never)
           .textFieldStyle(.plain)

@@ -10,47 +10,47 @@ import SwiftUI
 // MARK: - 레이아웃 상수
 
 fileprivate enum TeamspaceModalsLayout {
-  
+
   // 공통 안내 문구
   enum Common {
-    static let reInviteMessage: String = "이후 다시 초대할 수 있습니다."
-    static let leaveMessage: String = "다시 초대받아 참여할 수 있습니다."
+    static let reInviteMessage: String = String(localized: "이후 다시 초대할 수 있습니다.")
+    static let leaveMessage: String = String(localized: "다시 초대받아 참여할 수 있습니다.")
   }
-  
+
   // 팀원(뷰어)이 팀 스페이스 나가기
   enum MemberLeave {
-    static let titleSuffix: String = " 팀 스페이스를 나가시겠어요?"
-    static let cancelTitle: String = "취소"
-    static let leaveTitle: String = "나가기"
+    static let titleSuffix: String = String(localized: " 팀 스페이스를 나가시겠어요?")
+    static let cancelTitle: String = String(localized: "취소")
+    static let leaveTitle: String = String(localized: "나가기")
   }
-  
+
   // 팀장(오너)이 팀 스페이스 나가기 시도했을 때
   enum OwnerLeave {
-    static let titleSuffix: String = "팀 스페이스를 나가시겠어요?"
-    static let okTitle: String = "확인"
-    static let message: String = "팀 스페이스에서 나가려면 팀장 권한을 다른 팀원에게 양도해야 합니다."
+    static let titleSuffix: String = String(localized: "팀 스페이스를 나가시겠어요?")
+    static let okTitle: String = String(localized: "확인")
+    static let message: String = String(localized: "팀 스페이스에서 나가려면 팀장 권한을 다른 팀원에게 양도해야 합니다.")
   }
-  
+
   // 팀 스페이스 완전 삭제
   enum DeleteTeamspace {
-    static let titleSuffix: String = " 팀 스페이스를 삭제하시겠어요?"
-    static let cancelTitle: String = "취소"
-    static let deleteTitle: String = "삭제하기"
-    static let message: String = "팀 스페이스와 멤버 목록이 모두 초기화됩니다."
+    static let titleSuffix: String = String(localized: " 팀 스페이스를 삭제하시겠어요?")
+    static let cancelTitle: String = String(localized: "취소")
+    static let deleteTitle: String = String(localized: "삭제하기")
+    static let message: String = String(localized: "팀 스페이스와 멤버 목록이 모두 초기화됩니다.")
   }
-  
+
   // 단일 팀원 내보내기
   enum SingleMemberRemoval {
-    static let titleSuffix: String = " 팀원을 내보내시겠어요?"
-    static let cancelTitle: String = "취소"
-    static let removeTitle: String = "내보내기"
+    static let titleSuffix: String = String(localized: " 팀원을 내보내시겠어요?")
+    static let cancelTitle: String = String(localized: "취소")
+    static let removeTitle: String = String(localized: "내보내기")
   }
-  
+
   // 여러 팀원 묶음 내보내기
   enum BulkMemberRemoval {
-    static let title: String = "선택한 팀원들을 내보내시겠어요?"
-    static let cancelTitle: String = "취소"
-    static let removeTitle: String = "내보내기"
+    static let title: String = String(localized: "선택한 팀원들을 내보내시겠어요?")
+    static let cancelTitle: String = String(localized: "취소")
+    static let removeTitle: String = String(localized: "내보내기")
   }
 }
 

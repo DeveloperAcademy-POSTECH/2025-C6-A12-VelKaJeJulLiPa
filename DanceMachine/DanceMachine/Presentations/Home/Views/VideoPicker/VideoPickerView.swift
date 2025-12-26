@@ -166,7 +166,7 @@ struct VideoPickerView: View {
   private var filterSegment: some View {
     Picker("필터", selection: $pickerViewModel.selectedFilter) {
       ForEach(VideoType.allCases, id: \.self) { f in
-        Text(f.rawValue).tag(f)
+        Text(f.localizedString).tag(f)
       }
     }
     .pickerStyle(.segmented)

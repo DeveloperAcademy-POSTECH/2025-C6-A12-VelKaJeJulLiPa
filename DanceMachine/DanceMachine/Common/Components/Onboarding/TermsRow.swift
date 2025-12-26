@@ -17,7 +17,7 @@ struct TermsRow: View {
   
   var body: some View {
     HStack(spacing: 0) {
-      Text("필수")
+      Text(String(localized: "필수"))
         .font(.footnoteMedium)
         .foregroundStyle(.secondaryNormal)
         .padding(.horizontal, 8)
