@@ -1046,7 +1046,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Reply added!"
+            "value" : "left a reply"
           }
         },
         "ko" : {
@@ -3622,7 +3622,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Feedback added!"
+            "value" : "left a feedback"
           }
         },
         "ko" : {
