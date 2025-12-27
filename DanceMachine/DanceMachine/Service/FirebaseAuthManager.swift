@@ -202,7 +202,7 @@ final class FirebaseAuthManager: ObservableObject {
     var authCodeString: String?
     
     if needsReauth || needsTokenRevocation {
-      let helper = SignInAppleHelper() // 애플 로그인 실행
+      let helper = SignInWithAppleHelper() // 애플 로그인 실행
       let tokens = try await helper.startSignInWithAppleFlow()
       let credential = OAuthProvider.appleCredential(
         withIDToken: tokens.token,
