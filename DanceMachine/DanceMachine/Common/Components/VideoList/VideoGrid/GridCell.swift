@@ -28,7 +28,6 @@ struct GridCell: View {
   let sectionCount: Int
 
   @State private var showMenu: Bool = false
-  @State private var isPressed: Bool = false
 
   var body: some View {
     VStack(alignment: .leading) {
@@ -40,31 +39,7 @@ struct GridCell: View {
       RoundedRectangle(cornerRadius: 12)
         .fill(.fillNormal)
     )
-    .scaleEffect(isPressed ? 0.97 : 1.0)
-    .opacity(isPressed ? 0.8 : 1.0)
-    .animation(.easeInOut(duration: 0.15), value: isPressed)
     .sensoryFeedback(.success, trigger: showMenu)
-    .simultaneousGesture(
-      DragGesture(minimumDistance: 0)
-        .onChanged { value in
-          let horizontal = abs(value.translation.width)
-          let vertical = abs(value.translation.height)
-
-          // 수평/수직 드래그 감지 (스크롤 허용)
-          if horizontal > 10 || vertical > 10 {
-            isPressed = false
-            return
-          }
-
-          // 작은 움직임 - 탭으로 인식
-          if !isPressed && !showMenu {
-            isPressed = true
-          }
-        }
-        .onEnded { _ in
-          isPressed = false
-        }
-    )
     .simultaneousGesture(
       TapGesture()
         .onEnded {
@@ -74,12 +49,6 @@ struct GridCell: View {
           }
         }
     )
-    .onChange(of: showMenu) { _, newValue in
-      // contextMenu가 열리면 눌림 상태 해제
-      if newValue {
-        isPressed = false
-      }
-    }
     .overlay(alignment: .topTrailing) {
       Menu {
         contextRows
