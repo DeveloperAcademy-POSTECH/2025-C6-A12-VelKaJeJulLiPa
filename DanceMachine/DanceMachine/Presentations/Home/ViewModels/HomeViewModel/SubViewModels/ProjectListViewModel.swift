@@ -11,6 +11,7 @@ struct ProjectListDataState {
   // 1. 실제 데이터 & 로딩
   var projects: [Project] = []
   var isLoading: Bool = false
+  var hasCompletedInitialLoad: Bool = false
 }
 
 struct ProjectListEditingState {
@@ -73,11 +74,9 @@ final class ProjectListViewModel {
         return
       }
 
-      dataState.isLoading = true
-      defer { dataState.isLoading = false }
-
       let teamspaceId = currentTeamspace.teamspaceId.uuidString
 
+      // 캐시 체크를 먼저 수행 (isLoading 설정 전)
       if let cacheStore {
         let remoteUpdatedAtString = currentTeamspace.updatedAt?.iso8601KST()
         let cachedUpdatedAtString = try cacheStore.checkedProjectUpdatedAt(teamspaceId: teamspaceId)
@@ -92,10 +91,12 @@ final class ProjectListViewModel {
         if !cachedUpdatedAtString.isEmpty,
            cachedUpdatedAtString == remoteUpdatedAtString {
 
+          // 캐시 히트 - 로딩 뷰 없이 즉시 데이터 로드
           let cachedProjects = try cacheStore.loadProjects(teamspaceId: teamspaceId)
           dataState.projects = cachedProjects
+          dataState.hasCompletedInitialLoad = true
 
-          print("🍀 캐시 히트 → cache projects 사용. count=\(cachedProjects.count)")
+          print("🍀 캐시 히트 → cache projects 사용 (로딩 없음). count=\(cachedProjects.count)")
           cacheStore.debugPrintProjectCache(teamspaceId: teamspaceId, prefix: "🍀")
           return
         } else {
@@ -104,7 +105,13 @@ final class ProjectListViewModel {
         }
       }
 
-      // 서버 로딩
+      // 캐시 미스 - 서버에서 로딩 (로딩 뷰 표시)
+      dataState.isLoading = true
+      defer {
+        dataState.isLoading = false
+        dataState.hasCompletedInitialLoad = true
+      }
+
       let freshProjects = try await loadProject(teamspaceId: teamspaceId)
       dataState.projects = freshProjects
       print("🍏 서버 fetch 완료. count=\(freshProjects.count)")
@@ -460,7 +467,10 @@ extension ProjectListViewModel {
       }
 
       dataState.isLoading = true
-      defer { dataState.isLoading = false }
+      defer {
+        dataState.isLoading = false
+        dataState.hasCompletedInitialLoad = true
+      }
 
       let teamspaceId = currentTeamspace.teamspaceId.uuidString
 

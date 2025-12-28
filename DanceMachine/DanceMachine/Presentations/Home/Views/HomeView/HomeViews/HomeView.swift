@@ -48,16 +48,20 @@ struct HomeView: View {
       Color.backgroundNormal.ignoresSafeArea()
       
       VStack {
-        TeamspaceTitleView(
-          viewModel: homeViewModel,
-          projectListViewModel: projectListViewModel,
-          tracksViewModel: $tracksViewModel
-        )
-        .padding(.horizontal, Layout.CommonView.horizontalSpacing)
+        if !homeViewModel.state.isLoading {
+          TeamspaceTitleView(
+            viewModel: homeViewModel,
+            projectListViewModel: projectListViewModel,
+            tracksViewModel: $tracksViewModel
+          )
+          .padding(.horizontal, Layout.CommonView.horizontalSpacing)
+        }
         
         Spacer().frame(height: 24)
         
-        if homeViewModel.state.teamspaceState == .empty {
+        if homeViewModel.state.isLoading {
+          LoadingSpinner().frame(maxWidth: 28, maxHeight: 28, alignment: .center)
+        } else if homeViewModel.state.teamspaceState == .empty {
           emptyTeamspaceView
             .padding(.horizontal, Layout.CommonView.horizontalSpacing)
         } else {
@@ -68,10 +72,25 @@ struct HomeView: View {
             onTrackSelect : onTrackSelect
           )
           .id(projectTipRefreshTrigger)
+
         }
+        
+//        if homeViewModel.state.teamspaceState == .empty {
+//          emptyTeamspaceView
+//            .padding(.horizontal, Layout.CommonView.horizontalSpacing)
+//        } else {
+//          ProjectListView(
+//            homeViewModel: homeViewModel,
+//            projectListViewModel: projectListViewModel,
+//            tracksViewModel: $tracksViewModel,
+//            onTrackSelect : onTrackSelect
+//          )
+//          .id(projectTipRefreshTrigger)
+//        }
       }
     }
-    .overlay { if homeViewModel.state.isLoading { LoadingView() } }
+//    .overlay { if homeViewModel.state.isLoading { VideoLottieView() }}
+//    .overlay { if homeViewModel.state.isLoading { LoadingView() } }
     .onChange(of: homeViewModel.state.teamspaceState) { oldValue, newValue in
       // empty → nonEmpty로 변경될 때만 (팀스페이스 처음 생성)
       if oldValue == .empty && newValue == .nonEmpty {
