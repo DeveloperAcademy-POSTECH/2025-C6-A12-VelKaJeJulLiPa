@@ -22,7 +22,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Leave Team Space?"
+            "value" : "Are you sure you want to leave this Team Space?"
           }
         },
         "ko" : {
@@ -38,7 +38,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Delete Team Space?"
+            "value" : "Are you sure you want to delete this Team Space? "
           }
         },
         "ko" : {
@@ -54,7 +54,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Remove this member?"
+            "value" : "Are you sure you want to remove this team member?"
           }
         },
         "ko" : {
@@ -102,7 +102,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "(Example) SEVENTEEN - Mansae"
+            "value" : "(Example) BTS - Bow With Luv"
           }
         },
         "ko" : {
@@ -134,7 +134,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "[%@] Team Invite"
+            "value" : "Invite to [%@]"
           }
         },
         "ko" : {
@@ -225,6 +225,22 @@
         }
       }
     },
+    "%@ %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@"
+          }
+        }
+      }
+    },
     "%@ X" : {
       "localizations" : {
         "en" : {
@@ -269,22 +285,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@/%2$@"
-          }
-        }
-      }
-    },
-    "%@%@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@%2$@"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@%2$@"
           }
         }
       }
@@ -518,7 +518,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Update on App Store"
+            "value" : "Update on the App Store"
           }
         },
         "ko" : {
@@ -534,7 +534,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Problem occurred while revoking Apple login token: %@"
+            "value" : "An error occurred while revoking Apple Sign-In: %@"
           }
         },
         "ko" : {
@@ -582,7 +582,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "DirAct - [%@] Team Invite"
+            "value" : "DirAct - Invite to [%@]"
           }
         },
         "ko" : {
@@ -598,7 +598,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "About DirAct Team"
+            "value" : "The DirAct team"
           }
         },
         "ko" : {
@@ -678,7 +678,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Photo Library Access Required"
+            "value" : "Photo Library Access Request"
           }
         },
         "ko" : {
@@ -806,7 +806,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A space to store tracks and videos."
+            "value" : "A space to save tracks and videos"
           }
         },
         "ko" : {
@@ -982,7 +982,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Move to Another Part"
+            "value" : "Move to another Part"
           }
         },
         "ko" : {
@@ -1126,7 +1126,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Please select a shorter video\nor lower quality."
+            "value" : "Please select a shorter video\nor lower quality video."
           }
         },
         "ko" : {
@@ -1366,7 +1366,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Problem occurred while processing video.\nPlease try again."
+            "value" : "A problem occurred while processing the video.\nPlease try again."
           }
         },
         "ko" : {
@@ -1686,7 +1686,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Edit Video Name"
+            "value" : "Edit video name"
           }
         },
         "ko" : {
@@ -1702,7 +1702,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Video Title"
+            "value" : "Video title"
           }
         },
         "ko" : {
@@ -1718,7 +1718,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Let's add a video!"
+            "value" : "Add a video!"
           }
         },
         "ko" : {
@@ -1782,7 +1782,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Failed to delete related information (notification documents, user notification subcollections) for deleted video or team space. (%@)"
+            "value" : "Failed to delete related information (notification documents, user notification subcollections) for deleted video or Team Space. (%@)"
           }
         },
         "ko" : {
@@ -1846,7 +1846,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Create New Project"
+            "value" : "Create new project"
           }
         },
         "ko" : {
@@ -1878,7 +1878,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Agree to Terms of Service"
+            "value" : "Agree to Terms of service"
           }
         },
         "ko" : {
@@ -1926,7 +1926,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Remove selected members?"
+            "value" : "Remove selected team members?"
           }
         },
         "ko" : {
@@ -2070,7 +2070,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Report submitted.\nWe'll notify you of any actions via email."
+            "value" : "Report submitted.\nWe'll email you with updates."
           }
         },
         "ko" : {
@@ -2150,7 +2150,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No notification permission. Please allow notifications in Settings."
+            "value" : "No notification permission. Please allow notifications in settings."
           }
         },
         "ko" : {
@@ -2358,7 +2358,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Move Video"
+            "value" : "Move video"
           }
         },
         "ko" : {
@@ -2374,7 +2374,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Video name updated."
+            "value" : "Video name edited."
           }
         },
         "ko" : {
@@ -2406,7 +2406,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Size Limit Exceeded"
+            "value" : "Size limit exceeded"
           }
         },
         "ko" : {
@@ -2422,7 +2422,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Edit Name"
+            "value" : "Edit name"
           }
         },
         "ko" : {
@@ -2630,7 +2630,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "All Feedback"
+            "value" : "All feedback"
           }
         },
         "ko" : {
@@ -2646,7 +2646,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Agree to All"
+            "value" : "Agree to all"
           }
         },
         "ko" : {
@@ -2806,7 +2806,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Delete Account"
+            "value" : "Delete account"
           }
         },
         "ko" : {
@@ -2870,7 +2870,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Loading team space..."
+            "value" : "Loading Team Space..."
           }
         },
         "ko" : {
@@ -2934,7 +2934,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Enter team space name."
+            "value" : "Enter Team Space name."
           }
         },
         "ko" : {
@@ -2950,7 +2950,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Leave team space?"
+            "value" : "Leave Team Space?"
           }
         },
         "ko" : {
@@ -2966,7 +2966,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Let's create a team space!"
+            "value" : "Create a Team Space!"
           }
         },
         "ko" : {
@@ -2982,7 +2982,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Please create a team space."
+            "value" : "Please create a Team Space."
           }
         },
         "ko" : {
@@ -2998,7 +2998,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Create a team space"
+            "value" : "Create a Team Space"
           }
         },
         "ko" : {
@@ -3014,7 +3014,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Try inviting members to your team space."
+            "value" : "Try inviting team members to your Team Space."
           }
         },
         "ko" : {
@@ -3030,7 +3030,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "To leave team space, you must transfer leadership to another member."
+            "value" : "To leave Team Space, you must transfer leadership to another member."
           }
         },
         "ko" : {
@@ -3046,7 +3046,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Team space and member list will be reset."
+            "value" : "Team space and team member list will be reset."
           }
         },
         "ko" : {
@@ -3062,7 +3062,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Team Name"
+            "value" : "Team name"
           }
         },
         "ko" : {
@@ -3094,7 +3094,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Team space changed!"
+            "value" : "Team Space changed!"
           }
         },
         "ko" : {
@@ -3110,7 +3110,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Invite Members to Team"
+            "value" : "Invite members to team"
           }
         },
         "ko" : {
@@ -3126,7 +3126,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Remove from Team"
+            "value" : "Remove from team"
           }
         },
         "ko" : {
@@ -3142,7 +3142,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Member"
+            "value" : "Team member"
           }
         },
         "ko" : {
@@ -3158,7 +3158,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Manage Members"
+            "value" : "Manage team members"
           }
         },
         "ko" : {
@@ -3174,7 +3174,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Remove Member"
+            "value" : "Remove team member"
           }
         },
         "ko" : {
@@ -3190,7 +3190,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You can give and receive feedback by tagging members."
+            "value" : "You can give and receive feedback by tagging team members."
           }
         },
         "ko" : {
@@ -3366,7 +3366,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Problem occurred while deleting part.\nPlease check network and try again."
+            "value" : "Problem occurred while deleting Part.\nPlease check network and try again."
           }
         },
         "ko" : {
@@ -3382,7 +3382,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Problem occurred while creating part.\nPlease check network and try again."
+            "value" : "Problem occurred while creating Part.\nPlease check network and try again."
           }
         },
         "ko" : {
@@ -3398,7 +3398,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Problem occurred while editing part.\nPlease check network and try again."
+            "value" : "Problem occurred while editing Part.\nPlease check network and try again."
           }
         },
         "ko" : {
@@ -3430,7 +3430,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Let's add a part!"
+            "value" : "Add a part!"
           }
         },
         "ko" : {
@@ -3494,7 +3494,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Project Name"
+            "value" : "Project name"
           }
         },
         "ko" : {
@@ -3558,7 +3558,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Let's add a project!"
+            "value" : "Add a project!"
           }
         },
         "ko" : {
@@ -3574,7 +3574,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Let's add a project!"
+            "value" : "Add a project!"
           }
         },
         "ko" : {
@@ -3750,7 +3750,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Delete Account"
+            "value" : "Delete account"
           }
         },
         "ko" : {

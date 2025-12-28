@@ -74,7 +74,7 @@ extension View {
     // - 뷰어(viewer)라면: 해당 팀 스페이스에서 나가고, 다른 팀 스페이스로 이동하거나 팝
     // - 오너(owner)라면: 전체 팀 스페이스 삭제 로직으로 처리
       .alert(
-        "\(viewModel.currentTeamspace?.teamspaceName ?? "")\(TeamspaceModalsLayout.MemberLeave.titleSuffix)",
+        "\(viewModel.currentTeamspace?.teamspaceName ?? "") \(TeamspaceModalsLayout.MemberLeave.titleSuffix)",
         isPresented: $viewModel.teamspaceSettingPresentationState.isPresentingMemberLeaveTeamspaceAlert
       ) {
         Button(TeamspaceModalsLayout.MemberLeave.cancelTitle, role: .cancel) {}
@@ -101,7 +101,7 @@ extension View {
     // 팀장(오너)이 "팀 스페이스 나가기"를 시도했을 때,
     // 권한을 다른 팀원에게 양도해야 한다는 안내만 보여주는 Alert 입니다.
       .alert(
-        "\(viewModel.currentTeamspace?.teamspaceName ?? "")\(TeamspaceModalsLayout.OwnerLeave.titleSuffix)",
+        "\(viewModel.currentTeamspace?.teamspaceName ?? "") \(TeamspaceModalsLayout.OwnerLeave.titleSuffix)",
         isPresented: $viewModel.teamspaceSettingPresentationState.isPresentingOwnerLeaveTeamspaceAlert
       ) {
         Button(TeamspaceModalsLayout.OwnerLeave.okTitle, role: .cancel) {}
@@ -115,7 +115,7 @@ extension View {
     // - 팀 스페이스 문서 / 멤버 목록 / 프로젝트 등을 전부 정리하고,
     // - 삭제 후 상위 화면으로 이동합니다.
       .alert(
-        "\(viewModel.currentTeamspace?.teamspaceName ?? "")\(TeamspaceModalsLayout.DeleteTeamspace.titleSuffix)",
+        "\(viewModel.currentTeamspace?.teamspaceName ?? "") \(TeamspaceModalsLayout.DeleteTeamspace.titleSuffix)",
         isPresented: $viewModel.teamspaceSettingPresentationState.isPresentingDeleteTeamspaceAlert
       ) {
         Button(TeamspaceModalsLayout.DeleteTeamspace.cancelTitle, role: .cancel) {}
@@ -137,7 +137,7 @@ extension View {
     // - teamspace/{id}/members 서브컬렉션과
     // - users/{userId}/userTeamspace 서브컬렉션에서 모두 제거합니다.
       .alert(
-        "\(viewModel.teamspaceSettingPresentationState.selectedUserForRemoval?.name ?? "")\(TeamspaceModalsLayout.SingleMemberRemoval.titleSuffix)",
+        "\(viewModel.teamspaceSettingPresentationState.selectedUserForRemoval?.name ?? "") \(TeamspaceModalsLayout.SingleMemberRemoval.titleSuffix)",
         isPresented: $viewModel.teamspaceSettingPresentationState.isPresentingChoiceMemberRemovalAlert
       ) {
         Button(TeamspaceModalsLayout.SingleMemberRemoval.cancelTitle, role: .cancel) {
