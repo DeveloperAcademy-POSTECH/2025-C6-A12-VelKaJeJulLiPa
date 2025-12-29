@@ -53,10 +53,10 @@ struct CreateTracksView: View {
       String(localized: "변경사항이 저장되지 않았습니다.\n종료하시겠어요?"),
       isPresented: $closeAlert
     ) {
-      Button(String(localized: "취소"), role: .cancel) {}
-      Button(String(localized: "나가기"), role: .destructive) { dismiss() }
+      Button("취소", role: .cancel) {}
+      Button("나가기", role: .destructive) { dismiss() }
     } message: {
-      Text(String(localized: "저장하지 않은 변경사항은 사라집니다."))
+      Text("저장하지 않은 변경사항은 사라집니다.")
     }
     
   }
@@ -65,7 +65,7 @@ struct CreateTracksView: View {
   private var topTitleView: some View {
     ZStack { // TODO: 서치
       // 가운데 정렬 타이틀
-      Text(String(localized: "곡 추가하기"))
+      Text("곡 추가하기")
         .font(.headline2SemiBold)
         .foregroundStyle(Color.labelStrong)
         .frame(maxWidth: .infinity, alignment: .center)
@@ -86,7 +86,7 @@ struct CreateTracksView: View {
   // MARK: - 곡 텍스트 필드 뷰 ("곡 이름" + 텍스트 필드)
   private var inputTrackNameView: some View {
     VStack {
-      Text(String(localized: "추가할 곡의 이름을 입력하세요"))
+      Text("추가할 곡의 이름을 입력하세요")
         .font(.title2SemiBold)
         .foregroundStyle(Color.labelStrong)
       Spacer().frame(height: 32)
@@ -164,7 +164,7 @@ struct CreateTracksView: View {
         .foregroundStyle(Color.secondaryNormal)
         .opacity(overText ? 0 : 1)
 
-      Text(String(localized: "20자 이내로 입력해주세요."))
+      Text("20자 이내로 입력해주세요.")
         .font(.footnoteMedium)
         .foregroundStyle(Color.accentRedNormal)
         .opacity(overText ? 1 : 0)
@@ -249,7 +249,7 @@ struct CreateTracksView: View {
               .opacity(checkEffectActive ? 1 : 0)
           }
           
-          Text(String(localized: "곡을 생성했습니다."))
+          Text("곡을 생성했습니다.")
             .font(.headline2SemiBold)
             .foregroundStyle(Color.secondaryNormal)
             .opacity(checkEffectActive ? 1 : 0)

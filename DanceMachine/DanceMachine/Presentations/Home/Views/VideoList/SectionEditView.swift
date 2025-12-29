@@ -76,7 +76,7 @@ struct SectionEditView: View {
       }
       ToolbarItem(placement: .title) {
         VStack(alignment: .center) {
-          Text(String(localized: "파트 관리"))
+          Text("파트 관리")
             .font(.headline2SemiBold)
             .foregroundStyle(.labelStrong)
           Text("\(trackName)")
@@ -110,10 +110,10 @@ struct SectionEditView: View {
         "\(sectionToDelete?.localizedTitle ?? String(localized: "파트"))을/를 삭제하시겠어요?",
         isPresented: $showDeleteAlert
       ) {
-        Button(String(localized: "취소"), role: .cancel) {
+        Button("취소", role: .cancel) {
           sectionToDelete = nil
         }
-        Button(String(localized: "삭제"), role: .destructive) {
+        Button("삭제", role: .destructive) {
           if let section = sectionToDelete {
             Task {
               do {
@@ -127,7 +127,7 @@ struct SectionEditView: View {
           }
         }
       } message: {
-        Text(String(localized: "삭제하면 복구할 수 없습니다."))
+        Text("삭제하면 복구할 수 없습니다.")
       }
   }
   
@@ -143,7 +143,7 @@ struct SectionEditView: View {
           } label: {
             VStack(spacing: 24) {
               Image(.sectionAdd)
-              Text(String(localized: "파트를 추가해 보세요."))
+              Text("파트를 추가해 보세요.")
                 .font(.headline2Medium)
                 .foregroundStyle(.secondaryAssitive)
             }
@@ -161,7 +161,7 @@ struct SectionEditView: View {
   
   private var text: some View {
     HStack {
-      Text(String(localized: "파트 리스트"))
+      Text("파트 리스트")
         .font(.headline2Medium)
         .foregroundStyle(.labelAssitive)
       Spacer()
@@ -176,7 +176,7 @@ struct SectionEditView: View {
             Image(systemName: "plus")
               .font(.headline2SemiBold)
               .foregroundStyle(vm.isEditing ? .fillAssitive : .secondaryNormal)
-            Text(String(localized: "추가"))
+            Text("추가")
               .font(.headline2SemiBold)
               .foregroundStyle(vm.isEditing ? .fillAssitive : .secondaryNormal)
           }
@@ -213,13 +213,13 @@ struct SectionEditView: View {
             sectionToDelete = section
             showDeleteAlert = true
           } label: {
-            Label(String(localized: "삭제"), systemImage: "trash")
+            Label("삭제", systemImage: "trash")
           }
           
           Button {
             vm.startEdit(section: section)
           } label: {
-            Label(String(localized: "수정"), systemImage: "pencil")
+            Label("수정", systemImage: "pencil")
           }
           .tint(Color.fillAssitive)
         }
@@ -290,7 +290,7 @@ struct SectionEditView: View {
               .opacity(checkEffectActive ? 1 : 0)
           }
 
-          Text(String(localized: "파트를 저장했습니다."))
+          Text("파트를 저장했습니다.")
             .font(.headline2SemiBold)
             .foregroundStyle(Color.secondaryNormal)
             .opacity(checkEffectActive ? 1 : 0)

@@ -76,10 +76,10 @@ struct CreateTeamspaceView: View {
       String(localized: "변경사항이 저장되지 않았습니다.\n종료하시겠어요?"),
       isPresented: $closeAlert
     ) {
-      Button(String(localized: "취소"), role: .cancel) {}
-      Button(String(localized: "나가기"), role: .destructive) { dismiss() }
+      Button("취소", role: .cancel) {}
+      Button("나가기", role: .destructive) { dismiss() }
     } message: {
-      Text(String(localized: "저장하지 않은 변경사항은 사라집니다."))
+      Text("저장하지 않은 변경사항은 사라집니다.")
     }
   }
   
@@ -87,7 +87,7 @@ struct CreateTeamspaceView: View {
   private var topTitleView: some View {
     ZStack { // TODO: 서치
       // 가운데 정렬 타이틀
-      Text(String(localized: "팀 스페이스 만들기"))
+      Text("팀 스페이스 만들기")
         .font(.headline2SemiBold)
         .foregroundStyle(Color.labelStrong)
         .frame(maxWidth: .infinity, alignment: .center)
@@ -108,7 +108,7 @@ struct CreateTeamspaceView: View {
   // MARK: - 팀 스페이스 텍스트 필드 뷰 ("팀 스페이스 이름" + 텍스트 필드)
   private var inputTeamspaceNameView: some View {
     VStack {
-      Text(String(localized: "팀 스페이스 이름을 입력하세요."))
+      Text("팀 스페이스 이름을 입력하세요.")
         .font(.title2SemiBold)
         .foregroundStyle(Color.labelStrong)
       Spacer().frame(height: 32)
@@ -172,7 +172,7 @@ struct CreateTeamspaceView: View {
   @ViewBuilder
   private func textFieldView() -> some View {
     // 가운데 정렬 텍스트 필드 + 배경
-    TextField(String(localized: "팀 이름"), text: $teamspaceNameText)
+    TextField("팀 이름", text: $teamspaceNameText)
       .font(.headline2Medium)
       .foregroundStyle(Color.labelStrong)
       .tint(Color.labelStrong)
@@ -236,7 +236,7 @@ struct CreateTeamspaceView: View {
         .foregroundStyle(Color.secondaryNormal)
         .opacity(overText ? 0 : 1)
 
-      Text(String(localized: "20자 이내로 입력해주세요."))
+      Text("20자 이내로 입력해주세요.")
         .font(.footnoteMedium)
         .foregroundStyle(Color.accentRedNormal)
         .opacity(overText ? 1 : 0)
@@ -267,7 +267,7 @@ struct CreateTeamspaceView: View {
               .opacity(checkEffectActive ? 1 : 0)
           }
           
-          Text(String(localized: "팀을 생성했습니다."))
+          Text("팀을 생성했습니다.")
             .font(.headline2SemiBold)
             .foregroundStyle(Color.secondaryNormal)
             .opacity(checkEffectActive ? 1 : 0)

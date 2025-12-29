@@ -28,7 +28,7 @@ final class FirebaseAuthManager: ObservableObject {
   @Published var authenticationState: AuthenticationState = .unauthenticated
   
   private var authStateHandler: AuthStateDidChangeListenerHandle?
-  private var currentNonce: String?
+//  private var currentNonce: String?
   
   /// 현재 선택된 유저의 팀스페이스 입니다.
   @Published var currentTeamspace: Teamspace?

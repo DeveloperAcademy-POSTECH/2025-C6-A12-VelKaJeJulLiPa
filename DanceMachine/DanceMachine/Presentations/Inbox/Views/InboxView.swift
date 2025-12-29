@@ -41,7 +41,7 @@ struct InboxView: View {
                   .font(.system(size: 75))
                   .foregroundStyle(.fillAssitive)
                 Spacer().frame(height: 10)
-                Text(String(localized: "받은 알림이 없습니다."))
+                Text("받은 알림이 없습니다.")
                   .font(.headline2Medium)
                   .foregroundStyle(.labelAssitive)
                 Spacer()

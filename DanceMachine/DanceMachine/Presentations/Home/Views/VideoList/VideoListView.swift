@@ -207,7 +207,7 @@ struct VideoListView: View {
           .symbolRenderingMode(.hierarchical)
           .font(.system(size: 75))
           .foregroundStyle(.secondaryNormal)
-        Text(String(localized: "비디오를 추가해 보세요."))
+        Text("비디오를 추가해 보세요.")
           .font(.headline2Medium)
           .foregroundStyle(.secondaryAssitive)
       }

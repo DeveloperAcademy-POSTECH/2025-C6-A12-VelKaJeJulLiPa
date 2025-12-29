@@ -47,6 +47,12 @@
             "value" : "We need access to your photo library to upload videos."
           }
         },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "動画をアップロードするには、写真ライブラリへのアクセスを許可してください。"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "new",

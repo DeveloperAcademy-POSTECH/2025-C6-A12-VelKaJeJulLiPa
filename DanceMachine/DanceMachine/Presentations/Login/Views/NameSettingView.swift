@@ -38,7 +38,7 @@ struct NameSettingView: View {
       
       VStack {
         Spacer()
-        Text(String(localized: "만나서 반가워요!"))
+        Text("만나서 반가워요!")
           .font(.title2SemiBold)
           .foregroundStyle(Color.labelNormal)
         
@@ -46,7 +46,7 @@ struct NameSettingView: View {
           text: $name,
           prompt: Text(displayText).foregroundStyle(.labelAssitive)
         ) {
-          Text(String(localized: "사용자 이름"))
+          Text("사용자 이름")
         }
         .focused($isFocused)
         .multilineTextAlignment(.center)
@@ -83,7 +83,7 @@ struct NameSettingView: View {
         
         Spacer()
         
-        Text(String(localized: "이름이 정확한가요?"))
+        Text("이름이 정확한가요?")
           .font(.headline2Medium)
           .foregroundStyle(Color.labelNormal)
         

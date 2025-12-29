@@ -90,7 +90,7 @@ struct ProjectListModalsModifier: ViewModifier {
         position: .bottom,
         bottomPadding: 16
       ) {
-        ToastView(text: "프로젝트가 삭제되었습니다.", icon: .check)
+        ToastView(text: String(localized: "프로젝트가 삭제되었습니다."), icon: .check)
       }
       .toast(
         isPresented: $projectListViewModel.presentationState.showNameUpdateCompletedToast,
@@ -98,7 +98,7 @@ struct ProjectListModalsModifier: ViewModifier {
         position: .bottom,
         bottomPadding: 16
       ) {
-        ToastView(text: "프로젝트 이름을 수정했습니다.", icon: .check)
+        ToastView(text: String(localized: "프로젝트 이름을 수정했습니다."), icon: .check)
       }
       .toast(
         isPresented: $projectListViewModel.presentationState.showNameUpdateFailToast,
@@ -106,7 +106,7 @@ struct ProjectListModalsModifier: ViewModifier {
         position: .bottom,
         bottomPadding: 16
       ) {
-        ToastView(text: "프로젝트 이름 수정을 실패했습니다.", icon: .warning)
+        ToastView(text: String(localized: "프로젝트 이름 수정을 실패했습니다."), icon: .warning)
       }
       .toast(
         isPresented: $projectListViewModel.presentationState.showNameLengthToast,
@@ -114,7 +114,7 @@ struct ProjectListModalsModifier: ViewModifier {
         position: .bottom,
         bottomPadding: 16
       ) {
-        ToastView(text: "프로젝트 이름은 20자 이내로 입력해주세요.", icon: .warning)
+        ToastView(text: String(localized: "프로젝트 이름은 20자 이내로 입력해주세요."), icon: .warning)
       }
     
     // 트랙 이름 길이 토스트
@@ -124,7 +124,7 @@ struct ProjectListModalsModifier: ViewModifier {
         position: .bottom,
         bottomPadding: 16
       ) {
-        ToastView(text: "곡 이름은 20자 이내로 입력해주세요.", icon: .warning)
+        ToastView(text: String(localized: "곡 이름은 20자 이내로 입력해주세요."), icon: .warning)
       }
     
     // 트랙 이름 수정 완료 토스트 (tracksViewModel 바인딩)
@@ -137,7 +137,7 @@ struct ProjectListModalsModifier: ViewModifier {
         position: .bottom,
         bottomPadding: 16
       ) {
-        ToastView(text: "곡 이름을 수정했습니다.", icon: .check)
+        ToastView(text: String(localized: "곡 이름을 수정했습니다."), icon: .check)
       }
     
     
@@ -180,7 +180,7 @@ struct ProjectListModalsModifier: ViewModifier {
         position: .bottom,
         bottomPadding: 16
       ) {
-        ToastView(text: "곡이 삭제되었습니다.", icon: .check)
+        ToastView(text: String(localized: "곡이 삭제되었습니다."), icon: .check)
       }
   }
 }

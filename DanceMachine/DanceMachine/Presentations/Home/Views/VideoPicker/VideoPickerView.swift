@@ -42,7 +42,7 @@ struct VideoPickerView: View {
         position: .bottom,
         bottomPadding: 16,
         content: {
-          ToastView(text: "20자 미만으로 입력해 주세요.", icon: .warning)
+          ToastView(text: String(localized: "20자 미만으로 입력해 주세요."), icon: .warning)
         }
       )
       .dismissKeyboardOnTap()
@@ -86,7 +86,7 @@ struct VideoPickerView: View {
           vm.errorMessage = nil
         }
       } message: {
-        Text(vm.errorMessage ?? "알 수 없는 오류가 발생했습니다.")
+        Text(vm.errorMessage ?? String(localized: "알 수 없는 오류가 발생했습니다."))
       }
     }
     .background(Color.fillNormal)
@@ -196,7 +196,7 @@ struct VideoPickerView: View {
       .frame(height: 51)
       .overlay {
         TextField(
-          vm.selectedAsset == nil ? "업로드할 동영상을 선택하세요." : "동영상 제목을 입력해 주세요.",
+          vm.selectedAsset == nil ? String(localized: "업로드할 동영상을 선택하세요.") : String(localized: "동영상 제목을 입력해 주세요."),
           text: $pickerViewModel.videoTitle
         )
         .padding([.leading, .vertical], 16)

@@ -44,7 +44,7 @@ struct OnboardingInviteView: View {
       ToolbarLeadingBackButton(icon: .xmark) {
         router.popToRootView()
       }
-      ToolbarCenterTitle(text: "팀 스페이스 만들기")
+      ToolbarCenterTitle(text: String(localized: "팀 스페이스 만들기"))
     }
   }
   

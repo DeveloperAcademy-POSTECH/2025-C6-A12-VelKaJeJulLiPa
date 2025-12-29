@@ -40,7 +40,7 @@ struct PhotoLibraryPermissionView: View {
         .font(.heading1SemiBold)
         .foregroundStyle(.labelStrong)
         .multilineTextAlignment(.center)
-      
+
       Text("회원님의 라이브러리 영상 파일을\n불러오기 위한 접근 권한이 필요합니다.")
         .font(.headline2Medium)
         .foregroundStyle(.labelStrong)

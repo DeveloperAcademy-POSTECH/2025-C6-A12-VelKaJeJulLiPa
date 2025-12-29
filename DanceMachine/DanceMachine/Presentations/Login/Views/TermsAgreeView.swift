@@ -53,7 +53,7 @@ struct TermsAgreeView: View {
       Text("DirAct")
         .font(Font.establishRetrosans(.regular, size: 44))
         .foregroundStyle(.secondaryAssitive)
-      Text(String(localized: "서비스 이용을 위해\n약관에 동의해 주세요."))
+      Text("서비스 이용을 위해\n약관에 동의해 주세요.")
         .font(.title2SemiBold)
         .foregroundStyle(.labelNormal)
     }
@@ -62,7 +62,7 @@ struct TermsAgreeView: View {
   
   private var temrsTitle: some View {
     HStack {
-      Text(String(localized: "전체동의"))
+      Text("전체동의")
         .font(.title2SemiBold)
         .foregroundStyle(.labelStrong)
       Spacer()

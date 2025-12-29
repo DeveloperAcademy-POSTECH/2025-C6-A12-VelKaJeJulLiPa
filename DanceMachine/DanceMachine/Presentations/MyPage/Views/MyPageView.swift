@@ -21,7 +21,7 @@ struct MyPageView: View {
       
       VStack(spacing: 0) {
         HStack {
-          Text(String(localized: "마이페이지"))
+          Text("마이페이지")
             .font(.title2SemiBold)
             .foregroundStyle(.labelStrong)
           Spacer()

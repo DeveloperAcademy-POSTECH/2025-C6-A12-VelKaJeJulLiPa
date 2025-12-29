@@ -147,7 +147,7 @@ struct ReplySheet: View {
       position: .bottom,
       bottomPadding: 63, // FIXME: 신고하기 - 하단 공백 조정 필요
       content: {
-        ToastView(text: "신고가 접수되었습니다.\n조치사항은 이메일로 안내해드리겠습니다.", icon: .check)
+        ToastView(text: String(localized: "신고가 접수되었습니다.\n조치사항은 이메일로 안내해드리겠습니다."), icon: .check)
       }
     )
     // MARK: 신고 완료 토스트 리시버
@@ -186,7 +186,7 @@ struct ReplySheet: View {
     .toolbarTitleDisplayMode(.inline)
     .toolbar {
       ToolbarLeadingBackButton(icon: .xmark)
-      ToolbarCenterTitle(text: "댓글")
+      ToolbarCenterTitle(text: String(localized: "댓글"))
     }
     .background(Color.backgroundNormal.ignoresSafeArea())
   }

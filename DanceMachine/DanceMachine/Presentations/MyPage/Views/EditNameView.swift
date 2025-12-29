@@ -49,7 +49,7 @@ struct EditNameView: View {
           text: $editedName,
           prompt: Text(displayText).foregroundStyle(.labelAssitive)
         ) {
-          Text(String(localized: "사용자 이름"))
+          Text("사용자 이름")
         }
         .focused($isFocused)
         .multilineTextAlignment(.center)

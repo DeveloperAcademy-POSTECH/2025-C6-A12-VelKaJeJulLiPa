@@ -58,7 +58,7 @@ struct VideoTitleEditView: View {
         .frame(maxWidth: .infinity)
         .frame(height: 47)
         .overlay {
-          TextField(String(localized: "비디오 제목"), text: $videoTitle)
+          TextField("비디오 제목", text: $videoTitle)
             .autocorrectionDisabled(true)
             .textInputAutocapitalization(.never)
             .padding([.leading, .vertical], 16)
@@ -91,7 +91,7 @@ struct VideoTitleEditView: View {
       
       Spacer().frame(height: 16)
       
-      Text(String(localized: "20자 이하로 입력해 주세요."))
+      Text("20자 이하로 입력해 주세요.")
         .font(.footnoteMedium)
         .foregroundStyle(.accentRedNormal)
         .opacity(videoTitle.count < 21 ? 0 : 1)

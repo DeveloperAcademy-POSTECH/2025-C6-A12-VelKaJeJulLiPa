@@ -57,10 +57,10 @@ struct TeamspaceNameUpdateView: View {
       String(localized: "변경사항이 저장되지 않았습니다.\n종료하시겠어요?"),
       isPresented: $closeAlert
     ) {
-      Button(String(localized: "취소"), role: .cancel) {}
-      Button(String(localized: "종료"), role: .destructive) { dismiss() }
+      Button("취소", role: .cancel) {}
+      Button("종료", role: .destructive) { dismiss() }
     } message: {
-      Text(String(localized: "저장하지 않은 변경사항은 사라집니다."))
+      Text("저장하지 않은 변경사항은 사라집니다.")
     }
     .onAppear {
       // 현재 팀 스페이스 이름을 기본값으로 세팅
@@ -72,7 +72,7 @@ struct TeamspaceNameUpdateView: View {
   // MARK: - 탑 타이틀
   private var topTitleView: some View {
     ZStack {
-      Text(String(localized: "팀 스페이스 이름 수정"))
+      Text("팀 스페이스 이름 수정")
         .font(.headline2SemiBold)
         .foregroundStyle(Color.labelStrong)
         .frame(maxWidth: .infinity, alignment: .center)
@@ -92,13 +92,13 @@ struct TeamspaceNameUpdateView: View {
   // MARK: - 이름 입력 필드
   private var inputTeamspaceNameView: some View {
     VStack {
-      Text(String(localized: "팀 스페이스 이름을 입력하세요."))
+      Text("팀 스페이스 이름을 입력하세요.")
         .font(.title2SemiBold)
         .foregroundStyle(Color.labelStrong)
       
       Spacer().frame(height: 32)
       
-      TextField(String(localized: "팀 이름"), text: $teamspaceNameText)
+      TextField("팀 이름", text: $teamspaceNameText)
         .font(.headline2Medium)
         .foregroundStyle(Color.labelAssitive)
         .tint(Color.labelAssitive)
@@ -155,7 +155,7 @@ struct TeamspaceNameUpdateView: View {
       
       Spacer().frame(height: 8)
       
-      Text(String(localized: "20자 이내로 입력해주세요."))
+      Text("20자 이내로 입력해주세요.")
         .font(.footnoteMedium)
         .foregroundStyle(Color.accentRedNormal)
         .opacity(showMaxLengthWarning ? 1 : 0)

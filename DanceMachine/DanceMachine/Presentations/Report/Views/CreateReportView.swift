@@ -62,7 +62,7 @@ struct CreateReportView: View {
   // MARK: - Body
   var body: some View {
     VStack(spacing: 0) {
-      Text(String(localized: "신고 사유를 작성해 주세요."))
+      Text("신고 사유를 작성해 주세요.")
         .font(.title2SemiBold)
         .foregroundStyle(Color.labelStrong)
       
@@ -123,17 +123,17 @@ struct CreateReportView: View {
       String(localized: "신고 메일을 보내는데 실패했습니다."),
       isPresented: $showMailSendFailedAlert
     ) {
-      Button(String(localized: "확인"), role: .cancel) {}
+      Button("확인", role: .cancel) {}
     } message: {
-        Text(String(localized: "잠시 후 다시 시도해 주세요."))
+        Text("잠시 후 다시 시도해 주세요.")
     }
     .alert(
       String(localized: "신고 정보를 서버에 저장하는데 실패했습니다."),
       isPresented: $showCreateReportFailedAlert
     ) {
-      Button(String(localized: "확인"), role: .cancel) {}
+      Button("확인", role: .cancel) {}
     } message: {
-        Text(String(localized: "잠시 후 다시 시도해 주세요."))
+        Text("잠시 후 다시 시도해 주세요.")
     }
   }
 
