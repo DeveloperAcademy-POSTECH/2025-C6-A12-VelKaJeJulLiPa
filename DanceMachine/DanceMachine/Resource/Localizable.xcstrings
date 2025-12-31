@@ -24,10 +24,36 @@
       }
     },
     " 님이 답글을 남겼어요" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "replied to your feedback"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "が返信しました"
+          }
+        }
+      }
     },
     " 님이 피드백을 남겼어요" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "left feedback"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "がフィードバックを送りました"
+          }
+        }
+      }
     },
     " 팀 스페이스를 나가시겠어요?" : {
       "localizations" : {
@@ -2215,6 +2241,38 @@
         }
       }
     },
+    "문의 및 고객 지원" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inquiry & Support"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "お問い合わせ・サポート"
+          }
+        }
+      }
+    },
+    "문의 및 제보 사항을 작성해 주세요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please write your inquiry or report."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "お問い合わせ・報告事項をご記入ください。"
+          }
+        }
+      }
+    },
     "문제가 발생했습니다." : {
       "localizations" : {
         "en" : {
@@ -2709,6 +2767,22 @@
         }
       }
     },
+    "소중한 의견이 접수되었습니다.\n조치사항은 로그인 계정으로 안내드리겠습니다." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your feedback has been received. We’ll notify you of any updates in your account."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "貴重なご意見を受け付けました。対応内容はログイン中のアカウントへご案内します"
+          }
+        }
+      }
+    },
     "수신함" : {
       "localizations" : {
         "en" : {
@@ -2809,28 +2883,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "신고 메일을 보내는데 실패했습니다."
-          }
-        }
-      }
-    },
-    "신고 사유를 입력해 주세요." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Please enter reason for report."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "通報理由を入力"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "신고 사유를 입력해 주세요."
           }
         }
       }
@@ -3571,6 +3623,22 @@
         }
       }
     },
+    "작은 피드백이라도 큰 힘이 됩니다." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Even small feedback gives us great strength."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "小さなフィードバックでも大きな力になります。"
+          }
+        }
+      }
+    },
     "잠시 후 다시 시도해 주세요." : {
       "localizations" : {
         "en" : {
@@ -3743,6 +3811,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "접근 허용"
+          }
+        }
+      }
+    },
+    "접수하기" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Submit"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "送信する"
           }
         }
       }

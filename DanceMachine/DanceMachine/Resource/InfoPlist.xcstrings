@@ -11,6 +11,12 @@
             "value" : "DirAct"
           }
         },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DirAct"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "new",
@@ -24,6 +30,12 @@
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DanceMachine"
+          }
+        },
+        "ja" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "DanceMachine"
