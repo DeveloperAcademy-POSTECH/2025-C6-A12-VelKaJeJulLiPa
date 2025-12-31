@@ -75,5 +75,6 @@ struct RootView: View {
   NavigationStack {
     RootView()
       .environmentObject(MainRouter())
+      .environmentObject(InviteRouter())
   }
 }

@@ -20,13 +20,7 @@ struct MyPageView: View {
       Color.backgroundNormal.ignoresSafeArea()
       
       VStack(spacing: 0) {
-        HStack {
-          Text("마이페이지")
-            .font(.title2SemiBold)
-            .foregroundStyle(.labelStrong)
-          Spacer()
-        }
-        .padding()
+        CustomNavigationBar(text: String(localized: "마이페이지"))
         
         VStack(spacing: 0) {
           MyPageInfoRow(title: "ID", value: viewModel.myId, isDividerPresented: true)
