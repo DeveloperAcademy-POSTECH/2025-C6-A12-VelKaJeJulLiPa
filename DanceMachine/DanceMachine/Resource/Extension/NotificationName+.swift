@@ -74,10 +74,12 @@ enum SectionEvent {
 
 enum ToastEvent {
   case reportSuccess
+  case contactSuccess
 
   var name: Foundation.Notification.Name {
     switch self {
     case .reportSuccess: Foundation.Notification.Name("showCreateReportSuccessToast")
+    case .contactSuccess: Foundation.Notification.Name("contactSuccess")
     }
   }
 }
