@@ -116,8 +116,10 @@ async function sendPushNotificationsWithBadge(
       // 2. 유효하지 않은 토큰 (토큰 타입 / 토큰 길이 / FCM 토큰 발행 및 갱신 문제)
       if (!token) {
         logger.info("Skipping push notification for signed out user", { uid })
+        return;
       } else if (typeof token !== "string" || token.length === 0 || token == "Unknown") {
         logger.warn("FCM token is missing", { uid });
+        return;
       }
 
       // 딥링크 생성

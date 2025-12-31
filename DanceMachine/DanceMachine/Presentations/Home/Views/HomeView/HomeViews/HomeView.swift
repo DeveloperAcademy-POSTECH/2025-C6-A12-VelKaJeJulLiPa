@@ -122,17 +122,28 @@ struct HomeView: View {
       do {
         if homeViewModel.cacheStore == nil { homeViewModel.setCacheStore(cache) }
         await homeViewModel.onAppear()
-        
+
         // 팀스페이스 상태가 empty일 때만 팁 활성화
         TeamspaceTip.shouldshow = (homeViewModel.state.teamspaceState == .empty)
-        
+
         guard let userId = FirebaseAuthManager.shared.user?.uid else {
           return
         }
-        
+
+        // FCM 토큰을 Firestore에 저장 (타이밍 이슈 해결)
+        if let fcmToken = UserDefaults.standard.string(forKey: UserDefaultsKey.fcmToken.rawValue),
+           !fcmToken.isEmpty {
+          try await FirestoreManager.shared.updateLastLoginFields(
+            collection: .users,
+            documentId: userId,
+            asDictionary: [User.CodingKeys.fcmToken.rawValue: fcmToken]
+          )
+          print("🔑 FCM 토큰을 Firestore에 저장 완료: \(fcmToken)")
+        }
+
         try await NotificationManager.shared.refreshBadge(for: userId)
       } catch {
-        
+
       }
     }
     // 초대 링크 관련

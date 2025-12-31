@@ -231,6 +231,12 @@ extension HomeViewModel {
       print("User has denied notifications")
     case .authorized, .provisional, .ephemeral:
       print("Notifications already authorized.")
+      // 앱 재설치 시에도 APNs 토큰을 다시 등록해야 함
+      await MainActor.run {
+        print("🔔 registerForRemoteNotifications() 호출 시작")
+        UIApplication.shared.registerForRemoteNotifications()
+        print("🔔 registerForRemoteNotifications() 호출 완료")
+      }
     @unknown default:
       print("Unknown notification authorization status.")
     }
@@ -244,7 +250,9 @@ extension HomeViewModel {
       print("Notification permission state: \(granted)")
       if granted {
         Task { @MainActor in
+          print("🔔 registerForRemoteNotifications() 호출 시작 (권한 승인 후)")
           UIApplication.shared.registerForRemoteNotifications()
+          print("🔔 registerForRemoteNotifications() 호출 완료 (권한 승인 후)")
         }
       }
       if let error = error {
