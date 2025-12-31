@@ -228,9 +228,39 @@ final class FirebaseAuthManager: ObservableObject {
       }
     }
     
-    // Step 2 — 병렬 작업 실행
+    // Step 2 — 유저가 속한 모든 팀스페이스에서 members 제거
+    do {
+      // 유저의 user_teamspace 서브컬렉션에서 팀스페이스 목록 가져오기
+      let userTeamspaces: [UserTeamspace] = try await FirestoreManager.shared.fetchAllFromSubcollection(
+        under: .users,
+        parentId: user.uid,
+        subCollection: .userTeamspace
+      )
+
+      // 각 팀스페이스의 members 서브컬렉션에서 유저 제거
+      for userTeamspace in userTeamspaces {
+        let teamspaceId = userTeamspace.teamspaceId
+        do {
+          try await FirestoreManager.shared.deleteFromSubcollection(
+            under: .teamspace,
+            parentId: teamspaceId,
+            subCollection: .members,
+            target: user.uid
+          )
+          print("✅ 팀스페이스 \(teamspaceId)에서 멤버 제거 완료")
+        } catch {
+          print("⚠️ 팀스페이스 \(teamspaceId)에서 멤버 제거 실패: \(error.localizedDescription)")
+          // 계속 진행 (일부 실패해도 나머지는 삭제)
+        }
+      }
+    } catch {
+      print("⚠️ 팀스페이스 멤버 제거 중 오류 발생: \(error.localizedDescription)")
+      // 계속 진행 (팀스페이스 정리 실패해도 계정 삭제는 진행)
+    }
+
+    // Step 3 — 병렬 작업 실행
     try await withThrowingTaskGroup(of: Void.self) { group in
-      
+
       // 1. 애플 로그인 토큰 취소
       if let authCode = authCodeString {
         group.addTask {
@@ -241,7 +271,7 @@ final class FirebaseAuthManager: ObservableObject {
           }
         }
       }
-      
+
       // 2. Firestore 사용자 데이터 삭제
       group.addTask {
         do {
@@ -250,7 +280,7 @@ final class FirebaseAuthManager: ObservableObject {
           throw FirestoreError.deleteFailed(underlying: error)
         }
       }
-      
+
       // 3. Firebase Authentication 계정 삭제
       group.addTask {
         do {
@@ -259,9 +289,9 @@ final class FirebaseAuthManager: ObservableObject {
           throw AuthenticationError.userAccountDeleteFailed(underlying: error)
         }
       }
-      
+
       try await group.waitForAll()
-      
+
       //로그인 플로우 초기화
       didCompleteAuthFlow = false
     }
