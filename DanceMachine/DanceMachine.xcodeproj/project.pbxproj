@@ -16,9 +16,14 @@
 		C9990D682E8BEB4E00A6C7CC /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = C9990D672E8BEB4E00A6C7CC /* FirebaseMessaging */; };
 		C9990D6A2E8BEB4E00A6C7CC /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = C9990D692E8BEB4E00A6C7CC /* FirebaseStorage */; };
 		C9E73FD92EC3BC3C009BA54D /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = C9E73FD82EC3BC3C009BA54D /* Kingfisher */; };
+		CC13D08E43FC120A26104E63 /* Pods_DanceMachine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 74CA59D6B6C19DA03DA611F6 /* Pods_DanceMachine.framework */; };
+		E948D6272F0AA3A10026AE4A /* DancePoseAnalysis in Frameworks */ = {isa = PBXBuildFile; productRef = E948D6262F0AA3A10026AE4A /* DancePoseAnalysis */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		1381CD8EE71C8763327AFDED /* Pods-DanceMachine.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DanceMachine.release.xcconfig"; path = "Target Support Files/Pods-DanceMachine/Pods-DanceMachine.release.xcconfig"; sourceTree = "<group>"; };
+		17468C2F88B46E6C6D9E88FD /* Pods-DanceMachine.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DanceMachine.debug.xcconfig"; path = "Target Support Files/Pods-DanceMachine/Pods-DanceMachine.debug.xcconfig"; sourceTree = "<group>"; };
+		74CA59D6B6C19DA03DA611F6 /* Pods_DanceMachine.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_DanceMachine.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C999091A2E8A9CC100A6C7CC /* DanceMachine.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DanceMachine.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -56,7 +61,9 @@
 				C9E73FD92EC3BC3C009BA54D /* Kingfisher in Frameworks */,
 				C9990D642E8BEB4E00A6C7CC /* FirebaseFirestore in Frameworks */,
 				C9990D662E8BEB4E00A6C7CC /* FirebaseFunctions in Frameworks */,
+				E948D6272F0AA3A10026AE4A /* DancePoseAnalysis in Frameworks */,
 				C9990D6A2E8BEB4E00A6C7CC /* FirebaseStorage in Frameworks */,
+				CC13D08E43FC120A26104E63 /* Pods_DanceMachine.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -68,6 +75,8 @@
 			children = (
 				C999091C2E8A9CC100A6C7CC /* DanceMachine */,
 				C999091B2E8A9CC100A6C7CC /* Products */,
+				FE9A673AC19EFE9813494348 /* Pods */,
+				E22462BC14EFB12759359D55 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -79,6 +88,23 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		E22462BC14EFB12759359D55 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				74CA59D6B6C19DA03DA611F6 /* Pods_DanceMachine.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		FE9A673AC19EFE9813494348 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				17468C2F88B46E6C6D9E88FD /* Pods-DanceMachine.debug.xcconfig */,
+				1381CD8EE71C8763327AFDED /* Pods-DanceMachine.release.xcconfig */,
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -86,6 +112,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = C99909252E8A9CC200A6C7CC /* Build configuration list for PBXNativeTarget "DanceMachine" */;
 			buildPhases = (
+				7201B02C6ED9BA1B343A4A6B /* [CP] Check Pods Manifest.lock */,
 				C99909162E8A9CC100A6C7CC /* Sources */,
 				C99909172E8A9CC100A6C7CC /* Frameworks */,
 				C99909182E8A9CC100A6C7CC /* Resources */,
@@ -108,6 +135,7 @@
 				7177D6BB2EC1142A00F5522C /* Lottie */,
 				C9E73FD82EC3BC3C009BA54D /* Kingfisher */,
 				C955F2652EF0407200C76220 /* FirebaseRemoteConfig */,
+				E948D6262F0AA3A10026AE4A /* DancePoseAnalysis */,
 			);
 			productName = DanceMachine;
 			productReference = C999091A2E8A9CC100A6C7CC /* DanceMachine.app */;
@@ -135,6 +163,7 @@
 				en,
 				Base,
 				ko,
+				ja,
 			);
 			mainGroup = C99909112E8A9CC100A6C7CC;
 			minimizedProjectReferenceProxies = 1;
@@ -142,6 +171,7 @@
 				C9990D5E2E8BEB4E00A6C7CC /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				7177D6BA2EC1142A00F5522C /* XCRemoteSwiftPackageReference "lottie-spm" */,
 				C9E73FD72EC3BC3C009BA54D /* XCRemoteSwiftPackageReference "Kingfisher" */,
+				E9735C672F0A9DDF00ACD6D1 /* XCLocalSwiftPackageReference "Packages/DancePoseAnalysis" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = C999091B2E8A9CC100A6C7CC /* Products */;
@@ -162,6 +192,31 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		7201B02C6ED9BA1B343A4A6B /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-DanceMachine-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		C99909162E8A9CC100A6C7CC /* Sources */ = {
@@ -297,16 +352,15 @@
 		};
 		C99909262E8A9CC200A6C7CC /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 17468C2F88B46E6C6D9E88FD /* Pods-DanceMachine.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = DanceMachine/Service/DanceMachine.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
-				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = W4ZPYHTRPJ;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 26;
+				DEVELOPMENT_TEAM = XAL6YTMQ44;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = DanceMachine/Info.plist;
@@ -322,11 +376,10 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1.4;
+				MARKETING_VERSION = 1.1.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.VelKaJeJulLiPa.DanceMachine;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = DanceMachine;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -343,16 +396,15 @@
 		};
 		C99909272E8A9CC200A6C7CC /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1381CD8EE71C8763327AFDED /* Pods-DanceMachine.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = DanceMachine/Service/DanceMachine.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
-				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = W4ZPYHTRPJ;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 26;
+				DEVELOPMENT_TEAM = XAL6YTMQ44;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = DanceMachine/Info.plist;
@@ -368,11 +420,10 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1.4;
+				MARKETING_VERSION = 1.1.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.VelKaJeJulLiPa.DanceMachine;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = DanceMachine;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -409,6 +460,13 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		E9735C672F0A9DDF00ACD6D1 /* XCLocalSwiftPackageReference "Packages/DancePoseAnalysis" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/DancePoseAnalysis;
+		};
+/* End XCLocalSwiftPackageReference section */
 
 /* Begin XCRemoteSwiftPackageReference section */
 		7177D6BA2EC1142A00F5522C /* XCRemoteSwiftPackageReference "lottie-spm" */ = {
@@ -482,6 +540,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = C9E73FD72EC3BC3C009BA54D /* XCRemoteSwiftPackageReference "Kingfisher" */;
 			productName = Kingfisher;
+		};
+		E948D6262F0AA3A10026AE4A /* DancePoseAnalysis */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E9735C672F0A9DDF00ACD6D1 /* XCLocalSwiftPackageReference "Packages/DancePoseAnalysis" */;
+			productName = DancePoseAnalysis;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
