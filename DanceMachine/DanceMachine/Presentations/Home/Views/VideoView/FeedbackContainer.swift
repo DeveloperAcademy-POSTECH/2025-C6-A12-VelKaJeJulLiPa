@@ -129,8 +129,8 @@ struct FeedbackContainer: View {
             }
             state.showFeedbackInput = false
 
-            // 피드백 작성 완료 후 리뷰 요청
-            ReviewRequestHelper.requestReviewIfNeeded(requestReview: requestReview)
+            // 피드백 작성 완료 후 리뷰 요청 (3번째 피드백부터)
+            ReviewRequestHelper.incrementFeedbackCountAndRequestReviewIfNeeded(requestReview: requestReview)
 
             // 피드백 제출 후 스크롤 최상단 이동
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
