@@ -17,6 +17,9 @@ final class LoginViewModel: ObservableObject {
   @Published var isNewUser = false
   @Published var showError = false
   
+  @Published var adminLoginError: String? = nil
+  @Published var adminLoginSuccess: Bool = false
+  
   /// 애플 로그인을 담담하는 메서드
   /// - SigninwithAppleHelper 파일에서 소셜 로그인 플로우를 담당
   /// - 애플에서 제공해주는 사용자 정보로 Firebase Authentication 계정 생성
@@ -70,5 +73,29 @@ final class LoginViewModel: ObservableObject {
       showError = true
       throw error
     }
+  }
+  
+  func signInWithEmail(email: String, password: String) async {
+    
+    await MainActor.run {
+      self.isLoading = true
+      self.adminLoginError = nil
+      self.adminLoginSuccess = false
+    }
+    
+    do {
+      try await FirebaseAuthManager.shared.signInWithEmail(
+        email: email,
+        password: password
+      )
+      // 로그인 성공
+      self.isLoading = false
+      self.adminLoginSuccess = true
+      
+    } catch {
+      self.isLoading = false
+      self.adminLoginError = "로그인 실패: 계정 정보를 확인해 주세요."
+    }
+    
   }
 }

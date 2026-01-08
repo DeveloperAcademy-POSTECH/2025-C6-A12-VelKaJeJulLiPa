@@ -15,6 +15,8 @@ struct LoginView: View {
   @State private var logoOffset: CGFloat = 0
   @State private var showContent = false
   
+  @State private var showAdminView: Bool = false
+  
   var body: some View {
     ZStack {
       Image(.splashIcon)
@@ -24,12 +26,33 @@ struct LoginView: View {
       }
       .offset(y: 140)
     }
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .contextMenu {
+      contextRow
+    }
     .background(
       Image(.splashBackground)
         .resizable()
         .scaledToFill()
         .ignoresSafeArea()
     )
+    .overlay(alignment: .topTrailing) {
+      Menu {
+        contextRow
+      } label: {
+        Image(systemName: "info.circle.fill")
+          .font(.system(size: 18))
+          .foregroundStyle(.labelAssitive)
+      }
+      .frame(width: 44, height: 44)
+      .contentShape(Rectangle())
+      .offset(x: -10)
+    }
+    .sheet(isPresented: $showAdminView) {
+      NavigationStack {
+        AdminLoginView(vm: viewModel)
+      }
+    }
     .alert(
       String(localized: "로그인 실패"),
       isPresented: $viewModel.showError
@@ -47,7 +70,6 @@ struct LoginView: View {
       withAnimation(.easeOut(duration: 0.6)) {
         logoOffset = -100
       }
-      
       withAnimation(.easeOut(duration: 0.5).delay(0.3)) {
         showContent = true
       }
@@ -89,6 +111,14 @@ struct LoginView: View {
     .clipShape(RoundedRectangle(cornerRadius: 15))
     .padding(.horizontal, 26)
     .opacity(showContent ? 1 : 0)
+  }
+  
+  private var contextRow: some View {
+    Button {
+      self.showAdminView = true
+    } label: {
+      Label(String(localized: "관리자 계정으로 로그인"), systemImage: "long.text.page.and.pencil.fill")
+    }
   }
 }
 

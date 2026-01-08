@@ -311,4 +311,30 @@ extension FirebaseAuthManager {
     let authDataResult = try await firebaseAuth.signIn(with: credential)
     return authDataResult
   }
+  
+  // 애플 심사 어드민 email 로그인
+  func signInWithEmail(email: String, password: String) async throws {
+    do {
+      // Firebae Authentication 로그인
+      let authResult = try await firebaseAuth.signIn(
+        withEmail: email,
+        password: password
+      )
+      
+      let uid = authResult.user.uid
+      
+      // FIrestore 사용자 정보 패치
+      guard let userDoc: User = try await FirestoreManager.shared.get(
+        uid,
+        from: .users
+      ) else {
+        try firebaseAuth.signOut()
+        throw AuthenticationError.userNotFound
+      }
+      self.userInfo = userDoc
+      self.completeAuthFlow()
+    } catch {
+      throw error
+    }
+  }
 }
