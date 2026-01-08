@@ -31,13 +31,13 @@ struct AdminLoginView: View {
       AdminTextField(
         text: $email,
         isFocused: focusedField == .email,
-        placeHolder: "관리자 이메일"
+        placeHolder: String(localized: "관리자 이메일")
       ).focused($focusedField, equals: .email)
       Spacer().frame(height: 16)
       AdminTextField(
         text: $password,
         isFocused: focusedField == .password,
-        placeHolder: "관리자 비밀번호",
+        placeHolder: String(localized: "관리자 비밀번호"),
         isSecure: true
       ).focused($focusedField, equals: .password)
       Spacer()
