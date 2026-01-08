@@ -37,68 +37,60 @@ struct FeedbackContainer: View {
   }
 
   var body: some View {
-    VStack(spacing: 0) {
-      HStack {
-        FeedbackSection(feedbackFilter: $state.feedbackFilter)
-          .padding(.leading, leadingPadding)
-          .padding(.trailing, 16)
+    ZStack(alignment: .bottom) {
+      VStack(spacing: 0) {
+        HStack {
+          FeedbackSection(feedbackFilter: $state.feedbackFilter)
+            .padding(.leading, leadingPadding)
+            .padding(.trailing, 16)
+        }
+        .padding(.vertical, 10)
+        .padding(.top, isIPad && iPadLandscape ? 80 : 0)
+        Divider().frame(height: 0)
+        // 피드백 리스트
+        if vm.feedbackVM.showErrorView {
+          ErrorStateView(
+            message: vm.feedbackVM.errorMsg ?? "Fatal Error 404",
+            action: {
+              Task {
+                await vm.feedbackVM.loadFeedbacks(for: videoId)
+              }
+            }
+          )
+          .frame(maxWidth: .infinity, maxHeight: .infinity )
+        } else {
+          FeedbackListView(
+            vm: vm,
+            state: state,
+            filteredFeedbacks: filteredFeedbacks,
+            userId: userId,
+            videoId: videoId,
+            onFeedbackNavigate: onFeedbackSelect,
+            imageNamespace: feedbackImageNamespace
+          )
+        }
       }
-      .padding(.vertical, 10)
-      .padding(.top, isIPad && iPadLandscape ? 80 : 0)
-      Divider().frame(height: 0)
-      // 피드백 리스트
-      if vm.feedbackVM.showErrorView {
-        ErrorStateView(
-          message: vm.feedbackVM.errorMsg ?? "Fatal Error 404",
-          action: {
-            Task {
-              await vm.feedbackVM.loadFeedbacks(for: videoId)
+      .background(Color.backgroundNormal)
+      .contentShape(Rectangle())
+      .simultaneousGesture(
+        TapGesture()
+          .onEnded {
+            if state.showFeedbackInput {
+              state.showFeedbackInput = false
+              dismissKeyboard()
             }
           }
-        )
-        .frame(maxWidth: .infinity, maxHeight: .infinity )
-      } else {
-        FeedbackListView(
-          vm: vm,
-          state: state,
-          filteredFeedbacks: filteredFeedbacks,
-          userId: userId,
-          videoId: videoId,
-          onFeedbackNavigate: onFeedbackSelect,
-          imageNamespace: feedbackImageNamespace
-        )
-      }
-    }
-    .background(Color.backgroundNormal)
-    .contentShape(Rectangle())
-    .simultaneousGesture(
-      TapGesture()
-        .onEnded {
-          if state.showFeedbackInput {
-            state.showFeedbackInput = false
-            dismissKeyboard()
-          }
-        }
-    )
-//    .onTapGesture {
-//      if state.showFeedbackInput {
-//        state.showFeedbackInput = false
-//        dismissKeyboard()
-//      }
-//    }
-    .safeAreaInset(edge: .bottom) {
-      if state.isImageOverlayPresented {
-        EmptyView()
-      } else {
-        feedbackInputSection // 피드백 버튼
+      )
+
+      if !state.isImageOverlayPresented {
+        feedbackInputSection
       }
     }
   }
-  
+
   @ViewBuilder
   private var feedbackInputSection: some View {
     if state.showFeedbackInput {
-      /// FeedbackInPutView 여기
       FeedbackInPutView(
         teamMembers: vm.teamMembers,
         feedbackType: state.feedbackType,
@@ -106,7 +98,6 @@ struct FeedbackContainer: View {
         startTime: state.intervalTime,
         onSubmit: { content, taggedUserId in
           Task {
-            // MARK: - 구간 피드백
             if state.feedbackType == .point {
               await vm.feedbackVM.createPointFeedback(
                 videoId: videoId,
@@ -116,7 +107,7 @@ struct FeedbackContainer: View {
                 atTime: state.pointTime,
                 image: state.editedOverlayImage
               )
-            } else { // 시점 피드백
+            } else {
               await vm.feedbackVM.createIntervalFeedback(
                 videoId: videoId,
                 authorId: userId,
@@ -128,11 +119,7 @@ struct FeedbackContainer: View {
               )
             }
             state.showFeedbackInput = false
-
-            // 피드백 작성 완료 후 리뷰 요청 (3번째 피드백부터)
             ReviewRequestHelper.incrementFeedbackCountAndRequestReviewIfNeeded(requestReview: requestReview)
-
-            // 피드백 제출 후 스크롤 최상단 이동
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
               withAnimation {
                 state.scrollProxy?.scrollTo("topFeedback", anchor: .top)
@@ -146,7 +133,7 @@ struct FeedbackContainer: View {
         },
         timeSeek: { vm.videoVM.seekToTime(to: state.pointTime) },
         drawingButtonTapped: { onDrawingAction?() },
-        editDrawingTapped: { editExistingDrawing?() }, // TODO: 드로잉 수정 기능 체크
+        editDrawingTapped: { editExistingDrawing?() },
         feedbackDrawingImage: $state.editedOverlayImage,
         imageNamespace: drawingImageNamespace,
         showImageFull: $state.showDrawingImageFull
@@ -157,21 +144,18 @@ struct FeedbackContainer: View {
         pointAction: {
           state.feedbackType = .point
           state.pointTime = vm.videoVM.currentTime
-          state.showFeedbackInput = true // 텍스트 필드로 변하는 시점
+          state.showFeedbackInput = true
           if vm.videoVM.isPlaying {
             vm.videoVM.togglePlayPause()
           }
         },
         intervalAction: {
-          // 두 번째 버튼일 때 (녹화 중)
           if vm.feedbackVM.isRecordingInterval {
-            // 끝시간이 시작시간보다 전이면 토스트만
             if let startTime = vm.feedbackVM.intervalStartTime,
                vm.videoVM.currentTime < startTime {
               NotificationCenter.post(.video(.showIntervalWarning))
               return
             }
-            // 정상 종료
             state.feedbackType = .interval
             state.intervalTime = vm.videoVM.currentTime
             state.showFeedbackInput = true
@@ -180,7 +164,6 @@ struct FeedbackContainer: View {
               vm.videoVM.togglePlayPause()
             }
           } else {
-            // 첫 번째 버튼 (시작)
             state.feedbackType = .interval
             state.pointTime = vm.videoVM.currentTime
             _ = vm.feedbackVM.handleIntervalButtonType(currentTime: vm.videoVM.currentTime)
