@@ -77,18 +77,25 @@ extension VideoDetailViewModel {
   // 팀 스페이스 멤버 조회
   func loadTeamMembers(teamspaceId: String) async {
     do {
-      
+
       let members = try await self.fetchMember(teamspaceId: teamspaceId)
-      
+
       var users: [User] = []
+      // 탈퇴한 유저는 스킵하고 존재하는 유저만 추가
       for member in members {
-        let user: User = try await store.get(
-          member.userId,
-          from: .users
-        )
-        users.append(user)
-        print("조회된 유저 수: \(users.count)")
+        do {
+          let user: User = try await store.get(
+            member.userId,
+            from: .users
+          )
+          users.append(user)
+        } catch {
+          // 유저가 존재하지 않으면 (탈퇴한 경우) 스킵하고 계속 진행
+          print("⚠️ 유저를 찾을 수 없습니다 (탈퇴한 유저일 수 있음): \(member.userId)")
+          continue
+        }
       }
+      print("조회된 유저 수: \(users.count)")
       await MainActor.run {
         self.teamMembers = users
         self.errorMsg = ""

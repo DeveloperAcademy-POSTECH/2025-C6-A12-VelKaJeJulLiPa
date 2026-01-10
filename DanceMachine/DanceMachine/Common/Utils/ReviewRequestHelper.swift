@@ -49,4 +49,23 @@ struct ReviewRequestHelper {
       requestReviewIfNeeded(requestReview: requestReview)
     }
   }
+
+  /// 피드백 작성 횟수 증가 및 3번째 피드백 작성 시 리뷰 요청
+  /// - Parameter requestReview: SwiftUI의 requestReview 환경 액션
+  static func incrementFeedbackCountAndRequestReviewIfNeeded(requestReview: RequestReviewAction) {
+    let currentCount = UserDefaults.standard.integer(
+      forKey: UserDefaultsKey.feedbackCount.rawValue
+    )
+    let newCount = currentCount + 1
+
+    UserDefaults.standard.set(
+      newCount,
+      forKey: UserDefaultsKey.feedbackCount.rawValue
+    )
+
+    // 3번째 피드백 작성 시 리뷰 요청
+    if newCount == 3 {
+      requestReviewIfNeeded(requestReview: requestReview)
+    }
+  }
 }

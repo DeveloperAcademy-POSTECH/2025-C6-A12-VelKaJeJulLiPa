@@ -43,7 +43,7 @@ struct VideoTitleEditView: View {
           dismiss()
         }
       }
-      ToolbarCenterTitle(text: "비디오 이름 수정")
+      ToolbarCenterTitle(text: String(localized: "비디오 이름 수정"))
     }
     .unsavedChangesAlert(
       isPresented: $showExitAlert,
@@ -100,7 +100,7 @@ struct VideoTitleEditView: View {
   
   private var bottomButtonView: some View {
     ActionButton(
-      title: "확인",
+      title: String(localized: "확인"),
       color: self.videoTitle.isEmpty ? Color.fillAssitive : Color.secondaryStrong,
       height: 47,
       isEnabled: self.videoTitle.isEmpty ? false : true

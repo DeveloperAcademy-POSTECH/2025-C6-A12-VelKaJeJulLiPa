@@ -34,12 +34,12 @@ struct HomeView: View {
     enum CommonView {
       static let horizontalSpacing: CGFloat = 16
     }
-    
+
     enum EmptyTeamspaceView {
       static let imageName: String = "person.2.fill"
       static let imageSize: CGFloat = 75
       static let vstackSpacing: CGFloat = 10
-      static let titleText: String = "팀 스페이스를 만들어주세요."
+      static let titleText: String = String(localized: "팀 스페이스를 만들어주세요.")
     }
   }
   
@@ -48,16 +48,20 @@ struct HomeView: View {
       Color.backgroundNormal.ignoresSafeArea()
       
       VStack {
-        TeamspaceTitleView(
-          viewModel: homeViewModel,
-          projectListViewModel: projectListViewModel,
-          tracksViewModel: $tracksViewModel
-        )
-        .padding(.horizontal, Layout.CommonView.horizontalSpacing)
+        if !homeViewModel.state.isLoading {
+          TeamspaceTitleView(
+            viewModel: homeViewModel,
+            projectListViewModel: projectListViewModel,
+            tracksViewModel: $tracksViewModel
+          )
+          .padding(.horizontal, Layout.CommonView.horizontalSpacing)
+        }
         
         Spacer().frame(height: 24)
         
-        if homeViewModel.state.teamspaceState == .empty {
+        if homeViewModel.state.isLoading {
+          LoadingSpinner().frame(maxWidth: 28, maxHeight: 28, alignment: .center)
+        } else if homeViewModel.state.teamspaceState == .empty {
           emptyTeamspaceView
             .padding(.horizontal, Layout.CommonView.horizontalSpacing)
         } else {
@@ -68,10 +72,25 @@ struct HomeView: View {
             onTrackSelect : onTrackSelect
           )
           .id(projectTipRefreshTrigger)
+
         }
+        
+//        if homeViewModel.state.teamspaceState == .empty {
+//          emptyTeamspaceView
+//            .padding(.horizontal, Layout.CommonView.horizontalSpacing)
+//        } else {
+//          ProjectListView(
+//            homeViewModel: homeViewModel,
+//            projectListViewModel: projectListViewModel,
+//            tracksViewModel: $tracksViewModel,
+//            onTrackSelect : onTrackSelect
+//          )
+//          .id(projectTipRefreshTrigger)
+//        }
       }
     }
-    .overlay { if homeViewModel.state.isLoading { LoadingView() } }
+//    .overlay { if homeViewModel.state.isLoading { VideoLottieView() }}
+//    .overlay { if homeViewModel.state.isLoading { LoadingView() } }
     .onChange(of: homeViewModel.state.teamspaceState) { oldValue, newValue in
       // empty → nonEmpty로 변경될 때만 (팀스페이스 처음 생성)
       if oldValue == .empty && newValue == .nonEmpty {
@@ -103,17 +122,28 @@ struct HomeView: View {
       do {
         if homeViewModel.cacheStore == nil { homeViewModel.setCacheStore(cache) }
         await homeViewModel.onAppear()
-        
+
         // 팀스페이스 상태가 empty일 때만 팁 활성화
         TeamspaceTip.shouldshow = (homeViewModel.state.teamspaceState == .empty)
-        
+
         guard let userId = FirebaseAuthManager.shared.user?.uid else {
           return
         }
-        
+
+        // FCM 토큰을 Firestore에 저장 (타이밍 이슈 해결)
+        if let fcmToken = UserDefaults.standard.string(forKey: UserDefaultsKey.fcmToken.rawValue),
+           !fcmToken.isEmpty {
+          try await FirestoreManager.shared.updateLastLoginFields(
+            collection: .users,
+            documentId: userId,
+            asDictionary: [User.CodingKeys.fcmToken.rawValue: fcmToken]
+          )
+          print("🔑 FCM 토큰을 Firestore에 저장 완료: \(fcmToken)")
+        }
+
         try await NotificationManager.shared.refreshBadge(for: userId)
       } catch {
-        
+
       }
     }
     // 초대 링크 관련
@@ -127,7 +157,7 @@ struct HomeView: View {
     }
     .toast(
       isPresented: $showInviteToastMessage) {
-        ToastView(text: "\(inviteRouter.invitedTeamspaceName ?? "")팀에 입장하셨습니다.", icon: .check)
+        ToastView(text: String(localized: "\(inviteRouter.invitedTeamspaceName ?? "")팀에 입장하셨습니다."), icon: .check)
       }
   }
   

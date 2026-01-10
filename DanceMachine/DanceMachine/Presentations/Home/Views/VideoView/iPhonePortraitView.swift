@@ -25,7 +25,7 @@ struct iPhonePortraitView: View {
   
   let onCaptureFrame: () -> Void
   let editExistingDrawing: () -> Void
-  
+
   var body: some View {
     VStack(spacing: 0) {
       // 비디오 플레이어

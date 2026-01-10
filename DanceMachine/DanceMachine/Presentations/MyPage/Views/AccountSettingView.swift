@@ -29,7 +29,7 @@ struct AccountSettingView: View {
         Spacer()
         
         ActionButton(
-          title: "로그아웃",
+          title: String(localized: "로그아웃"),
           color: .secondaryStrong,
           height: 47,
           action: { isSignOutAlertPresented = true }
@@ -48,10 +48,10 @@ struct AccountSettingView: View {
     }
     .toolbar {
       ToolbarLeadingBackButton(icon: .chevron)
-      ToolbarCenterTitle(text: "계정 설정")
+      ToolbarCenterTitle(text: String(localized: "계정 설정"))
     }
     .alert(
-      "로그아웃",
+      String(localized: "로그아웃"),
       isPresented: $isSignOutAlertPresented
     ) {
       Button("취소", role: .cancel) {}
@@ -65,7 +65,7 @@ struct AccountSettingView: View {
       Text("정말 로그아웃하시겠어요?")
     }
     .alert(
-      "회원탈퇴",
+      String(localized: "회원탈퇴"),
       isPresented: $isDeleteUserAlertPresented
     ) {
       Button("취소", role: .cancel) {}

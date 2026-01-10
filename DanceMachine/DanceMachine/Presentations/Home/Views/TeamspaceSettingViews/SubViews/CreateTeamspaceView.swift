@@ -69,11 +69,11 @@ struct CreateTeamspaceView: View {
     .toolbar {
       if presentationStyle == .navigation {
         ToolbarLeadingBackButton(icon: .chevron)
-        ToolbarCenterTitle(text: "팀 스페이스 만들기")
+        ToolbarCenterTitle(text: String(localized: "팀 스페이스 만들기"))
       }
     }
     .alert(
-      "변경사항이 저장되지 않았습니다.\n종료하시겠어요?",
+      String(localized: "변경사항이 저장되지 않았습니다.\n종료하시겠어요?"),
       isPresented: $closeAlert
     ) {
       Button("취소", role: .cancel) {}
@@ -122,7 +122,7 @@ struct CreateTeamspaceView: View {
   private var bottomButtonView: some View {
     ZStack {
       ActionButton(
-        title: "팀 스페이스 만들기",
+        title: String(localized: "팀 스페이스 만들기"),
         color: teamspaceNameText.isEmpty ? Color.fillAssitive : Color.secondaryStrong,
         height: 47,
         isEnabled: !teamspaceNameText.isEmpty && !isCreatingTeamspace

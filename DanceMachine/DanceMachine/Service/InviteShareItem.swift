@@ -47,7 +47,7 @@ final class InviteShareItem: NSObject, UIActivityItemSource {
     _ activityViewController: UIActivityViewController,
     subjectForActivityType activityType: UIActivity.ActivityType?
   ) -> String {
-    return "[\(teamName)] 팀 초대"
+    return String(localized: "[\(teamName)] 팀 초대")
   }
   
   /// 링크 미리보기(메타데이터)를 제공합니다.
@@ -57,7 +57,7 @@ final class InviteShareItem: NSObject, UIActivityItemSource {
   ) -> LPLinkMetadata? {
     let md = LPLinkMetadata()
     // 제목에 설명 포함
-    md.title = "DirAct - [\(teamName)] 팀 초대"
+    md.title = String(localized: "DirAct - [\(teamName)] 팀 초대")
     md.originalURL = url
     md.url = url
     

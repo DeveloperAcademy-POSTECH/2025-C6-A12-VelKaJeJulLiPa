@@ -20,7 +20,7 @@ struct TrackAddButtonRow: View {
           .scaledToFit()
           .frame(width: 17, height: 17)
 
-        Text("곡 추가하기")
+        Text(String(localized: "곡 추가하기"))
           .font(.headline2Medium)
           .foregroundStyle(Color.labelStrong)
       }

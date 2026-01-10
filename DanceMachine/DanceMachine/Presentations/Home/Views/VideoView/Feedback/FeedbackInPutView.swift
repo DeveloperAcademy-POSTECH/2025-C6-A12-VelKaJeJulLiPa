@@ -60,9 +60,7 @@ struct FeedbackInPutView: View {
       }
       CustomTextField(
         content: $content,
-        placeHolder: (
-          "팀원을 태그하고 피드백을 입력하세요."
-        ),
+        placeHolder: String(localized: "팀원을 태그하고 피드백을 입력하세요."),
         submitAction: {
           onSubmit(content, mM.taggedUsers.map { $0.userId })
         },

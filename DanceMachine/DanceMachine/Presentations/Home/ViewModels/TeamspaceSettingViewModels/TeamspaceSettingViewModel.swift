@@ -140,19 +140,28 @@ final class TeamspaceSettingViewModel: TeamspaceSettingViewModelProtocol {
         parentId: self.currentTeamspace?.teamspaceId.uuidString ?? "",
         subCollection: .members
       )
-      
+
       let userIds = members.map { $0.userId }
       var users: [User] = []
-      
+
+      // 탈퇴한 유저는 스킵하고 존재하는 유저만 추가
       for id in userIds {
-        users.append(try await FirestoreManager.shared.get(id, from: .users))
+        do {
+          let user: User = try await FirestoreManager.shared.get(id, from: .users)
+          users.append(user)
+        } catch {
+          // 유저가 존재하지 않으면 (탈퇴한 경우) 스킵하고 계속 진행
+          print("⚠️ 유저를 찾을 수 없습니다 (탈퇴한 유저일 수 있음): \(id)")
+          // TODO: members 서브컬렉션에서도 제거하는 로직 추가 고려
+          continue
+        }
       }
-      
+
       // ㄱㄴㄷ순으로 정렬
       let sortedUsers = users.sorted {
         $0.name.compare($1.name, locale: Locale(identifier: "ko_KR")) == .orderedAscending
       }
-      
+
       return sortedUsers
     } catch {
       print("error: \(error.localizedDescription)") // FIXME: - 에러에 맞게 로직 수정

@@ -42,7 +42,7 @@ struct SectionContent: View {
             CustomSectionChip(
               vm: $vm,
               action: { vm.selectedSection = section },
-              title: section.sectionTitle,
+              title: section.localizedTitle,
               id: section.sectionId
             )
           }

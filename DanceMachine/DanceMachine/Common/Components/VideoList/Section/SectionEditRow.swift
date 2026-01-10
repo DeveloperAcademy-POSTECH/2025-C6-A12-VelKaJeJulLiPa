@@ -32,7 +32,7 @@ struct SectionEditRow: View {
   private var sectionRow: some View {
     HStack {
       if isEditing {
-        TextField("파트 이름", text: $editText)
+        TextField(String(localized: "파트 이름"), text: $editText)
           .autocorrectionDisabled(true)
           .textInputAutocapitalization(.never)
           .textFieldStyle(.plain)
@@ -77,7 +77,7 @@ struct SectionEditRow: View {
             .foregroundStyle(.labelNormal)
         }
       } else { // 일반 모드
-        Text(section.sectionTitle)
+        Text(section.localizedTitle)
           .font(.headline2Medium)
           .foregroundStyle(.labelStrong)
         Spacer()

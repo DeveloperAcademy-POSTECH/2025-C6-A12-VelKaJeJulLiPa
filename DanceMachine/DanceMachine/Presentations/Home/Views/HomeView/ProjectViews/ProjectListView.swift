@@ -73,7 +73,7 @@ struct ProjectListView: View {
       static let imageName: String = "folder.fill.badge.plus"
       static let imageSize: CGFloat = 75
       static let vstackSpacing: CGFloat = 24
-      static let titleText: String = "프로젝트를 추가해보세요."
+      static let titleText: String = String(localized: "프로젝트를 추가해보세요.")
     }
   }
   
@@ -83,7 +83,10 @@ struct ProjectListView: View {
       Color.backgroundNormal.ignoresSafeArea()
       
       VStack(alignment: .leading, spacing: 12) {
-        if projectListViewModel.dataState.projects.isEmpty {
+        if !projectListViewModel.dataState.hasCompletedInitialLoad {
+          // 초기 로딩 전에는 빈 공간만 (홈뷰의 LoadingView 오버레이가 표시됨)
+          Spacer()
+        } else if projectListViewModel.dataState.projects.isEmpty {
           emptyView
         } else {
           projectListHeaderView

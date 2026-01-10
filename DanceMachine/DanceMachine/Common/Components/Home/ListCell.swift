@@ -53,7 +53,7 @@ struct ListCell: View {
           VStack(spacing: 4) {
             
             HStack(alignment: .firstTextBaseline, spacing: 8) {
-              TextField("프로젝트 이름", text: $editText)
+              TextField(String(localized: "프로젝트 이름"), text: $editText)
                 .font(.headline2Medium)
                 .foregroundStyle(Color.labelStrong)
                 .tint(Color.labelStrong)

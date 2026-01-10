@@ -16,7 +16,7 @@ struct RootView: View {
   var body: some View {
     NavigationStack(path: $router.destination) {
       TabView(selection: $tabcase) {
-        ForEach(TabCase.allCases, id: \.rawValue) { tab in
+        ForEach(TabCase.allCases) { tab in
           Tab(value: tab) {
             tabView(tab: tab)
               .tag(tab)
@@ -42,8 +42,8 @@ struct RootView: View {
   private func tabLabel(_ tab: TabCase) -> some View {
     VStack(spacing: 8, content: {
       Image(systemName: tab.icon)
-      
-      Text(tab.rawValue)
+
+      Text(tab.localizedString)
         .font(Font.system(size: 12))
         .foregroundStyle(Color.black)
     })
@@ -75,5 +75,6 @@ struct RootView: View {
   NavigationStack {
     RootView()
       .environmentObject(MainRouter())
+      .environmentObject(InviteRouter())
   }
 }

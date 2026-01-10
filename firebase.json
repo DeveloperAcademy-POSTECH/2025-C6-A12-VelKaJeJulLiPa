@@ -20,6 +20,8 @@
       { "source": "/.well-known/apple-app-site-association", "headers": [{ "key": "Content-Type", "value": "application/json" }] }
     ],
     "rewrites": [
+      { "source": "/invite-en", "destination": "/invite-en.html" },
+      { "source": "/invite-ja", "destination": "/invite-ja.html" },
       { "source": "/invite", "destination": "/index.html" },
       { "source": "/invite/**", "destination": "/index.html" },
       { "source": "**", "destination": "/index.html" }

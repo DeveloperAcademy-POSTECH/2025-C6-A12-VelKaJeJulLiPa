@@ -179,7 +179,7 @@ struct LandscapeReplyView: View {
       position: .bottom,
       bottomPadding: 63,
       content: {
-        ToastView(text: "신고가 접수되었습니다.\n조치사항은 이메일로 안내해드리겠습니다.", icon: .check)
+        ToastView(text: String(localized: "신고가 접수되었습니다.\n조치사항은 이메일로 안내해드리겠습니다."), icon: .check)
       }
     )
     .onReceive(NotificationCenter.publisher(for: .toast(.reportSuccess))) { notification in
@@ -209,7 +209,7 @@ struct LandscapeReplyView: View {
       teamMembers: teamMembers,
       filteredMembers: filteredMembers,
       showMentionPicker: mM.showPicker,
-      placeholder: "댓글을 입력해 주세요.",
+      placeholder: String(localized: "댓글을 입력해 주세요."),
       onSubmit: {
         onReplySubmit(content, mM.taggedUsers.map { $0.userId })
         self.content = ""

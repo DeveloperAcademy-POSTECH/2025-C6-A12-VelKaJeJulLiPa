@@ -22,7 +22,7 @@ struct AppMakerView: View {
     }
     .toolbar {
       ToolbarLeadingBackButton(icon: .chevron)
-      ToolbarCenterTitle(text: "DirAct를 만든 사람들")
+      ToolbarCenterTitle(text: String(localized: "DirAct를 만든 사람들"))
     }
   }
 }

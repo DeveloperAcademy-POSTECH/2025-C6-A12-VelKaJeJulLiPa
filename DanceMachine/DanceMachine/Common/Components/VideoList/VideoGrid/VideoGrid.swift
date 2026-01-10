@@ -111,10 +111,10 @@ struct VideoGrid: View {
     }
     // MARK: 삭제 알랏
     .alert(
-      "\(selectedVideo?.videoTitle ?? "영상")을/를 삭제하시겠어요?",
+      String(localized: "\(selectedVideo?.videoTitle ?? "영상")을/를 삭제하시겠어요?"),
       isPresented: $showDeleteAlert) {
-        Button("취소", role: .cancel) { }
-        Button("삭제", role: .destructive) {
+        Button(String(localized: "취소"), role: .cancel) { }
+        Button(String(localized: "삭제"), role: .destructive) {
           if let video = selectedVideo {
             Task {
               await vm.deleteVideo(
@@ -125,7 +125,7 @@ struct VideoGrid: View {
           }
         }
       } message: {
-        Text("삭제하면 복구할 수 없습니다.")
+        Text(String(localized: "삭제하면 복구할 수 없습니다."))
       }
     
     // MARK: 영상 섹션 이동 뷰

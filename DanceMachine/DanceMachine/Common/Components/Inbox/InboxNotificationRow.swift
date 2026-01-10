@@ -45,11 +45,11 @@ struct InboxNotificationRow: View {
           VStack(alignment: .leading, spacing: 8) {
             // 알림 제목
             HStack(spacing: 0) {
-              Text(josa(notification.senderName, "이/가") + " ")
+              Text(notification.senderName)
                 .font(.heading1SemiBold)
                 .foregroundStyle(.labelStrong)
                 .multilineTextAlignment(.leading)
-              Text(notification.type == .feedback ? "피드백을 남겼어요" : "답글을 남겼어요" )
+              Text(notification.type == .feedback ? String(localized: " 님이 피드백을 남겼어요") : String(localized: " 님이 답글을 남겼어요"))
                 .font(.heading1Medium)
                 .foregroundStyle(.labelNormal)
                 .multilineTextAlignment(.leading)
@@ -66,12 +66,32 @@ struct InboxNotificationRow: View {
       }
       .contentShape(Rectangle())
       .padding(.horizontal, 16)
-      .padding(.vertical, 24)
+      .padding(.vertical, 20)
     }
     .background(notification.isRead ? .clear : .fillAlternative )
 
     Divider()
       .foregroundStyle(.strokeNormal)
   }
-  
+}
+
+#Preview {
+  InboxNotificationRow(
+    notification: InboxNotification(
+      notificationId: "",
+      type: InboxNotificationType.feedback,
+      videoId: "",
+      videoURL: "",
+      videoTitle: "dd",
+      senderName: "조재훈",
+      teamspace: Teamspace(
+        teamspaceId: UUID(),
+        ownerId: "",
+        teamspaceName: ""
+      ),
+      content: "dddddddd",
+      date: Date(),
+      isRead: false
+    )
+  )
 }

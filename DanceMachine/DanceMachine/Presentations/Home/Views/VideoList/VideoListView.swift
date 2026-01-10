@@ -119,7 +119,7 @@ struct VideoListView: View {
       bottomPadding: 16,
       content: {
         ToastView(
-          text: vm.errorMsg ?? "동영상 이름 수정을 실패했습니다.",
+          text: vm.errorMsg ?? String(localized: "동영상 이름 수정을 실패했습니다."),
           icon: .warning
         )
       }
@@ -131,42 +131,42 @@ struct VideoListView: View {
       bottomPadding: 16,
       content: {
         ToastView(
-          text: vm.errorMsg ?? "동영상 삭제를 실패했습니다.",
+          text: vm.errorMsg ?? String(localized: "동영상 삭제를 실패했습니다."),
           icon: .warning
         )
       }
     )
     .notificationToast(
       isPresented: $showVideoEditFailedToast,
-      text: "동영상 이동을 실패했습니다.",
+      text: String(localized: "동영상 이동을 실패했습니다."),
       icon: .warning,
       for: .video(.videoEditFailed),
       bottomPadding: 16
     )
     .notificationToast(
       isPresented: $showDeleteToast,
-      text: "동영상이 삭제되었습니다.",
+      text: String(localized: "동영상이 삭제되었습니다."),
       icon: .check,
       for: .video(.videoDelete),
       bottomPadding: 16
     )
     .notificationToast(
       isPresented: $showEditVideoTitleToast,
-      text: "영상 이름이 수정되었습니다.",
+      text: String(localized: "영상 이름이 수정되었습니다."),
       icon: .check,
       for: .video(.videoTitleEdit),
       bottomPadding: 16
     )
     .notificationToast(
       isPresented: $showEditToast,
-      text: "영상이 이동되었습니다.",
+      text: String(localized: "영상이 이동되었습니다."),
       icon: .check,
       for: .video(.videoEdit),
       bottomPadding: 16
     )
     .notificationToast(
       isPresented: $showCreateReportSuccessToast,
-      text: "신고가 접수되었습니다.\n조치사항은 이메일로 안내해드리겠습니다.",
+      text: String(localized: "신고가 접수되었습니다.\n조치사항은 이메일로 안내해드리겠습니다."),
       icon: .check,
       for: .toast(.reportSuccess),
       bottomPadding: 16,
@@ -184,7 +184,7 @@ struct VideoListView: View {
   
   private func errorView(g: GeometryProxy) -> some View {
     ErrorStateView(
-      message: "동영상 불러오기를 실패했습니다.\n네트워크를 확인해 주세요.",
+      message: String(localized: "동영상 불러오기를 실패했습니다.\n네트워크를 확인해 주세요."),
       action: {
         Task {
           await vm.refresh(tracksId: tracksId)

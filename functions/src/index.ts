@@ -39,8 +39,14 @@ import * as admin from "firebase-admin";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { setGlobalOptions } from "firebase-functions";
 import * as logger from "firebase-functions/logger";
+import { defineString } from "firebase-functions/params";
 import { josa } from "es-hangul";
 import { v4 as uuidv4 } from "uuid";
+import * as nodemailer from "nodemailer";
+
+// 환경 변수 정의
+const gmailUser = defineString("GMAIL_USER");
+const gmailPassword = defineString("GMAIL_PASSWORD");
 
 admin.initializeApp();
 setGlobalOptions({ region: "asia-northeast3", maxInstances: 10 });
@@ -116,8 +122,10 @@ async function sendPushNotificationsWithBadge(
       // 2. 유효하지 않은 토큰 (토큰 타입 / 토큰 길이 / FCM 토큰 발행 및 갱신 문제)
       if (!token) {
         logger.info("Skipping push notification for signed out user", { uid })
+        return;
       } else if (typeof token !== "string" || token.length === 0 || token == "Unknown") {
         logger.warn("FCM token is missing", { uid });
+        return;
       }
 
       // 딥링크 생성
@@ -353,4 +361,65 @@ export const onReplyCreated = onDocumentCreated("feedback/{feedbackId}/reply/{re
 
   await sendPushNotificationsWithBadge(validReceivers, title, body, extra);
   logger.info("[Reply] - Push notification process completed", { validReceivers, title, body, extra });
+});
+
+/**
+ * 문의하기 이메일 전송 트리거
+ * inquiries 컬렉션에 새 문서가 생성되면 자동으로 이메일 발송
+ */
+export const sendInquiryEmail = onDocumentCreated("inquiries/{inquiryId}", async (event) => {
+  const snap = event.data;
+  if (!snap) {
+    logger.error("[Inquiry] - No snapshot", { eventId: event.id });
+    return;
+  }
+
+  const inquiry = snap.data();
+  const { userId, content, createdAt } = inquiry;
+
+  // 사용자 정보 가져오기
+  let userName = "Unknown";
+  let userEmail = "Unknown";
+  try {
+    const userDoc = await db.collection("users").doc(userId).get();
+    if (userDoc.exists) {
+      userName = userDoc.get("name") || "Unknown";
+      userEmail = userDoc.get("email") || "Unknown";
+    }
+  } catch (error) {
+    logger.error("[Inquiry] - Error fetching user info", { userId, error });
+  }
+
+  // Nodemailer 설정
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: gmailUser.value(),
+      pass: gmailPassword.value(),
+    },
+  });
+
+  // 이메일 내용
+  const mailOptions = {
+    from: gmailUser.value(),
+    to: gmailUser.value(), // 같은 주소로 받기
+    subject: `[DirAct 문의] ${userName}님의 문의`,
+    html: `
+      <h2>DirAct 앱 문의</h2>
+      <p><strong>작성자:</strong> ${userName} (${userEmail})</p>
+      <p><strong>사용자 ID:</strong> ${userId}</p>
+      <p><strong>작성 시간:</strong> ${createdAt ? new Date(createdAt._seconds * 1000).toLocaleString("ko-KR") : "Unknown"}</p>
+      <hr>
+      <h3>문의 내용:</h3>
+      <p>${content}</p>
+    `,
+  };
+
+  // 이메일 전송
+  try {
+    await transporter.sendMail(mailOptions);
+    logger.info("[Inquiry] - Email sent successfully", { userId, userName, userEmail });
+  } catch (error) {
+    logger.error("[Inquiry] - Error sending email", { userId, error });
+  }
 });

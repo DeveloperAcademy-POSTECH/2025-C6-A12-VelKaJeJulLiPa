@@ -30,6 +30,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate { // TODO: If necessary ch
     FirebaseApp.configure()
     Messaging.messaging().delegate = self
     UNUserNotificationCenter.current().delegate = self
+
     print("🔥 FirebaseApp configured")
     return true
   }
@@ -39,6 +40,27 @@ class AppDelegate: UIResponder, UIApplicationDelegate { // TODO: If necessary ch
                    didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
     Messaging.messaging().apnsToken = deviceToken
     print("✅ APNs 토큰 등록 성공:", deviceToken.map { String(format: "%02.2hhx", $0) }.joined())
+
+    // ✅ CRITICAL FIX: APNs 토큰 설정 후 FCM 토큰 강제 갱신
+    // FCM 토큰이 APNs 토큰을 포함해야 iOS에서 푸시를 받을 수 있음
+    Task {
+      do {
+        let fcmToken = try await Messaging.messaging().token()
+        print("🔄 FCM 토큰 APNs 포함하여 갱신 완료: \(fcmToken)")
+
+        // Firestore에 저장
+        if let userId = FirebaseAuthManager.shared.user?.uid {
+          try await FirestoreManager.shared.updateLastLoginFields(
+            collection: .users,
+            documentId: userId,
+            asDictionary: [User.CodingKeys.fcmToken.rawValue: fcmToken]
+          )
+          print("🔑 갱신된 FCM 토큰 Firestore 저장 완료")
+        }
+      } catch {
+        print("❌ FCM 토큰 갱신 실패: \(error.localizedDescription)")
+      }
+    }
   }
   
   

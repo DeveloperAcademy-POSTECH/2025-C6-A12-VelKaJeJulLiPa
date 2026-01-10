@@ -9,6 +9,11 @@ typings/
 node_modules/
 *.local
 
+# Environment variables (contains secrets!)
+.env
+.env.local
+.env.*.local
+
 # Debug files
 firebase-debug.log
 firebase-debug.*.log

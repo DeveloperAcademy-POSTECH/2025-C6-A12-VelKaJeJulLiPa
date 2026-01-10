@@ -13,4 +13,5 @@ enum UserDefaultsKey: String, CaseIterable {
   case didCompleteAuthFlow = "didCompleteAuthFlow"
   case appLaunchCount = "appLaunchCount"
   case hasRequestedReview = "hasRequestedReview"
+  case feedbackCount = "feedbackCount"
 }

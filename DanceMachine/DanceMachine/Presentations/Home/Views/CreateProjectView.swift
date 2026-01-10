@@ -45,7 +45,7 @@ struct CreateProjectView: View {
       .dismissKeyboardOnTap()
     }
     .alert(
-      "변경사항이 저장되지 않았습니다.\n종료하시겠어요?",
+      String(localized: "변경사항이 저장되지 않았습니다.\n종료하시겠어요?"),
       isPresented: $closeAlert
     ) {
       Button("취소", role: .cancel) {}
@@ -170,7 +170,7 @@ struct CreateProjectView: View {
   private var bottomButtonView: some View {
     ZStack {
       ActionButton(
-        title: "새 프로젝트 만들기",
+        title: String(localized: "새 프로젝트 만들기"),
         color: projectNameText.isEmpty ? Color.fillAssitive : Color.secondaryStrong,
         height: 47,
         isEnabled: !projectNameText.isEmpty && !isCreatingProject

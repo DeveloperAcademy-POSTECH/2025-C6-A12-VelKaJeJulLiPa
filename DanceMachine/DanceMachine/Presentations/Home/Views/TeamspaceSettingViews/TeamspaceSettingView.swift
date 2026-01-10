@@ -16,20 +16,20 @@ struct TeamspaceSettingView: View {
 
   fileprivate enum NameSpace {
     enum Top {
-      static let inviteTitle: String = "팀에 멤버 초대하기"
+      static let inviteTitle: String = String(localized: "팀에 멤버 초대하기")
     }
     enum MemberHeader {
-      static let title: String = "팀원"
-      static let cancelTitle: String = "취소"
-      static let removeTitle: String = "내보내기"
+      static let title: String = String(localized: "팀원")
+      static let cancelTitle: String = String(localized: "취소")
+      static let removeTitle: String = String(localized: "내보내기")
     }
     enum MemberRow {
-      static let ownerBadgeTitle: String = "팀장"
+      static let ownerBadgeTitle: String = String(localized: "팀장")
       static let ellipsisSystemName: String = "ellipsis"
     }
     enum Bottom {
-      static let leaveTeamspaceTitle: String = "팀 스페이스 나가기"
-      static let deleteTeamspaceTitle: String = "팀 스페이스 삭제하기"
+      static let leaveTeamspaceTitle: String = String(localized: "팀 스페이스 나가기")
+      static let deleteTeamspaceTitle: String = String(localized: "팀 스페이스 삭제하기")
     }
   }
   
@@ -85,7 +85,7 @@ struct TeamspaceSettingView: View {
       tapToDismiss: true,
       bottomPadding: 16,
       content: {
-        ToastView(text: "팀스페이스가 변경 되었습니다!", icon: .check)
+        ToastView(text: String(localized: "팀스페이스가 변경 되었습니다!"), icon: .check)
       }
     )
     .onChange(of: toastMessage) { oldValue, newValue in
@@ -121,11 +121,11 @@ struct TeamspaceSettingView: View {
               if completed {
                 if activityType == .copyToPasteboard {
                   HapticManager.shared.trigger(.success)
-                  toastMessage = "링크가 복사되었습니다."
+                  toastMessage = String(localized: "링크가 복사되었습니다.")
                 } else if let rawValue = activityType?.rawValue,
                           rawValue.lowercased().contains("kakao") {
                   HapticManager.shared.trigger(.success)
-                  toastMessage = "카카오톡으로 공유되었습니다."
+                  toastMessage = String(localized: "카카오톡으로 공유되었습니다.")
                 }
               }
             }

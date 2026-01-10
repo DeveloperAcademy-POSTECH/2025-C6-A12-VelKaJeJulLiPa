@@ -21,7 +21,7 @@ struct EditNameView: View {
       .trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || editedName == viewModel.myName || viewModel.isLoading ? false : true
   }
   
-  let placeholder = "이름을 입력하세요"
+  let placeholder = String(localized: "이름을 입력하세요")
   let fontSize: CGFloat = 32
   let maxLength = 10
   
@@ -107,7 +107,7 @@ struct EditNameView: View {
       position: .bottom,
       bottomPadding: 16 + 47 + 16 // 아래 빈공간 + 버튼 크기 + 윗 빈공간
     ) {
-      ToastView(text: "이름은 10자 이내로 입력해 주세요.", icon: .warning)
+      ToastView(text: String(localized: "이름은 10자 이내로 입력해 주세요."), icon: .warning)
     }
     .unsavedChangesAlert(
       isPresented: $isAlertPresented,
@@ -119,7 +119,7 @@ struct EditNameView: View {
       position: .bottom,
       bottomPadding: 16 + 47 + 16,
       content: {
-        ToastView(text: "문제가 발생했습니다.", icon: .warning)
+        ToastView(text: String(localized: "문제가 발생했습니다."), icon: .warning)
       }
     )    .toolbar {
       ToolbarLeadingBackButton(icon: .chevron) {
@@ -130,7 +130,7 @@ struct EditNameView: View {
           router.pop()
         }
       }
-      ToolbarCenterTitle(text: "나의 이름 설정")
+      ToolbarCenterTitle(text: String(localized: "나의 이름 설정"))
     }
     .dismissKeyboardOnTap()
   }
@@ -139,7 +139,7 @@ struct EditNameView: View {
   // MARK: - 이름 수정하기 버튼 뷰
   private var bottomButtonView: some View {
     ActionButton(
-      title: "변경하기",
+      title: String(localized: "변경하기"),
       color: Color.secondaryNormal,
       height: 47,
       isEnabled: isButtonEnabled,

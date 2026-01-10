@@ -48,14 +48,14 @@ struct ReplyCard: View {
 
   private var topRow: some View {
     HStack {
-      Text(authorUser?.name ?? "알 수 없는 유저")
+      Text(authorUser?.name ?? String(localized: "알 수 없는 유저"))
         .font(.footnoteSemiBold)
         .foregroundStyle(.labelNormal)
       if reply.createdAt != nil {
         Text("·")
           .font(.footnoteMedium)
           .foregroundStyle(.labelAssitive)
-        Text(reply.createdAt?.listTimeLabel() ?? "방금 전")
+        Text(reply.createdAt?.listTimeLabel() ?? String(localized: "방금 전"))
           .font(.footnoteMedium)
           .foregroundStyle(.labelAssitive)
       }
@@ -105,7 +105,7 @@ struct ReplyCard: View {
     Button {
 //      replyAction()
     } label: {
-      Text("답글달기")
+      Text(String(localized: "답글달기"))
         .font(.caption1Medium)
         .foregroundStyle(.labelNormal)
         .simultaneousGesture(
@@ -124,13 +124,13 @@ struct ReplyCard: View {
         Button(role: .destructive) {
           onDelete()
         } label: {
-          Label("삭제", systemImage: "trash")
+          Label(String(localized: "삭제"), systemImage: "trash")
         }
       } else {
         Button(role: .destructive) {
           showCreateReportSheet()
         } label: {
-          Label("신고하기", systemImage: "light.beacon.max")
+          Label(String(localized: "신고하기"), systemImage: "light.beacon.max")
         }
       }
     }

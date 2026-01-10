@@ -77,7 +77,7 @@ struct TermsAgreeView: View {
     // 약관 동의 항목들
     VStack(spacing: 22) {
       TermsRow(
-        text: "개인정보 처리 방침 동의",
+        text: String(localized: "개인정보 처리 방침 동의"),
         tapAction: { router.push(to: .privacyPolicy) },
         toggleAction: { isPrivacyAgreed.toggle() },
         isAgreed: isPrivacyAgreed,
@@ -85,7 +85,7 @@ struct TermsAgreeView: View {
       )
       
       TermsRow(
-        text: "서비스 이용 약관 동의",
+        text: String(localized: "서비스 이용 약관 동의"),
         tapAction: { router.push(to: .termsOfUse) },
         toggleAction: { isTermsOfUseAgreed.toggle() },
         isAgreed: isTermsOfUseAgreed,
@@ -93,7 +93,7 @@ struct TermsAgreeView: View {
       )
       
       TermsRow(
-        text: "저는 14세 이상 입니다.",
+        text: String(localized: "저는 14세 이상 입니다."),
         tapAction: {},
         toggleAction: { isAgeValid.toggle() },
         isAgreed: isAgeValid,
@@ -104,7 +104,7 @@ struct TermsAgreeView: View {
   
   private var bottomButton: some View {
     ActionButton(
-      title: "확인",
+      title: String(localized: "확인"),
       color: .secondaryNormal,
       height: 47,
       isEnabled: isAllTermsAgreed

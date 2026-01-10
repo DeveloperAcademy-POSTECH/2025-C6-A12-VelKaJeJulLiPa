@@ -190,8 +190,6 @@ struct VideoView: View {
         videoURL: videoURL,
         teamspaceId: teamspaceId
       )
-      // 비디오 로드 후 자동 재생
-      vm.videoVM.togglePlayPause()
     }
     .onDisappear {
       vm.videoVM.cleanPlayer()
@@ -202,12 +200,12 @@ struct VideoView: View {
       position: .bottom,
       bottomPadding: 16, // FIXME: 신고하기 - 하단 공백 조정 필요
       content: {
-        ToastView(text: "신고가 접수되었습니다.\n조치사항은 이메일로 안내해드리겠습니다.", icon: .check)
+        ToastView(text: String(localized: "신고가 접수되었습니다.\n조치사항은 이메일로 안내해드리겠습니다."), icon: .check)
       }
     )
     .notificationToast(
       isPresented: $showIntervalWarning,
-      text: "시작 시점 이후에서 생성해 주세요!",
+      text: String(localized: "시작 시점 이후에서 생성해 주세요!"),
       icon: .warning,
       for: .video(.showIntervalWarning),
       bottomPadding: 80
@@ -224,7 +222,7 @@ struct VideoView: View {
       }
     )
     .alert(
-      "존재하지 않는 영상입니다.",
+      String(localized: "존재하지 않는 영상입니다."),
       isPresented: $vm.videoVM.notiFalseAlert,
       actions: {
         Button("확인", role: .destructive) { router.pop() }

@@ -91,7 +91,7 @@ struct SectionEditView: View {
       duration: 2,
       position: .bottom,
       bottomPadding: 63) {
-        ToastView(text: "10자 미만으로 입력해 주세요.", icon: .warning)
+        ToastView(text: String(localized: "10자 미만으로 입력해 주세요."), icon: .warning)
       }
       .unsavedChangesAlert(
         isPresented: $showExitAlert,
@@ -107,7 +107,7 @@ struct SectionEditView: View {
         }
       )
       .alert(
-        "\(sectionToDelete?.sectionTitle ?? "파트")을/를 삭제하시겠어요?",
+        "\(sectionToDelete?.localizedTitle ?? String(localized: "파트"))을/를 삭제하시겠어요?",
         isPresented: $showDeleteAlert
       ) {
         Button("취소", role: .cancel) {
@@ -232,7 +232,7 @@ struct SectionEditView: View {
   private var bottomButton: some View {
     ZStack {
       ActionButton(
-        title: "확인",
+        title: String(localized: "확인"),
         color: vm.editText.isEmpty || vm.isLoading ? .fillAssitive : .secondaryStrong,
         height: 47,
         isEnabled: !vm.editText.isEmpty && !vm.isLoading,

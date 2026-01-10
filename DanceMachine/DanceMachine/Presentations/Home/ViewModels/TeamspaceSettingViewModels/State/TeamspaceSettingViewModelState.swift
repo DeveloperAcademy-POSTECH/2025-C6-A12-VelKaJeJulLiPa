@@ -10,11 +10,11 @@ import Foundation
 /// 팀 셋팅 뷰에서 리스트/권한 등을 담당하는 데이터 상태입니다.
 struct TeamspaceSettingDataState {
   var loading: Bool = false
-  var selectedTeamspaceName: String = "불러오는중..."
+  var selectedTeamspaceName: String = String(localized: "불러오는중...")
   var users: [User] = []
   var teamspaceRole: TeamspaceRole = .viewer
   var memberListMode: MemberListMode = .browsing
-  
+
   var selectedUserIdsForRemoval: Set<String> = [] // 삭제용
 }
 

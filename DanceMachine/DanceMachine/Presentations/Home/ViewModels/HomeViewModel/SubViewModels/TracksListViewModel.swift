@@ -56,6 +56,11 @@ final class TracksListViewModel {
   init(project: Project? = nil, cacheStore: CacheStore? = nil) {
     self.project = project
     self.cacheStore = cacheStore
+
+    // 프로젝트가 있으면 로딩 상태로 시작
+    if project != nil {
+      dataState.isLoading = true
+    }
   }
 
   // 나중에 주입할 수도 있게
@@ -76,9 +81,7 @@ extension TracksListViewModel {
 
     let key = project.projectId
     let projectIdString = key.uuidString
-
-    dataState.isLoading = true
-    defer { dataState.isLoading = false }
+    let startTime = Date()
 
     // 1) SwiftData 캐시 비교 로직
     if let cacheStore {
@@ -97,16 +100,18 @@ extension TracksListViewModel {
          !cachedUpdatedAtString.isEmpty,
          cachedUpdatedAtString == remoteUpdatedAtString {
 
+        // 캐시 히트 - 데이터 로드 후 최소 시간 대기
         let cachedTracks = (try? cacheStore.loadTracks(projectId: projectIdString)) ?? []
         dataState.tracks = cachedTracks
         dataState.errorText = nil
-        dataState.isLoading = false
 
         // in-memory 캐시도 싱크
         cacheState.byProject[key] = cachedTracks
         cacheState.error[key] = nil
 
-        print("🍀 tracks 캐시 히트. count=\(cachedTracks.count)")
+        // 최소 로딩 시간 보장 후 로딩 종료
+        await TaskTimeUtility.waitForMinimumLoadingTime(startTime: startTime, minimim: 1.1)
+        dataState.isLoading = false
         return
       } else {
         print("🥀 tracks 캐시 미스 → 서버 fetch")
@@ -132,6 +137,7 @@ extension TracksListViewModel {
 
     let key = project.projectId
     let projectIdString = key.uuidString
+    let startTime = Date()
 
     // in-memory 캐시 히트 (empty여도 히트)
     if !forceRefresh,
@@ -176,6 +182,9 @@ extension TracksListViewModel {
           projectIdUpdatedAt: updatedAt,
           tracks: result
         )
+        
+        // 최소 로딩 시간 보장 후 로딩 종료
+        await TaskTimeUtility.waitForMinimumLoadingTime(startTime: startTime, minimim: 1.1)
 
         print("🧊 tracks 캐시 교체 완료. updatedAt: \(updatedAt.iso8601KST())")
       }
@@ -346,7 +355,8 @@ extension TracksListViewModel {
         subCollection: .section
       )
       print("섹션 목록 조회가 완료되었습니다. (fetchSection 종료)")
-      return secs.filter { $0.sectionTitle == "일반" }
+      // 기존 "일반" 데이터와의 하위 호환성 유지
+      return secs.filter { $0.sectionTitle == "General" || $0.sectionTitle == "일반" }
     } catch {
       print("섹션 목록 조회 중 오류가 발생했습니다. (fetchSection 실패): \(error.localizedDescription)")
       return []

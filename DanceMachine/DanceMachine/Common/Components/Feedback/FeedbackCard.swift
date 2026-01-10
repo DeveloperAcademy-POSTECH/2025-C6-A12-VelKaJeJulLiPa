@@ -50,7 +50,7 @@ struct FeedbackCard: View {
             Button {
               onBottomReplyTap?()
             } label: {
-              Text("답글달기")
+              Text(String(localized: "답글달기"))
                 .font(.caption1Medium)
                 .foregroundStyle(.labelNormal)
             }
@@ -85,7 +85,7 @@ struct FeedbackCard: View {
   
   private var authorName: some View {
     HStack {
-      Text(authorUser?.name ?? "알 수 없는 사용자")
+      Text(authorUser?.name ?? String(localized: "알 수 없는 사용자"))
         .font(.footnoteSemiBold)
         .foregroundStyle(.labelNormal)
       Text("·")
@@ -218,13 +218,13 @@ struct FeedbackCard: View {
         Button(role: .destructive) {
           onDelete()
         } label: {
-          Label("삭제", systemImage: "trash")
+          Label(String(localized: "삭제"), systemImage: "trash")
         }
       } else {
         Button(role: .destructive) {
           onReport()
         } label: {
-          Label("신고하기", systemImage: "light.beacon.max")
+          Label(String(localized: "신고하기"), systemImage: "light.beacon.max")
         }
       }
     }

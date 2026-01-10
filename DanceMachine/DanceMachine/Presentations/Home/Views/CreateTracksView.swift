@@ -50,7 +50,7 @@ struct CreateTracksView: View {
     
     /// 나가기 Alert
     .alert(
-      "변경사항이 저장되지 않았습니다.\n종료하시겠어요?",
+      String(localized: "변경사항이 저장되지 않았습니다.\n종료하시겠어요?"),
       isPresented: $closeAlert
     ) {
       Button("취소", role: .cancel) {}
@@ -175,7 +175,7 @@ struct CreateTracksView: View {
   private var bottomButtonView: some View {
     ZStack {
       ActionButton(
-        title: "곡 추가하기",
+        title: String(localized: "곡 추가하기"),
         color: trackNameText.isEmpty ? Color.fillAssitive : Color.secondaryStrong,
         height: 47,
         isEnabled: !trackNameText.isEmpty && !isCreatingTrack
