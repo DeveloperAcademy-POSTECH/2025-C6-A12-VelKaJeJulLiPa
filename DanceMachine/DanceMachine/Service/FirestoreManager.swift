@@ -87,7 +87,41 @@ final class FirestoreManager {
   // TODO: 코드 논의
   @discardableResult
   func createUser<T: EntityRepresentable>(_ data: T) async throws -> T {
-    try await save(data, strategy: .userStrategy)
+    print("🔐 [FirestoreManager] createUser 시작")
+
+    // Cast to User to validate fields
+    guard let user = data as? User else {
+      print("⚠️ [FirestoreManager] 데이터를 User 타입으로 변환 실패")
+      return try await save(data, strategy: .userStrategy)
+    }
+
+    print("📋 [FirestoreManager] 저장할 User 데이터:")
+    print("   userId: \(user.userId)")
+    print("   email: \(user.email.isEmpty ? "(빈 문자열)" : user.email)")
+    print("   name: \(user.name.isEmpty ? "(빈 문자열)" : user.name)")
+
+    // email 경고만 출력 (저장은 허용)
+    if user.email.isEmpty || user.email.contains("@diract.app") {
+      print("⚠️ [FirestoreManager] email이 비어있거나 dummy email입니다")
+      print("   → 저장은 진행하지만, 나중에 실제 email로 업데이트 필요")
+    }
+
+    // Critical validation: reject blank name
+    guard !user.name.isEmpty else {
+      print("🚨🚨🚨 [FirestoreManager] 치명적 오류!")
+      print("   name이 빈 문자열입니다.")
+      print("   Firestore 저장을 중단합니다.")
+      throw FirestoreError.addFailed(
+        underlying: NSError(
+          domain: "FirestoreManager",
+          code: -1,
+          userInfo: [NSLocalizedDescriptionKey: "User name cannot be empty"]
+        )
+      )
+    }
+
+    print("✅ [FirestoreManager] 검증 통과 - Firestore 저장 진행")
+    return try await save(data, strategy: .userStrategy)
   }
   
   // TODO: 코드 논의
