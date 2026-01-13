@@ -33,6 +33,8 @@ struct MainNavigationRoutingView: View {
           TermsOfUseView()
         case .accountSetting:
           AccountSettingView()
+        case .accountRecovery:
+          AccountRecoveryView()
         case .appMaker:
           AppMakerView()
         }

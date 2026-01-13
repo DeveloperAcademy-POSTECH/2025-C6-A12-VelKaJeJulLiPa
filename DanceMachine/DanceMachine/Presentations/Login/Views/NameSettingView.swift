@@ -97,7 +97,8 @@ struct NameSettingView: View {
         ) {
           Task {
             dismissKeyboard()
-            try await viewModel.createNewuser()
+            // TextField 값 전달!
+            try await viewModel.createNewuser(name: name)
             viewModel.completeNameSetting()
           }
         }

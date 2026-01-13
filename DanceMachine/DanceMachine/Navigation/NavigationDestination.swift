@@ -64,6 +64,7 @@ enum MyPageRoute: Hashable {
   case privacyPolicy
   case termsOfUse
   case accountSetting
+  case accountRecovery
   case appMaker
 }
 

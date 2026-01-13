@@ -599,6 +599,22 @@
         }
       }
     },
+    "⚠️ 복구 작업은 1~2분 정도 소요될 수 있습니다.\n화면을 이탈하지 말고 기다려주세요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⚠️ Recovery may take 1-2 minutes.\nPlease wait without leaving this screen."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⚠️ 復旧作業には1~2分程度かかる場合があります。\n画面を離れずにお待ちください。"
+          }
+        }
+      }
+    },
     "10/10" : {
       "localizations" : {
         "en" : {
@@ -979,6 +995,70 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "갤러리 접근 권한 요청"
+          }
+        }
+      }
+    },
+    "계정 복구" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Account Recovery"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アカウント復旧"
+          }
+        }
+      }
+    },
+    "계정 복구 성공!" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Account Recovery Successful!"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アカウント復旧成功！"
+          }
+        }
+      }
+    },
+    "계정 복구 실패" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Account Recovery Failed"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アカウント復旧失敗"
+          }
+        }
+      }
+    },
+    "계정 복구 안내" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Account Recovery Guide"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アカウント復旧案内"
           }
         }
       }
@@ -1691,6 +1771,22 @@
         }
       }
     },
+    "더 나은 서비스를 위해 노력하겠습니다." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "We will strive to provide better service."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "より良いサービスのために努力いたします。"
+          }
+        }
+      }
+    },
     "더 짧거나 낮은 화질의 영상을\n선택해 주세요." : {
       "localizations" : {
         "en" : {
@@ -2263,6 +2359,22 @@
         }
       }
     },
+    "마이페이지 > 문의 및 고객 지원에서 문의해 주세요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please contact us at My Page > Contact & Support."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "マイページ > お問い合わせ・カスタマーサポートからお問い合わせください。"
+          }
+        }
+      }
+    },
     "마이피드백" : {
       "localizations" : {
         "en" : {
@@ -2483,6 +2595,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "변경하기"
+          }
+        }
+      }
+    },
+    "보안을 위해 본인이 속해있던 팀스페이스를 선택해주세요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For security purposes, please select the teamspace you belonged to."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "セキュリティのため、ご自身が所属していたチームスペースを選択してください。"
+          }
+        }
+      }
+    },
+    "복구되지 않은 데이터가 있다면" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If there is any unrecovered data"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "復旧されていないデータがある場合"
+          }
+        }
+      }
+    },
+    "복구할 계정의 이름을 입력해주세요" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter the name of the account to recover"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "復旧するアカウントの名前を入力してください"
           }
         }
       }
@@ -2851,6 +3011,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "선택한 팀원들을 내보내시겠어요?"
+          }
+        }
+      }
+    },
+    "소속된 팀스페이스를 선택해주세요" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please select the teamspace you belong to"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所属しているチームスペースを選択してください"
           }
         }
       }
@@ -3299,6 +3475,22 @@
         }
       }
     },
+    "앱 업데이트로 계정 정보가 초기화되었습니다.\n마이페이지 > 계정 복구 탭에서 복구할 수 있습니다." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your account information was reset due to an app update.\nYou can recover it from My Page > Account Recovery tab."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アプリのアップデートによりアカウント情報が初期化されました。\nマイページ > アカウント復旧タブから復旧できます。"
+          }
+        }
+      }
+    },
     "업데이트가 필요합니다" : {
       "localizations" : {
         "en" : {
@@ -3541,6 +3733,22 @@
         }
       }
     },
+    "이름" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "名前"
+          }
+        }
+      }
+    },
     "이름 수정" : {
       "localizations" : {
         "en" : {
@@ -3641,6 +3849,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "이메일을 입력해주세요"
+          }
+        }
+      }
+    },
+    "이전에 사용하던 계정 이름을 정확히 입력해주세요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please enter the exact name of your previous account."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以前使用していたアカウント名を正確に入力してください。"
           }
         }
       }
