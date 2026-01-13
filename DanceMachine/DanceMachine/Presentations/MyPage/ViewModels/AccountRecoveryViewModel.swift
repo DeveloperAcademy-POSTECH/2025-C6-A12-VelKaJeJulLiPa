@@ -17,6 +17,8 @@ final class AccountRecoveryViewModel {
   var isLoading: Bool = false
   var showError: Bool = false
   var errorMessage: String = ""
+  var showLoadingToast: Bool = false
+  var loadingToastMessage: String = ""
 
   // MARK: - Step 2: Teamspace Selection
   var teamspaceOptions: [TeamspaceOption] = []
@@ -59,7 +61,12 @@ final class AccountRecoveryViewModel {
     }
 
     isLoading = true
-    defer { isLoading = false }
+    loadingToastMessage = String(localized: "계정 검색 중입니다. 잠시만 기다려주세요.")
+    showLoadingToast = true
+    defer {
+      isLoading = false
+      showLoadingToast = false
+    }
 
     do {
       print("🔍 [AccountRecovery] 계정 검색 시작")
@@ -140,7 +147,12 @@ final class AccountRecoveryViewModel {
     }
 
     isLoading = true
-    defer { isLoading = false }
+    loadingToastMessage = String(localized: "복구 중입니다. 잠시만 기다려주세요.")
+    showLoadingToast = true
+    defer {
+      isLoading = false
+      showLoadingToast = false
+    }
 
     do {
       print("🔐 [AccountRecovery] 계정 복구 시작")

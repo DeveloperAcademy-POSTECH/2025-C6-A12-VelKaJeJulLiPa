@@ -61,11 +61,23 @@ struct AccountRecoveryView: View {
       isPresented: $viewModel.showError,
       duration: 2,
       position: .bottom,
-      bottomPadding: 16,
+      bottomPadding: 79,
       content: {
         ToastView(
           text: viewModel.errorMessage,
           icon: .warning
+        )
+      }
+    )
+    .toast(
+      isPresented: $viewModel.showLoadingToast,
+      duration: 30,
+      position: .bottom,
+      bottomPadding: 79,
+      content: {
+        ToastView(
+          text: viewModel.loadingToastMessage,
+          icon: .check
         )
       }
     )

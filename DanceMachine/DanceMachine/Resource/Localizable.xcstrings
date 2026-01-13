@@ -5778,6 +5778,50 @@
           }
         }
       }
+    },
+    "계정 검색 중입니다. 잠시만 기다려주세요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Searching for account. Please wait."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アカウント検索中です。しばらくお待ちください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "계정 검색 중입니다. 잠시만 기다려주세요."
+          }
+        }
+      }
+    },
+    "복구 중입니다. 잠시만 기다려주세요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recovering account. Please wait."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "復旧中です。しばらくお待ちください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "복구 중입니다. 잠시만 기다려주세요."
+          }
+        }
+      }
     }
   },
   "version" : "1.1"
