@@ -38,7 +38,7 @@ struct AccountRecoveryView: View {
         }
         .disabled(viewModel.isLoading)
       }
-      ToolbarCenterTitle(text: "계정 복구")
+      ToolbarCenterTitle(text: String(localized: "계정 복구"))
     }
     .dismissKeyboardOnTap()
     .interactiveDismissDisabled(viewModel.isLoading)
@@ -50,7 +50,7 @@ struct AccountRecoveryView: View {
       let isRecoverable = currentEmail == "Unknown" || currentName.isEmpty || currentName == "Unknown"
 
       if !isRecoverable {
-        viewModel.errorMessage = "계정 복구 대상이 아닙니다. 고객지원에 문의해 주세요."
+        viewModel.errorMessage = String(localized: "계정 복구 대상이 아닙니다. 고객지원에 문의해 주세요.")
         viewModel.showError = true
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
           dismiss()
@@ -88,7 +88,7 @@ struct AccountRecoveryView: View {
 
       Spacer().frame(height: 32)
 
-      TextField("이름", text: $viewModel.userName)
+      TextField(String(localized: "이름"), text: $viewModel.userName)
         .font(.headline1Medium)
         .foregroundStyle(Color.labelStrong)
         .padding(.horizontal, 16)
@@ -101,7 +101,7 @@ struct AccountRecoveryView: View {
     }
     .safeAreaInset(edge: .bottom) {
         ActionButton(
-          title: viewModel.isLoading ? "계정 검색 중..." : "다음",
+          title: viewModel.isLoading ? String(localized: "계정 검색 중...") : String(localized: "다음"),
           color: viewModel.userName.isEmpty ? Color.fillAssitive : Color.secondaryStrong,
           height: 47,
           isEnabled: !viewModel.userName.isEmpty && !viewModel.isLoading,
@@ -156,7 +156,7 @@ struct AccountRecoveryView: View {
     }
     .safeAreaInset(edge: .bottom) {
         ActionButton(
-          title: viewModel.isLoading ? "계정 복구 중..." : "계정 복구",
+          title: viewModel.isLoading ? String(localized: "계정 복구 중...") : String(localized: "계정 복구"),
           color: viewModel.selectedTeamspaceId == nil ? Color.fillAssitive : Color.secondaryStrong,
           height: 47,
           isEnabled: viewModel.selectedTeamspaceId != nil && !viewModel.isLoading,
@@ -238,7 +238,7 @@ struct AccountRecoveryView: View {
       VStack(spacing: 12) {
         if viewModel.recoverySuccess {
           ActionButton(
-            title: "확인",
+            title: String(localized: "확인"),
             color: Color.secondaryStrong,
             height: 47
           ) {
@@ -246,7 +246,7 @@ struct AccountRecoveryView: View {
           }
         } else {
           ActionButton(
-            title: "다시 시도",
+            title: String(localized: "다시 시도"),
             color: Color.secondaryStrong,
             height: 47
           ) {
@@ -254,7 +254,7 @@ struct AccountRecoveryView: View {
           }
 
           ActionButton(
-            title: "취소",
+            title: String(localized: "취소"),
             color: Color.fillAssitive,
             height: 47
           ) {

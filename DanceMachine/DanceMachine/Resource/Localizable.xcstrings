@@ -999,6 +999,28 @@
         }
       }
     },
+    "계정 검색 중..." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Searching for account..."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アカウント検索中..."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "계정 검색 중..."
+          }
+        }
+      }
+    },
     "계정 복구" : {
       "localizations" : {
         "en" : {
@@ -1011,6 +1033,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "アカウント復旧"
+          }
+        }
+      }
+    },
+    "계정 복구 대상이 아닙니다. 고객지원에 문의해 주세요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You are not eligible for account recovery. Please contact customer support."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アカウント復旧の対象ではありません。カスタマーサポートにお問い合わせください。"
           }
         }
       }
@@ -1059,6 +1097,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "アカウント復旧案内"
+          }
+        }
+      }
+    },
+    "계정 복구 중..." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recovering account..."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アカウント復旧中..."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "계정 복구 중..."
           }
         }
       }
@@ -1617,6 +1677,28 @@
         }
       }
     },
+    "다시 시도" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try Again"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "再試行"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다시 시도"
+          }
+        }
+      }
+    },
     "다시 초대받아 참여할 수 있습니다." : {
       "localizations" : {
         "en" : {
@@ -1635,6 +1717,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "다시 초대받아 참여할 수 있습니다."
+          }
+        }
+      }
+    },
+    "다음" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "次へ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다음"
           }
         }
       }
@@ -2631,18 +2735,18 @@
         }
       }
     },
-    "복구할 계정의 이름을 입력해주세요" : {
+    "복구할 계정의 사용자 이름을 입력해주세요" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Enter the name of the account to recover"
+            "value" : "Enter the username of the account to recover"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "復旧するアカウントの名前を入力してください"
+            "value" : "復旧するアカウントのユーザー名を入力してください"
           }
         }
       }
@@ -3475,18 +3579,18 @@
         }
       }
     },
-    "앱 업데이트로 계정 정보가 초기화되었습니다.\n마이페이지 > 계정 복구 탭에서 복구할 수 있습니다." : {
+    "앱 업데이트로 계정 정보가 초기화 되신 유저분들은\n마이페이지 > 계정 복구 탭에서 복구할 수 있습니다." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Your account information was reset due to an app update.\nYou can recover it from My Page > Account Recovery tab."
+            "value" : "If your account information was reset due to the app update,\nyou can recover it from My Page > Account Recovery tab."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "アプリのアップデートによりアカウント情報が初期化されました。\nマイページ > アカウント復旧タブから復旧できます。"
+            "value" : "アプリのアップデートでアカウント情報が初期化されたユーザー様は\nマイページ > アカウント復旧タブから復旧できます。"
           }
         }
       }
@@ -3853,18 +3957,18 @@
         }
       }
     },
-    "이전에 사용하던 계정 이름을 정확히 입력해주세요." : {
+    "이전에 사용하던 계정의 사용자 이름을 정확히 입력해주세요." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Please enter the exact name of your previous account."
+            "value" : "Please enter the exact username of your previous account."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "以前使用していたアカウント名を正確に入力してください。"
+            "value" : "以前使用していたアカウントのユーザー名を正確に入力してください。"
           }
         }
       }

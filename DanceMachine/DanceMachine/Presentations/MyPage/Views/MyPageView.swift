@@ -102,7 +102,7 @@ struct MyPageView: View {
       bottomPadding: 16,
       content: {
         ToastView(
-          text: "계정 복구 대상이 아닙니다. 고객지원에 문의해 주세요.",
+          text: String(localized: "계정 복구 대상이 아닙니다. 고객지원에 문의해 주세요."),
           icon: .warning
         )
       }
