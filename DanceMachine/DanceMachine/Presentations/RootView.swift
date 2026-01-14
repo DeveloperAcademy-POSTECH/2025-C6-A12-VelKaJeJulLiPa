@@ -18,37 +18,21 @@ struct RootView: View {
   @State private var showAccountRecoveryAlert = false
 
   var body: some View {
-    NavigationStack(path: $router.destination) {
-      TabView(selection: $tabcase) {
-        ForEach(TabCase.allCases) { tab in
-          Tab(value: tab) {
-            tabView(tab: tab)
-              .tag(tab)
-          } label: { tabLabel(tab) }
-            .badge(
-              tab == .inbox ? notificationManager.unreadNotificationCount : 0
-            )
+    mainContent
+      .preferredColorScheme(.dark)
+      .onChange(of: tabcase) { oldValue, newValue in
+        if oldValue != newValue {
+          router.destination.removeAll()
         }
       }
-      .navigationDestination(for: MainRoute.self) { destination in
-        MainNavigationRoutingView(destination: destination)
-          .environmentObject(router)
-      }
-    }
-    .preferredColorScheme(.dark)
-    .onChange(of: tabcase) { oldValue, newValue in
-      if oldValue != newValue {
-        router.destination.removeAll()
-      }
-    }
-    .onAppear {
+      .onAppear {
       // 기존 유저의 country 필드 업데이트 (1회만)
       if !hasUpdatedCountry {
         updateUserCountryIfNeeded()
       }
 
-      // 이메일이 Unknown이거나 이름이 비어있거나 Unknown인 사용자에게 한 번만 알림 표시
-      if !hasShownAccountRecoveryAlert {
+      // 1.1.7 버전 이상에서만 계정 복구 알림 표시 (1회만)
+      if !hasShownAccountRecoveryAlert && isVersion117OrHigher() {
         let currentEmail = FirebaseAuthManager.shared.userInfo?.email ?? "Unknown"
         let currentName = FirebaseAuthManager.shared.userInfo?.name ?? "Unknown"
 
@@ -68,7 +52,27 @@ struct RootView: View {
       Text("앱 업데이트로 계정 정보가 초기화 되신 유저분들은\n마이페이지 > 계정 복구 탭에서 복구할 수 있습니다.")
     }
   }
-  
+
+  private var mainContent: some View {
+    NavigationStack(path: $router.destination) {
+      TabView(selection: $tabcase) {
+        ForEach(TabCase.allCases) { tab in
+          Tab(value: tab) {
+            tabView(tab: tab)
+              .tag(tab)
+          } label: { tabLabel(tab) }
+            .badge(
+              tab == .inbox ? notificationManager.unreadNotificationCount : 0
+            )
+        }
+      }
+      .navigationDestination(for: MainRoute.self) { destination in
+        MainNavigationRoutingView(destination: destination)
+          .environmentObject(router)
+      }
+    }
+  }
+
   private func tabLabel(_ tab: TabCase) -> some View {
     VStack(spacing: 8, content: {
       Image(systemName: tab.icon)
@@ -98,6 +102,27 @@ struct RootView: View {
       )
       .environmentObject(router)
     }
+  }
+
+  /// 현재 앱 버전이 1.1.7 이상인지 확인
+  private func isVersion117OrHigher() -> Bool {
+    guard let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String else {
+      return false
+    }
+
+    let components = appVersion.split(separator: ".").compactMap { Int($0) }
+    guard components.count >= 3 else { return false }
+
+    let major = components[0]
+    let minor = components[1]
+    let patch = components[2]
+
+    // 1.1.7 이상인지 확인
+    if major > 1 { return true }
+    if major == 1 && minor > 1 { return true }
+    if major == 1 && minor == 1 && patch >= 7 { return true }
+
+    return false
   }
 
   /// 기존 유저의 country 필드 업데이트 (Firestore에 country 필드가 없는 경우)
