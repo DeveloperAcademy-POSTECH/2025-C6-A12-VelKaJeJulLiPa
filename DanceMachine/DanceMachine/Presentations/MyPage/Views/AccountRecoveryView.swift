@@ -219,7 +219,7 @@ struct AccountRecoveryView: View {
           Spacer().frame(height: 12)
 
           Text("더 나은 서비스를 위해 노력하겠습니다.")
-            .font(.caption1Medium)
+            .font(.headline1Medium)
             .foregroundStyle(Color.labelNormal)
         }
         .multilineTextAlignment(.center)

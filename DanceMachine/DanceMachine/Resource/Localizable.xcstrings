@@ -1021,6 +1021,28 @@
         }
       }
     },
+    "계정 검색 중입니다. 잠시만 기다려주세요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Searching for account. Please wait."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アカウント検索中です。しばらくお待ちください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "계정 검색 중입니다. 잠시만 기다려주세요."
+          }
+        }
+      }
+    },
     "계정 복구" : {
       "localizations" : {
         "en" : {
@@ -2715,6 +2737,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "セキュリティのため、ご自身が所属していたチームスペースを選択してください。"
+          }
+        }
+      }
+    },
+    "복구 중입니다. 잠시만 기다려주세요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recovering account. Please wait."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "復旧中です。しばらくお待ちください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "복구 중입니다. 잠시만 기다려주세요."
           }
         }
       }
@@ -5560,6 +5604,7 @@
       }
     },
     "프리뷰 용" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5775,50 +5820,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "회원탈퇴"
-          }
-        }
-      }
-    },
-    "계정 검색 중입니다. 잠시만 기다려주세요." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Searching for account. Please wait."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "アカウント検索中です。しばらくお待ちください。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "계정 검색 중입니다. 잠시만 기다려주세요."
-          }
-        }
-      }
-    },
-    "복구 중입니다. 잠시만 기다려주세요." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recovering account. Please wait."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "復旧中です。しばらくお待ちください。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "복구 중입니다. 잠시만 기다려주세요."
           }
         }
       }
