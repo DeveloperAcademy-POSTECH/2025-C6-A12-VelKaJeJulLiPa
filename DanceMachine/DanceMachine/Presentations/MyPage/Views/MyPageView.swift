@@ -16,7 +16,8 @@ struct MyPageView: View {
   
   @State private var showContactView: Bool = false
   @State private var showContactSucessToast: Bool = false
-  
+  @State private var showRecoveryAccessDeniedToast: Bool = false
+
   var body: some View {
     ZStack {
       Color.backgroundNormal.ignoresSafeArea()
@@ -59,6 +60,14 @@ struct MyPageView: View {
           MyPageNavigationRow(title: String(localized: "계정 설정"), isDividerPresented: true) {
             router.push(to: .mypage(.accountSetting))
           }
+          MyPageNavigationRow(title: String(localized: "계정 복구"), isDividerPresented: true) {
+            // 이메일이 Unknown이거나 이름이 비어있거나 Unknown인 계정만 복구 가능
+            if viewModel.myId == "Unknown" || viewModel.myName.isEmpty || viewModel.myName == "Unknown" {
+              router.push(to: .mypage(.accountRecovery))
+            } else {
+              showRecoveryAccessDeniedToast = true
+            }
+          }
           MyPageInfoRow(title: String(localized: "앱 버전"), value: viewModel.appVersion, isDividerPresented: true)
           MyPageNavigationRow(title: String(localized: "문의 및 고객 지원"), isDividerPresented: true) {
             self.showContactView = true
@@ -85,6 +94,18 @@ struct MyPageView: View {
       icon: .check,
       for: .toast(.contactSuccess),
       bottomPadding: 16
+    )
+    .toast(
+      isPresented: $showRecoveryAccessDeniedToast,
+      duration: 2,
+      position: .bottom,
+      bottomPadding: 16,
+      content: {
+        ToastView(
+          text: String(localized: "계정 복구 대상이 아닙니다. 고객지원에 문의해 주세요."),
+          icon: .warning
+        )
+      }
     )
   }
 }
