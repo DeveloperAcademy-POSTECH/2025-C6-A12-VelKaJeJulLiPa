@@ -759,6 +759,7 @@ export const verifyAndRecoverAccount = onCall(async (request) => {
     await db.collection("users").doc(currentUid).set({
       ...oldUserData,
       user_id: currentUid,  // ← 새 UID로 변경
+      country: oldUserData.country || "kr",  // ← country 필드 없으면 기본값 추가
       updated_at: admin.firestore.FieldValue.serverTimestamp(),
     });
 
