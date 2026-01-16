@@ -8,9 +8,15 @@
 import SwiftUI
 
 struct SectionEditView: View {
-  @EnvironmentObject private var router: NavigationRouter
+  @EnvironmentObject private var router: MainRouter
   @State private var vm: SectionEditViewModel
-  
+  @State private var showToast: Bool = false
+  @State private var showExitAlert: Bool = false
+  @State private var showDeleteAlert: Bool = false
+  @State private var sectionToDelete: Section? = nil
+
+  @State private var showCRUDToast: Bool = false
+  @State private var checkEffectActive: Bool = false
   
   let tracksId: String
   let trackName: String
@@ -28,111 +34,266 @@ struct SectionEditView: View {
     self.sectionId = sectionId
   }
   
+  var filteredSection: [Section] {
+    vm.sections.filter { $0.sectionId != sectionId }
+  }
   
   var body: some View {
-    VStack {
-      customHeader
-      text
-      Spacer().frame(height: 15)
-      listView
+    VStack(spacing: 0) {
+      if filteredSection.isEmpty {
+        emptyView
+      } else {
+        listView.padding(.top, 16)
+      }
     }
+    .onReceive(NotificationCenter.publisher(for: .section(.sectionEditWarning))) { _ in
+      self.showToast = true
+    }
+    .onReceive(NotificationCenter.publisher(for: .section(.sectionCRUDFailed))) { _ in
+      self.showCRUDToast = true
+    }
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
     .toolbar(.hidden, for: .tabBar)
     .padding(.horizontal, 16)
-    .background(Color.white) // FIXME: 다크모드 배경색 명시
+    .background(.backgroundNormal)
+    .safeAreaInset(edge: .top, content: {
+      text.padding(.horizontal, 16)
+    })
     .safeAreaInset(edge: .bottom) {
-      Group {
-        if vm.editingSectionid == nil {
-          addButton
+      if !filteredSection.isEmpty {
+        bottomButton
+          .padding(.horizontal, 16)
+      }
+    }
+    .toolbarTitleDisplayMode(.inline)
+    .toolbar {
+      ToolbarLeadingBackButton(icon: .chevron) {
+        if vm.isEditing {
+          self.showExitAlert = true
         } else {
-          confirmButton
+          router.pop()
         }
       }
-      .padding(.horizontal, 16)
+      ToolbarItem(placement: .title) {
+        VStack(alignment: .center) {
+          Text("파트 관리")
+            .font(.headline2SemiBold)
+            .foregroundStyle(.labelStrong)
+          Text("\(trackName)")
+            .font(.caption1Medium)
+            .foregroundStyle(.labelNormal)
+        }
+      }
     }
+    .navigationBarBackButtonHidden(true)
+    .toast(
+      isPresented: $showToast,
+      duration: 2,
+      position: .bottom,
+      bottomPadding: 63) {
+        ToastView(text: String(localized: "10자 미만으로 입력해 주세요."), icon: .warning)
+      }
+      .unsavedChangesAlert(
+        isPresented: $showExitAlert,
+        onConfirm: { router.pop() }
+      )
+      .toast(
+        isPresented: $showCRUDToast,
+        duration: 2,
+        position: .bottom,
+        bottomPadding: 63,
+        content: {
+          ToastView(text: vm.errorMsg, icon: .warning)
+        }
+      )
+      .alert(
+        "\(sectionToDelete?.localizedTitle ?? String(localized: "파트"))을/를 삭제하시겠어요?",
+        isPresented: $showDeleteAlert
+      ) {
+        Button("취소", role: .cancel) {
+          sectionToDelete = nil
+        }
+        Button("삭제", role: .destructive) {
+          if let section = sectionToDelete {
+            Task {
+              do {
+                try await vm.deleteSection(tracksId: tracksId, section: section)
+                sectionToDelete = nil
+              } catch {
+                // ViewModel에서 이미 isLoading = false 처리됨
+                // 에러 메시지는 notification으로 전달됨
+              }
+            }
+          }
+        }
+      } message: {
+        Text("삭제하면 복구할 수 없습니다.")
+      }
   }
   
-  private var customHeader: some View { // FIXME: 컬러 폰트 수정
-    HStack(alignment: .top, spacing: 16) {
-      Button {
-        NotificationCenter.post(.sectionDidUpdate)
-        router.pop()
-      } label: {
-        Image(systemName: "chevron.left")
-          .font(.system(size: 17, weight: .semibold))
-          .foregroundStyle(.black)
+  private var emptyView: some View {
+    GeometryReader { geometry in
+      VStack {
+        if vm.isLoading {
+          LoadingSpinner()
+            .frame(width: 40, height: 40)
+        } else {
+          Button {
+            vm.addNewSection()
+          } label: {
+            VStack(spacing: 24) {
+              Image(.sectionAdd)
+              Text("파트를 추가해 보세요.")
+                .font(.headline2Medium)
+                .foregroundStyle(.secondaryAssitive)
+            }
+          }
+          .disabled(vm.isEditing)
+        }
       }
-      VStack(alignment: .leading, spacing: 4) {
-        Text("섹션 관리")
-          .font(.system(size: 17, weight: .semibold))
-          .foregroundStyle(.black) // FIXME: 다크모드 컬러 명시
-        Text(trackName)
-          .font(.system(size: 13))
-          .foregroundStyle(.black) // FIXME: 다크모드 컬러 명시
-      }
-      .onTapGesture {
-        router.pop()
-      }
-      Spacer()
+      .frame(maxWidth: .infinity)
+      .position(
+        x: geometry.size.width / 2,
+        y: geometry.size.height / 2 - 32
+      )
     }
-    .padding(.vertical, 12)
   }
-  
   
   private var text: some View {
     HStack {
-      Text("섹션 리스트")
-        .font(Font.system(size: 14, weight: .semibold)) // FIXME: 폰트 수정
-        .foregroundStyle(Color.gray.opacity(0.8)) // FIXME: 컬러 수정
+      Text("파트 리스트")
+        .font(.headline2Medium)
+        .foregroundStyle(.labelAssitive)
       Spacer()
+      Button {
+        vm.addNewSection()
+      } label: {
+        HStack(spacing: 4) {
+          if vm.isLoading {
+            LoadingSpinner()
+              .frame(width: 17, height: 17)
+          } else {
+            Image(systemName: "plus")
+              .font(.headline2SemiBold)
+              .foregroundStyle(vm.isEditing ? .fillAssitive : .secondaryNormal)
+            Text("추가")
+              .font(.headline2SemiBold)
+              .foregroundStyle(vm.isEditing ? .fillAssitive : .secondaryNormal)
+          }
+        }
+      }
+      .disabled(vm.isEditing || vm.isLoading)
     }
+    .padding(.top, 32)
   }
   
   private var listView: some View {
-    ScrollView {
-      ForEach(vm.sections, id: \.sectionId) { section in
+    List {
+      ForEach(filteredSection, id: \.sectionId) { section in
         SectionEditRow(
           tracksId: tracksId,
           section: section,
           isEditing: vm.editingSectionid == section.sectionId,
           onEditStart: { vm.startEdit(section: section) },
-          sheetAction: {
+          onDeleteIfEmpty: {
             Task {
-              await vm.deleteSection(tracksId: tracksId, section: section)
+              try await vm.deleteSection(tracksId: tracksId, section: section)
+                vm.editingSectionid = nil
             }
           },
-          editText: $vm.editText
+          editText: $vm.editText,
+          showToast: $showToast
         )
-        .disabled(section.sectionId == sectionId)
-        .opacity(section.sectionId == sectionId ? 0.5 : 1.0)
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
+        .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+        .buttonStyle(.plain)
+        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+          Button(role: .destructive) {
+            sectionToDelete = section
+            showDeleteAlert = true
+          } label: {
+            Label("삭제", systemImage: "trash")
+          }
+          
+          Button {
+            vm.startEdit(section: section)
+          } label: {
+            Label("수정", systemImage: "pencil")
+          }
+          .tint(Color.fillAssitive)
+        }
       }
     }
-  }
-  // 평상시 버튼
-  private var addButton: some View {
-    ActionButton(
-      title: "섹션 추가하기",
-      color: Color.blue,
-      height: 47,
-      action: { vm.addNewSection() }
-    )
+    .listStyle(.plain)
+    .scrollContentBackground(.hidden)
   }
   
-  private var confirmButton: some View {
-    RoundedRectangle(cornerRadius: 5)
-      .fill((!vm.editText.isEmpty && vm.editText != "일반") ? Color.blue : Color.gray.opacity(0.5)) // FIXME: 컬러 수정
-      .frame(maxWidth: .infinity)
-      .frame(height: 47)
-      .overlay {
-        Text("확인")
-          .font(Font.system(size: 16, weight: .medium)) // FIXME: - 폰트 수정
-          .foregroundStyle(Color.white) // FIXME: - 컬러 수정
-      }
-      .onTapGesture {
-        if !vm.editText.isEmpty && vm.editText != "일반" {
-          if let sectionId = vm.editingSectionid,
-             let section = vm.sections.first(where: { $0.sectionId == sectionId }) {
-            Task { await vm.updateSection(tracksId: tracksId, section: section) }
+  private var bottomButton: some View {
+    ZStack {
+      ActionButton(
+        title: String(localized: "확인"),
+        color: vm.editText.isEmpty || vm.isLoading ? .fillAssitive : .secondaryStrong,
+        height: 47,
+        isEnabled: !vm.editText.isEmpty && !vm.isLoading,
+        isLoading: vm.isLoading
+      ) {
+        if let sectionId = vm.editingSectionid,
+           let section = vm.sections.first(where: { $0.sectionId == sectionId }) {
+          Task {
+            await vm.updateSection(tracksId: tracksId, section: section)
+
+            // 업데이트 성공 시에만 체크 애니메이션 표시
+            if !vm.isLoading { // isLoading이 false면 성공한 것
+              await MainActor.run {
+                checkEffectActive = true
+              }
+
+              try? await Task.sleep(for: .seconds(2.5))
+
+              await MainActor.run {
+                checkEffectActive = false
+              }
+            }
           }
+        }
+      }
+      .opacity(checkEffectActive ? 0 : 1)
+
+      // 완료 체크 뷰
+      completedButtonView
+    }
+    .padding(.bottom, 8)
+  }
+
+  // MARK: - 섹션 저장 완료 뷰
+  private var completedButtonView: some View {
+    RoundedRectangle(cornerRadius: 15)
+      .fill(Color.fillAssitive)
+      .frame(height: 47)
+      .opacity(checkEffectActive ? 1 : 0)
+      .overlay {
+        HStack(spacing: 10) {
+          if #available(iOS 26.0, *) {
+            Image(systemName: "checkmark.circle")
+              .font(.system(size: 24, weight: .medium))
+              .foregroundStyle(Color.secondaryNormal)
+              .symbolEffect(
+                .drawOn,
+                options: .nonRepeating,
+                isActive: !checkEffectActive
+              )
+          } else {
+            Image(systemName: "checkmark.circle")
+              .font(.system(size: 24, weight: .medium))
+              .foregroundStyle(Color.secondaryNormal)
+              .opacity(checkEffectActive ? 1 : 0)
+          }
+
+          Text("파트를 저장했습니다.")
+            .font(.headline2SemiBold)
+            .foregroundStyle(Color.secondaryNormal)
+            .opacity(checkEffectActive ? 1 : 0)
         }
       }
   }
@@ -148,5 +309,5 @@ struct SectionEditView: View {
       sectionId: ""
     )
   }
-  .environmentObject(NavigationRouter())
+  .environmentObject(MainRouter())
 }

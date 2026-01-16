@@ -8,47 +8,121 @@
 import SwiftUI
 import AuthenticationServices
 
-//TODO: Hi-fi 디자인 반영 (현재는 임시)
 struct LoginView: View {
-    @State private var viewModel = LoginViewModel()
-    
-    
-    var body: some View {
-        ZStack {
-            Color.white.ignoresSafeArea() // FIXME: - 컬러 수정
-            
-            VStack(spacing: 24) {
-                Spacer()
-                
-                Text("Welcome to DirAct")
-                    .font(.largeTitle.bold())
-                    .foregroundStyle(Color.black) // FIXME: - 컬러 수정
-                    .multilineTextAlignment(.center)
-                
-                Button {
-                    Task {
-                        await viewModel.signInApple()
-                    }
-                } label: {
-                    SignInWithAppleButtonViewRepresentable(
-                        type: .default,
-                        style: .black
-                    )
-                    .allowsHitTesting(false)
-                }
-                .frame(height: 50) //FIXME: 버튼 크기
-                .padding(.horizontal, 32) //FIXME: 버튼 여백
-                
-                Spacer()
-                    .overlay {
-                        if viewModel.isLoading { ProgressView() }
-                    }
-            }
-        }
+  @EnvironmentObject var router: AuthRouter
+  @StateObject private var viewModel = LoginViewModel()
+  
+  @State private var logoOffset: CGFloat = 0
+  @State private var showContent = false
+  
+  @State private var showAdminView: Bool = false
+  
+  var body: some View {
+    ZStack {
+      Image(.splashIcon)
+        .offset(y: logoOffset)
+      VStack {
+        content
+      }
+      .offset(y: 140)
     }
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .contextMenu {
+      contextRow
+    }
+    .background(
+      Image(.splashBackground)
+        .resizable()
+        .scaledToFill()
+        .ignoresSafeArea()
+    )
+    .overlay(alignment: .topTrailing) {
+      Menu {
+        contextRow
+      } label: {
+        Image(systemName: "info.circle.fill")
+          .font(.system(size: 18))
+          .foregroundStyle(.labelAssitive)
+      }
+      .frame(width: 44, height: 44)
+      .contentShape(Rectangle())
+      .offset(x: -10)
+    }
+    .sheet(isPresented: $showAdminView) {
+      NavigationStack {
+        AdminLoginView(vm: viewModel)
+      }
+    }
+    .alert(
+      String(localized: "로그인 실패"),
+      isPresented: $viewModel.showError
+    ) {
+      Button("확인", role: .cancel) {}
+    } message: {
+      Text("로그인을 실패했습니다.\n다시 시도해주세요.")
+    }
+    .onReceive(viewModel.$isNewUser) { isNewUser in
+      if isNewUser {
+        router.push(to: .termsAgree)
+      }
+    }
+    .onAppear {
+      withAnimation(.easeOut(duration: 0.6)) {
+        logoOffset = -100
+      }
+      withAnimation(.easeOut(duration: 0.5).delay(0.3)) {
+        showContent = true
+      }
+    }
+  }
+  
+  private var content: some View {
+    VStack(spacing: 0) {
+      Text("DirAct")
+        .font(Font.establishRetrosans(.regular, size: 44))
+        .foregroundStyle(.labelStrong)
+        .opacity(showContent ? 1 : 0)
+      Spacer().frame(height: 24)
+      Text("댄스팀을 위한 효과적인 피드백 앱")
+        .font(Font.pretendard(.medium, size: 18))
+        .foregroundStyle(.labelAssitive)
+        .opacity(showContent ? 1 : 0)
+      Spacer().frame(height: 56)
+      LoadingSpinner()
+        .frame(width: 28, height: 28)
+        .opacity(viewModel.isLoading ? 1 : 0)
+      Spacer().frame(height: 56)
+      appleLogginButton
+    }
+  }
+  
+  private var appleLogginButton: some View {
+    Button {
+      Task { try await viewModel.signInApple() }
+    } label: {
+      SignInWithAppleButtonViewRepresentable(
+        type: .default,
+        style: .white
+      )
+      .allowsHitTesting(false)
+    }
+    .disabled(viewModel.isLoading)
+    .frame(height: 54)
+    .clipShape(RoundedRectangle(cornerRadius: 15))
+    .padding(.horizontal, 26)
+    .opacity(showContent ? 1 : 0)
+  }
+  
+  private var contextRow: some View {
+    Button {
+      self.showAdminView = true
+    } label: {
+      Label(String(localized: "관리자 계정으로 로그인"), systemImage: "long.text.page.and.pencil.fill")
+    }
+  }
 }
 
 
 #Preview {
-    LoginView()
+  LoginView()
 }

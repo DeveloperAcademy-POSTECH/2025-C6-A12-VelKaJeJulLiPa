@@ -10,63 +10,72 @@ import SwiftUI
 struct PlaybackSpeedSheet: View {
   @Environment(\.dismiss) private var dismiss
   @Binding var playbackSpeed: Float
-  
+
   let onSpeedChange: (Float) -> Void
-  
+
   private let minSpeed: Float = 0.25
-  private let maxSpeed: Float = 3.0
+  private let maxSpeed: Float = 2.0
   private let speedStep: Float = 0.25
-  
-  private let presetSpeeds: [Float] = [1.0, 1.25, 1.5, 2.0, 3.0]
+
+  private let presetSpeeds: [Float] = [0.3, 0.5, 0.8, 0.9, 1.0]
+
+  @State private var tempSpeed: Float = 1.0
+
   var body: some View {
-    VStack {
-      Text("\(String(format: "%.2f", playbackSpeed)) X") // FIXME: 폰트, 컬러 수정
-        .font(.system(size: 24))
-        .foregroundStyle(.white)
-      
+    VStack(spacing: 16) {
+      Text("\(String(format: "%.2f", tempSpeed)) X")
+        .font(.headline2Medium)
+        .foregroundStyle(.labelStrong)
+
       HStack {
         Button {
           decreaseSpeed()
         } label: {
           Image(systemName: "minus")
             .font(.system(size: 20))
-            .foregroundStyle(.white)
-            .frame(width: 50, height: 50)
-            .background(Color.gray.opacity(0.3))
+            .foregroundStyle(.backgroundElevated)
+            .frame(width: 44, height: 44)
+            .background(.primitiveAssitive)
             .clipShape(Circle())
         }
         Slider(
-          value: Binding(
-            get: { playbackSpeed },
-            set: { newValue in
-              let rounded = round(newValue / speedStep) * speedStep
+          value: $tempSpeed,
+          in: minSpeed...maxSpeed,
+          step: speedStep,
+          onEditingChanged: { isEditing in
+            if !isEditing {
+              let rounded = round(tempSpeed / speedStep) * speedStep
               updateSpeed(rounded)
             }
-          ),
-          in: minSpeed...maxSpeed,
-          step: speedStep
+          }
         )
-        .tint(.purple)
-        
+        .tint(Color.primitiveAssitive)
+        .contentShape(Rectangle())
+
         Button {
           increaseSpeed()
         } label: {
           Image(systemName: "plus")
             .font(.system(size: 20))
-            .foregroundStyle(.white)
-            .frame(width: 50, height: 50)
-            .background(Color.gray.opacity(0.3))
+            .foregroundStyle(.backgroundElevated)
+            .frame(width: 44, height: 44)
+            .background(.primitiveAssitive)
             .clipShape(Circle())
         }
       }
       .padding(.horizontal, 16)
-      
+
       freeSetButton
     }
-    
-//    .padding(.vertical, 16)
+    .padding(.top, 16)
     .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .background(Color.black.opacity(0.9))
+    .background(.backgroundElevated)
+    .onAppear {
+      tempSpeed = playbackSpeed
+    }
+    .onChange(of: playbackSpeed) { _, newValue in
+      tempSpeed = newValue
+    }
   }
   private var freeSetButton: some View {
     HStack {
@@ -75,11 +84,11 @@ struct PlaybackSpeedSheet: View {
           updateSpeed(speed)
         } label: {
           Text(formatSpeed(speed))
-            .font(.system(size: 16))
-            .foregroundStyle(.white)
+            .font(.caption1Medium)
+            .foregroundStyle(.labelStrong)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
-            .background(Color.gray.opacity(0.8))
+            .background(.fillAssitive)
             .clipShape(RoundedRectangle(cornerRadius: 30))
         }
       }
@@ -88,15 +97,16 @@ struct PlaybackSpeedSheet: View {
   }
   
   private func updateSpeed(_ speed: Float) {
+    self.tempSpeed = speed
     self.playbackSpeed = speed
     self.onSpeedChange(speed)
   }
   private func increaseSpeed() {
-    let new = min(playbackSpeed + speedStep, maxSpeed)
+    let new = min(tempSpeed + speedStep, maxSpeed)
     updateSpeed(new)
   }
   private func decreaseSpeed() {
-    let new = max(playbackSpeed - speedStep, minSpeed)
+    let new = max(tempSpeed - speedStep, minSpeed)
     updateSpeed(new)
   }
   private func formatSpeed(_ speed: Float) -> String {

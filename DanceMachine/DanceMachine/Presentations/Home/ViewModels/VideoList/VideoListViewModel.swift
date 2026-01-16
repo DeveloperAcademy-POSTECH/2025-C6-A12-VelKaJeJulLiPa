@@ -6,21 +6,34 @@
 //
 
 import Foundation
+import Photos
+import UIKit
 
 @Observable
 final class VideoListViewModel {
   private let store = FirestoreManager.shared
   private let storage = FireStorageManager.shared
-  
+  private let dataCacheManager = ListDataCacheManager.shared
+
   var videos: [Video] = []
   var section: [Section] = []
   var track: [Track] = []
-  
+
   var isLoading: Bool = false
   var errorMsg: String? = nil
+
+  // 에러 뷰 관련
+  var isRefreshing: Bool = false
+  var showErrorView: Bool = false
+  var showDeleteErrorToast: Bool = false
+  var showVideoTitleEditErrorToast: Bool = false
   
+
   var selectedSection: Section?
-  
+
+  var photoLibraryStatus: PHAuthorizationStatus = .notDetermined
+  var showPermissionModal: Bool = false
+  var showCustomPicker: Bool = false
 }
 // MARK: - UI 관련
 extension VideoListViewModel {
@@ -33,25 +46,66 @@ extension VideoListViewModel {
       $0.sectionId == selectedSection.sectionId
     }
     let videoIds = Set(sectionTracks.map { $0.videoId })
-    
+
     return videos.filter { videoIds.contains($0.videoId.uuidString) }
+  }
+
+  /// 리프레시 재사용 함수
+  /// 땡겨서 새로고침 or 에러뷰에서 탭으로 새로고침에 재사용 되는 메서드 입니다.
+  func refresh(tracksId: String) async {
+    await MainActor.run {
+      self.isRefreshing = true
+    }
+    await self.forceRefreshFromServer(tracksId: tracksId)
+
+    await MainActor.run {
+      self.isRefreshing = false
+    }
   }
 }
 // MARK: - 서버 메서드
 extension VideoListViewModel {
   // 모든 데이터 불러오기
   func loadFromServer(tracksId: String) async {
-    #if DEBUG
-    if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
-      return }
-    #endif
+    if ProcessInfo.isRunningInPreviews { return } // 프리뷰 전용
+    
+    let startTime = Date()
+    
     await MainActor.run {
       self.isLoading = true
       self.errorMsg = nil
     }
     
+    // 1. 캐시 확인 우선
+    if let cachedData = await dataCacheManager.getCachedData(for: tracksId) {
+      print("캐시에서 데이터 로드")
+      
+      // 최소 로딩 시간 보장 (스켈레톤 뷰 1.5초)
+      await TaskTimeUtility.waitForMinimumLoadingTime(
+        startTime: startTime
+      )
+      
+      await MainActor.run {
+        let previousSelectedId = self.selectedSection?.sectionId
+        self.section = cachedData.section
+        self.track = cachedData.track
+        self.videos = cachedData.videos
+
+        // 이전에 선택했던 섹션이 있으면 유지, 없으면 첫 번째 섹션 선택
+        if let prevId = previousSelectedId,
+           let stillExists = cachedData.section.first(where: { $0.sectionId == prevId }) {
+          self.selectedSection = stillExists
+        } else if let firstSection = cachedData.section.first {
+          self.selectedSection = firstSection
+        }
+        self.isLoading = false
+      }
+      return
+    }
+    
+    // 2. 캐시 없으면 그때 서버에서 로드
     do {
-      print("tracksId: \(tracksId)")
+      print("서버에서 로드 시작")
       // 1. Tracks -> Section 목록 가져오기
       let fetchSection = try await self.fetchSection(in: tracksId)
       print("불러온 section 개수\(fetchSection.count)")
@@ -74,7 +128,7 @@ extension VideoListViewModel {
       print("불러온 videoId 개수\(videoIds.count)")
       
       // 4. 수집한 videoId로 Video 문서들 가져오기 (동시 + 결측 허용)
-      let validIds = videoIds.filter { UUID(uuidString: $0) != nil }
+      _ = videoIds.filter { UUID(uuidString: $0) != nil }
       var fetchedVideos: [Video] = []
       // 4. 수집한 videoId로 Video 문서들 가져오기
       for videoId in videoIds {
@@ -92,38 +146,212 @@ extension VideoListViewModel {
       fetchedVideos.sort {
         ($0.createdAt ?? .distantPast > ($1.createdAt ?? .distantPast))
       }
-      // 5. UI 업데이트
+      
+      // 3. 로드 후 캐시에 저장
+      try await dataCacheManager.cache(
+        video: fetchedVideos,
+        track: allTrack,
+        section: fetchSection,
+        for: tracksId
+      )
+      
+      // 최소 로딩 시간 보장 (스켈레톤 뷰 0.8초)
+      await TaskTimeUtility.waitForMinimumLoadingTime(
+        startTime: startTime
+      )
+      
+      // 4. UI 업데이트
       await MainActor.run {
         let previousSelectedId = self.selectedSection?.sectionId
         self.section = fetchSection
         self.track = allTrack
         self.videos = fetchedVideos
-        
+
         if let prevId = previousSelectedId,
            let stillExists = fetchSection.first(where: { $0.sectionId == prevId }) {
           self.selectedSection = stillExists
         } else {
           self.selectedSection = fetchSection.first
         }
-        
+
         self.isLoading = false
       }
     } catch {
+      // 최소 로딩 시간 보장 (스켈레톤 뷰 1.5초)
+      await TaskTimeUtility.waitForMinimumLoadingTime(
+        startTime: startTime
+      )
+
       await MainActor.run {
         self.isLoading = false
-        // 동작 중 일부 videoId가 누락되어도 전체를 중단하지 않도록,
-        // 이미 로딩된 비디오가 없다면에만 에러 메시지를 표시
-        if self.videos.isEmpty {
-          self.errorMsg = VideoError.fetchFailed.userMsg
-        }
-        print("비디오 에러: \(VideoError.fetchFailed.debugMsg)")
-        print("상세 에러: \(error)")
+        self.showErrorView = true // 에러처리 뷰로 보여주기
       }
+    }
+  }
+  // MARK: 새 영상 캐시에 추가
+  func addNewVideo(video: Video, track: Track, traksId: String) async {
+    await dataCacheManager.addVideo(
+      video,
+      track: track,
+      to: traksId
+    )
+    await MainActor.run {
+      if !self.videos.contains(where: { $0.videoId == video.videoId }) {
+        self.videos.insert(video, at: 0)
+      }
+      if !self.track.contains(where: { $0.trackId == track.trackId }) {
+        self.track.append(track)
+      }
+      print("새 영상 캐시에 추가: \(video.videoTitle)")
+    }
+  }
+  
+  // MARK: 강제 서버 새로고침 (Pull-to-refresh용)
+  func forceRefreshFromServer(tracksId: String) async {
+    if ProcessInfo.isRunningInPreviews { return }
+    
+    let startTime = Date()
+    
+    await MainActor.run {
+      self.isLoading = true
+      self.errorMsg = nil
+      self.showErrorView = false
+    }
+
+    // 캐시 무시하고 무조건 서버에서 로드
+    do {
+      print("강제 서버 새로고침 시작")
+      
+      let fetchSection = try await self.fetchSection(in: tracksId)
+      var allTrack: [Track] = []
+      var videoIds: Set<String> = []
+      
+      for section in fetchSection {
+        let track = try await self.fetchTrack(
+          in: tracksId,
+          withIn: section.sectionId
+        )
+        allTrack.append(contentsOf: track)
+        
+        for t in track {
+          videoIds.insert(t.videoId)
+        }
+      }
+      
+      var fetchedVideos: [Video] = []
+      for videoId in videoIds {
+        do {
+          let video: Video = try await store.get(videoId, from: .video)
+          fetchedVideos.append(video)
+        } catch {
+          print("비디오 문서 없음 스킵 : \(error)")
+          continue
+        }
+      }
+      
+      fetchedVideos.sort {
+        ($0.createdAt ?? .distantPast > ($1.createdAt ?? .distantPast))
+      }
+      
+      // 새로 받은 데이터로 캐시 업데이트
+      try await dataCacheManager.cache(
+        video: fetchedVideos,
+        track: allTrack,
+        section: fetchSection,
+        for: tracksId
+      )
+      
+      // 최소 로딩 시간 보장 (1.5초)
+      await TaskTimeUtility.waitForMinimumLoadingTime(
+        startTime: startTime
+      )
+      
+      await MainActor.run {
+        let previousSelectedId = self.selectedSection?.sectionId
+        self.section = fetchSection
+        self.track = allTrack
+        self.videos = fetchedVideos
+
+        if let prevId = previousSelectedId,
+           let stillExists = fetchSection.first(where: { $0.sectionId == prevId }) {
+          self.selectedSection = stillExists
+        } else {
+          self.selectedSection = fetchSection.first
+        }
+
+        self.isLoading = false
+        self.showErrorView = false
+        print("강제 새로고침 완료")
+      }
+    } catch {
+      await TaskTimeUtility.waitForMinimumLoadingTime(
+        startTime: startTime
+      )
+
+      await MainActor.run {
+        self.isLoading = false
+        self.showErrorView = true
+        print("강제 새로고침 실패: \(error)")
+      }
+    }
+  }
+  
+  // 영상 제목 수정 메서드 Firestore(Video)
+  func updateVideoTitle(
+    video: Video,
+    newTitle: String,
+    tracksId: String
+  ) async {
+    await MainActor.run {
+      self.isLoading = true
+      self.errorMsg = nil
+    }
+    
+    do {
+      let videoId = video.videoId.uuidString
+      
+      // Firestore에 비디오 제목 업데이트
+      try await store.updateFields(
+        collection: .video,
+        documentId: videoId,
+        asDictionary: ["video_title": newTitle]
+      )
+      print("\(videoId)의 영상 제목 \(newTitle)로 변경 완료")
+      
+      await dataCacheManager.updateVideoTitle(
+        videoId: video.videoId.uuidString,
+        newTitle: newTitle,
+        in: tracksId
+      )
+      
+      // 로컬 UI 업데이트
+      await MainActor.run {
+        if let index = self.videos.firstIndex(where: { $0.videoId == video.videoId }) {
+          var updatedVideo = self.videos[index]
+          updatedVideo.videoTitle = newTitle
+          self.videos[index] = updatedVideo
+          self.errorMsg = "동영상 이름 수정을 실패했습니다."
+        }
+        self.isLoading = false
+      }
+      
+      // 제목 수정 완료 토스트 알림
+      NotificationCenter.post(.video(.videoTitleEdit))
+      print("비디오 제목 업데이트 성공: \(newTitle)")
+    } catch {
+      await MainActor.run {
+        self.isLoading = false
+        self.errorMsg = "동영상 이름 수정을 실패했습니다."
+        self.showVideoTitleEditErrorToast = true
+      }
+      print("영상 제목 수정 실패: \(error)")
     }
   }
   
   // 영상 삭제 메서드 Storage + Firestore(Video + Track)
   func deleteVideo(video: Video, tracksId: String) async {
+    let startTime = Date()
+    
     await MainActor.run {
       self.isLoading = true
       self.errorMsg = nil
@@ -147,20 +375,43 @@ extension VideoListViewModel {
         }
         group.addTask {
           _ = try await self.store.delete(collectionType: .video, documentID: videoId)
-          print(videoId)
+          print("\(videoId) 비디오 삭제")
+        }
+        group.addTask {
+          _ = try await self.deleteFeedback(videoId: videoId)
         }
         try await group.waitForAll()
       }
+      
+      // 캐시도 삭제
+      await dataCacheManager.removeVideo(
+        videoId: videoId,
+        from: tracksId
+      )
+      
+      // 최소 로딩 시간 보장 (스켈레톤 뷰 1.5초)
+      await TaskTimeUtility.waitForMinimumLoadingTime(
+        startTime: startTime
+      )
       
       await MainActor.run {
         self.videos.removeAll { $0.videoId == video.videoId }
         self.track.removeAll { $0.videoId == videoId }
         self.isLoading = false
       }
+      
+      // 삭제 완료 토스트 알림
+      NotificationCenter.post(.video(.videoDelete))
     } catch {
-      await MainActor.run { // TODO: 에러 처리
+      // 최소 로딩 시간 보장 (스켈레톤 뷰 1.5초)
+      await TaskTimeUtility.waitForMinimumLoadingTime(
+        startTime: startTime
+      )
+      
+      await MainActor.run {
         self.isLoading = false
-        self.errorMsg = "영상 삭제에 실패했습니다. 다시 시도해 주세요."
+        self.errorMsg = "동영상 삭제를 실패했습니다."
+        self.showDeleteErrorToast = true
       }
       print("영상 삭제 실패")
     }
@@ -211,54 +462,133 @@ private extension VideoListViewModel {
       print(track.trackId)
     }
   }
+  
+  func deleteFeedback(videoId: String) async throws {
+    do {
+      // 1. 해당 videoId의 모든 feedback 문서 가져오기
+      let feedbacks: [Feedback] = try await self.store.fetchAll(
+        videoId,
+        from: .feedback,
+        where: "video_id"
+      )
+      
+      // 2. 각 feedback의 reply 서브컬렉션 삭제 후 feedback 삭제
+      try await withThrowingTaskGroup(of: Void.self) { group in
+        for feedback in feedbacks {
+          group.addTask {
+            let feedbackId = feedback.feedbackId.uuidString
+            
+            // reply 서브컬렉션의 모든 문서 삭제
+            try await self.store.deleteAllDocumentsInSubcollection(
+              under: .feedback,
+              parentId: feedbackId,
+              subCollection: .reply
+            )
+            
+            // feedback 문서 삭제
+            try await self.store.delete(
+              collectionType: .feedback,
+              documentID: feedbackId
+            )
+          }
+        }
+        try await group.waitForAll()
+      }
+      
+      print("피드백 및 답글 삭제 완료: \(feedbacks.count)")
+    } catch {
+      print("피드백 삭제 실패: \(error)")
+      throw error
+    }
+  }
 }
 // MARK: - 프리뷰
 extension VideoListViewModel {
-    static var preview: VideoListViewModel {
-      let vm = VideoListViewModel()
-
-      // 목 데이터 주입
-      vm.section = [
-        Section(sectionId: "1", sectionTitle: "기초"),
-        Section(sectionId: "2", sectionTitle: "중급"),
-        Section(sectionId: "3", sectionTitle: "고급 안무 연습")
-      ]
-
-      vm.track = [
-        Track(trackId: "t1", videoId: "v1", sectionId: "1"),
-        Track(trackId: "t2", videoId: "v2", sectionId: "1"),
-        Track(trackId: "t3", videoId: "v3", sectionId: "2")
-      ]
-
-      vm.videos = [
-        Video(
-          videoId: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
-          videoTitle: "비디오 1",
-          videoDuration: 120.5,
-          videoURL: "https://example.com/video1.mp4",
-          thumbnailURL: "https://example.com/thumb1.jpg",
-          createdAt: Date()
-        ),
-        Video(
-          videoId: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!,
-          videoTitle: "비디오 2",
-          videoDuration: 95.3,
-          videoURL: "https://example.com/video2.mp4",
-          thumbnailURL: "https://example.com/thumb2.jpg",
-          createdAt: Date()
-        ),
-        Video(
-          videoId: UUID(uuidString: "00000000-0000-0000-0000-000000000003")!,
-          videoTitle: "비디오 3",
-          videoDuration: 180.0,
-          videoURL: "https://example.com/video3.mp4",
-          thumbnailURL: "https://example.com/thumb3.jpg",
-          createdAt: Date()
-        )
-      ]
-
-      vm.isLoading = false
-
-      return vm
+  static var preview: VideoListViewModel {
+    let vm = VideoListViewModel()
+    
+    // 목 데이터 주입
+    vm.section = [
+      Section(sectionId: "1", sectionTitle: "기초"),
+      Section(sectionId: "2", sectionTitle: "중급"),
+      Section(sectionId: "3", sectionTitle: "고급 안무 연습")
+    ]
+    
+    vm.track = [
+      Track(trackId: "t1", videoId: "v1", sectionId: "1"),
+      Track(trackId: "t2", videoId: "v2", sectionId: "1"),
+      Track(trackId: "t3", videoId: "v3", sectionId: "2")
+    ]
+    
+    vm.videos = [
+      Video(
+        videoId: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
+        videoTitle: "비디오 1",
+        videoDuration: 120.5,
+        videoURL: "https://example.com/video1.mp4",
+        thumbnailURL: "https://example.com/thumb1.jpg",
+        createdAt: Date(),
+        uploaderId: ""
+      ),
+      Video(
+        videoId: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!,
+        videoTitle: "비디오 2",
+        videoDuration: 95.3,
+        videoURL: "https://example.com/video2.mp4",
+        thumbnailURL: "https://example.com/thumb2.jpg",
+        createdAt: Date(),
+        uploaderId: ""
+      ),
+      Video(
+        videoId: UUID(uuidString: "00000000-0000-0000-0000-000000000003")!,
+        videoTitle: "비디오 3",
+        videoDuration: 180.0,
+        videoURL: "https://example.com/video3.mp4",
+        thumbnailURL: "https://example.com/thumb3.jpg",
+        createdAt: Date(),
+        uploaderId: ""
+      )
+    ]
+    
+    vm.isLoading = false
+    
+    return vm
+  }
+}
+// MARK: - 권한 설정
+extension VideoListViewModel {
+  func requestPermissionAndFetch() async {
+    if ProcessInfo.isRunningInPreviews { return } // 프리뷰 전용
+    
+    let currentStatus = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+    
+    await MainActor.run {
+      self.photoLibraryStatus = currentStatus
+    }
+    
+    PHPhotoLibrary.requestAuthorization(for: .readWrite) {
+      status in
+      Task { @MainActor in
+        self.photoLibraryStatus = status
+      }
+      switch status {
+      case .authorized, .limited:
+        self.showCustomPicker = true
+      case .denied, .restricted, .notDetermined:
+        self.showPermissionModal = true
+      @unknown default:
+        print("알 수 없는 권한 상태")
+      }
     }
   }
+  
+  func openSettings() {
+    guard let settingsURL = URL(string: UIApplication.openSettingsURLString) else {
+      return
+    }
+    
+    if UIApplication.shared.canOpenURL(settingsURL) {
+      UIApplication.shared.open(settingsURL)
+    }
+  }
+}

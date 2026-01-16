@@ -11,6 +11,7 @@ import Foundation
 enum StorageType {
   case video(String)
   case thumbnail(String)
+  case feedbackImage(String)
   
   var path: String {
     switch self {
@@ -18,6 +19,8 @@ enum StorageType {
       return "video/\(videoId)/\(videoId).video.mov"
     case .thumbnail(let thumbId):
       return "video/\(thumbId)/\(thumbId).jpg"
+    case .feedbackImage(let feedbackId):
+      return "image/\(feedbackId)/\(feedbackId).jpg"
     }
   }
 }

@@ -8,85 +8,250 @@
 import SwiftUI
 
 struct CreateProjectView: View {
-    
-    
-    @EnvironmentObject private var router: NavigationRouter
-    
-    @State private var viewModel: CreateProjectViewModel = .init()
-    @State private var projectNameText = ""
-    
-    @FocusState private var isFocusTextField: Bool
-    
-    var body: some View {
-        ZStack {
-            Color.white.ignoresSafeArea() // FIXME: - 컬러 수정
-            
-            VStack {
-                Spacer()
-                inputTeamspaceNameView
-                    .padding(.horizontal, 16)
-                Spacer()
-                bottomButtonView
-                    .padding(.horizontal, 16)
-            }
-        }
-        .toolbar {
-            ToolbarLeadingBackButton(icon: .chevron)
-        }
+  
+  @Environment(\.dismiss) private var dismiss
+  @EnvironmentObject private var router: MainRouter
+  
+  @State private var viewModel: CreateProjectViewModel = .init()
+  @State private var projectNameText = ""
+  
+  @FocusState private var isFocusTextField: Bool
+  
+  @State private var closeAlert: Bool = false
+  
+  var onCreated: () -> Void = {}
+  
+  @State private var isCreatingProject: Bool = false
+  @State var overText: Bool = false
+  // 애니메이션 용도 변수 (drawOn)
+  @State private var checkEffectActive: Bool = false //애니메이션 트리거 + 표시 조건
+  
+  var body: some View {
+    ZStack {
+      Color.backgroundElevated.ignoresSafeArea()
+      
+      VStack {
+        Spacer().frame(height: 29)
+        topTitleView
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .padding(.horizontal, 16)
+        Spacer()
+        inputProjectNameView
+          .padding(.horizontal, 16)
+        Spacer()
+        bottomButtonView
+          .padding(.horizontal, 16)
+      }
+      .dismissKeyboardOnTap()
     }
-    
-    // MARK: - 팀 스페이스 텍스트 필드 뷰 ("팀 스페이스 이름" + 텍스트 필드)
-    private var inputTeamspaceNameView: some View {
-        VStack(spacing: 32) {
-            Text("프로젝트명을 입력하세요.")
-                .font(Font.system(size: 24, weight: .semibold)) // FIXME: - 폰트 수정
-                .foregroundStyle(Color.black) // FIXME: - 컬러 수정
-            
-            RoundedRectangle(cornerRadius: 5)
-                .fill(Color.gray) // FIXME: - 컬러 수정
-                .overlay(
-                    RoundedRectangle(cornerRadius: 5)
-                        .stroke(isFocusTextField ? Color.blue : Color.clear, lineWidth: isFocusTextField ? 1 : 0) // FIXME: - 컬러 수정
-                )
-                .frame(maxWidth: .infinity)
-                .frame(height: 47)
-                .overlay {
-                    HStack {
-                        // TODO: 컴포넌트 추가하기
-                        TextField("프로젝트명", text: $projectNameText)
-                            .font(Font.system(size: 16, weight: .medium)) // FIXME: - 폰트 수정
-                            .foregroundStyle(Color.black) // FIXME: - 컬러 수정
-                            .multilineTextAlignment(.center)
-                            .padding(.vertical, 16)
-                            .overlay(alignment: .trailing) {
-                                XmarkButton { self.projectNameText = "" }
-                                .padding(.trailing, 8)
-                            }
-                    }
-                }
-                .focused($isFocusTextField)
-        }
+    .alert(
+      String(localized: "변경사항이 저장되지 않았습니다.\n종료하시겠어요?"),
+      isPresented: $closeAlert
+    ) {
+      Button("취소", role: .cancel) {}
+      Button("나가기", role: .destructive) { dismiss() }
+    } message: {
+      Text("저장하지 않은 변경사항은 사라집니다.")
     }
-    
-    // MARK: - 바텀 팀 스페이스 만들기 뷰
-    private var bottomButtonView: some View {
-        ActionButton(
-            title: "확인",
-            color: self.projectNameText.isEmpty ? Color.gray : Color.blue, // FIXME: - 컬러 수정
-            height: 47,
-            isEnabled: self.projectNameText.isEmpty ? false : true
-        ) {
-            Task {
-                try await viewModel.createProject(projectName: self.projectNameText)
-                await MainActor.run { router.pop() }
-            }
-        }
+  }
+  
+  // MARK: - 탑 타이틀
+  private var topTitleView: some View {
+    ZStack { // TODO: 서치
+      // 가운데 정렬 타이틀
+      Text("새 프로젝트 만들기")
+        .font(.headline2SemiBold)
+        .foregroundStyle(Color.labelStrong)
+        .frame(maxWidth: .infinity, alignment: .center)
+      
+      // 왼쪽 X 버튼
+      HStack {
+        Image(systemName: "xmark.circle.fill")
+          .resizable()
+          .scaledToFit()
+          .frame(width: 44, height: 44)
+          .foregroundStyle(Color.labelNormal)
+          .onTapGesture { self.closeAlert = true }
+        Spacer()
+      }
     }
+  }
+  
+  // MARK: - 프로젝트 텍스트 필드 뷰 ("프로젝트 이름" + 텍스트 필드)
+  private var inputProjectNameView: some View {
+    VStack {
+      Text("프로젝트 이름을 입력하세요.")
+        .font(.title2SemiBold)
+        .foregroundStyle(Color.labelStrong)
+      Spacer().frame(height: 32)
+      textFieldView()
+      Spacer().frame(height: 16)
+      textFieldItem()
+    }
+  }
+  
+  // MARK: - 텍스트 필드 뷰
+  @ViewBuilder
+  private func textFieldView() -> some View {
+    // 가운데 정렬 텍스트 필드 + 배경
+    TextField("(예시) 대동제", text: $projectNameText)
+      .font(.headline2Medium)
+      .foregroundStyle(Color.labelStrong)
+      .tint(Color.labelStrong)
+      .multilineTextAlignment(.center)
+      .onChange(of: projectNameText) { oldValue, newValue in
+        // 1) 삭제 방향이면 검증 로직은 태우지 않고, 경고만 정리
+        if newValue.count < oldValue.count {
+          // 20자 미만이면 경고 끔
+          if newValue.count < 20 {
+            overText = false
+          }
+          return
+        }
+        
+        // 2) 입력(길이 증가)일 때만 검증
+        let result = viewModel.validateTeamspaceName(
+          oldValue: oldValue,
+          newValue: newValue
+        )
+        
+        // 3) 자른 텍스트 반영 (무한 onChange 방지용 체크)
+        if projectNameText != result.text {
+          projectNameText = result.text
+        }
+        
+        // 4) 경고 플래그 반영
+        overText = result.overText
+      }
+      .frame(maxWidth: .infinity)
+      .frame(height: 51)
+      .overlay(alignment: .trailing) {
+        XmarkButton {
+          self.projectNameText = ""
+        }
+          .padding(.trailing, 8)
+      }
+      .background(
+        RoundedRectangle(cornerRadius: 15)
+          .fill(Color.fillStrong)
+          .overlay(
+            RoundedRectangle(cornerRadius: 15)
+              .stroke(
+                isFocusTextField ? Color.secondaryStrong : Color.clear,
+                lineWidth: isFocusTextField ? 1 : 0
+              )
+          )
+      )
+      .overlay(
+        RoundedRectangle(cornerRadius: 15)
+          .stroke(self.overText ? Color.accentRedNormal : Color.clear, lineWidth: 1)
+      )
+      .focused($isFocusTextField)
+  }
+  
+  
+  // MARK: - 텍스트 필드 아이템 (글자수 라벨, x 버튼)
+  @ViewBuilder
+  private func textFieldItem() -> some View {
+    ZStack {
+      Text("\(projectNameText.count)/20")
+        .font(.headline2Medium)
+        .foregroundStyle(Color.secondaryNormal)
+        .opacity(overText ? 0 : 1)
+
+      Text("20자 이내로 입력해주세요.")
+        .font(.footnoteMedium)
+        .foregroundStyle(Color.accentRedNormal)
+        .opacity(overText ? 1 : 0)
+    }
+  }
+  
+  // MARK: - 바텀 팀 스페이스 만들기 뷰
+  private var bottomButtonView: some View {
+    ZStack {
+      ActionButton(
+        title: String(localized: "새 프로젝트 만들기"),
+        color: projectNameText.isEmpty ? Color.fillAssitive : Color.secondaryStrong,
+        height: 47,
+        isEnabled: !projectNameText.isEmpty && !isCreatingProject
+      ) {
+        Task {
+          guard !projectNameText.isEmpty else { return }
+          
+          isCreatingProject = true
+          
+          defer {
+            isCreatingProject = false
+          }
+          
+          try await viewModel.createProject(projectName: self.projectNameText)
+          
+          await MainActor.run {
+            onCreated()
+            checkEffectActive = true
+          }
+          
+          try? await Task.sleep(for: .seconds(2)) // 애니메이션 2초 효과
+          
+          await MainActor.run { dismiss() }
+        }
+      }
+      .disabled(isCreatingProject)
+      
+      // 로딩 오버레이
+      if isCreatingProject {
+        // 버튼 영역을 꽉 채우는 배경
+        RoundedRectangle(cornerRadius: 15)
+          .fill(Color.fillAssitive)
+          .frame(height: 47)
+        
+        LoadingSpinner()
+          .frame(width: 28, height: 28)
+      }
+      
+      // 생성 완료 됐을 시, 보여지는 뷰
+      completedButtonView
+    }
+    .padding(.bottom, 16)
+  }
+  
+  
+  // MARK: - 프로젝트 생성 시, 완료 뷰
+  private var completedButtonView: some View {
+    RoundedRectangle(cornerRadius: 15)
+      .fill(Color.fillAssitive)
+      .frame(height: 47)
+      .opacity(checkEffectActive ? 1 : 0)
+      .overlay {
+        HStack(spacing: 10) {
+          if #available(iOS 26.0, *) {
+            Image(systemName: "checkmark.circle")
+              .font(.system(size: 24, weight: .medium))
+              .foregroundStyle(Color.secondaryNormal)
+              .symbolEffect(
+                .drawOn,
+                options: .nonRepeating,
+                isActive: !checkEffectActive
+              )
+          } else {
+            Image(systemName: "checkmark.circle")
+              .font(.system(size: 24, weight: .medium))
+              .foregroundStyle(Color.secondaryNormal)
+              .opacity(checkEffectActive ? 1 : 0)
+          }
+          
+          Text("프로젝트를 생성했습니다.")
+            .font(.headline2SemiBold)
+            .foregroundStyle(Color.secondaryNormal)
+            .opacity(checkEffectActive ? 1 : 0)
+        }
+      }
+  }
 }
 
 #Preview {
-    NavigationStack {
-        CreateProjectView()
-    }
+  NavigationStack {
+    CreateProjectView()
+  }
 }
 

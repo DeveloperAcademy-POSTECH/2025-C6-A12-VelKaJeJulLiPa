@@ -8,5 +8,10 @@
 import Foundation
 
 enum UserDefaultsKey: String, CaseIterable {
-    case hasLaunchedBefore = "hasLaunchedBefore"
+  case hasLaunchedBefore = "hasLaunchedBefore"
+  case fcmToken = "fcmToken"
+  case didCompleteAuthFlow = "didCompleteAuthFlow"
+  case appLaunchCount = "appLaunchCount"
+  case hasRequestedReview = "hasRequestedReview"
+  case feedbackCount = "feedbackCount"
 }

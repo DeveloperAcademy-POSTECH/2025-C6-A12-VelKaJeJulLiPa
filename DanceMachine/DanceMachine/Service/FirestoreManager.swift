@@ -87,7 +87,41 @@ final class FirestoreManager {
   // TODO: 코드 논의
   @discardableResult
   func createUser<T: EntityRepresentable>(_ data: T) async throws -> T {
-    try await save(data, strategy: .userStrategy)
+    print("🔐 [FirestoreManager] createUser 시작")
+
+    // Cast to User to validate fields
+    guard let user = data as? User else {
+      print("⚠️ [FirestoreManager] 데이터를 User 타입으로 변환 실패")
+      return try await save(data, strategy: .userStrategy)
+    }
+
+    print("📋 [FirestoreManager] 저장할 User 데이터:")
+    print("   userId: \(user.userId)")
+    print("   email: \(user.email.isEmpty ? "(빈 문자열)" : user.email)")
+    print("   name: \(user.name.isEmpty ? "(빈 문자열)" : user.name)")
+
+    // email 경고만 출력 (저장은 허용)
+    if user.email.isEmpty || user.email.contains("@diract.app") {
+      print("⚠️ [FirestoreManager] email이 비어있거나 dummy email입니다")
+      print("   → 저장은 진행하지만, 나중에 실제 email로 업데이트 필요")
+    }
+
+    // Critical validation: reject blank name
+    guard !user.name.isEmpty else {
+      print("🚨🚨🚨 [FirestoreManager] 치명적 오류!")
+      print("   name이 빈 문자열입니다.")
+      print("   Firestore 저장을 중단합니다.")
+      throw FirestoreError.addFailed(
+        underlying: NSError(
+          domain: "FirestoreManager",
+          code: -1,
+          userInfo: [NSLocalizedDescriptionKey: "User name cannot be empty"]
+        )
+      )
+    }
+
+    print("✅ [FirestoreManager] 검증 통과 - Firestore 저장 진행")
+    return try await save(data, strategy: .userStrategy)
   }
   
   // TODO: 코드 논의
@@ -101,6 +135,38 @@ final class FirestoreManager {
   func createInvite<T: EntityRepresentable>(_ data: T) async throws -> T {
     try await save(data, strategy: .invite)
   }
+  
+  /// 지정한 문서에서 특정 필드만 서버 타임스탬프로 업데이트합니다.
+  /// - Parameters:
+  ///   - strategy: 필드 키로 사용할 WriteStrategy (ex: .update, .join, .userStrategy ...)
+  ///   - collection: 대상 컬렉션
+  ///   - documentId: 대상 문서 ID
+  func updateTimestampField(
+    field strategy: WriteStrategy,
+    in collection: CollectionType,
+    documentId: String
+  ) async throws {
+    try await db
+      .collection(collection.rawValue)
+      .document(documentId)
+      .updateData([strategy.rawValue: FieldValue.serverTimestamp()])
+  }
+  
+  /// 첫 로그인용 메서드 ❗️ (조금 범용적으로 사용할 수 있게 수정해야함)
+  func updateLastLoginFields(
+    collection: CollectionType,
+    documentId: String,
+    asDictionary: [String: Any]
+  ) async throws {
+    var asDictionary = asDictionary
+    asDictionary[WriteStrategy.userStrategy.rawValue] = FieldValue.serverTimestamp() // 마지막 로그인 시점 시간을 포함
+    
+    try await db
+      .collection(collection.rawValue)
+      .document(documentId)
+      .updateData(asDictionary)
+  }
+  
   
   /// 특정 필드만 부분 업데이트를 진행하는 메서드입니다.
   /// - Parameters:
@@ -365,25 +431,30 @@ final class FirestoreManager {
     return snap.documents.compactMap { try? $0.data(as: T.self) }
   }
   
-  //TODO: 범용적으로 사용할 수 있도록 리팩토링
-  @discardableResult
+  /// 특정 유저의 알림 목록을 가져옵니다.
+  /// - Parameters:
+  ///   - userId: 유저의 document ID
+  ///   - type: 콜렉션 타입 (현재 Notification)
+  ///   - receiverIds: 푸시 알림 수신자 배열의 필드명
+  ///   - orderKey: 정렬 기준 (현재, createdAt)
+  ///   - descending: 내림 차순 정렬 여부 (현재는 true)
+  ///   - limit: 가져오는 최대 목록 개수 (현재 최대 20개)
+  ///   - lastDocument: 페이지내이션 처리를 위한 가져온 목록 중 마지막 목록 문서
+  /// - Returns: 튜플 형태로 알림 목록과 해당 목록의 마지막 문서를 반환
   func fetchNotificationList<T: Decodable>(
     userId: String,
-    currentTeamspaceId: String,
     from type: CollectionType = .notification,
     where receiverIds: String = Notification.CodingKeys.receiverIds.rawValue,
-    teamspaceField: String = Notification.CodingKeys.teamspaceId.rawValue,
     orderBy orderKey: String = Notification.CodingKeys.createdAt.rawValue,
     descending: Bool = true,
     limit: Int = 20,
     lastDocument: DocumentSnapshot? = nil
   ) async throws -> ([T], DocumentSnapshot?) {
-    let oneMonthAgo = Calendar.current.date(byAdding: .month, value: -1, to: Date.now)! // FIXME: Force unwrapping이 최선인가...?!
+    let oneMonthAgo = Calendar.current.date(byAdding: .month, value: -1, to: Date.now)!
     let oneMonthAgoTimestamp = Timestamp(date: oneMonthAgo)
     
     var q: Query = db.collection(type.rawValue)
       .whereField(receiverIds, arrayContains: userId)
-      .whereField(teamspaceField, isEqualTo: currentTeamspaceId)
       .whereField(orderKey, isGreaterThan: oneMonthAgoTimestamp)
       .order(by: orderKey, descending: descending)
       .limit(to: limit)
@@ -417,7 +488,7 @@ final class FirestoreManager {
       .document(userId)
       .collection(subCollection.rawValue)
     
-    var query: Query = parentRef.whereField("is_read", isEqualTo: false)
+    var query: Query = parentRef.whereField(UserNotification.CodingKeys.isRead.rawValue , isEqualTo: false)
     
     if limitToRecentMonth {
       let oneMonthAgo = Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date()

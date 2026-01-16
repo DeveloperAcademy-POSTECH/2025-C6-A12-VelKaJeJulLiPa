@@ -1,3 +1,26 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DirAct - 팀 초대</title>
+
+  <!-- Open Graph 메타 태그 (카카오톡, 메시지 미리보기용) -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="DirAct - 팀 초대">
+  <meta property="og:description" content="DirAct 팀스페이스에 참여하여 함께 피드백을 주고받으세요">
+  <meta property="og:url" content="https://dancemachine-5243b.web.app">
+  <meta property="og:image" content="https://dancemachine-5243b.web.app/share-image-ko.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <!-- 트위터 카드 (선택사항) -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="DirAct - 팀 초대">
+  <meta name="twitter:description" content="DirAct 팀스페이스에 참여하여 함께 피드백을 주고받으세요">
+  <meta name="twitter:image" content="https://dancemachine-5243b.web.app/share-image-ko.png">
+</head>
+<body>
 <script>
   (function () {
     // 1) 경로/쿼리에서 token 추출
@@ -25,7 +48,7 @@
       // 앱 미설치 폴백 (앱스토어 ID 교체)
       setTimeout(function () {
         // 카카오 인앱 브라우저일 때 새 창 열기가 더 잘 먹힐 수 있음
-        const fallback = "https://apps.apple.com/app/id1234567890";
+        const fallback = "https://apps.apple.com/app/id6754757174";
         if (isKakaoInApp) {
           window.location.href = fallback; // 또는 window.open(fallback, "_blank");
         } else {
@@ -40,3 +63,5 @@
     // 4) /invite 가 아니면 평소 SPA/웹앱 초기화 계속 진행
   })();
 </script>
+</body>
+</html>

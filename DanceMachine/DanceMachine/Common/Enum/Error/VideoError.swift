@@ -15,6 +15,8 @@ enum VideoError: Error {
   case deleteFailed             // 삭제 실패
   case uploadTimeout            // 업로드 타임아웃 (시간 지정)
   case networkError             // 네트워크 연결 오류
+  case compressionError         // 압축 에러
+  case fileTooLarge             // 파일 용량 초과 에러
   
   var debugMsg: String {
     switch self {
@@ -32,25 +34,33 @@ enum VideoError: Error {
       "업로드 시간 초과"
     case .networkError:
       "네트워크 연결 오류"
+    case .compressionError:
+      "동영상 압축에 실패헀습니다."
+    case .fileTooLarge:
+      "파일 용량 초과"
     }
   }
   
   var userMsg: String {
     switch self {
     case .thumbnailFailed:
-      "동영상 처리 중 문제가 발생했습니다.\n다시 시도해주세요."
+      String(localized: "동영상 처리 중 문제가 발생했습니다.\n다시 시도해 주세요.")
     case .uploadFailed:
-      "네트워크 연결을 확인하고\n다시 시도해주세요."
+      String(localized: "네트워크 상태를 확인해 주세요.")
     case .createSectionFailed:
-      "일시적인 오류가 발생했습니다.\n잠시 후 다시 시도해주세요."
+      String(localized: "일시적인 오류가 발생했습니다.\n잠시 후 다시 시도해 주세요.")
     case .fetchFailed:
-      "영상 목록을 불러올 수 없습니다.\n네트워크 연결을 확인해주세요."
+      String(localized: "영상 목록을 불러올 수 없습니다.\n네트워크 연결을 확인해 주세요.")
     case .deleteFailed:
-      "영상 삭제에 실패했습니다.\n다시 시도해주세요."
+      String(localized: "영상 삭제에 실패했습니다.\n다시 시도해 주세요.")
     case .uploadTimeout:
-      "업로드 시간이 초과되었습니다.\n네트워크 연결을 확인하고 다시 시도해주세요."
+      String(localized: "업로드 시간이 초과되었습니다.\n네트워크 연결을 확인하고 다시 시도해 주세요.")
     case .networkError:
-      "네트워크 연결이 불안정합니다.\n다시 시도해주세요."
+      String(localized: "네트워크 상태를 확인해 주세요.")
+    case .compressionError:
+      String(localized: "동영상 압축을 실패했습니다.")
+    case .fileTooLarge:
+      String(localized: "더 짧거나 낮은 화질의 영상을\n선택해 주세요.")
     }
   }
 }

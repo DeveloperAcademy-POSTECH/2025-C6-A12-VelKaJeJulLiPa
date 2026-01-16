@@ -40,17 +40,16 @@ struct VideoPreview: View {
   private var realBody: some View {
     VStack {
       if vm.isLoading {
-        loadingView
+        VideoLottieView()
+          .frame(maxWidth: .infinity)
           .frame(height: size)
       } else if let p = vm.player {
         VideoPlayer(player: p)
           .aspectRatio(16/9, contentMode: .fit)
       } else {
-        VStack {
-          Image(.videoEmpty)
-        }
-        .frame(maxWidth: .infinity)
-        .frame(height: size)
+        Image(.videoEmpty)
+          .frame(maxWidth: .infinity)
+          .frame(height: size)
       }
     }
     .onChange(of: vm.selectedAsset, { oldValue, newValue in
@@ -61,17 +60,6 @@ struct VideoPreview: View {
       }
     })
     .ignoresSafeArea()
-  }
-  
-  private var loadingView: some View {
-    VStack {
-      ProgressView()
-        .tint(.white)
-        .scaleEffect(1.5)
-      Text("로딩 중...")
-        .foregroundStyle(.white)
-        .padding(.top)
-    }
   }
 }
 //#Preview {

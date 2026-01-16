@@ -8,29 +8,38 @@
 import Foundation
 
 nonisolated
-struct Teamspace: Codable {
-    let teamspaceId: UUID
-    let ownerId: String
-    let teamspaceName: String
-
-    init(
-        teamspaceId: UUID,
-        ownerId: String,
-        teamspaceName: String
-    ) {
-        self.teamspaceId = teamspaceId
-        self.ownerId = ownerId
-        self.teamspaceName = teamspaceName
-    }
-
-    enum CodingKeys: String, CodingKey {
-        case teamspaceId   = "teamspace_id"
-        case ownerId       = "owner_id"
-        case teamspaceName = "teamspace_name"
-    }
+struct Teamspace: Codable, Equatable {
+  let teamspaceId: UUID
+  let ownerId: String
+  let teamspaceName: String
+  var createdAt: Date?
+  var updatedAt: Date?
+  
+  
+  init(
+    teamspaceId: UUID,
+    ownerId: String,
+    teamspaceName: String,
+    createdAt: Date? = nil,
+    updatedAt: Date? = nil,
+  ) {
+    self.teamspaceId = teamspaceId
+    self.ownerId = ownerId
+    self.teamspaceName = teamspaceName
+    self.createdAt = createdAt
+    self.updatedAt = updatedAt
+  }
+  
+  enum CodingKeys: String, CodingKey {
+    case teamspaceId   = "teamspace_id"
+    case ownerId       = "owner_id"
+    case teamspaceName = "teamspace_name"
+    case createdAt     = "created_at"
+    case updatedAt     = "updated_at"
+  }
 }
 
 extension Teamspace: EntityRepresentable {
-    var entityName: CollectionType { .teamspace }
-    var documentID: String { teamspaceId.uuidString }
+  var entityName: CollectionType { .teamspace }
+  var documentID: String { teamspaceId.uuidString }
 }

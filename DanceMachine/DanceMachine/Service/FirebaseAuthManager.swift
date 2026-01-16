@@ -21,41 +21,76 @@ final class FirebaseAuthManager: ObservableObject {
   private let firebaseAuth = Auth.auth()
   
   @AppStorage(UserDefaultsKey.hasLaunchedBefore.rawValue) var hasLaunchedBefore: Bool = false
+  @AppStorage(UserDefaultsKey.didCompleteAuthFlow.rawValue) var didCompleteAuthFlow = false
   
   @Published var user: FirebaseAuth.User?
   @Published var userInfo: User?
   @Published var authenticationState: AuthenticationState = .unauthenticated
-  @Published var needsNameSetting: Bool = false
   
   private var authStateHandler: AuthStateDidChangeListenerHandle?
-  private var currentNonce: String?
+//  private var currentNonce: String?
   
   /// 현재 선택된 유저의 팀스페이스 입니다.
-  var currentTeamspace: Teamspace?
+  @Published var currentTeamspace: Teamspace?
   var isSigningIn: Bool = false
   
   private init() {
-    // 앱을 다시 다운로드했는데, 자동으로 로그인되지 않게 하기 위한 로그아웃
+    print("🔧 [FirebaseAuthManager] 초기화 시작")
+    print("   hasLaunchedBefore: \(hasLaunchedBefore)")
+    print("   didCompleteAuthFlow: \(didCompleteAuthFlow)")
+    print("   currentUser: \(firebaseAuth.currentUser?.uid ?? "nil")")
+
+    // ⚠️ 중요: hasLaunchedBefore 로직 개선
+    // 앱 재설치 시에만 로그아웃하되, 더 안전하게 처리
     if !hasLaunchedBefore {
-      Task {
+      print("⚠️ [FirebaseAuthManager] 첫 실행 감지 - 초기화 진행")
+
+      // 현재 로그인되어 있고, 플로우 완료 안됐으면 비정상 상태
+      if firebaseAuth.currentUser != nil && !didCompleteAuthFlow {
+        print("🔄 [FirebaseAuthManager] 비정상 인증 상태 감지 - 로그아웃 실행")
         do {
           try firebaseAuth.signOut()
+          print("✅ [FirebaseAuthManager] 강제 로그아웃 완료")
+        } catch {
+          print("❌ [FirebaseAuthManager] 로그아웃 실패: \(error.localizedDescription)")
         }
+      } else {
+        print("ℹ️ [FirebaseAuthManager] 정상 상태 - 로그아웃 불필요")
       }
+
       hasLaunchedBefore = true
+      print("✅ [FirebaseAuthManager] hasLaunchedBefore = true 설정 완료")
     }
-    
-    // 현재 사용자 인증 상태 확인 + 사용자 데이터 가져오기
+
+    // 현재 사용자 인증 상태 확인
     if let user = firebaseAuth.currentUser {
-      self.user = user
-      self.authenticationState = .authenticated
+      print("👤 [FirebaseAuthManager] currentUser 존재: \(user.uid)")
+
+      if !didCompleteAuthFlow {
+        // 로그인 플로우가 완료하지 않았는데 currentUser가 있는 상태
+        print("⚠️ [FirebaseAuthManager] didCompleteAuthFlow=false 이지만 currentUser 존재")
+        print("   → 비정상 로그인 상태, 로그아웃 실행")
+        do {
+          try firebaseAuth.signOut()
+          print("✅ [FirebaseAuthManager] 비정상 상태 로그아웃 완료")
+        } catch {
+          print("❌ [FirebaseAuthManager] 로그아웃 실패: \(error.localizedDescription)")
+        }
+        self.authenticationState = .unauthenticated
+      } else {
+        // 정상 로그인 완료된 상태
+        print("✅ [FirebaseAuthManager] 정상 로그인 상태")
+        self.user = user
+        self.authenticationState = .authenticated
+      }
     } else {
+      print("🚫 [FirebaseAuthManager] currentUser 없음 - 로그아웃 상태")
       self.authenticationState = .unauthenticated
     }
-    
+
     registerAuthStateHandler()
     verifySignInWithAppleAuthenticationState()
-    print("FirebaseAuthManager initialized")
+    print("✅ [FirebaseAuthManager] 초기화 완료")
   }
   
   /// 사용자 인증 상태를 확인하는 리스너를 등록하는 메서드
@@ -71,10 +106,16 @@ final class FirebaseAuthManager: ObservableObject {
       } else {
         print("user == nil 이어서 userInfo 도 nil 로 세팅됨")
         self.userInfo = nil
-        self.needsNameSetting = false
         self.authenticationState = .unauthenticated
       }
     }
+  }
+  
+  
+  func completeAuthFlow() {
+    self.isSigningIn = false
+    self.didCompleteAuthFlow = true
+    self.authenticationState = .authenticated
   }
   
   
@@ -83,18 +124,21 @@ final class FirebaseAuthManager: ObservableObject {
   ///     - uid: 사용자 id (Firebase Authentication 에서 반환 - users 콜렉션에서 id로 사용중)
   @MainActor
   func fetchUserInfo(for uid: String) async throws {
-    print("Fetch user information for \(uid)")
+    print("🔍 [FirebaseAuthManager] fetchUserInfo 시작 - uid: \(uid)")
     do {
       if let user: User = try await FirestoreManager.shared.get(uid, from: .users) {
+        print("✅ [FirebaseAuthManager] Firestore에서 유저 조회 성공")
+        print("   name: \(user.name)")
+        print("   email: \(user.email)")
         self.userInfo = user
-        self.needsNameSetting = false
       } else {
+        print("⚠️ [FirebaseAuthManager] Firestore에서 유저 없음 (nil)")
         self.userInfo = nil
-        self.needsNameSetting = true
       }
     } catch {
+      print("❌ [FirebaseAuthManager] fetchUserInfo 실패: \(error.localizedDescription)")
       self.authenticationState = .unauthenticated
-      print("Failed to fetch user information: \(FirestoreError.fetchFailed(underlying: error).localizedDescription)")
+      throw error
     }
   }
   
@@ -136,7 +180,7 @@ final class FirebaseAuthManager: ObservableObject {
   func displayName(from fullName: String?, locale: Locale = .current) -> String {
     guard let fullName = fullName,
           let nameComponents = PersonNameComponentsFormatter().personNameComponents(from: fullName) else {
-      return "Unknown"
+      return ""
     }
     
     let formatter = PersonNameComponentsFormatter()
@@ -145,31 +189,35 @@ final class FirebaseAuthManager: ObservableObject {
     
     return formatter.string(from: nameComponents)
   }
-
+  
   
   /// 로그아웃 메서드
   /// - 수행 순서:
-  ///   1. FCM 토큰 삭제
-  ///   2. Firestore에서 fcm_token 필드 삭제
+  ///   1. Firestore에서 fcm_token 빈 문자열("")로 저장
   ///   3. 앱 뱃지 초기화
   ///   4. Firebase 인증 로그아웃 (인증상태 리스너 작동으로 화면 전환됨)
   func signOut() async throws {
-      print("AuthManager 로그아웃 누름")
-
-      // ① FCM 토큰 삭제(비활성화) - DB에서 삭제되는 것은 아님
-      // FIXME: 재로그인 시 토큰이 다시 갱신되어서 푸시 알림 잘 오는지 확인
-//      try await Messaging.messaging().deleteToken()
-//      print("🧹 FCM 토큰 삭제 완료")
-
-      // ③ 앱 뱃지 초기화
-      try await UNUserNotificationCenter.current().setBadgeCount(0)
-      print("🔢 뱃지 카운트 0으로 초기화 완료")
-
-      // ④ Firebase 로그아웃
-      try firebaseAuth.signOut()
-      print("✅ Firebase 로그아웃 완료, currentUser: \(String(describing: firebaseAuth.currentUser))")
+    //FCM 토큰 빈 문자열 처리 (로그아웃한 사용자는 알림 받지 않을 수 있도록)
+    try await FirestoreManager.shared.updateFields(
+      collection: .users,
+      documentId: self.userInfo?.userId ?? "",
+      asDictionary: [ User.CodingKeys.fcmToken.rawValue: "" ]
+    )
+    
+    //앱 뱃지 초기화
+    try await UNUserNotificationCenter.current().setBadgeCount(0)
+    print("🔢 뱃지 카운트 0으로 초기화 완료")
+    
+    //Firebase 로그아웃
+    try firebaseAuth.signOut()
+    
+    //로그인 플로우 초기화
+    didCompleteAuthFlow = false
+    
+    print("✅ Firebase 로그아웃 완료, currentUser: \(String(describing: firebaseAuth.currentUser))")
   }
-
+  
+  
   
   /// Firebase Authentication 계정 삭제 메서드
   /// 1. 토큰 취소하기 위해  (Revoke Access / Refresh Token) 애플 로그인
@@ -217,9 +265,39 @@ final class FirebaseAuthManager: ObservableObject {
       }
     }
     
-    // Step 2 — 병렬 작업 실행
+    // Step 2 — 유저가 속한 모든 팀스페이스에서 members 제거
+    do {
+      // 유저의 user_teamspace 서브컬렉션에서 팀스페이스 목록 가져오기
+      let userTeamspaces: [UserTeamspace] = try await FirestoreManager.shared.fetchAllFromSubcollection(
+        under: .users,
+        parentId: user.uid,
+        subCollection: .userTeamspace
+      )
+
+      // 각 팀스페이스의 members 서브컬렉션에서 유저 제거
+      for userTeamspace in userTeamspaces {
+        let teamspaceId = userTeamspace.teamspaceId
+        do {
+          try await FirestoreManager.shared.deleteFromSubcollection(
+            under: .teamspace,
+            parentId: teamspaceId,
+            subCollection: .members,
+            target: user.uid
+          )
+          print("✅ 팀스페이스 \(teamspaceId)에서 멤버 제거 완료")
+        } catch {
+          print("⚠️ 팀스페이스 \(teamspaceId)에서 멤버 제거 실패: \(error.localizedDescription)")
+          // 계속 진행 (일부 실패해도 나머지는 삭제)
+        }
+      }
+    } catch {
+      print("⚠️ 팀스페이스 멤버 제거 중 오류 발생: \(error.localizedDescription)")
+      // 계속 진행 (팀스페이스 정리 실패해도 계정 삭제는 진행)
+    }
+
+    // Step 3 — 병렬 작업 실행
     try await withThrowingTaskGroup(of: Void.self) { group in
-      
+
       // 1. 애플 로그인 토큰 취소
       if let authCode = authCodeString {
         group.addTask {
@@ -230,7 +308,7 @@ final class FirebaseAuthManager: ObservableObject {
           }
         }
       }
-      
+
       // 2. Firestore 사용자 데이터 삭제
       group.addTask {
         do {
@@ -239,7 +317,7 @@ final class FirebaseAuthManager: ObservableObject {
           throw FirestoreError.deleteFailed(underlying: error)
         }
       }
-      
+
       // 3. Firebase Authentication 계정 삭제
       group.addTask {
         do {
@@ -248,8 +326,11 @@ final class FirebaseAuthManager: ObservableObject {
           throw AuthenticationError.userAccountDeleteFailed(underlying: error)
         }
       }
-      
+
       try await group.waitForAll()
+
+      //로그인 플로우 초기화
+      didCompleteAuthFlow = false
     }
   }
 }
@@ -259,12 +340,75 @@ extension FirebaseAuthManager {
   
   @discardableResult
   func signInWithApple(tokens: SignInWithAppleResult) async throws -> AuthDataResult {
-    let credential = OAuthProvider.appleCredential(withIDToken: tokens.token, rawNonce: tokens.nonce, fullName: tokens.fullName)
-    return try await signIn(credential: credential)
+    print("🔐 [FirebaseAuthManager] signInWithApple 시작")
+    print("   Apple User ID: \(tokens.appleUserId)")
+
+    let credential = OAuthProvider.appleCredential(
+      withIDToken: tokens.token,
+      rawNonce: tokens.nonce,
+      fullName: tokens.fullName
+    )
+
+    let authDataResult = try await signIn(credential: credential)
+
+    print("🔑 [FirebaseAuthManager] Firebase UID: \(authDataResult.user.uid)")
+    print("   Provider ID: \(authDataResult.user.providerID)")
+
+    // ⚠️ 중요: UID 변경 감지
+    if let existingUID = UserDefaults.standard.string(forKey: "lastKnownUID_\(tokens.appleUserId)") {
+      if existingUID != authDataResult.user.uid {
+        print("🚨🚨🚨 [FirebaseAuthManager] UID 변경 감지!")
+        print("   기존 UID: \(existingUID)")
+        print("   새 UID: \(authDataResult.user.uid)")
+        print("   Apple User ID: \(tokens.appleUserId)")
+      } else {
+        print("✅ [FirebaseAuthManager] UID 일치")
+      }
+    } else {
+      print("📝 [FirebaseAuthManager] 첫 로그인 - UID 저장")
+    }
+
+    // UID 저장 (다음번 로그인 시 비교용)
+    UserDefaults.standard.set(authDataResult.user.uid, forKey: "lastKnownUID_\(tokens.appleUserId)")
+
+    return authDataResult
   }
-  
+
   func signIn(credential: AuthCredential) async throws -> AuthDataResult {
     let authDataResult = try await firebaseAuth.signIn(with: credential)
+
+    // additionalUserInfo 확인 (디버깅용)
+    if let additionalUserInfo = authDataResult.additionalUserInfo {
+      print("ℹ️ [FirebaseAuthManager] isNewUser: \(additionalUserInfo.isNewUser)")
+      print("   profile: \(additionalUserInfo.profile ?? [:])")
+    }
+
     return authDataResult
+  }
+  
+  // 애플 심사 어드민 email 로그인
+  func signInWithEmail(email: String, password: String) async throws {
+    do {
+      // Firebae Authentication 로그인
+      let authResult = try await firebaseAuth.signIn(
+        withEmail: email,
+        password: password
+      )
+      
+      let uid = authResult.user.uid
+      
+      // FIrestore 사용자 정보 패치
+      guard let userDoc: User = try await FirestoreManager.shared.get(
+        uid,
+        from: .users
+      ) else {
+        try firebaseAuth.signOut()
+        throw AuthenticationError.userNotFound
+      }
+      self.userInfo = userDoc
+      self.completeAuthFlow()
+    } catch {
+      throw error
+    }
   }
 }

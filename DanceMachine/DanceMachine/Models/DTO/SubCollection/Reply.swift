@@ -46,3 +46,7 @@ extension Reply: EntityRepresentable {
     var entityName: CollectionType { .feedback }
     var documentID: String { replyId }
 }
+
+extension Reply: Identifiable {
+  var id: String { replyId }
+}

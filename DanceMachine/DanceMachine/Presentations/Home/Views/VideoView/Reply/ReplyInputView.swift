@@ -17,8 +17,9 @@ struct ReplyRecycle: View {
   
   @State private var content: String = ""
   @State private var mentionQuery: String = ""
-  
-  
+  @State private var viewHeight: CGFloat = 0
+
+
   private var filteredMembers: [User] {
     if mM.mentionQuery.isEmpty {
       return teamMembers
@@ -27,14 +28,25 @@ struct ReplyRecycle: View {
       $0.name.lowercased().contains(mM.mentionQuery.lowercased())
     }
   }
-  
+
   var body: some View {
-    VStack(spacing: 8) {
-      replyTo
-      taggedView
+    VStack(spacing: 16) {
+      if replyingTo != nil {
+        replyTo
+      }
+      if !mM.taggedUsers.isEmpty {
+        TaggedUsersView(
+          taggedUsers: mM.taggedUsers,
+          teamMembers: teamMembers,
+          onRemove: { userId in
+            mM.taggedUsers.removeAll { $0.userId == userId }
+          },
+          onRemoveAll: { mM.taggedUsers.removeAll() }
+        )
+      }
       CustomTextField(
         content: $content,
-        placeHolder: "답글을 입력해주세요.",
+        placeHolder: String(localized: "댓글을 입력해 주세요."),
         submitAction: {
           var taggedIds = Set(mM.taggedUsers.map { $0.userId })
           if let replyToId = replyingTo?.userId {
@@ -46,28 +58,41 @@ struct ReplyRecycle: View {
         onFocusChange: {_ in },
         autoFocus: true
       )
-      .animation(.easeInOut(duration: 0.2), value: mM.showPicker)
       .onChange(of: content) { oldValue, newValue in
         mM.handleMention(oldValue: oldValue, newValue: newValue)
       }
     }
-    .padding(.vertical, 8)
-    .padding(.horizontal, 16)
+    .padding([.vertical, .horizontal], 16)
+    .background(
+      GeometryReader { geometry in
+        Color.clear.onAppear {
+          viewHeight = geometry.size.height
+        }
+        .onChange(of: geometry.size.height) { _, newHeight in
+          viewHeight = newHeight
+        }
+      }
+    )
     .background(
       RoundedRectangle(cornerRadius: 20)
-        .fill(Color.gray)
+        .fill(Color.backgroundElevated)
     )
+    .animation(.easeInOut(duration: 0.2), value: content.count)
     .overlay(alignment: .bottom) {
       if mM.showPicker {
         MentionPicker(
           filteredMembers: filteredMembers,
           action: {
             mM.selectMention(user: $0)
-            self.content = ""
+            self.content = mM.removeMentionText(from: self.content)
+          },
+          selectAll: {
+            mM.selectAllMembers(members: filteredMembers)
+            self.content = mM.removeMentionText(from: self.content)
           },
           taggedUsers: mM.taggedUsers
         )
-        .padding(.bottom, 60)
+        .padding(.bottom, viewHeight + 5)
       }
     }
   }
@@ -75,8 +100,8 @@ struct ReplyRecycle: View {
   private var replyTo: some View {
     HStack {
       Text("@\(replyingTo?.name ?? "알수 없는 유저")에게 답글 남기는중")
-        .font(.system(size: 14))
-        .foregroundColor(.secondary)
+        .font(.footnoteMedium)
+        .foregroundStyle(.labelNormal)
       Spacer()
       clearButton
     }
@@ -84,94 +109,18 @@ struct ReplyRecycle: View {
   
   private var clearButton: some View {
     Button {
-      refresh()
+//      refresh()
     } label: {
-      HStack { // FIXME: 아이콘 수정, 폰트 수정
-        Image(systemName: "arrow.trianglehead.clockwise.rotate.90")
-      }
-      .foregroundStyle(.black) // FIXME: 컬러 수정
-    }
-  }
-  // MARK: 태그된 사용자 표시
-  private var taggedView: some View {
-    ScrollView(.horizontal, showsIndicators: false) {
-      HStack(spacing: 4) {
-        ForEach(mM.taggedUsers, id: \.userId) { user in
-          HStack(spacing: 0) {
-            Text("@")
-              .font(.system(size: 16)) // FIXME: 폰트 수정
-              .foregroundStyle(.purple) // FIXME: 컬러 수정
-            Text(user.name)
-              .font(.system(size: 16)) // FIXME: 폰트 수정
-              .foregroundStyle(.purple) // FIXME: 컬러 수정
-            Button {
-              mM.taggedUsers.removeAll { $0.userId == user.userId }
-            } label: {
-              Image(systemName: "xmark.circle.fill")
-                .foregroundStyle(Color.red) // FIXME: 컬러 수정
+      Image(systemName: "xmark")
+        .font(.system(size: 17))
+        .foregroundStyle(.labelNormal)
+        .simultaneousGesture(
+          TapGesture()
+            .onEnded {
+              refresh()
             }
-          }
-          .animation(nil, value: mM.taggedUsers)
-        }
-      }
+        )
     }
-  }
-  // MARK: 멘션 피커
-  private var mentionPicker: some View {
-    VStack(alignment: .leading, spacing: 0) {
-      Text("팀원 선택")
-        .font(.system(size: 14, weight: .medium))
-        .foregroundStyle(.white.opacity(0.7))
-        .padding(.horizontal, 16)
-        .padding(.top, 12)
-        .padding(.bottom, 8)
-
-      ScrollView {
-        LazyVStack(alignment: .leading, spacing: 4) {
-          ForEach(filteredMembers, id: \.userId) { user in
-            Button {
-              mM.selectMention(user: user)
-              self.content = ""
-            } label: {
-              HStack(spacing: 8) {
-                Image(systemName: "person.circle.fill")
-                  .foregroundStyle(
-                    mM.taggedUsers.contains(where: { $0.userId == user.userId })
-                    ? .purple
-                    : .gray
-                  )
-
-                Text(user.name)
-                  .font(.system(size: 16))
-                  .foregroundStyle(.white)
-
-                Spacer()
-
-                if mM.taggedUsers.contains(where: { $0.userId == user.userId }) {
-                  Image(systemName: "checkmark.circle.fill")
-                    .foregroundStyle(.purple)
-                }
-              }
-              .padding(.horizontal, 16)
-              .padding(.vertical, 12)
-              .background(
-                mM.taggedUsers.contains(where: { $0.userId == user.userId })
-                ? Color.purple.opacity(0.1)
-                : Color.clear
-              )
-              .clipShape(RoundedRectangle(cornerRadius: 10))
-              .contentShape(Rectangle())
-            }
-          }
-        }
-        .padding(.horizontal, 8)
-      }
-      .frame(maxHeight: 160)
-    }
-    .background(
-      RoundedRectangle(cornerRadius: 16)
-        .fill(Color.gray)
-    )
   }
 }
 

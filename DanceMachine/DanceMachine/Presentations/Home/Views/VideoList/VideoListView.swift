@@ -6,204 +6,224 @@
 //
 
 import SwiftUI
+import Photos
 
 struct VideoListView: View {
-  @EnvironmentObject private var router: NavigationRouter
-  
-  @State private var showCustomPicker: Bool = false
+  @EnvironmentObject private var router: MainRouter
   
   @State var vm: VideoListViewModel
+  
+  @State private var isScrollDown: Bool = false
+  //  @State private var isRefreshing: Bool = false
+  
+  @State private var showDeleteToast: Bool = false
+  @State private var showEditToast: Bool = false
+  @State private var showEditVideoTitleToast: Bool = false
+  @State private var showCreateReportSuccessToast: Bool = false
+  @State private var showVideoEditFailedToast: Bool = false
+  
+  @State private var pickerViewModel = VideoPickerViewModel()
   
   init(
     vm: VideoListViewModel = .init(),
     tracksId: String,
     sectionId: String,
-    trackName: String
+    trackName: String,
+    onBackButtonTap: (() -> Void)? = nil
   ) {
     self.vm = vm
     self.tracksId = tracksId
     self.sectionId = sectionId
     self.trackName = trackName
+    self.onBackButtonTap = onBackButtonTap
   }
-  
+
   let tracksId: String
   let sectionId: String
   let trackName: String
+  let onBackButtonTap: (() -> Void)?
   
   var body: some View {
-    ZStack(alignment: .bottom) {
-      if vm.videos.isEmpty && vm.isLoading != true {
-        emptyView
-        uploadButton
-      } else {
-        listView
-        uploadButton
+    GeometryReader { geometry in
+      ScrollView {
+        if vm.showErrorView {
+          errorView(g: geometry)
+        } else if vm.filteredVideos.isEmpty && vm.isLoading != true && !pickerViewModel.isUploading {
+          emptyContent(g: geometry)
+        } else {
+          VideoListContent(
+            geometry: geometry,
+            tracksId: tracksId,
+            sectionId: vm.selectedSection?.sectionId ?? sectionId,
+            videos: vm.filteredVideos,
+            track: vm.track,
+            section: vm.section,
+            pickerViewModel: pickerViewModel,
+            vm: $vm
+          )
+        }
       }
+      .scrollDisabled(vm.isLoading && !vm.isRefreshing)
+      .refreshable {
+        await vm.refresh(tracksId: tracksId)
+      }
+      .background(.backgroundNormal)
     }
-    .background(Color.white) // FIXME: 배경색 지정 (다크모드)
-    .overlay { if vm.isLoading { LoadingView() }}
-    .safeAreaInset(edge: .top, content: {
-      sectionView
-    })
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .background(.backgroundNormal)
+    .safeAreaInset(edge: .top) {
+      SectionContent(
+        vm: $vm,
+        tracksId: tracksId,
+        trackName: trackName,
+        sectionId: sectionId
+      )
+    }
     .navigationBarTitleDisplayMode(.inline)
-    //    .toolbar(.hidden, for: .tabBar)
+//    .toolbar(.hidden, for: .tabBar)
     .toolbar {
-      ToolbarLeadingBackButton(icon: .chevron)
+      ToolbarLeadingBackButton(icon: .chevron, action: onBackButtonTap)
       ToolbarCenterTitle(text: trackName)
+      ToolbarUploadButton {
+        Task {
+          await vm.requestPermissionAndFetch()
+        }
+      }
     }
     .task {
       await vm.loadFromServer(tracksId: tracksId)
     }
-    // MARK: 섹션 변경 감지 해서 업데이트하는 노티
-    .onReceive(NotificationCenter.default.publisher(
-      for: .sectionDidUpdate)) { _ in
-        Task { await vm.loadFromServer(tracksId: tracksId) }
+    .onChange(of: pickerViewModel.lastUploadedVideo) { _, newValue in
+      guard let video = newValue, let track = pickerViewModel.lastUploadedTrack else { return }
+      Task {
+        await vm.addNewVideo(video: video, track: track, traksId: tracksId)
+        await MainActor.run {
+          pickerViewModel.lastUploadedVideo = nil
+          pickerViewModel.lastUploadedTrack = nil
+        }
       }
+    }
     // MARK: 영상 피커 시트
-    .sheet(isPresented: $showCustomPicker) {
+    .sheet(isPresented: $vm.showCustomPicker) {
       VideoPickerView(
+        pickerViewModel: pickerViewModel,
         tracksId: tracksId,
-        sectionId: vm.selectedSection?.sectionId ?? sectionId
+        sectionId: vm.selectedSection?.sectionId ?? sectionId,
+        trackName: trackName
       )
     }
-    // MARK: 글래스 모피즘 사용하여 플로팅 버튼을 rootView에서 관리할때 쓰는 리시버
-    .onReceive(
-      NotificationCenter.default.publisher(
-        for: .showVideoPicker)
-    ) { _ in
-          self.showCustomPicker = true
-        }
-    // MARK: 비디오 업로드 했을때 리시버
-    .onReceive(
-      NotificationCenter.default.publisher(for: .videoUpload)
-    ) { _ in
-      Task {
-        await vm.loadFromServer(tracksId: tracksId)
+    .toast(
+      isPresented: $vm.showVideoTitleEditErrorToast,
+      duration: 2,
+      position: .bottom,
+      bottomPadding: 16,
+      content: {
+        ToastView(
+          text: vm.errorMsg ?? String(localized: "동영상 이름 수정을 실패했습니다."),
+          icon: .warning
+        )
       }
-    }
-}
-  
-  //  private var glassButton: some View {
-  //    GlassEffectContainer {
-  //      HStack(spacing: 20) {
-  //        homeButton
-  //        uploadButton
-  //      }
-  //    }
-  //    .padding(.horizontal, 16)
-  //  }
-  
-  //  private var homeButton: some View {
-  //    Button {
-  //      // TODO: 여긴 뭐지?
-  //    } label: {
-  //      Image(systemName: "house.fill")
-  //        .foregroundStyle(Color.purple.opacity(0.8))
-  //    }
-  //    .frame(width: 47, height: 47)
-  //    .glassEffect(.clear.interactive(), in: .circle)
-  //  }
-  
-  private var uploadButton: some View {
-    Button {
-      self.showCustomPicker = true
-    } label: {
-      Text("동영상 업로드")
-        .font(.system(size: 17)) // FIXME: 폰트 수정
-        .foregroundStyle(Color.white)
-    }
-    .frame(maxWidth: .infinity)
-    .frame(height: 47)
-    .background(
-        RoundedRectangle(cornerRadius: 10)
-            .fill(Color.blue) // FIXME: - 컬러수정
     )
-    .padding(.horizontal, 16) // FIXME: - 패딩 수정
-    .padding(.bottom, 8) // FIXME: - 패딩 수정
-//    .glassEffect(
-//      .clear.tint(Color.purple.opacity(0.7)).interactive(),
-//      in: RoundedRectangle(cornerRadius: 1000)
-//    )
+    .toast(
+      isPresented: $vm.showDeleteErrorToast,
+      duration: 2,
+      position: .bottom,
+      bottomPadding: 16,
+      content: {
+        ToastView(
+          text: vm.errorMsg ?? String(localized: "동영상 삭제를 실패했습니다."),
+          icon: .warning
+        )
+      }
+    )
+    .notificationToast(
+      isPresented: $showVideoEditFailedToast,
+      text: String(localized: "동영상 이동을 실패했습니다."),
+      icon: .warning,
+      for: .video(.videoEditFailed),
+      bottomPadding: 16
+    )
+    .notificationToast(
+      isPresented: $showDeleteToast,
+      text: String(localized: "동영상이 삭제되었습니다."),
+      icon: .check,
+      for: .video(.videoDelete),
+      bottomPadding: 16
+    )
+    .notificationToast(
+      isPresented: $showEditVideoTitleToast,
+      text: String(localized: "영상 이름이 수정되었습니다."),
+      icon: .check,
+      for: .video(.videoTitleEdit),
+      bottomPadding: 16
+    )
+    .notificationToast(
+      isPresented: $showEditToast,
+      text: String(localized: "영상이 이동되었습니다."),
+      icon: .check,
+      for: .video(.videoEdit),
+      bottomPadding: 16
+    )
+    .notificationToast(
+      isPresented: $showCreateReportSuccessToast,
+      text: String(localized: "신고가 접수되었습니다.\n조치사항은 이메일로 안내해드리겠습니다."),
+      icon: .check,
+      for: .toast(.reportSuccess),
+      bottomPadding: 16,
+      targetViewType: .videoListView
+    )
+    .overlay(alignment: .center) {
+      if vm.showPermissionModal {
+        PhotoLibraryPermissionView(
+          onOpenSettigns: { vm.openSettings() },
+          action: { vm.showPermissionModal = false }
+        )
+      }
+    }
   }
   
-  private var emptyView: some View {
-    VStack {
-      Spacer()
-      HStack {
-        Image(systemName: "folder.badge.plus")
-          .foregroundStyle(Color.black) // FIXME: - 컬러 수정
-        
-        Text("폴더 버튼을 눌러서 파트를 추가하세요")
-          .font(.system(size: 18, weight: .semibold)) // FIXME: - 폰트 수정
-          .foregroundStyle(Color.black) // FIXME: - 컬러 수정
+  private func errorView(g: GeometryProxy) -> some View {
+    ErrorStateView(
+      message: String(localized: "동영상 불러오기를 실패했습니다.\n네트워크를 확인해 주세요."),
+      action: {
+        Task {
+          await vm.refresh(tracksId: tracksId)
+        }
       }
-      Spacer()
-    }
+    )
+    .frame(width: g.size.width, height: g.size.height)
+    .position(
+      x: g.size.width / 2,
+      y: g.size.height / 2 - 40
+    )
   }
-  // MARK: 영상 그리드 뷰
-  private var listView: some View {
-    GeometryReader { g in
-      let horizontalPadding: CGFloat = 16
-      let spacing: CGFloat = 16
-      let columns = 2
-      
-      let totalSpacing = spacing * CGFloat(columns - 1)
-      let availableWidth = g.size.width - (horizontalPadding * 2) - totalSpacing
-      let itemSize = availableWidth / CGFloat(columns)
-      
-      ScrollView {
-          VideoGrid(
-            size: itemSize,
-            columns: columns,
-            spacing: spacing,
-            tracksId: tracksId,
-            videos: vm.filteredVideos,
-            track: vm.track,
-            section: vm.section,
-            vm: $vm
-          )
-          .onTapGesture {
-            // TODO: 비디오 플레이 화면 네비게이션 연결
-            print("비디오 클릭")
-          }
-        }
+  
+  private func emptyContent(g: GeometryProxy) -> some View {
+    Button {
+//      Task { await vm.requestPermissionAndFetch() }
+    } label: {
+      VStack(spacing: 24) {
+        Image(systemName: "video.fill.badge.plus")
+          .symbolRenderingMode(.hierarchical)
+          .font(.system(size: 75))
+          .foregroundStyle(.secondaryNormal)
+        Text("비디오를 추가해 보세요.")
+          .font(.headline2Medium)
+          .foregroundStyle(.secondaryAssitive)
       }
-    .overlay { if vm.filteredVideos.isEmpty && vm.isLoading == false { emptyView }}
-    }
-  // MARK: 섹션 칩 뷰
-  private var sectionView: some View {
-    ScrollView(.horizontal, showsIndicators: false) {
-//      GlassEffectContainer {
-        HStack {
-          SectionChipIcon(
-            vm: $vm,
-            action: {
-              router.push(
-                to: .video(
-                  .section(
-                    section: vm.section,
-                    tracksId: tracksId,
-                    trackName: trackName,
-                    sectionId: sectionId
-                  )
-                )
-              )
-            }
-          )
-          ForEach(vm.section, id: \.sectionId) { section in
-            CustomSectionChip(
-              vm: $vm,
-              action: { vm.selectedSection = section },
-              title: section.sectionTitle,
-              id: section.sectionId
-            )
+      .simultaneousGesture(
+        TapGesture()
+          .onEnded {
+            Task { await vm.requestPermissionAndFetch() }
           }
-        }
-        .padding(.horizontal, 1) // FIXME: 여백 없으면 캡슐이 짤리는 현상 있음
-        .padding(.vertical, 1) // FIXME: 여백 없으면 캡슐이 짤리는 현상 있음
-//      }
+      )
     }
-    .padding(.horizontal, 16)
+    .buttonStyle(.plain)
+    .frame(width: g.size.width, height: g.size.height)
+    .position(
+      x: g.size.width / 2,
+      y: g.size.height / 2 - 40
+    )
   }
 }
 
@@ -212,5 +232,5 @@ struct VideoListView: View {
   NavigationStack {
     VideoListView(vm: vm, tracksId: "", sectionId: "", trackName: "벨코의 리치맨")
   }
-  .environmentObject(NavigationRouter())
+  .environmentObject(MainRouter())
 }

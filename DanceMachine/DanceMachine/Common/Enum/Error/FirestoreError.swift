@@ -19,17 +19,17 @@ enum FirestoreError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .addFailed(let error):
-            "데이터를 추가하는데 실패했습니다: \(error)"
+            String(localized: "데이터를 추가하는데 실패했습니다: \(error)")
         case .fetchFailed(let error):
-            "데이터를 읽어오는데 실패했습니다: \(error)"
+            String(localized: "데이터를 읽어오는데 실패했습니다: \(error)")
         case .deleteFailed(let error):
-            "데이터를 삭제하는데 실패했습니다: \(error)"
+            String(localized: "데이터를 삭제하는데 실패했습니다: \(error)")
         case .updateFailed(let error):
-            "데이터를 업데이트하는데 실패했습니다: \(error)"
+            String(localized: "데이터를 업데이트하는데 실패했습니다: \(error)")
         case .encodingFailed:
-            "데이터를 encoding하는데 실패했습니다"
+            String(localized: "데이터를 encoding하는데 실패했습니다")
         case .decodingFailed:
-            "데이터를 decoding하는데 실패했습니다"
+            String(localized: "데이터를 decoding하는데 실패했습니다")
         }
     }
 }

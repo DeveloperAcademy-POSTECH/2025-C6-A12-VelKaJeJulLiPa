@@ -9,33 +9,41 @@ import SwiftUI
 
 struct ReplySheet: View {
   @Environment(\.dismiss) private var dismiss
-  
+
   @State private var mM = MentionManager()
-  
+
   @State private var isKeyboardVisible: Bool = false
-  
+
+  @State private var isReportSheetPresented: Bool = false
+  @State private var showCreateReportSuccessToast: Bool = false
+
   let reply: [Reply]
   let feedback: Feedback
   let taggedUsers: [User] // 이전화면에서 받아오는 태그 된 유저 (피드백 카드)
   let teamMembers: [User]
   let replyCount: Int
-  
+
   let currentTime: Double
   let startTime: Double
   let timeSeek: () -> Void
-  
+
   let getTaggedUsers: ([String]) -> [User]
   let getAuthorUser: (String) -> User?
   let onReplySubmit: (String, [String]) -> Void
-  
+
   let currentUserId: String
   let onDelete: (String, String) async -> Void
-  
+
   let onFeedbackDelete: () -> Void
-  
+
+  let imageNamespace: Namespace.ID
+
   @State private var selectedReply: Reply?
+  @State private var reportTargetReply: Reply?
   @State private var content: String = ""
-  
+
+  let onImageTap: (String) -> Void
+
   private var filteredMembers: [User] {
     if mM.mentionQuery.isEmpty {
       return teamMembers
@@ -54,90 +62,133 @@ struct ReplySheet: View {
   @State private var inputMode: InputMode = .none
   
   var body: some View {
-    NavigationStack {
-      VStack {
-        FeedbackCard(
-          feedback: feedback,
-          authorUser: getAuthorUser(feedback.authorId),
-          taggedUsers: taggedUsers,
-          replyCount: replyCount,
-          action: {}, // 아무 기능 없음
-          showReplySheet: {}, // 아무 기능 없음
-          currentTime: currentTime,
-          startTime: startTime,
-          timeSeek: { timeSeek() },
-          currentUserId: currentUserId,
-          onDelete: {
-            onFeedbackDelete()
-            dismiss()
+    VStack {
+      FeedbackCard(
+        feedback: feedback,
+        authorUser: getAuthorUser(feedback.authorId),
+        taggedUsers: taggedUsers,
+        replyCount: replyCount,
+        action: {}, // 아무 기능 없음
+        showReplySheet: {}, // 아무 기능 없음
+        currentTime: currentTime,
+        startTime: startTime,
+        timeSeek: { timeSeek() },
+        currentUserId: currentUserId,
+        onDelete: {
+          onFeedbackDelete()
+          dismiss()
+        },
+        onReport: { isReportSheetPresented = true },
+        showBottomReplyButton: true,
+        onBottomReplyTap: {
+          self.inputMode = .reply
+        },
+        imageNamespace: nil,
+        onImageTap: { url in
+          onImageTap(url)
+          dismiss()
+        }
+      )
+      replyList
+    }
+    .contentShape(Rectangle())
+    .simultaneousGesture(
+      TapGesture()
+        .onEnded {
+          /// 키보드 내리면서 들어가있는 모든 내용들을 초기화 하는 내용입니다.
+          self.inputMode = .none
+          mM.dismissKeyboardAndClear()
+        }
+    )
+//    .onTapGesture {
+//      /// 키보드 내리면서 들어가있는 모든 내용들을 초기화 하는 내용입니다.
+//      self.inputMode = .none
+//      mM.dismissKeyboardAndClear()
+//    }
+    .animation(.easeInOut(duration: 0.2), value: mM.showPicker)
+    .safeAreaInset(edge: .bottom) {
+      switch inputMode {
+      case .none: // 일반 상태
+        inputView
+      case .reply: // 피드백에 답글달때
+        ReplyRecycle(
+          teamMembers: teamMembers,
+          replyingTo: getAuthorUser(feedback.authorId),
+          onSubmit: { content, taggedIds in
+            self.onReplySubmit(content, taggedIds)
+            self.inputMode = .none
+            mM.dismissKeyboardAndClear()
+          },
+          refresh: {
+            dismissKeyboard()
+            self.inputMode = .none
+            mM.dismissKeyboardAndClear()
           }
         )
-        .padding(.horizontal, 8)
-        .overlay(alignment: .bottomLeading) {
-          Button {
-            self.inputMode = .reply
-          } label: {
-            Text("답글달기")
-              .font(.caption)
-              .foregroundStyle(.gray)
+      case .rereply: // 답글에 답글달때
+        ReplyRecycle(
+          teamMembers: teamMembers,
+          replyingTo: getAuthorUser(feedback.authorId),
+          onSubmit: { content, taggedIds in
+            self.onReplySubmit(content, taggedIds)
+            dismissKeyboard()
+            self.inputMode = .none
+          },
+          refresh: {
+            self.inputMode = .none
+            mM.dismissKeyboardAndClear()
           }
-          .padding()
-        }
-        
-        Divider()
-        
-        replyList
-      }
-      .contentShape(Rectangle())
-      .onTapGesture {
-        /// 키보드 내리면서 들어가있는 모든 내용들을 초기화 하는 내용입니다.
-        self.inputMode = .none
-        mM.dismissKeyboardAndClear()
-      }
-      .animation(.easeInOut(duration: 0.2), value: mM.showPicker)
-      .safeAreaInset(edge: .bottom) {
-        switch inputMode {
-        case .none: // 일반 상태
-          inputView
-        case .reply: // 피드백에 답글달때
-          ReplyRecycle(
-            teamMembers: teamMembers,
-            replyingTo: getAuthorUser(feedback.authorId),
-            onSubmit: { content, taggedIds in
-              self.onReplySubmit(content, taggedIds)
-              self.inputMode = .none
-              mM.dismissKeyboardAndClear()
-            },
-            refresh: {
-              dismissKeyboard()
-              self.inputMode = .none
-              mM.dismissKeyboardAndClear()
-            }
-          )
-        case .rereply: // 답글에 답글달때
-          ReplyRecycle(
-            teamMembers: teamMembers,
-            replyingTo: getAuthorUser(feedback.authorId),
-            onSubmit: { content, taggedIds in
-              self.onReplySubmit(content, taggedIds)
-              dismissKeyboard()
-              self.inputMode = .none
-            },
-            refresh: {
-              self.inputMode = .none
-              mM.dismissKeyboardAndClear()
-            }
-          )
-        }
-      }
-      //      .ignoresSafeArea(edges: .bottom)
-      .toolbarTitleDisplayMode(.inline)
-      .toolbar {
-        ToolbarLeadingBackButton(icon: .xmark)
-        ToolbarCenterTitle(text: "댓글")
+        )
       }
     }
-    .background(Color.white) // FIXME: 다크모드 배경색 명시
+    .toast(
+      isPresented: $showCreateReportSuccessToast,
+      duration: 3,
+      position: .bottom,
+      bottomPadding: 63, // FIXME: 신고하기 - 하단 공백 조정 필요
+      content: {
+        ToastView(text: String(localized: "신고가 접수되었습니다.\n조치사항은 이메일로 안내해드리겠습니다."), icon: .check)
+      }
+    )
+    // MARK: 신고 완료 토스트 리시버
+    .onReceive(NotificationCenter.publisher(for: .toast(.reportSuccess))) { notification in
+      if let toastViewName = notification.userInfo?["toastViewName"] as? ReportToastReceiveViewType,
+         toastViewName == ReportToastReceiveViewType.replySheet {
+        showCreateReportSuccessToast = true
+      }
+    }
+
+    // 신고하기 시트 - 피드백
+    .sheet(isPresented: $isReportSheetPresented) {
+      NavigationStack {
+        CreateReportView(
+          reportedId: feedback.authorId,
+          reportContentType: .feedback,
+          feedback: feedback,
+          toastReceiveView: ReportToastReceiveViewType.replySheet
+        )
+      }
+    }
+
+    // 신고하기 - 답글
+    .sheet(item: $reportTargetReply) { reply in
+      NavigationStack {
+        CreateReportView(
+          reportedId: reply.authorId,
+          reportContentType: .reply,
+          reply: reply,
+          toastReceiveView: ReportToastReceiveViewType.replySheet
+        )
+      }
+    }
+
+    //      .ignoresSafeArea(edges: .bottom)
+    .toolbarTitleDisplayMode(.inline)
+    .toolbar {
+      ToolbarLeadingBackButton(icon: .xmark)
+      ToolbarCenterTitle(text: String(localized: "댓글"))
+    }
+    .background(Color.backgroundNormal.ignoresSafeArea())
   }
   
   private var replyList: some View {
@@ -158,6 +209,7 @@ struct ReplySheet: View {
                 await onDelete(reply.replyId, feedback.feedbackId.uuidString)
               }
             }, // TODO: 삭제
+            showCreateReportSheet: { self.reportTargetReply = reply }
           )
         }
       }
@@ -165,87 +217,50 @@ struct ReplySheet: View {
   }
   
   private var inputView: some View {
-    VStack(spacing: 8) {
-      taggedView
-      
-      CustomTextField(
-        content: $content,
-        placeHolder: "답글을 입력해주세요.",
-        submitAction: {
-          onReplySubmit(
-            content, mM.taggedUsers.map { $0.userId }
-          )
-          self.content = ""
-          self.inputMode = .none
-          mM.dismissKeyboardAndClear()
-        },
-        onFocusChange: { focused in
-          self.isKeyboardVisible = focused
-        },
-        autoFocus: false
-      )
-      .onChange(of: content) { oldValue, newValue in
-        mM.handleMention(oldValue: oldValue, newValue: newValue)
-      }
-    }
-    .padding(.vertical, 8)
-    .padding(.horizontal, 16)
-    .background { // FIXME: 컬러 수정
-      if isKeyboardVisible {
-        RoundedRectangle(cornerRadius: 20)
-          .fill(Color.gray)
-      } else {
-        Color.gray
-          .ignoresSafeArea()
-          .overlay(alignment: .top) {
-            Rectangle().frame(height: 1.5)
-              .foregroundStyle(.white) // FIXME: 다크모드 색 명시
-          }
-      }
-    }
-    .overlay(alignment: .bottom) {
-      if mM.showPicker {
-        MentionPicker(
-          filteredMembers: filteredMembers,
-          action: {
-            mM.selectMention(user: $0)
-            self.content = ""
-          },
-          taggedUsers: mM.taggedUsers
+    ReplySheetInputView(
+      content: $content,
+      isKeyboardVisible: $isKeyboardVisible,
+      taggedUsers: mM.taggedUsers,
+      teamMembers: teamMembers,
+      filteredMembers: filteredMembers,
+      showMentionPicker: mM.showPicker,
+      placeholder: String(localized: "댓글을 입력해 주세요."),
+      onSubmit: {
+        onReplySubmit(
+          content, mM.taggedUsers.map { $0.userId }
         )
-        .padding(.bottom, 60)
+        self.content = ""
+        self.inputMode = .none
+        mM.dismissKeyboardAndClear()
+      },
+      onContentChange: { oldValue, newValue in
+        mM.handleMention(oldValue: oldValue, newValue: newValue)
+      },
+      onSelectMention: { user in
+        mM.selectMention(user: user)
+        self.content = mM.removeMentionText(from: self.content)
+      },
+      onSelectAllMentions: {
+        mM.selectAllMembers(members: filteredMembers)
+        self.content = mM.removeMentionText(from: self.content)
+      },
+      onRemoveTag: { userId in
+        mM.taggedUsers.removeAll { $0.userId == userId }
+      },
+      onRemoveAllTags: {
+        mM.taggedUsers.removeAll()
+      },
+      onFocusChange: { focused in
+        self.isKeyboardVisible = focused
       }
-    }
-  }
-  
-  private var taggedView: some View {
-    ScrollView(.horizontal, showsIndicators: false) {
-      HStack(spacing: 4) {
-        ForEach(mM.taggedUsers, id: \.userId) { user in
-          HStack(spacing: 3) {
-            Text("@")
-              .font(.system(size: 16)) // FIXME: 폰트 수정
-              .foregroundStyle(.blue) // FIXME: 컬러 수정
-            Text(user.name)
-              .font(.system(size: 16)) // FIXME: 폰트 수정
-              .foregroundStyle(.blue) // FIXME: 컬러 수정
-            Button {
-              mM.taggedUsers.removeAll { $0.userId == user.userId }
-            } label: {
-              Image(systemName: "xmark.circle.fill")
-                .foregroundStyle(Color.gray) // FIXME: 컬러 수정
-            }
-          }
-          .animation(nil, value: mM.taggedUsers)
-        }
-      }
-    }
-    .padding(.vertical, 8)
+    )
   }
 }
 
 #Preview {
+  @Previewable @Namespace var previewNamespace
   NavigationStack {
+    
     ReplySheet(
       reply: [
         Reply(
@@ -316,7 +331,8 @@ struct ReplySheet: View {
       replyCount: 20,
       currentTime: 30.0,
       startTime: 50.0,
-      timeSeek: {},
+      timeSeek: {
+      },
       getTaggedUsers: { ids in
         let all = [
           User(
@@ -353,8 +369,10 @@ struct ReplySheet: View {
       onReplySubmit: {_,_ in },
       currentUserId: "",
       onDelete: {_,_ in },
-      onFeedbackDelete: {}
+      onFeedbackDelete: {},
+      imageNamespace: previewNamespace,
+      onImageTap: { _ in }
     )
   }
-  .environmentObject(NavigationRouter())
+  .environmentObject(MainRouter())
 }

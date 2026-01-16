@@ -30,6 +30,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate { // TODO: If necessary ch
     FirebaseApp.configure()
     Messaging.messaging().delegate = self
     UNUserNotificationCenter.current().delegate = self
+
     print("🔥 FirebaseApp configured")
     return true
   }
@@ -39,6 +40,27 @@ class AppDelegate: UIResponder, UIApplicationDelegate { // TODO: If necessary ch
                    didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
     Messaging.messaging().apnsToken = deviceToken
     print("✅ APNs 토큰 등록 성공:", deviceToken.map { String(format: "%02.2hhx", $0) }.joined())
+
+    // ✅ CRITICAL FIX: APNs 토큰 설정 후 FCM 토큰 강제 갱신
+    // FCM 토큰이 APNs 토큰을 포함해야 iOS에서 푸시를 받을 수 있음
+    Task {
+      do {
+        let fcmToken = try await Messaging.messaging().token()
+        print("🔄 FCM 토큰 APNs 포함하여 갱신 완료: \(fcmToken)")
+
+        // Firestore에 저장
+        if let userId = FirebaseAuthManager.shared.user?.uid {
+          try await FirestoreManager.shared.updateLastLoginFields(
+            collection: .users,
+            documentId: userId,
+            asDictionary: [User.CodingKeys.fcmToken.rawValue: fcmToken]
+          )
+          print("🔑 갱신된 FCM 토큰 Firestore 저장 완료")
+        }
+      } catch {
+        print("❌ FCM 토큰 갱신 실패: \(error.localizedDescription)")
+      }
+    }
   }
   
   
@@ -93,10 +115,7 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
       if UIApplication.shared.applicationState == .active {
         print("🔥 포그라운드 - 딥링크 처리")
         DispatchQueue.main.async {
-          NotificationCenter.default.post(
-            name: .didReceiveDeeplink,
-            object: deeplinkURL
-          )
+          NotificationCenter.post(.system(.deeplink), object: deeplinkURL)
         }
       } else {
         AppDelegate.pendingDeeplinkURL = deeplinkURL
@@ -113,17 +132,12 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
       if UIApplication.shared.applicationState == .active {
         print("🔥 포그라운드 - 푸시 알림 읽음 처리")
         DispatchQueue.main.async {
-          NotificationCenter.default.post(
-            name: .needToMarkAsRead,
-            object: notificationId
-          )
+          NotificationCenter.post(.system(.markAsRead), object: notificationId)
         }
       } else {
         AppDelegate.pendingNotificationId = notificationId
       }
     }
-    
-    
   }
 }
 
@@ -132,6 +146,9 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
 extension AppDelegate: MessagingDelegate {
   func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
     guard let fcmToken = fcmToken else { return }
+    
+    // 로그아웃 했다가 다시 로그인 할 때, 서버에 저장하기 위해 FCM 토큰을 로컬 저장
+    UserDefaults.standard.set(fcmToken, forKey: UserDefaultsKey.fcmToken.rawValue)
     print("📲 FCM token is now: \(fcmToken)")
     
     let dataDict: [String: String] = ["token": fcmToken]
@@ -144,12 +161,12 @@ extension AppDelegate: MessagingDelegate {
     // 로그인 상태일 때 Firestore에 업데이트
     if let userId = FirebaseAuthManager.shared.user?.uid {
       Task {
-        try await FirestoreManager.shared.updateFields(
+        try await FirestoreManager.shared.updateLastLoginFields(
           collection: .users,
           documentId: userId,
           asDictionary: [User.CodingKeys.fcmToken.rawValue: fcmToken]
         )
-        print("Firestore updated with valid fcmToken for \(userId)")
+        print("🔑 New FCM token assigned to user \(userId): \(fcmToken)")
       }
     }
   }

@@ -138,3 +138,7 @@ iOSInjectionProject/
 # Firebase
 # Firebase Cloud Functions
 **/node_modules
+.firebase/
+
+# Claude Code
+.claude/

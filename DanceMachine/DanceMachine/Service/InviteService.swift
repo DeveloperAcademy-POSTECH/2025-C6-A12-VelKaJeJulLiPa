@@ -23,7 +23,7 @@ struct InviteService {
         ttlHours: Int = 24
     ) async throws -> URL {
         
-        let token = UUID().uuidString + UUID().uuidString // TODO: token을 UUID로 만들어도 괜찮은가? 이야기
+        let token = UUID().uuidString // 초대 링크 토큰 (36자)
         let inviteId = UUID().uuidString
 
         let invite: Invite = .init(
@@ -46,8 +46,21 @@ struct InviteService {
         var comps = URLComponents()
         comps.scheme = "https"
         comps.host = "dancemachine-5243b.web.app"
-        comps.path = "/invite"
-        comps.queryItems = [ URLQueryItem(name: "token", value: token) ]
+
+        // 현재 언어 코드 가져오기 (ko, en, ja)
+        let currentLanguage = Locale.current.language.languageCode?.identifier ?? "ko"
+
+        // 언어별 경로 설정
+        switch currentLanguage {
+        case "en":
+            comps.path = "/invite-en"
+        case "ja":
+            comps.path = "/invite-ja"
+        default:
+            comps.path = "/invite"
+        }
+
+        comps.queryItems = [URLQueryItem(name: "token", value: token)]
         
         guard let url = comps.url else {
             print("❌ [InviteService] URL 생성 실패")

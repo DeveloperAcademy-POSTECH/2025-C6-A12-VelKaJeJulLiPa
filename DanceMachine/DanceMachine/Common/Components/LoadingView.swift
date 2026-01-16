@@ -7,18 +7,21 @@
 
 import SwiftUI
 
-// FIXME: - 임시 로딩 뷰 (디자이너와 협의)
 struct LoadingView: View {
-    var body: some View {
-        ZStack {
-            Color.gray.opacity(0.75)
-                .ignoresSafeArea()
-            ProgressView()
-        }
-        .allowsHitTesting(true)
+  var body: some View {
+    ZStack {
+      Color.materialDimmer.ignoresSafeArea()
+      VStack {
+        LoadingSpinner()
+          .frame(width: 28, height: 28)
+      }
     }
+    .zIndex(999)
+    .allowsHitTesting(true)
+  }
 }
 
 #Preview {
-    LoadingView()
+  LoadingView()
 }
+
