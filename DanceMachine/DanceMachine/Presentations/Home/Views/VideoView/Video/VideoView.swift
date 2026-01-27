@@ -40,6 +40,7 @@ struct VideoView: View {
     switch state.feedbackFilter {
     case .all: return vm.feedbackVM.feedbacks
     case .mine: return vm.feedbackVM.feedbacks.filter { $0.taggedUserIds.contains(userId) }
+    case .ai: return vm.feedbackVM.feedbacks
     }
   }
   
@@ -77,7 +78,6 @@ struct VideoView: View {
         }
       }
     }
-    
     .disabled(vm.feedbackVM.isUploading)
     .overlay(alignment: .center, content: {
       if vm.feedbackVM.isUploading {
