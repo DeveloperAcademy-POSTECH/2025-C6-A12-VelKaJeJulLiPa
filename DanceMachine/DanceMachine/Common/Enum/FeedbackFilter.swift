@@ -11,4 +11,5 @@ import Foundation
 enum FeedbackFilter {
   case all
   case mine
+  case ai
 }

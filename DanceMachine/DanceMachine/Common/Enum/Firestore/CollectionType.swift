@@ -27,4 +27,5 @@ enum CollectionType: String {
   case section = "section" // tracks 서브 컬렉션
   case track = "track" // section 서브 컬렉션의 서브 컬렉션
   case reply = "reply" // feedback 서브 컬렉션
+  case aiAnalysis = "aiAnalysis" // video 서브 컬렉션
 }
