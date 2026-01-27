@@ -30,18 +30,14 @@ struct FeedbackListView: View {
         LazyVStack {
           Color.clear.frame(height: 1).id("topFeedback")
           
-          if vm.feedbackVM.isLoading {
-            ForEach(0..<3, id: \.self) { _ in
-              SkeletonFeedbackCard()
-            }
-          } else if vm.feedbackVM.feedbacks.isEmpty && !vm.feedbackVM.isLoading {
-            emptyView
+          if state.feedbackFilter == .ai {
+            AISheetView(
+              vm: vm,
+              videoId: videoId
+            )
           } else {
-            ForEach(filteredFeedbacks, id: \.feedbackId) { f in
-              feedbackCardView(for: f)
-            }
+            feedbackListContent
           }
-          
         }
         .onAppear {
           state.scrollProxy = proxy
@@ -100,7 +96,13 @@ struct FeedbackListView: View {
       }
     }
     .refreshable {
-      Task { try await vm.feedbackVM.loadFeedbacks(for: videoId) }
+      Task {
+        if state.feedbackFilter == .ai {
+          await vm.loadAIAnalysis(videoId: videoId)
+        } else {
+          await vm.feedbackVM.loadFeedbacks(for: videoId)          
+        }
+      }
     }
     .scrollIndicators(.hidden)
   }
@@ -113,6 +115,21 @@ struct FeedbackListView: View {
       .frame(width: g.size.width, height: g.size.height)
     }
     .frame(height: 300)
+  }
+  // MARK: 기존 피드백 컨텐츠
+  @ViewBuilder
+  private var feedbackListContent: some View {
+    if vm.feedbackVM.isLoading {
+      ForEach(0..<3, id: \.self) { _ in
+        SkeletonFeedbackCard()
+      }
+    } else if vm.feedbackVM.feedbacks.isEmpty && !vm.feedbackVM.isLoading {
+      emptyView
+    } else {
+      ForEach(filteredFeedbacks, id: \.feedbackId) { f in
+        feedbackCardView(for: f)
+      }
+    }
   }
 
   @ViewBuilder
