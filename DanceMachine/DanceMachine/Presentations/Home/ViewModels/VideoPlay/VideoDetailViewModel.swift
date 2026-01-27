@@ -7,6 +7,7 @@
 
 import Foundation
 import UIKit
+import DancePoseAnalysis
 
 @Observable
 final class VideoDetailViewModel {
@@ -16,15 +17,20 @@ final class VideoDetailViewModel {
   
   var videoVM: VideoViewModel
   var feedbackVM: FeedbackViewModel
-  
+  var aiVM: AIViewModel
   
   var isLoading: Bool = false
   var showMemberError: Bool = false
   var errorMsg: String = ""
   
+  // Feedback패널에서 사용되는 상태
+  var showAIPanel: Bool = false
+  var aiAnalysis: AIAnalysis?
+  
   init() {
     self.videoVM = VideoViewModel()
-    self.feedbackVM = FeedbackViewModel() 
+    self.feedbackVM = FeedbackViewModel()
+    self.aiVM = AIViewModel()
   }
   
   // 팀 멤버 이름 유틸 함수 (태그 관련)
@@ -62,6 +68,11 @@ final class VideoDetailViewModel {
       // 피드백 로드 (FeedbackViewModel 내부에서 에러 처리)
       g.addTask {
         await self.feedbackVM.loadFeedbacks(for: videoId)
+      }
+      
+      // AI 분석 로드
+      g.addTask {
+        await self.loadAIAnalysis(videoId: videoId)
       }
 
       await g.waitForAll()
@@ -131,7 +142,62 @@ extension VideoDetailViewModel {
     return teamMembers.filter { $0.name.lowercased().contains(query.lowercased()) }
   }
 }
-// MARK: - 가로모드
+// MARK: - AI 관련
+extension VideoDetailViewModel {
+  // AI 분석 로드
+  func loadAIAnalysis(videoId: String) async {
+    print("🔍 [1] loadAIAnalysis 시작 - videoId: \(videoId)")
+
+    // guard 제거!
+
+    do {
+      print("🔍 [2] Firebase 쿼리 시작...")
+      let analysis: [AIAnalysis] = try await FirestoreManager.shared.fetchAll(
+        videoId,
+        from: .aiAnalysis,
+        where: "video_id"
+      )
+
+      print("🔍 [3] 쿼리 완료 - 결과: \(analysis.count)개")
+
+      if let first = analysis.first {
+        print("🔍 [4] 분석 데이터 발견!")
+        await MainActor.run {
+          self.aiAnalysis = first
+          self.aiVM.visionFeedback = first.feedback
+          self.aiVM.state = .completed
+          print("✅ AI 분석 로드 완료")
+        }
+      } else {
+        print("ℹ️ 분석 데이터 없음")
+      }
+    } catch {
+      print("❌ 로드 실패: \(error)")
+    }
+  }
+
+
+  
+  // AI 분석 저장
+  func saveAIAnalysis(
+    _ visionFeedback: VisionFeedback,
+    videoId: String
+  ) async {
+    let analysis = AIAnalysis(
+      feedback: visionFeedback,
+      videoId: videoId
+    )
+
+    do {
+      try await FirestoreManager.shared.create(analysis)
+      self.aiAnalysis = analysis
+      print("✅ AI 분석 저장 완료 - Score: \(visionFeedback.overallScore)")
+    } catch {
+      // TODO: 에러처리
+      print("❌ AI 분석 저장 실패: \(error)")
+    }
+  }
+}
 
 // MARK: - 프리뷰 전용 목데이터
 extension VideoDetailViewModel {
