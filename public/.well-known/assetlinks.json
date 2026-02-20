@@ -1,0 +1,15 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.baek.diract",
+      "sha256_cert_fingerprints": [
+        "90:02:F8:D9:64:88:3F:1B:25:F4:83:FA:84:5F:75:3D:29:DB:95:74:37:77:CF:12:03:F7:2C:5E:49:E4:AB:9D",
+        "33:1B:A8:3C:2C:4A:03:65:D8:D5:67:E8:9E:C2:27:B6:72:ED:7A:F8:BC:F2:5A:F5:F6:9B:5F:D3:D7:F7:46:B3"
+      ]
+    }
+  }
+]

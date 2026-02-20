@@ -140,5 +140,8 @@ iOSInjectionProject/
 **/node_modules
 .firebase/
 
+# Backup files
+*.backup
+
 # Claude Code
 .claude/
