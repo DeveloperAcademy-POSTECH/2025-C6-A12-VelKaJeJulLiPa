@@ -231,7 +231,7 @@ struct ProjectListView: View {
       }
       
       await homeViewModel.onAppear()
-      await projectListViewModel.onAppear()
+      await projectListViewModel.refreshFromServer()
       await tracksViewModel?.onAppear()
       
       // FIXME: - 확인 필요
