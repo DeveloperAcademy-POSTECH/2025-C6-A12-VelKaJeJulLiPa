@@ -41,7 +41,8 @@ struct FeedbackListView: View {
               feedbackCardView(for: f)
             }
           }
-          
+          // 하단 피드백 버튼에 가리지 않도록 여백 추가
+          Color.clear.frame(height: 80)
         }
         .onAppear {
           state.scrollProxy = proxy
@@ -175,6 +176,32 @@ struct FeedbackListView: View {
   }
 }
 
-//#Preview {
-//  FeedbackListView()
-//}
+#Preview {
+  @Previewable @Namespace var imageNamespace
+
+  let mockFeedbacks = (0..<10).map { i in
+    Feedback(
+      feedbackId: UUID(),
+      videoId: "video1",
+      authorId: "user\(i)",
+      content: "피드백 \(i + 1)번 - 동작을 좀 더 크게 해보세요!",
+      startTime: Double(i * 5),
+      teamspaceId: "team1"
+    )
+  }
+
+  let vm = VideoDetailViewModel()
+
+  let _ = {
+    vm.feedbackVM.feedbacks = mockFeedbacks
+  }()
+
+  FeedbackListView(
+    vm: vm,
+    state: VideoViewState(),
+    filteredFeedbacks: mockFeedbacks,
+    userId: "user0",
+    videoId: "video1",
+    imageNamespace: imageNamespace
+  )
+}
